@@ -1,0 +1,19 @@
+# ---------------------------------------------------------------
+# NEVER commit working data. The app's .json holds real demand data
+# and (even when encrypted) the credentials vault.
+# ---------------------------------------------------------------
+*.json
+demand-desk-data*.json
+snapshots/
+
+# Screenshots captured by the app / Snip Desk
+images/
+dd-*.png
+shot-*.png
+*.marks.json
+
+# Local tooling & OS noise
+.claude/
+Thumbs.db
+desktop.ini
+.DS_Store
