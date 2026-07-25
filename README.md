@@ -9,9 +9,27 @@ Double-click `DemandDesk.html`. It opens in your default browser (use **Edge**
 or **Chrome** for the best file experience). Nothing to install.
 
 ## Appearance
-A **☀ / 🌙 toggle** in the header switches between the dark and light themes.
-Your choice is remembered on this browser (it's a display preference, not part
-of your data file) and applied instantly on the next launch with no flash.
+The header button cycles **three themes**: **dark → light → instrument white →
+dark**. The icon shows what you'd switch *to* (☀ light, ▦ instrument, 🌙 dark).
+
+**Instrument White** is the scientific-plotter aesthetic from the Yantra
+dashboard (see `instrument-white/`), the same one Team Desk offers: white paper
+with a faint engineering dot-grid, hairline rules, corner registration tics on
+every panel, uppercase silkscreen micro-labels, and tabular monospaced figures.
+Colour is reserved for meaning — ink carries all structure, so anything coloured
+is a real state. The pens are fixed for the life of the app:
+
+| Pen | Used for |
+|---|---|
+| prussian `#1B4FA0` | Open · Development tier · links |
+| ochre `#B07500` | In progress · QA tier · waiting & warnings |
+| viridian `#0E7C63` | Delivered · Production tier · reached / good |
+| cinnabar `#D93A1E` | Bug · overdue · expired (the "past a limit" pen) |
+| violet `#6B3FA0` | projects · Transports of Copies |
+
+Your choice is remembered on this browser (a display preference, not part of
+your data file — so it also works on the lock screen) and is applied before the
+first paint, with no flash.
 
 ## Saving your data
 - Click **💾 Save** (or `Ctrl+S`). The first time, pick where to keep your

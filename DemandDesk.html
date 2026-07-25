@@ -20,7 +20,7 @@
     --pin-bg:linear-gradient(180deg,#2a2410,#1c2230);
     --exp-bg:#2a1416; --exp-line:#5e2a2a;
     --alert-line:#5e2a2a; --warn-line:#5a4a1e;
-    --accent-line:#274b6e; --green-line:#274b2c; --amber-line:#5a4a1e; --red-line:#5e2a2a;
+    --accent-line:#274b6e; --green-line:#274b2c; --amber-line:#5a4a1e; --red-line:#5e2a2a; --violet-line:#3a2f6b;
     --radius:9px; --mono:"Cascadia Code","Consolas",ui-monospace,monospace;
     --sans:"Segoe UI",system-ui,-apple-system,sans-serif;
   }
@@ -37,7 +37,40 @@
     --resume-bg:#eaf5ee; --pin-bg:#fbf3dd;
     --exp-bg:#ffe9e6; --exp-line:#f0b3ab;
     --alert-line:#f0b3ab; --warn-line:#e6d19a;
-    --accent-line:#b6d3f5; --green-line:#b7e0c3; --amber-line:#e6d19a; --red-line:#f0b3ab;
+    --accent-line:#b6d3f5; --green-line:#b7e0c3; --amber-line:#e6d19a; --red-line:#f0b3ab; --violet-line:#d0c4e4;
+  }
+  /* ---- INSTRUMENT WHITE ----
+     Scientific-plotter look: white paper, hairlines, drafting-pen signal colours,
+     silkscreen micro-labels, tabular mono figures. Adapted from instrument-white/.
+
+     Pen assignment for this app, fixed for its lifetime (§2 colour discipline):
+       prussian #1B4FA0 — Open / Development tier / links & accents
+       ochre    #B07500 — In progress / QA tier / waiting & warnings
+       viridian #0E7C63 — Delivered / Production tier / reached & good
+       cinnabar #D93A1E — Bug / overdue / expired  (the "past a limit" pen)
+       violet   #6B3FA0 — projects & Transports-of-Copies (structural grouping)
+     Ink carries all structure; a colour anywhere means a real state.
+     Scoped entirely under the attribute — dark and light are untouched. */
+  :root[data-theme="instrument"]{
+    color-scheme:light;
+    --bg:#FFFFFF; --bg2:#FFFFFF; --panel:#FFFFFF; --panel2:#F7F7F4;
+    --line:#E7E6DF; --line2:#D6D5CC;
+    --txt:#12141A; --muted:#5A5E68; --faint:#9A9EA8;
+    --accent:#1B4FA0; --accent2:#6B3FA0; --on-accent:#FFFFFF;
+    --green:#0E7C63; --amber:#B07500; --red:#D93A1E; --teal:#0E7C63;
+    --chip:#FFFFFF;
+    /* the system forbids surface gradients and tinted fills — flat paper, ruled edges */
+    --danger-bg:#FDF1EE; --toc-bg:#FFFFFF;
+    --cover-yes-bg:#FFFFFF; --cover-yes-line:#B4D8CE;
+    --cover-no-bg:#FFFFFF; --cover-no-line:#E4D3A6;
+    --resume-bg:#FFFFFF; --pin-bg:#FFFFFF;
+    --exp-bg:#FFFFFF; --exp-line:#F0C0B6;
+    --alert-line:#F0C0B6; --warn-line:#E4D3A6;
+    --accent-line:#BFD0E6; --green-line:#B4D8CE; --amber-line:#E4D3A6; --red-line:#F0C0B6; --violet-line:#D0C4E4;
+    --radius:3px;
+    --mono:ui-monospace,"Cascadia Mono","JetBrains Mono","SF Mono",Consolas,monospace;
+    --sans:"Inter","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    --rule-strong:#D6D5CC; --grid-dot:#DEDDD6; --ink-3:#9A9EA8;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -71,10 +104,20 @@
   .navbtn:hover{background:var(--panel2);color:var(--txt)}
   .navbtn.active{background:var(--accent);color:var(--on-accent)}
   header .spacer{flex:1}
-  .hsearch{position:relative;width:300px}
+  /* shrinkable so a cramped header (7 nav tabs, narrow window, or instrument's
+     wider letter-spacing) squeezes the search instead of pushing the file buttons
+     off-screen — Ctrl+K still focuses it either way */
+  .hsearch{position:relative;flex:0 1 300px;min-width:104px}
   .hsearch input{padding-left:30px;background:var(--panel)}
   .hsearch svg{position:absolute;left:9px;top:8px;width:15px;height:15px;opacity:.5}
-  .filebar{display:flex;align-items:center;gap:7px}
+  .filebar{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+  .filebar button{white-space:nowrap}
+  /* On a cramped header the nav scrolls rather than pushing Save/⋯ off-screen;
+     the file controls must always stay reachable. Scrollbar hidden — it's a
+     7-item strip, and the workspaces are also on Ctrl+K. */
+  .nav{flex:0 1 auto;min-width:0;overflow-x:auto;scrollbar-width:none}
+  .nav::-webkit-scrollbar{display:none}
+  .navbtn{flex:0 0 auto}
   .savestate{font-size:11px;color:var(--faint);min-width:74px;text-align:right}
   .savestate.dirty{color:var(--amber)}
   .savestate.saved{color:var(--green)}
@@ -135,14 +178,16 @@
 
   .tree{margin-top:4px}
   .node .children{margin-left:22px;border-left:1px dashed var(--line2);padding-left:14px;margin-top:6px}
-  .nrow{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:7px 10px;margin-bottom:6px}
+  /* wraps when the detail pane is narrow: the two fixed-width date pickers used to
+     crush the subtask title into a ~60px column of stacked letters */
+  .nrow{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:7px 10px;margin-bottom:6px;flex-wrap:wrap}
   .nrow .twist{cursor:pointer;width:14px;color:var(--faint);font-size:11px;flex:0 0 14px;text-align:center;user-select:none}
   .nrow .chk{cursor:pointer;width:16px;height:16px;flex:0 0 16px;border:1.5px solid var(--line2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:11px}
   .nrow .chk.done{background:var(--green);border-color:var(--green);color:var(--on-accent)}
-  .nrow .nm{flex:1;font-size:13px;cursor:text;padding:2px 4px;border-radius:4px}
+  .nrow .nm{flex:1 1 170px;min-width:0;font-size:13px;cursor:text;padding:2px 4px;border-radius:4px}
   .nrow .nm:hover{background:var(--bg2)}
   .nrow.done .nm{text-decoration:line-through;color:var(--faint)}
-  .nrow .ndates{display:flex;gap:8px;font-size:11px;color:var(--muted);align-items:center}
+  .nrow .ndates{display:flex;gap:8px;font-size:11px;color:var(--muted);align-items:center;flex:0 0 auto;margin-left:auto}
   .nrow .nact{display:flex;gap:2px;opacity:0;transition:.1s}
   .nrow:hover .nact{opacity:1}
 
@@ -301,6 +346,165 @@
   .getting-started{background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:24px 28px;max-width:660px;margin:14px auto}
   .objlink{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px}
 
+  /* ================= INSTRUMENT WHITE — structural refinements =================
+     Colour alone doesn't make the aesthetic; this is the geometry and typography
+     that read as an instrument: near-square edges, hairlines, corner registration
+     tics, silkscreen micro-labels, tabular mono figures, outlined pills.
+     Every rule is scoped under the theme attribute, so dark/light are untouched
+     and no render logic changes. ============================================== */
+  :root[data-theme="instrument"] body{font-size:13.5px;letter-spacing:.005em}
+
+  /* engineering dot-grid paper, faded down the page (§4) */
+  :root[data-theme="instrument"] #app::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:radial-gradient(circle at 1px 1px,var(--grid-dot) 1px,transparent 0);
+    background-size:22px 22px;opacity:.5;
+    -webkit-mask-image:radial-gradient(ellipse 130% 100% at 50% 0%,#000 30%,transparent 92%);
+    mask-image:radial-gradient(ellipse 130% 100% at 50% 0%,#000 30%,transparent 92%)}
+  :root[data-theme="instrument"] header,
+  :root[data-theme="instrument"] main{position:relative;z-index:1}
+
+  /* near-square geometry; depth from hairlines only — no shadows, no glow */
+  :root[data-theme="instrument"] button,
+  :root[data-theme="instrument"] input,
+  :root[data-theme="instrument"] select,
+  :root[data-theme="instrument"] textarea,
+  :root[data-theme="instrument"] .pill,
+  :root[data-theme="instrument"] .chip,
+  :root[data-theme="instrument"] .sys,
+  :root[data-theme="instrument"] .lc-badge,
+  :root[data-theme="instrument"] .expbadge,
+  :root[data-theme="instrument"] .kindtag,
+  :root[data-theme="instrument"] .toctag{border-radius:2px}
+  :root[data-theme="instrument"] .tcard,
+  :root[data-theme="instrument"] .dashcard,
+  :root[data-theme="instrument"] .trcard,
+  :root[data-theme="instrument"] .modal,
+  :root[data-theme="instrument"] .imgcard,
+  :root[data-theme="instrument"] .actitem,
+  :root[data-theme="instrument"] .cmt,
+  :root[data-theme="instrument"] .finding,
+  :root[data-theme="instrument"] .nrow,
+  :root[data-theme="instrument"] .readybar,
+  :root[data-theme="instrument"] .resume-box,
+  :root[data-theme="instrument"] .pinbox,
+  :root[data-theme="instrument"] .tbl-wrap,
+  :root[data-theme="instrument"] .getting-started,
+  :root[data-theme="instrument"] .picklist,
+  :root[data-theme="instrument"] .gsearch,
+  :root[data-theme="instrument"] .toast{border-radius:3px;box-shadow:none}
+  :root[data-theme="instrument"] .modal,
+  :root[data-theme="instrument"] .gsearch,
+  :root[data-theme="instrument"] .toast{box-shadow:0 2px 10px rgba(18,20,26,.07)}
+  :root[data-theme="instrument"] .lightbox img{box-shadow:none;border:1px solid var(--rule-strong)}
+
+  /* registration tics — the detail that reads "instrument", not "web card".
+     Panels only; list rows at this density would be noise. */
+  :root[data-theme="instrument"] .dashcard,
+  :root[data-theme="instrument"] .trcard,
+  :root[data-theme="instrument"] .modal,
+  :root[data-theme="instrument"] .resume-box,
+  :root[data-theme="instrument"] .pinbox,
+  :root[data-theme="instrument"] .readybar,
+  :root[data-theme="instrument"] .getting-started,
+  :root[data-theme="instrument"] .imgcard{position:relative}
+  :root[data-theme="instrument"] .dashcard::before,  :root[data-theme="instrument"] .dashcard::after,
+  :root[data-theme="instrument"] .trcard::before,    :root[data-theme="instrument"] .trcard::after,
+  :root[data-theme="instrument"] .modal::before,     :root[data-theme="instrument"] .modal::after,
+  :root[data-theme="instrument"] .resume-box::before,:root[data-theme="instrument"] .resume-box::after,
+  :root[data-theme="instrument"] .pinbox::before,    :root[data-theme="instrument"] .pinbox::after,
+  :root[data-theme="instrument"] .readybar::before,  :root[data-theme="instrument"] .readybar::after,
+  :root[data-theme="instrument"] .getting-started::before,:root[data-theme="instrument"] .getting-started::after,
+  :root[data-theme="instrument"] .imgcard::before,   :root[data-theme="instrument"] .imgcard::after{
+    content:"";position:absolute;width:7px;height:7px;border:solid var(--rule-strong);pointer-events:none}
+  :root[data-theme="instrument"] .dashcard::before,
+  :root[data-theme="instrument"] .trcard::before,
+  :root[data-theme="instrument"] .modal::before,
+  :root[data-theme="instrument"] .resume-box::before,
+  :root[data-theme="instrument"] .pinbox::before,
+  :root[data-theme="instrument"] .readybar::before,
+  :root[data-theme="instrument"] .getting-started::before,
+  :root[data-theme="instrument"] .imgcard::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
+  :root[data-theme="instrument"] .dashcard::after,
+  :root[data-theme="instrument"] .trcard::after,
+  :root[data-theme="instrument"] .modal::after,
+  :root[data-theme="instrument"] .resume-box::after,
+  :root[data-theme="instrument"] .pinbox::after,
+  :root[data-theme="instrument"] .readybar::after,
+  :root[data-theme="instrument"] .getting-started::after,
+  :root[data-theme="instrument"] .imgcard::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
+
+  /* silkscreen micro-labels — uppercase, wide tracking, quiet ink (§3) */
+  :root[data-theme="instrument"] label{font-size:8.5px;letter-spacing:.17em;color:var(--ink-3)}
+  :root[data-theme="instrument"] .sec-title h3,
+  :root[data-theme="instrument"] .dashcard h3{font-size:9px;letter-spacing:.22em;font-weight:600;color:var(--muted)}
+  :root[data-theme="instrument"] .stat{border-radius:2px;background:transparent}
+  :root[data-theme="instrument"] .stats{gap:1px;background:var(--line);border:1px solid var(--line);padding:1px}
+  :root[data-theme="instrument"] .stat{border:none;background:var(--panel);font-size:8.5px;
+    letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);padding:7px 2px}
+  :root[data-theme="instrument"] header .logo{font-family:var(--mono);font-size:11px;letter-spacing:.3em}
+  :root[data-theme="instrument"] header .logo .dot{box-shadow:none;width:7px;height:7px;border-radius:50%}
+  :root[data-theme="instrument"] header{background:var(--panel)}
+  :root[data-theme="instrument"] aside{background:transparent;border-right:1px solid var(--line)}
+  :root[data-theme="instrument"] .detail-head{border-bottom:1px solid var(--line)}
+
+  /* nav + tabs as instrument controls */
+  :root[data-theme="instrument"] .nav{background:transparent;border-color:transparent;padding:0;gap:1px}
+  :root[data-theme="instrument"] .navbtn{font-family:var(--mono);font-size:9px;letter-spacing:.13em;
+    text-transform:uppercase;border-radius:2px;border:1px solid transparent;padding:5px 8px}
+  :root[data-theme="instrument"] .navbtn.active{background:transparent;color:var(--txt);border-color:var(--rule-strong)}
+  :root[data-theme="instrument"] .tab{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+  :root[data-theme="instrument"] .tab .count{font-family:var(--mono);font-variant-numeric:tabular-nums;
+    background:transparent;border:1px solid var(--rule-strong);border-radius:2px}
+
+  /* every figure mono + tabular — non-tabular digits jitter as values change (§3) */
+  :root[data-theme="instrument"] .stat b,
+  :root[data-theme="instrument"] .due,
+  :root[data-theme="instrument"] .demand,
+  :root[data-theme="instrument"] .dh-demand,
+  :root[data-theme="instrument"] .di-sub,
+  :root[data-theme="instrument"] .fts,
+  :root[data-theme="instrument"] .cmt-meta,
+  :root[data-theme="instrument"] .lc-badge{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  /* numbers are mono, prose is not — a blanket td rule widens text columns and
+     forces titles to wrap. The numeric cells already carry .mono / .due. */
+  :root[data-theme="instrument"] .mono,
+  :root[data-theme="instrument"] input[type="date"],
+  :root[data-theme="instrument"] table td.mono{font-variant-numeric:tabular-nums}
+  :root[data-theme="instrument"] .stat b{letter-spacing:-.01em;font-weight:600;font-size:17px}
+  :root[data-theme="instrument"] .dh-demand{letter-spacing:.06em}
+
+  /* pills: outlined silkscreen, never filled lozenges */
+  :root[data-theme="instrument"] .pill,
+  :root[data-theme="instrument"] .lc-badge,
+  :root[data-theme="instrument"] .expbadge,
+  :root[data-theme="instrument"] .kindtag,
+  :root[data-theme="instrument"] .toctag,
+  :root[data-theme="instrument"] .cover{background:transparent;font-size:9px;letter-spacing:.11em;
+    text-transform:uppercase;font-weight:600;padding:1px 6px}
+  :root[data-theme="instrument"] .sys{background:transparent;letter-spacing:.06em}
+  :root[data-theme="instrument"] .sys .d{letter-spacing:.12em}
+  :root[data-theme="instrument"] .chip{background:transparent}
+
+  /* status edge on list cards stays the only heavy colour — it is the value */
+  :root[data-theme="instrument"] .tcard{border-left-width:2px}
+  :root[data-theme="instrument"] .tcard.active{background:var(--panel2)}
+  :root[data-theme="instrument"] .tcard.s-closed{opacity:.55}
+
+  /* tinted boxes lose their fills; the coloured left edge carries the meaning */
+  :root[data-theme="instrument"] .resume-box,
+  :root[data-theme="instrument"] .pinbox{border-left-width:2px}
+  :root[data-theme="instrument"] .cover.yes{border-color:var(--green-line)}
+  :root[data-theme="instrument"] .cover.no{border-color:var(--amber-line)}
+  /* unknown/absent is outlined, never a fourth status fill (§7) */
+  :root[data-theme="instrument"] .nothumb{border-style:dashed;color:var(--ink-3)}
+
+  /* dotted row separators, as on plotter paper */
+  :root[data-theme="instrument"] .dashitem{border-bottom-style:dotted;border-bottom-color:var(--rule-strong)}
+  :root[data-theme="instrument"] th{font-size:8.5px;letter-spacing:.15em;color:var(--ink-3)}
+  :root[data-theme="instrument"] td{border-bottom-style:dotted;border-bottom-color:var(--rule-strong)}
+  :root[data-theme="instrument"] ::-webkit-scrollbar-thumb{border-radius:2px;background:var(--rule-strong)}
+
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -311,7 +515,7 @@
 </style>
 </head>
 <body>
-<script>try{if(localStorage.getItem("demanddesk.theme")==="light")document.documentElement.setAttribute("data-theme","light");}catch(e){}</script>
+<script>try{var _t=localStorage.getItem("demanddesk.theme");if(_t==="light"||_t==="instrument")document.documentElement.setAttribute("data-theme",_t);}catch(e){}</script>
 <div id="app">
   <header>
     <div class="logo"><span class="dot"></span> DEMAND&nbsp;DESK</div>
@@ -864,8 +1068,8 @@ function renderList(){
       <div class="demand">${esc(t.demandId||"— no demand id —")}</div>
       <div class="ttitle">${esc(t.title)}</div>
       <div class="meta"><span class="pill ${st.cls}">${st.label}</span>
-        ${isWaiting(t)?`<span class="pill" style="color:var(--amber);border-color:#5a4a1e">⏳ ${esc(t.waiting.on)}${waitDays(t)!=null?" "+waitDays(t)+"d":""}</span>`:""}
-        ${t.project?`<span class="pill" style="color:var(--accent2);border-color:#3a2f6b">▦ ${esc(t.project)}</span>`:""}
+        ${isWaiting(t)?`<span class="pill" style="color:var(--amber);border-color:var(--amber-line)">⏳ ${esc(t.waiting.on)}${waitDays(t)!=null?" "+waitDays(t)+"d":""}</span>`:""}
+        ${t.project?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">▦ ${esc(t.project)}</span>`:""}
         ${t.theme?`<span class="pill type">${esc(t.theme)}</span>`:`<span class="pill type">${esc(t.type)}</span>`}
         ${t.requestor?`<span class="faint">👤 ${esc(t.requestor)}</span>`:""}
         ${sub.n?`<span class="faint">☑ ${sub.done}/${sub.n}</span>`:""}
@@ -889,7 +1093,7 @@ function renderDetail(){
       </div>
       <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
         <span class="pill ${st.cls}" style="font-size:12px">${st.label}</span>
-        ${isWaiting(t)?`<span class="pill" style="font-size:12px;color:var(--amber);border-color:#5a4a1e">⏳ Waiting on ${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+"d":""}</span>`:""}
+        ${isWaiting(t)?`<span class="pill" style="font-size:12px;color:var(--amber);border-color:var(--amber-line)">⏳ Waiting on ${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+"d":""}</span>`:""}
         <div style="display:flex;gap:6px"><button class="sm" id="btnSpec" title="Generate post-delivery technical spec">📄 Tech Spec</button><button class="sm" id="btnEditTask">✎ Edit</button><button class="sm danger" id="btnDelTask">🗑 Delete</button></div>
       </div></div>
       <div class="tabs">
@@ -1617,7 +1821,7 @@ function renderVault(){
   document.getElementById("side").innerHTML=`
     <div class="side-tools">
       <button class="primary" id="btnNewCred" style="width:100%">＋ Add credential</button>
-      <div class="${enc?"":"warn"}" style="font-size:12px;border-radius:8px;padding:9px 11px;border:1px solid ${enc?"var(--line2)":"var(--red)"};background:${enc?"var(--panel)":"#3a1d1f"}">
+      <div class="${enc?"":"warn"}" style="font-size:12px;border-radius:8px;padding:9px 11px;border:1px solid ${enc?"var(--line2)":"var(--red)"};background:${enc?"var(--panel)":"var(--danger-bg)"}">
         ${enc?`🔒 <b>Encrypted at rest.</b><br>This file is protected by your master password.`:`⚠ <b>Not encrypted.</b><br>Passwords are stored in plain text. Set a master password before saving real credentials.`}
         <button class="sm" id="btnEnc" style="margin-top:8px;width:100%">${enc?"Change / remove master password":"🔒 Set master password"}</button>
       </div>
@@ -2055,7 +2259,7 @@ function renderPlaybookSidebar(){
     return `<div class="tcard ${p.id===activePlayId?"active":""}" data-id="${p.id}">
       <div class="demand">${K.icon} ${K.label}${p.pinned?" · 📌":""}</div>
       <div class="ttitle">${esc(p.title)}</div>
-      <div class="meta">${p.category?`<span class="pill" style="color:var(--accent2);border-color:#3a2f6b">${esc(p.category)}</span>`:""}${sub}${imagesFor("playbook",p.id).length?`<span class="lc-badge">📷 ${imagesFor("playbook",p.id).length}</span>`:""}</div></div>`;}).join("");
+      <div class="meta">${p.category?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">${esc(p.category)}</span>`:""}${sub}${imagesFor("playbook",p.id).length?`<span class="lc-badge">📷 ${imagesFor("playbook",p.id).length}</span>`:""}</div></div>`;}).join("");
   el.querySelectorAll(".tcard").forEach(x=>x.onclick=()=>{activePlayId=x.dataset.id;renderApp();});
 }
 function renderPlaybookDetail(){
@@ -2454,9 +2658,25 @@ document.getElementById("btnOpen").onclick=openFile;
 document.getElementById("btnSave").onclick=saveFile;
 document.getElementById("btnMenu").onclick=openMenu;
 document.getElementById("btnReconnect").onclick=reconnectFile;
-function applyTheme(t){const light=t==="light";document.documentElement.setAttribute("data-theme",light?"light":"dark");try{localStorage.setItem("demanddesk.theme",light?"light":"dark");}catch(e){}const b=document.getElementById("btnTheme");if(b){b.textContent=light?"🌙":"☀";b.title=light?"Switch to dark theme":"Switch to light theme";}}
-document.getElementById("btnTheme").onclick=()=>applyTheme(document.documentElement.getAttribute("data-theme")==="light"?"dark":"light");
-applyTheme(localStorage.getItem("demanddesk.theme")==="light"?"light":"dark");
+/* Theme is a UI preference kept in localStorage (NOT the encrypted data file), so
+   it works on the lock screen and never sits behind the master password. Purely
+   presentational — no logic reads it. */
+const THEME_KEY="demanddesk.theme";
+const THEMES=["dark","light","instrument"];
+const THEME_ICON={dark:"☀",light:"▦",instrument:"🌙"};   /* icon shows what you'd switch TO */
+const THEME_NEXT_LABEL={dark:"light",light:"instrument white",instrument:"dark"};
+function currentTheme(){try{const t=localStorage.getItem(THEME_KEY);return THEMES.includes(t)?t:"dark";}catch(e){return "dark";}}
+function applyTheme(t){const el=document.documentElement;el.setAttribute("data-theme",t);
+  /* Chromium doesn't reliably repaint already-rendered persistent chrome (the header)
+     when a :root custom property changes. Detaching and reattaching the root forces
+     every element to re-resolve the variables; it's synchronous, so no flash. */
+  el.style.display="none";void el.offsetHeight;el.style.display="";
+  const b=document.getElementById("btnTheme");
+  if(b){b.textContent=THEME_ICON[t]||"☀";b.title="Switch to "+THEME_NEXT_LABEL[t]+" theme";}}
+function toggleTheme(){const nx=THEMES[(THEMES.indexOf(currentTheme())+1)%THEMES.length];
+  try{localStorage.setItem(THEME_KEY,nx);}catch(e){}applyTheme(nx);}
+document.getElementById("btnTheme").onclick=toggleTheme;
+applyTheme(currentTheme());
 const gs=document.getElementById("globalSearch");
 gs.oninput=e=>{clearTimeout(gs._t);gs._t=setTimeout(()=>runGlobalSearch(e.target.value),150);};
 gs.onblur=()=>setTimeout(()=>document.getElementById("gsearchResults").classList.add("hide"),200);
