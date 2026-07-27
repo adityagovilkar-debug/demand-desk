@@ -70,6 +70,12 @@
     --radius:3px;
     --mono:ui-monospace,"Cascadia Mono","JetBrains Mono","SF Mono",Consolas,monospace;
     --sans:"Inter","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    /* Silkscreen face for micro-labels. Bahnschrift is Windows' stock DIN — the
+       typeface of engineering drawings — so it needs no install and gives the
+       labels a genuinely technical voice instead of falling back to Segoe UI
+       (Inter is not installed on a locked-down machine, so --sans alone still
+       renders as the old font). Condensed, so tracked uppercase stays compact. */
+    --label:"Bahnschrift","Inter","Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
     --rule-strong:#D6D5CC; --grid-dot:#DEDDD6; --ink-3:#9A9EA8;
   }
   *{box-sizing:border-box}
@@ -344,6 +350,15 @@
   .dashitem .di-sub{font-size:11px;color:var(--faint);white-space:nowrap;flex:0 0 auto}
   .dash-empty{color:var(--faint);font-size:12px;padding:4px}
   .getting-started{background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:24px 28px;max-width:660px;margin:14px auto}
+  .getting-started h1{margin:0 0 4px;font-size:19px}
+  .gs-lede{color:var(--muted);margin:0 0 16px}
+  .gs-list{margin:0;display:grid;grid-template-columns:auto 1fr;gap:0 16px;align-items:baseline}
+  .gs-list dt{font-weight:650;padding:7px 0 0;white-space:nowrap}
+  .gs-list dd{margin:0;padding:7px 0 0;color:var(--muted);font-size:12.5px;line-height:1.5}
+  .gs-list dt~dt,.gs-list dt:not(:first-of-type){border-top:1px solid var(--line)}
+  .gs-list dd:not(:first-of-type){border-top:1px solid var(--line)}
+  .gs-tip{color:var(--muted);font-size:12px;margin:18px 0 0;padding-top:12px;border-top:1px solid var(--line)}
+  .gs-acts{display:flex;gap:8px;margin-top:14px}
   .objlink{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px}
 
   /* ================= INSTRUMENT WHITE — structural refinements =================
@@ -354,15 +369,24 @@
      and no render logic changes. ============================================== */
   :root[data-theme="instrument"] body{font-size:13.5px;letter-spacing:.005em}
 
-  /* engineering dot-grid paper, faded down the page (§4) */
+  /* Engineering dot-grid paper (§4). Even across the whole viewport rather than
+     masked to a fade — it reads as blueprint field, and every panel then sits on
+     it as a sheet of paper. Kept faint enough to be near-subliminal. */
   :root[data-theme="instrument"] #app::before{
     content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     background-image:radial-gradient(circle at 1px 1px,var(--grid-dot) 1px,transparent 0);
-    background-size:22px 22px;opacity:.5;
-    -webkit-mask-image:radial-gradient(ellipse 130% 100% at 50% 0%,#000 30%,transparent 92%);
-    mask-image:radial-gradient(ellipse 130% 100% at 50% 0%,#000 30%,transparent 92%)}
+    background-size:22px 22px;opacity:.55}
   :root[data-theme="instrument"] header,
   :root[data-theme="instrument"] main{position:relative;z-index:1}
+  /* The grid only shows through if the big surfaces stop painting white over it.
+     Panels/cards keep their fill, so they read as paper laid on the blueprint. */
+  :root[data-theme="instrument"] main,
+  :root[data-theme="instrument"] aside,
+  :root[data-theme="instrument"] section.detail,
+  :root[data-theme="instrument"] .detail-body,
+  :root[data-theme="instrument"] .listwrap,
+  :root[data-theme="instrument"] .side-tools,
+  :root[data-theme="instrument"] .dash{background:transparent}
 
   /* near-square geometry; depth from hairlines only — no shadows, no glow */
   :root[data-theme="instrument"] button,
@@ -434,10 +458,22 @@
   :root[data-theme="instrument"] .getting-started::after,
   :root[data-theme="instrument"] .imgcard::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
 
-  /* silkscreen micro-labels — uppercase, wide tracking, quiet ink (§3) */
+  /* silkscreen micro-labels — DIN face, uppercase, wide tracking, quiet ink (§3) */
+  :root[data-theme="instrument"] label,
+  :root[data-theme="instrument"] .sec-title h3,
+  :root[data-theme="instrument"] .dashcard h3,
+  :root[data-theme="instrument"] .stat,
+  :root[data-theme="instrument"] th,
+  :root[data-theme="instrument"] .tab,
+  :root[data-theme="instrument"] .pill,
+  :root[data-theme="instrument"] .cover,
+  :root[data-theme="instrument"] .kindtag,
+  :root[data-theme="instrument"] .toctag,
+  :root[data-theme="instrument"] .expbadge,
+  :root[data-theme="instrument"] .gsr .k{font-family:var(--label)}
   :root[data-theme="instrument"] label{font-size:8.5px;letter-spacing:.17em;color:var(--ink-3)}
   :root[data-theme="instrument"] .sec-title h3,
-  :root[data-theme="instrument"] .dashcard h3{font-size:9px;letter-spacing:.22em;font-weight:600;color:var(--muted)}
+  :root[data-theme="instrument"] .dashcard h3{font-size:9.5px;letter-spacing:.22em;font-weight:600;color:var(--muted)}
   :root[data-theme="instrument"] .stat{border-radius:2px;background:transparent}
   :root[data-theme="instrument"] .stats{gap:1px;background:var(--line);border:1px solid var(--line);padding:1px}
   :root[data-theme="instrument"] .stat{border:none;background:var(--panel);font-size:8.5px;
@@ -450,8 +486,8 @@
 
   /* nav + tabs as instrument controls */
   :root[data-theme="instrument"] .nav{background:transparent;border-color:transparent;padding:0;gap:1px}
-  :root[data-theme="instrument"] .navbtn{font-family:var(--mono);font-size:9px;letter-spacing:.13em;
-    text-transform:uppercase;border-radius:2px;border:1px solid transparent;padding:5px 8px}
+  :root[data-theme="instrument"] .navbtn{font-family:var(--label);font-size:10px;letter-spacing:.15em;
+    text-transform:uppercase;border-radius:2px;border:1px solid transparent;padding:5px 9px}
   :root[data-theme="instrument"] .navbtn.active{background:transparent;color:var(--txt);border-color:var(--rule-strong)}
   :root[data-theme="instrument"] .tab{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
   :root[data-theme="instrument"] .tab .count{font-family:var(--mono);font-variant-numeric:tabular-nums;
@@ -498,6 +534,17 @@
   :root[data-theme="instrument"] .cover.no{border-color:var(--amber-line)}
   /* unknown/absent is outlined, never a fourth status fill (§7) */
   :root[data-theme="instrument"] .nothumb{border-style:dashed;color:var(--ink-3)}
+
+  /* first-run panel reads as a legend/key on the blueprint, not a welcome banner */
+  :root[data-theme="instrument"] .getting-started h1{font-family:var(--label);font-size:13px;
+    font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--txt)}
+  :root[data-theme="instrument"] .gs-lede{font-size:11.5px;color:var(--ink-3)}
+  :root[data-theme="instrument"] .gs-list dt{font-family:var(--label);font-size:10px;font-weight:600;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--accent);min-width:96px}
+  :root[data-theme="instrument"] .gs-list dd{font-size:11.5px;color:var(--ink-3);line-height:1.55}
+  :root[data-theme="instrument"] .gs-list dt:not(:first-of-type),
+  :root[data-theme="instrument"] .gs-list dd:not(:first-of-type){border-top-style:dotted;border-top-color:var(--rule-strong)}
+  :root[data-theme="instrument"] .gs-tip{font-size:10.5px;letter-spacing:.03em;color:var(--ink-3)}
 
   /* dotted row separators, as on plotter paper */
   :root[data-theme="instrument"] .dashitem{border-bottom-style:dotted;border-bottom-color:var(--rule-strong)}
@@ -956,18 +1003,18 @@ function renderToday(){
   const host=document.getElementById("detail");
   if(contentCount()===0){
     host.innerHTML=`<div class="dash"><div class="getting-started">
-      <h1 style="margin-top:0">👋 Welcome to Demand Desk</h1>
-      <p class="muted">Your data file is empty. Here's what each area is for:</p>
-      <ul style="line-height:1.9;font-size:13.5px">
-        <li><b>Demands</b> — every requirement/change: branching subtasks, objects touched, transports, reference facts, post-delivery Tech Spec.</li>
-        <li><b>Debug</b> — breakpoints, findings & a “resume here” note so you're never lost after a weekend.</li>
-        <li><b>Journal</b> — one consolidated rough-notes entry per day.</li>
-        <li><b>Meetings</b> — call &amp; team-meeting notes with action points, linkable to demands.</li>
-        <li><b>Playbook</b> — processes, FAQs, freeze periods, recurring obligations, contact lists.</li>
-        <li><b>🔒 Vault</b> — system credentials (set a master password first).</li>
-      </ul>
-      <p class="muted" style="font-size:12px">Tip: <b>Ctrl+S</b> saves to your .json file · <b>Ctrl+K</b> searches everything · remember to 💾 Save and keep the file on your own drive.</p>
-      <div style="display:flex;gap:8px;margin-top:14px"><button class="primary" id="gsNew">＋ Create your first demand</button><button id="gsJournal">📓 Start today's journal</button></div>
+      <h1>Welcome to Demand Desk</h1>
+      <p class="gs-lede">Your data file is empty. Here's what each area is for.</p>
+      <dl class="gs-list">
+        <dt>Demands</dt><dd>Every requirement/change: branching subtasks, objects touched, transports, reference facts, post-delivery Tech Spec.</dd>
+        <dt>Debug</dt><dd>Breakpoints, findings &amp; a “resume here” note so you're never lost after a weekend.</dd>
+        <dt>Journal</dt><dd>One consolidated rough-notes entry per day, plus your personal action items.</dd>
+        <dt>Meetings</dt><dd>Call &amp; team-meeting notes with action points, linkable to demands.</dd>
+        <dt>Playbook</dt><dd>Processes, FAQs, freeze periods, recurring obligations, contact lists.</dd>
+        <dt>Vault</dt><dd>System credentials — set a master password first.</dd>
+      </dl>
+      <p class="gs-tip"><b>Ctrl+S</b> saves to your .json file · <b>Ctrl+K</b> searches everything · keep the file on your own drive.</p>
+      <div class="gs-acts"><button class="primary" id="gsNew">＋ Create your first demand</button><button id="gsJournal">Start today's journal</button></div>
     </div></div>`;
     host.querySelector("#gsNew").onclick=()=>{view="demands";renderApp();openTaskModal(null);};
     host.querySelector("#gsJournal").onclick=newJournalToday;

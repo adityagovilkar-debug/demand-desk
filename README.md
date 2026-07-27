@@ -27,6 +27,13 @@ is a real state. The pens are fixed for the life of the app:
 | cinnabar `#D93A1E` | Bug · overdue · expired (the "past a limit" pen) |
 | violet `#6B3FA0` | projects · Transports of Copies |
 
+Typography uses three faces, all stock on Windows so nothing needs installing:
+**Bahnschrift** (Windows' DIN — the typeface of engineering drawings) for the
+uppercase silkscreen micro-labels, **Cascadia Mono** for every figure (tabular,
+so numbers don't jitter as they change), and Segoe UI Variable for prose. The
+page sits on a faint engineering dot-grid, with each panel reading as a sheet of
+paper laid on the blueprint.
+
 Your choice is remembered on this browser (a display preference, not part of
 your data file — so it also works on the lock screen) and is applied before the
 first paint, with no flash.
