@@ -58,9 +58,9 @@ Copy `DemandDesk.html` **and** your `.json` data file to any folder, USB stick,
 or OneDrive. Open the HTML there, then **📂 Open** the JSON. Identical anywhere.
 
 ## Workspaces (top nav)
-**Today**, **Demands**, **Debug**, **Journal**, **Meetings**, **Playbook**, and
-**🔒 Vault** — switch between them in the header. The search box (top, or `Ctrl+K`)
-spans all of them.
+**Today**, **Demands**, **Epics**, **Debug**, **Journal**, **Meetings**,
+**Playbook**, and **🔒 Vault** — switch between them in the header. The search box
+(top, or `Ctrl+K`) spans all of them.
 
 ### Today (the cockpit — default landing)
 A cross-cutting dashboard that pulls everything needing attention into one glance:
@@ -196,8 +196,12 @@ above).
 - **Images** — screenshots attached to the demand (see *Images & screenshots*
   below).
 
-The demands sidebar has a **Hide closed demands** checkbox to keep the list
-focused on active work.
+**Filtering the demand list** — the status chips at the top of the sidebar are
+**multi-select**: click *Open* and *In progress* to see both, click a chip again
+to drop it, and **All** clears the selection. A "shown" counter appears in the
+stats row while a selection is active. There are also filters for epic, project,
+theme and requestor, and a **Hide closed demands** checkbox — that checkbox is
+the default convenience, so if you explicitly select *Closed* the chips win.
 
 ### System landscape
 Sync targets are picked from your landscape grid, generated from `H0`–`H6` ×
@@ -232,6 +236,32 @@ and **action points** (text, owner, due date, done).
   the top of the Journal sidebar; items persist across days until you tick them,
   and open items also surface on the Today dashboard. Add with a due date, tick
   to complete, add ↳ outcome notes (📝), clear completed in one click.
+
+### Epics
+Group related demands under one initiative. A **LUCA** epic might hold three
+separate demands — set up a connection, build a report, modify a standard object
+— which stay independent so each keeps **its own transports and go-live target**,
+even when they share a ticket number.
+
+An epic is a real record, not just a label: **code** (e.g. `LUCA`), name,
+description, owner, target date, status (Active / On hold / Delivered / Closed)
+and notes. Its detail view rolls up everything underneath it:
+- **Demands** — status, waiting-on flag, outstanding go-live TRs and due date per
+  demand; click through to any of them.
+- **Go-live readiness across the epic** — one line telling you whether *every*
+  transport on *every* demand has reached its target, and which haven't (with a
+  ❄ warning if the target system is inside a freeze period).
+- **Objects touched** and **Transports** — the full cross-demand list, so "what
+  did LUCA actually change?" is one screen.
+
+Assign demands from the epic (**🔗 Assign demands**) or from the demand's own
+✎ Edit dialog. Deleting an epic never deletes demands — they just become
+un-grouped. Epics also appear on **Today** as they near their target date, and
+as a third dimension in the **▦ Portfolio** rollup.
+
+**Epic vs Project vs Theme** — all three coexist: an *Epic* is a first-class
+record grouping demands; *Project* and *Theme* remain free-text labels for a
+named initiative and a functional area (Travel, TRem, Payroll).
 
 ### Playbook
 Your team's tribal knowledge — the stuff that otherwise dies in old mails and

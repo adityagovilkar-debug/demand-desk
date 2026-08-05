@@ -132,6 +132,19 @@
   aside{width:340px;flex:0 0 340px;background:var(--bg2);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
   .side-tools{padding:10px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
   .filters{display:flex;gap:6px;flex-wrap:wrap}
+  /* multi-select status filter — click to include, click again to drop */
+  .statchips{display:flex;gap:4px;flex-wrap:wrap}
+  .statchip{padding:2px 8px;font-size:11px;font-weight:600;border-radius:20px;background:transparent;
+    border:1px solid var(--line2);color:var(--faint);transition:.12s}
+  .statchip:hover{color:var(--txt);border-color:var(--faint);background:transparent}
+  .statchip.on{background:var(--chip)}
+  .statchip.on.open{color:var(--accent);border-color:var(--accent)}
+  .statchip.on.progress{color:var(--amber);border-color:var(--amber)}
+  .statchip.on.delivered{color:var(--green);border-color:var(--green)}
+  .statchip.on.bug{color:var(--red);border-color:var(--red)}
+  .statchip.on.closed{color:var(--muted);border-color:var(--muted)}
+  .statchip.clear{margin-left:auto}
+  .statchip.clear.on{color:var(--txt);border-color:var(--faint)}
   .filters select{width:auto;flex:1;min-width:0;padding:5px 6px;font-size:12px}
   .stats{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);font-size:11px}
   .stat{flex:1;text-align:center;background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:5px 2px}
@@ -518,6 +531,9 @@
   :root[data-theme="instrument"] .toctag,
   :root[data-theme="instrument"] .cover{background:transparent;font-size:9px;letter-spacing:.11em;
     text-transform:uppercase;font-weight:600;padding:1px 6px}
+  :root[data-theme="instrument"] .statchip{font-family:var(--label);border-radius:2px;font-size:9.5px;
+    letter-spacing:.12em;text-transform:uppercase}
+  :root[data-theme="instrument"] .statchip.on{background:transparent;font-weight:700}
   :root[data-theme="instrument"] .sys{background:transparent;letter-spacing:.06em}
   :root[data-theme="instrument"] .sys .d{letter-spacing:.12em}
   :root[data-theme="instrument"] .chip{background:transparent}
@@ -569,6 +585,7 @@
     <div class="nav">
       <button class="navbtn" data-view="today">Today</button>
       <button class="navbtn" data-view="demands">Demands</button>
+      <button class="navbtn" data-view="epics">Epics</button>
       <button class="navbtn" data-view="debug">Debug</button>
       <button class="navbtn" data-view="journal">Journal</button>
       <button class="navbtn" data-view="meetings">Meetings</button>
@@ -623,11 +640,11 @@ const OBJ_ACTIONS=["Created","Modified","Deleted","Analyzed"];
 const DEF_LANDSCAPES=["H0","H1","H2","H3","H4","H5","H6"];
 const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod / QA",short:"QA"},{d:"1",label:"Production",short:"PRD"}];
 
-let state={version:14,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
+let state={version:15,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false;
 let view="today";
 let activeId=null, activeTab="work", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
-let activeJournalId=null, activeDebugId=null, journalTodos=false, activePlayId=null;
+let activeJournalId=null, activeDebugId=null, journalTodos=false, activePlayId=null, activeEpicId=null;
 let masterPassword=null, pendingEncrypted=null, revealPw={};
 
 const DEBUG_STATUS={active:{label:"Active",cls:"open"},paused:{label:"Paused",cls:"progress"},resolved:{label:"Resolved",cls:"delivered"},abandoned:{label:"Abandoned",cls:"closed"}};
@@ -688,8 +705,8 @@ async function serializeData(){return isEncrypted()?await encryptStateStr(master
 
 /* ---------- persistence ---------- */
 let hadContent=false;
-function contentCount(){return state.tasks.length+state.meetings.length+state.credentials.length+state.journal.length+state.todos.length+state.debug.length+state.images.length+state.playbook.length;}
-function isValidState(s){return s&&typeof s==="object"&&Array.isArray(s.tasks)&&Array.isArray(s.meetings)&&Array.isArray(s.credentials)&&Array.isArray(s.journal)&&Array.isArray(s.todos)&&Array.isArray(s.debug)&&Array.isArray(s.images)&&Array.isArray(s.playbook);}
+function contentCount(){return state.tasks.length+state.epics.length+state.meetings.length+state.credentials.length+state.journal.length+state.todos.length+state.debug.length+state.images.length+state.playbook.length;}
+function isValidState(s){return s&&typeof s==="object"&&Array.isArray(s.tasks)&&Array.isArray(s.epics)&&Array.isArray(s.meetings)&&Array.isArray(s.credentials)&&Array.isArray(s.journal)&&Array.isArray(s.todos)&&Array.isArray(s.debug)&&Array.isArray(s.images)&&Array.isArray(s.playbook);}
 function noteContent(){if(isValidState(state)&&contentCount()>0)hadContent=true;}
 /* defensive guard: returns true if it is SAFE to persist current state */
 function safeToPersist(){return isValidState(state)&&!(hadContent&&contentCount()===0);}
@@ -783,7 +800,7 @@ function updateReconnectUI(){const b=document.getElementById("btnReconnect");if(
 async function forgetHandle(){savedHandle=null;if(useIdb)await idbDel("handle");updateReconnectUI();}
 
 function migrate(d){
-  d.version=14;
+  d.version=15;
   d.settings=d.settings||{};
   d.settings.landscapes=d.settings.landscapes&&d.settings.landscapes.length?d.settings.landscapes:[...DEF_LANDSCAPES];
   d.settings.tiers=d.settings.tiers&&d.settings.tiers.length?d.settings.tiers:DEF_TIERS;
@@ -794,6 +811,11 @@ function migrate(d){
   d.settings.imageExpiryDays=(typeof d.settings.imageExpiryDays==="number")?d.settings.imageExpiryDays:90;
   d.images=(d.images||[]).map(normImage);
   d.playbook=(d.playbook||[]).map(normPlay);
+  d.epics=(d.epics||[]).map(normEpic);
+  /* referential integrity: a demand pointing at a deleted epic falls back to none,
+     so a stale id can never render as a phantom grouping */
+  {const eids=new Set(d.epics.map(e=>e.id));
+   d.tasks.forEach(t=>{if(t.epicId&&!eids.has(t.epicId))t.epicId="";});}
   d.tasks=(d.tasks||[]).map(t=>{
     const tocs=(t.tocs||[]).map(normToc);
     const transports=(t.transports||[]).map(tr=>({
@@ -807,7 +829,7 @@ function migrate(d){
     transports.forEach(tr=>{ if(!tr.tocId && tr.toc){ let toc=tocs.find(x=>x.number===tr.toc); if(!toc){toc=normToc({number:tr.toc}); tocs.push(toc);} tr.tocId=toc.id; } tr.toc=""; });
     return {
     id:t.id||uid(),demandId:t.demandId||"",title:t.title||"(untitled)",type:t.type||"Other",status:t.status||"open",
-    requestor:t.requestor||"",project:t.project||"",theme:t.theme||"",
+    requestor:t.requestor||"",epicId:t.epicId||"",project:t.project||"",theme:t.theme||"",
     waiting:{on:(t.waiting&&t.waiting.on)||"",since:(t.waiting&&t.waiting.since)||""},goliveTarget:t.goliveTarget||"",
     receivedDate:t.receivedDate||"",dueDate:t.dueDate||"",description:t.description||"",notes:t.notes||"",
     timeline:(t.timeline||[]).map(e=>({id:e.id||uid(),ts:e.ts||Date.now(),type:e.type||"note",from:e.from||"",to:e.to||"",note:e.note||""})),
@@ -842,6 +864,16 @@ function normAction(a){return{id:a.id||uid(),text:a.text||"",owner:a.owner||"",d
 function normMeeting(m){return{id:m.id||uid(),date:m.date||todayStr(),title:m.title||"(untitled meeting)",team:m.team||"",attendees:m.attendees||"",body:m.body||"",taskIds:(m.taskIds||[]).slice(),actions:(m.actions||[]).map(normAction),createdAt:m.createdAt||Date.now(),updatedAt:m.updatedAt||Date.now()};}
 function normTodo(x){return{id:x.id||uid(),text:x.text||"",done:!!x.done,due:x.due||"",resolution:x.resolution||"",createdAt:x.createdAt||Date.now(),doneAt:x.doneAt||null};}
 function normImage(x){return{id:x.id||uid(),file:x.file||"",label:x.label||"",expiry:x.expiry||"",links:(x.links||[]).filter(l=>l&&l.kind&&l.id).map(l=>({kind:l.kind,id:l.id})),addedAt:x.addedAt||Date.now()};}
+/* ---------- epics ----------
+   A first-class grouping for related demands (e.g. "LUCA"): a connection, a report
+   and a standard-object change can share one epic while staying separate demands,
+   each with its own transports and go-live target. Distinct from `project`/`theme`,
+   which remain free-text labels. */
+const EPIC_STATUS={active:{label:"Active",cls:"open"},onhold:{label:"On hold",cls:"progress"},
+  delivered:{label:"Delivered",cls:"delivered"},closed:{label:"Closed",cls:"closed"}};
+function normEpic(e){return{id:e.id||uid(),name:e.name||"(untitled epic)",code:e.code||"",description:e.description||"",
+  owner:e.owner||"",targetDate:e.targetDate||"",status:EPIC_STATUS[e.status]?e.status:"active",notes:e.notes||"",
+  createdAt:e.createdAt||Date.now(),updatedAt:e.updatedAt||Date.now()};}
 const PLAY_KINDS={
   process:{label:"Process / How-to",icon:"📋"},
   faq:{label:"FAQ",icon:"❓"},
@@ -903,7 +935,7 @@ async function loadFromText(txt,labelName){
 async function openFile(){if(!supportsFS)return importViaInput();
   try{const[h]=await window.showOpenFilePicker({types:[{description:"Demand Desk data",accept:{"application/json":[".json"]}}]});
     const f=await h.getFile();if(!await loadFromText(await f.text(),h.name))return;
-    fileHandle=h;dirty=false;setFileLabel(h.name);rememberHandle();activeId=activeMeetingId=activeJournalId=activeDebugId=null;meetingRollup=journalTodos=false;backupLocal();renderApp();toast("Opened "+h.name);
+    fileHandle=h;dirty=false;setFileLabel(h.name);rememberHandle();resetActive();backupLocal();renderApp();toast("Opened "+h.name);
   }catch(e){if(e.name!=="AbortError")toast("Couldn't open: "+e.message,true);}}
 function saveGuardOk(action){
   if(!isValidState(state)){toast("Save blocked — data looks corrupted; your file was NOT overwritten.",true);return false;}
@@ -919,7 +951,7 @@ async function saveFile(){if(!supportsFS)return exportDownload();
 function setFileLabel(n){const el=document.getElementById("fileLabel");if(el)el.textContent=n?("— "+n):"";}
 async function exportDownload(){if(!saveGuardOk("download"))return;const b=new Blob([await serializeData()],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="demand-desk-data.json";a.click();URL.revokeObjectURL(a.href);dirty=false;renderSaveState();maybeSnapshot();toast("Downloaded data file"+(isEncrypted()?" 🔒":""));}
 function importViaInput(){const i=document.createElement("input");i.type="file";i.accept=".json,application/json";
-  i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{try{if(!await loadFromText(r.result,f.name))return;dirty=false;activeId=activeMeetingId=activeJournalId=activeDebugId=null;meetingRollup=journalTodos=false;backupLocal();renderApp();toast("Imported "+f.name);}catch(e){toast("Bad file: "+e.message,true);}};r.readAsText(f);};i.click();}
+  i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{try{if(!await loadFromText(r.result,f.name))return;dirty=false;resetActive();backupLocal();renderApp();toast("Imported "+f.name);}catch(e){toast("Bad file: "+e.message,true);}};r.readAsText(f);};i.click();}
 
 /* password prompt — returns Promise<string|null> */
 function promptPassword(title,confirm){
@@ -955,6 +987,24 @@ function toast(m,err){const t=document.getElementById("toast");t.textContent=m;t
 function countSubs(list){let n=0,done=0;(function w(a){a.forEach(s=>{n++;if(s.done)done++;w(s.children);});})(list);return{n,done};}
 function findSub(list,id){for(const s of list){if(s.id===id)return{sub:s,parent:list};const r=findSub(s.children,id);if(r)return r;}return null;}
 function earliestOpenDue(t){let best=null;if(t.dueDate&&t.status!=="delivered"&&t.status!=="closed")best=t.dueDate;(function w(a){a.forEach(s=>{if(!s.done&&s.dueDate&&(!best||s.dueDate<best))best=s.dueDate;w(s.children);});})(t.subtasks);return best;}
+function activeEpic(){return state.epics.find(e=>e.id===activeEpicId);}
+function epicById(id){return id?state.epics.find(e=>e.id===id):null;}
+function tasksForEpic(id){return state.tasks.filter(t=>t.epicId===id);}
+function epicLabel(e){return (e.code?e.code+" · ":"")+e.name;}
+/* Rollup across an epic's demands: status mix, every object and transport it
+   touches, and whether the whole epic has actually reached production. */
+function epicRollup(e){
+  const ts=tasksForEpic(e.id);
+  const counts={};ts.forEach(t=>counts[t.status]=(counts[t.status]||0)+1);
+  const objects=[],trs=[];
+  ts.forEach(t=>{t.objects.forEach(o=>{if(o.name)objects.push({o,t});});
+    t.transports.forEach(tr=>trs.push({tr,t}));});
+  const pending=ts.map(t=>({t,g:golivePending(t)})).filter(x=>x.g);
+  const overdue=ts.filter(t=>{const d=earliestOpenDue(t);return d&&daysUntil(d)<0;});
+  const openTs=ts.filter(t=>!["delivered","closed"].includes(t.status));
+  return {ts,counts,objects,trs,pending,overdue,openTs,
+    done:ts.filter(t=>["delivered","closed"].includes(t.status)).length};
+}
 function meetingsForTask(id){return state.meetings.filter(m=>m.taskIds.includes(id));}
 function journalForTask(id){return state.journal.filter(j=>(j.taskIds||[]).includes(id));}
 function debugForTask(id){return state.debug.filter(s=>s.taskId===id);}
@@ -974,6 +1024,7 @@ function renderApp(){
   else if(view==="debug"){renderDebugSidebar();renderDebugDetail();}
   else if(view==="journal"){renderJournalSidebar();renderJournalDetail();}
   else if(view==="meetings"){renderMeetingSidebar();renderMeetingDetail();}
+  else if(view==="epics"){renderEpicSidebar();renderEpicDetail();}
   else if(view==="playbook"){renderPlaybookSidebar();renderPlaybookDetail();}
   else{renderVault();}
   renderSaveState();
@@ -1007,6 +1058,7 @@ function renderToday(){
       <p class="gs-lede">Your data file is empty. Here's what each area is for.</p>
       <dl class="gs-list">
         <dt>Demands</dt><dd>Every requirement/change: branching subtasks, objects touched, transports, reference facts, post-delivery Tech Spec.</dd>
+        <dt>Epics</dt><dd>Group related demands under one initiative — each keeps its own transports and go-live target.</dd>
         <dt>Debug</dt><dd>Breakpoints, findings &amp; a “resume here” note so you're never lost after a weekend.</dd>
         <dt>Journal</dt><dd>One consolidated rough-notes entry per day, plus your personal action items.</dd>
         <dt>Meetings</dt><dd>Call &amp; team-meeting notes with action points, linkable to demands.</dd>
@@ -1045,6 +1097,11 @@ function renderToday(){
   card("Open action points","☑","",actions.map(({a,m})=>({main:esc(a.text||"(no text)"),sub:`${esc(a.owner||"—")}${m.team?" · "+esc(m.team):""}`,go:()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;renderApp();}})));
   card("My action items","✅","",mytodos.map(x=>({main:esc(x.text||"(no text)"),sub:x.due?(daysUntil(x.due)<0?"⚠ "+x.due:x.due):"",go:()=>{view="journal";journalTodos=true;renderApp();}})));
   card("Expired images — delete for data hygiene","🧹","warn",expiredImages().map(im=>({main:esc(im.label||im.file),sub:"expired "+im.expiry,go:()=>gotoImage(im)})));
+  const epicsDue=state.epics.filter(e=>!["delivered","closed"].includes(e.status)&&e.targetDate&&daysUntil(e.targetDate)<=21)
+    .sort((a,b)=>a.targetDate.localeCompare(b.targetDate));
+  card("Epics nearing target","◆","warn",epicsDue.map(e=>{const r=epicRollup(e),n=daysUntil(e.targetDate);
+    return{main:esc(epicLabel(e)),sub:`${r.done}/${r.ts.length} done · ${n<0?(-n)+"d over":e.targetDate}`,
+      go:()=>{view="epics";activeEpicId=e.id;renderApp();}};}));
   const recDue=state.playbook.filter(p=>p.kind==="recurring"&&p.due&&daysUntil(p.due)<=14).sort((a,b)=>a.due.localeCompare(b.due));
   card("Recurring processes due","🔁","warn",recDue.map(p=>({main:esc(p.title),sub:(daysUntil(p.due)<0?"⚠ overdue · ":"")+p.due,go:()=>{view="playbook";activePlayId=p.id;renderApp();}})));
   const frz=state.playbook.filter(p=>p.kind==="freeze"&&p.from&&p.to&&p.to>=todayStr()&&daysUntil(p.from)<=14).sort((a,b)=>a.from.localeCompare(b.from));
@@ -1067,8 +1124,9 @@ function renderDemandSidebar(){
   const reqs=distinctVals("requestor"),projs=distinctVals("project"),themes=distinctVals("theme");
   document.getElementById("side").innerHTML=`
     <div class="side-tools">
+      <div class="statchips" id="fStatus">${Object.entries(STATUS).map(([k,v])=>`<button class="statchip ${v.cls}" data-s="${k}">${v.label}</button>`).join("")}<button class="statchip clear" id="fStatusAll" title="Show every status">All</button></div>
       <div class="filters">
-        <select id="fStatus"><option value="">All statuses</option>${Object.entries(STATUS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join("")}</select>
+        <select id="fEpic"><option value="">All epics</option><option value="__none">— no epic —</option>${state.epics.slice().sort((a,b)=>epicLabel(a).localeCompare(epicLabel(b))).map(e=>`<option value="${e.id}">◆ ${esc(epicLabel(e))}</option>`).join("")}</select>
         <select id="fSort"><option value="due">Sort: Due</option><option value="received">Sort: Received</option><option value="updated">Sort: Updated</option><option value="demand">Sort: Demand ID</option></select>
       </div>
       <div class="filters">
@@ -1090,9 +1148,19 @@ function renderDemandSidebar(){
   document.getElementById("btnObjIdx").onclick=openObjectIndex;
   document.getElementById("btnPortfolio").onclick=openPortfolio;
   document.getElementById("btnAging").onclick=openAging;
-  const fs=document.getElementById("fStatus"),so=document.getElementById("fSort"),fr=document.getElementById("fReq"),fp=document.getElementById("fProj"),ft=document.getElementById("fTheme");
-  fs.value=renderDemandSidebar._fs||"";so.value=renderDemandSidebar._so||"due";fr.value=renderDemandSidebar._fr||"";fp.value=renderDemandSidebar._fp||"";ft.value=renderDemandSidebar._ft||"";
-  fs.onchange=()=>{renderDemandSidebar._fs=fs.value;renderList();};
+  const so=document.getElementById("fSort"),fr=document.getElementById("fReq"),fp=document.getElementById("fProj"),ft=document.getElementById("fTheme"),fe=document.getElementById("fEpic");
+  so.value=renderDemandSidebar._so||"due";fr.value=renderDemandSidebar._fr||"";fp.value=renderDemandSidebar._fp||"";ft.value=renderDemandSidebar._ft||"";fe.value=renderDemandSidebar._fe||"";
+  /* multi-select statuses: a set, so "open + in progress" is one click each.
+     Empty set = every status (and then the hide-closed convenience applies). */
+  const sel=statusSel();
+  const paint=()=>{document.querySelectorAll("#fStatus .statchip[data-s]").forEach(b=>b.classList.toggle("on",sel.has(b.dataset.s)));
+    document.getElementById("fStatusAll").classList.toggle("on",sel.size===0);};
+  document.querySelectorAll("#fStatus .statchip[data-s]").forEach(b=>b.onclick=()=>{
+    if(sel.has(b.dataset.s))sel.delete(b.dataset.s);else sel.add(b.dataset.s);
+    renderDemandSidebar._fs=[...sel];paint();renderStats();renderList();});
+  document.getElementById("fStatusAll").onclick=()=>{sel.clear();renderDemandSidebar._fs=[];paint();renderStats();renderList();};
+  paint();
+  fe.onchange=()=>{renderDemandSidebar._fe=fe.value;renderList();};
   so.onchange=()=>{renderDemandSidebar._so=so.value;renderList();};
   fr.onchange=()=>{renderDemandSidebar._fr=fr.value;renderList();};
   fp.onchange=()=>{renderDemandSidebar._fp=fp.value;renderList();};
@@ -1102,13 +1170,29 @@ function renderDemandSidebar(){
 }
 function renderStats(){const s={open:0,progress:0,delivered:0,bug:0,closed:0,overdue:0};
   state.tasks.forEach(t=>{s[t.status]=(s[t.status]||0)+1;const d=earliestOpenDue(t);if(d&&daysUntil(d)<0)s.overdue++;});
-  document.getElementById("stats").innerHTML=`<div class="stat op"><b>${s.open+s.progress}</b>active</div><div class="stat ov"><b>${s.overdue}</b>overdue</div><div class="stat"><b>${s.bug}</b>bugs</div><div class="stat dl"><b>${s.delivered}</b>delivered</div>`;}
+  const el=document.getElementById("stats");if(!el)return;
+  const shown=state.tasks.filter(demandFilter()).length,sel=statusSel();
+  el.innerHTML=`<div class="stat op"><b>${s.open+s.progress}</b>active</div><div class="stat ov"><b>${s.overdue}</b>overdue</div><div class="stat"><b>${s.bug}</b>bugs</div><div class="stat dl"><b>${s.delivered}</b>delivered</div>`
+    +(sel.size?`<div class="stat" title="Matching the selected statuses"><b>${shown}</b>shown</div>`:"");}
+/* _fs is an array of statuses (legacy single-string values still load fine) */
+function statusSel(){const v=renderDemandSidebar._fs;
+  return new Set(Array.isArray(v)?v:(v?[v]:[]));}
+function demandFilter(){
+  const sel=statusSel(),fReq=renderDemandSidebar._fr||"",fProj=renderDemandSidebar._fp||"",
+        fTheme=renderDemandSidebar._ft||"",fEpic=renderDemandSidebar._fe||"",hideClosed=!!renderDemandSidebar._hc;
+  return t=>(!fReq||t.requestor===fReq)&&(!fProj||t.project===fProj)&&(!fTheme||t.theme===fTheme)
+    &&(!fEpic||(fEpic==="__none"?!t.epicId:t.epicId===fEpic))
+    /* explicit chips win; hide-closed is only the default convenience */
+    &&(sel.size?sel.has(t.status):!(hideClosed&&t.status==="closed"));
+}
 function renderList(){
-  const fStatus=renderDemandSidebar._fs||"",fSort=renderDemandSidebar._so||"due",fReq=renderDemandSidebar._fr||"",fProj=renderDemandSidebar._fp||"",fTheme=renderDemandSidebar._ft||"",hideClosed=!!renderDemandSidebar._hc;
-  let list=state.tasks.filter(t=>(!fStatus||t.status===fStatus)&&(!fReq||t.requestor===fReq)&&(!fProj||t.project===fProj)&&(!fTheme||t.theme===fTheme)&&!(hideClosed&&t.status==="closed"));
+  const fSort=renderDemandSidebar._so||"due";
+  let list=state.tasks.filter(demandFilter());
   list.sort((a,b)=>{if(fSort==="demand")return(a.demandId||"").localeCompare(b.demandId||"");if(fSort==="received")return(b.receivedDate||"").localeCompare(a.receivedDate||"");if(fSort==="updated")return b.updatedAt-a.updatedAt;const da=earliestOpenDue(a)||"9999",db=earliestOpenDue(b)||"9999";return da.localeCompare(db);});
   const el=document.getElementById("taskList");
-  if(!list.length){el.innerHTML=`<div class="empty">No demands yet.<br>Click <b>＋ New Demand</b>.</div>`;return;}
+  if(!list.length){el.innerHTML=state.tasks.length
+    ?`<div class="empty">No demands match the current filters.<br>Click <b>All</b> above to clear the status filter.</div>`
+    :`<div class="empty">No demands yet.<br>Click <b>＋ New Demand</b>.</div>`;return;}
   el.innerHTML=list.map(t=>{const st=STATUS[t.status],sub=countSubs(t.subtasks),due=earliestOpenDue(t),dc=dueClass(due,t.status);
     const lc=linkedCount(t.id);
     return `<div class="tcard s-${t.status} ${t.id===activeId?"active":""}" data-id="${t.id}">
@@ -1116,6 +1200,7 @@ function renderList(){
       <div class="ttitle">${esc(t.title)}</div>
       <div class="meta"><span class="pill ${st.cls}">${st.label}</span>
         ${isWaiting(t)?`<span class="pill" style="color:var(--amber);border-color:var(--amber-line)">⏳ ${esc(t.waiting.on)}${waitDays(t)!=null?" "+waitDays(t)+"d":""}</span>`:""}
+        ${(()=>{const ep=epicById(t.epicId);return ep?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">◆ ${esc(ep.code||ep.name)}</span>`:"";})()}
         ${t.project?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">▦ ${esc(t.project)}</span>`:""}
         ${t.theme?`<span class="pill type">${esc(t.theme)}</span>`:`<span class="pill type">${esc(t.type)}</span>`}
         ${t.requestor?`<span class="faint">👤 ${esc(t.requestor)}</span>`:""}
@@ -1136,7 +1221,7 @@ function renderDetail(){
       <div class="dh-top"><div style="flex:1">
         <div class="dh-demand">${esc(t.demandId||"— no demand id —")}</div>
         <h1>${esc(t.title)}</h1>
-        <div class="dh-dates"><span>Type: <b>${esc(t.type)}</b></span>${t.project?`<span>Project: <b>▦ ${esc(t.project)}</b></span>`:""}${t.theme?`<span>Theme: <b>${esc(t.theme)}</b></span>`:""}${t.requestor?`<span>Requestor: <b>👤 ${esc(t.requestor)}</b></span>`:""}<span>Received: <b class="mono">${t.receivedDate||"—"}</b></span><span>Due: <b class="mono due ${dueClass(t.dueDate,t.status)}">${t.dueDate||"—"}</b></span>${reworkCount(t)?`<span style="color:var(--red)">↻ ${reworkCount(t)} rework cycle(s)</span>`:""}</div>
+        <div class="dh-dates"><span>Type: <b>${esc(t.type)}</b></span>${(()=>{const ep=epicById(t.epicId);return ep?`<span>Epic: <b class="ep-go" style="color:var(--accent2);cursor:pointer">◆ ${esc(epicLabel(ep))}</b></span>`:"";})()}${t.project?`<span>Project: <b>▦ ${esc(t.project)}</b></span>`:""}${t.theme?`<span>Theme: <b>${esc(t.theme)}</b></span>`:""}${t.requestor?`<span>Requestor: <b>👤 ${esc(t.requestor)}</b></span>`:""}<span>Received: <b class="mono">${t.receivedDate||"—"}</b></span><span>Due: <b class="mono due ${dueClass(t.dueDate,t.status)}">${t.dueDate||"—"}</b></span>${reworkCount(t)?`<span style="color:var(--red)">↻ ${reworkCount(t)} rework cycle(s)</span>`:""}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
         <span class="pill ${st.cls}" style="font-size:12px">${st.label}</span>
@@ -1153,6 +1238,7 @@ function renderDetail(){
         <button class="tab ${activeTab==="history"?"active":""}" data-tab="history">History<span class="count">${(t.timeline||[]).length}</span></button>
       </div>
     </div><div class="detail-body" id="detailBody"></div>`;
+  const epGo=host.querySelector(".ep-go");if(epGo)epGo.onclick=()=>{view="epics";activeEpicId=t.epicId;renderApp();};
   host.querySelector("#btnSpec").onclick=()=>openTechSpec(t);
   host.querySelector("#btnEditTask").onclick=()=>openTaskModal(t);
   host.querySelector("#btnDelTask").onclick=()=>{if(confirm("Delete this demand and all its subtasks, objects and transports?")){state.tasks=state.tasks.filter(x=>x.id!==t.id);state.meetings.forEach(m=>m.taskIds=m.taskIds.filter(id=>id!==t.id));state.journal.forEach(j=>j.taskIds=(j.taskIds||[]).filter(id=>id!==t.id));state.debug.forEach(s=>{if(s.taskId===t.id)s.taskId="";});state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="demand"&&l.id===t.id)));activeId=null;markDirty();renderApp();}};
@@ -1499,6 +1585,7 @@ function buildTechSpecHTML(t){
   return `<h1>Post-Delivery Technical Specification</h1>
    <h2>${esc(t.demandId||"(no demand id)")} — ${esc(t.title)}</h2>
    <p class="meta"><b>Type:</b> ${esc(t.type)} &nbsp;|&nbsp; <b>Status:</b> ${STATUS[t.status].label} &nbsp;|&nbsp; <b>Requestor:</b> ${esc(t.requestor)||"—"} &nbsp;|&nbsp; <b>Received:</b> ${t.receivedDate||"—"} &nbsp;|&nbsp; <b>Due:</b> ${t.dueDate||"—"} &nbsp;|&nbsp; <b>Generated:</b> ${todayStr()}</p>
+   ${(()=>{const e=epicById(t.epicId);return e?`<p class="meta"><b>Epic:</b> ${esc(epicLabel(e))}${e.owner?" ("+esc(e.owner)+")":""}</p>`:"";})()}
    ${(t.project||t.theme)?`<p class="meta"><b>Project:</b> ${esc(t.project)||"—"} &nbsp;|&nbsp; <b>Theme:</b> ${esc(t.theme)||"—"}</p>`:""}
    ${(reworkCount(t)||deliveredDates(t).length)?`<p class="meta"><b>Delivered:</b> ${deliveredDates(t).join(", ")||"—"} &nbsp;|&nbsp; <b>Rework cycles:</b> ${reworkCount(t)}</p>`:""}
    <h3>1. Functional Requirement</h3><p>${esc(t.description)||"<i>none captured</i>"}</p>
@@ -1513,6 +1600,7 @@ function buildTechSpecMarkdown(t){
   const calls=meetingsForTask(t.id);const L=[];
   L.push(`# Post-Delivery Technical Specification`,``,`## ${t.demandId||"(no demand id)"} — ${t.title}`,``);
   L.push(`- **Type:** ${t.type}`,`- **Status:** ${STATUS[t.status].label}`,`- **Requestor:** ${t.requestor||"—"}`);
+  {const e=epicById(t.epicId);if(e)L.push(`- **Epic:** ${epicLabel(e)}${e.owner?" ("+e.owner+")":""}`);}
   if(t.project||t.theme)L.push(`- **Project:** ${t.project||"—"} | **Theme:** ${t.theme||"—"}`);
   L.push(`- **Received:** ${t.receivedDate||"—"} | **Due:** ${t.dueDate||"—"}`);
   if(reworkCount(t)||deliveredDates(t).length)L.push(`- **Delivered:** ${deliveredDates(t).join(", ")||"—"} | **Rework cycles:** ${reworkCount(t)}`);
@@ -1698,6 +1786,7 @@ function openTaskModal(existing){
     <div class="grid2"><div class="field"><label>Demand ID</label><input id="m-demand" class="mono" value="${esc(t.demandId)||""}" placeholder="DMND-12345"></div>
       <div class="field"><label>Type</label><select id="m-type">${TASK_TYPES.map(x=>`<option ${x===t.type?"selected":""}>${x}</option>`).join("")}</select></div></div>
     <div class="field"><label>Title</label><input id="m-title" value="${esc(t.title)||""}" placeholder="Short description of the requirement"></div>
+    <div class="field"><label>◆ Epic</label><select id="m-epic"><option value="">— none —</option>${state.epics.slice().sort((a,b)=>epicLabel(a).localeCompare(epicLabel(b))).map(x=>`<option value="${x.id}" ${t.epicId===x.id?"selected":""}>${esc(epicLabel(x))}</option>`).join("")}</select></div>
     <div class="grid2"><div class="field"><label>Project (initiative)</label><input id="m-proj" list="dl-proj" value="${esc(t.project)||""}" placeholder="e.g. Sailpoint integration"><datalist id="dl-proj">${distinctVals("project").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div>
       <div class="field"><label>Theme (functional area)</label><input id="m-theme" list="dl-theme" value="${esc(t.theme)||""}" placeholder="e.g. Travel, TRem, Payroll"><datalist id="dl-theme">${distinctVals("theme").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div></div>
     <div class="grid2"><div class="field"><label>Requestor / who asked</label><input id="m-req" list="dl-req" value="${esc(t.requestor)||""}" placeholder="Name / team"><datalist id="dl-req">${distinctVals("requestor").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div>
@@ -1714,9 +1803,10 @@ function openTaskModal(existing){
   root.querySelector("#m-title").focus();
   root.querySelector("#m-save").onclick=()=>{const g=id=>root.querySelector(id).value;
     const won=g("#m-wait").trim();let wsince=g("#m-waitsince");if(won&&!wsince)wsince=todayStr();if(!won)wsince="";
-    const data={demandId:g("#m-demand").trim(),type:g("#m-type"),title:g("#m-title").trim()||"(untitled)",requestor:g("#m-req").trim(),project:g("#m-proj").trim(),theme:g("#m-theme").trim(),waiting:{on:won,since:wsince},receivedDate:g("#m-rec"),dueDate:g("#m-due"),status:g("#m-status"),description:g("#m-desc")};
+    const data={demandId:g("#m-demand").trim(),type:g("#m-type"),title:g("#m-title").trim()||"(untitled)",requestor:g("#m-req").trim(),epicId:g("#m-epic"),project:g("#m-proj").trim(),theme:g("#m-theme").trim(),waiting:{on:won,since:wsince},receivedDate:g("#m-rec"),dueDate:g("#m-due"),status:g("#m-status"),description:g("#m-desc")};
     if(existing){if(existing.status!==data.status)logTimeline(existing,"status",existing.status,data.status);Object.assign(existing,data);touch(existing);}
-    else{const nt={id:uid(),...data,goliveTarget:"",notes:"",timeline:[],subtasks:[],objects:[],transports:[],tocs:[],comments:[],reference:[],createdAt:Date.now(),updatedAt:Date.now()};logTimeline(nt,"status","",data.status);state.tasks.push(nt);activeId=nt.id;markDirty();}
+    else{const nt={id:uid(),...data,goliveTarget:"",notes:"",timeline:[],subtasks:[],objects:[],transports:[],tocs:[],comments:[],reference:[],createdAt:Date.now(),updatedAt:Date.now()};
+      if(view==="epics"&&activeEpicId&&!nt.epicId)nt.epicId=activeEpicId;logTimeline(nt,"status","",data.status);state.tasks.push(nt);activeId=nt.id;markDirty();}
     close();renderApp();};
 }
 function distinctVals(field){return [...new Set(state.tasks.map(t=>t[field]).filter(Boolean))].sort();}
@@ -1989,7 +2079,7 @@ function openPortfolio(){
   root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:700px"><h2>▦ Portfolio overview</h2>
     <p class="faint" style="font-size:12px;margin-top:-8px">Everything grouped by initiative or functional area — e.g. all work done for Sailpoint, or every TRem change.</p>
     <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-      <div class="nav" style="background:var(--panel2)"><button class="navbtn active" data-dim="project">By Project</button><button class="navbtn" data-dim="theme">By Theme</button></div>
+      <div class="nav" style="background:var(--panel2)"><button class="navbtn active" data-dim="project">By Project</button><button class="navbtn" data-dim="theme">By Theme</button><button class="navbtn" data-dim="epic">By Epic</button></div>
       <input id="pf-q" placeholder="Filter…" style="flex:1" autocomplete="off">
     </div>
     <div id="pf-list" class="picklist" style="max-height:56vh"></div>
@@ -2001,7 +2091,9 @@ function openPortfolio(){
   const draw=()=>{
     const q=(root.querySelector("#pf-q").value||"").trim().toLowerCase();
     const groups={};
-    state.tasks.forEach(t=>{const key=(t[dim]||"").trim()||"— (none) —";(groups[key]=groups[key]||[]).push(t);});
+    state.tasks.forEach(t=>{
+      const raw=dim==="epic"?(()=>{const e=epicById(t.epicId);return e?epicLabel(e):"";})():t[dim];
+      const key=(raw||"").trim()||"— (none) —";(groups[key]=groups[key]||[]).push(t);});
     let names=Object.keys(groups).sort((a,b)=>a==="— (none) —"?1:b==="— (none) —"?-1:a.localeCompare(b));
     if(q)names=names.filter(n=>n.toLowerCase().includes(q)||groups[n].some(t=>[t.demandId,t.title].join(" ").toLowerCase().includes(q)));
     if(!names.length){listEl.innerHTML=`<div class="pickrow faint">Nothing matches “${esc(q)}”.</div>`;return;}
@@ -2015,7 +2107,12 @@ function openPortfolio(){
         ${(objs.size||trs.size)?`<div style="font-size:11px;margin:6px 0 0 6px" class="faint">${objs.size?"Objects: "+[...objs].map(esc).join(", "):""}${objs.size&&trs.size?" · ":""}${trs.size?"TRs: "+[...trs].map(esc).join(", "):""}</div>`:""}
       </div>`;}).join("");
     listEl.querySelectorAll(".pf-go").forEach(a=>a.onclick=()=>{view="demands";activeId=a.dataset.id;activeTab="work";close();renderApp();});
-    listEl.querySelectorAll(".pf-filter").forEach(a=>a.onclick=()=>{const n=a.dataset.n;if(dim==="project"){renderDemandSidebar._fp=n;renderDemandSidebar._ft="";}else{renderDemandSidebar._ft=n;renderDemandSidebar._fp="";}view="demands";close();renderApp();});
+    listEl.querySelectorAll(".pf-filter").forEach(a=>a.onclick=()=>{const n=a.dataset.n;
+      renderDemandSidebar._fp=renderDemandSidebar._ft=renderDemandSidebar._fe="";
+      if(dim==="project")renderDemandSidebar._fp=n;
+      else if(dim==="theme")renderDemandSidebar._ft=n;
+      else{const e=state.epics.find(x=>epicLabel(x)===n);if(e)renderDemandSidebar._fe=e.id;}
+      view="demands";close();renderApp();});
   };
   root.querySelectorAll(".navbtn[data-dim]").forEach(b=>b.onclick=()=>{dim=b.dataset.dim;root.querySelectorAll(".navbtn[data-dim]").forEach(x=>x.classList.toggle("active",x===b));draw();});
   root.querySelector("#pf-q").oninput=draw;
@@ -2269,6 +2366,143 @@ function renderDebugBody(body,s){
     wa.querySelectorAll("tr[data-id]").forEach(tr=>{const w=s.watches.find(x=>x.id===tr.dataset.id);const bind=(sel,k)=>{const el=tr.querySelector(sel);if(el)el.onchange=e=>{w[k]=e.target.value;touch(s);};};bind(".w-n","name");bind(".w-v","value");bind(".w-w","where");tr.querySelector(".w-x").onclick=()=>{s.watches=s.watches.filter(x=>x.id!==w.id);touch(s);drawWa();};});};
   body.querySelector("#d-addw").onclick=()=>{s.watches.push({id:uid(),name:"",value:"",where:""});touch(s);drawWa();};
   drawWa();
+}
+
+/* ===================== EPICS ===================== */
+function renderEpicSidebar(){
+  document.getElementById("side").innerHTML=`
+    <div class="side-tools">
+      <button class="primary" id="btnNewEpic" style="width:100%">＋ New Epic</button>
+      <select id="eFilter"><option value="">All statuses</option>${Object.entries(EPIC_STATUS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join("")}</select>
+      <p class="faint" style="font-size:11px;margin:0">Group related demands under one initiative — a connection, a report and an object change can share an epic while staying separate demands with their own transports.</p>
+    </div>
+    <div class="stats" id="epicStats"></div>
+    <div class="listwrap" id="epicList"></div>`;
+  document.getElementById("btnNewEpic").onclick=()=>{const e=normEpic({name:"New epic"});state.epics.unshift(e);activeEpicId=e.id;markDirty();renderApp();};
+  const fe=document.getElementById("eFilter");fe.value=renderEpicSidebar._f||"";
+  fe.onchange=()=>{renderEpicSidebar._f=fe.value;renderEpicSidebar();};
+  const openE=state.epics.filter(e=>e.status==="active").length;
+  const unassigned=state.tasks.filter(t=>!t.epicId).length;
+  document.getElementById("epicStats").innerHTML=`<div class="stat op"><b>${state.epics.length}</b>epics</div><div class="stat"><b>${openE}</b>active</div><div class="stat"><b>${unassigned}</b>unassigned</div>`;
+  const el=document.getElementById("epicList");
+  let rows=state.epics.filter(e=>!renderEpicSidebar._f||e.status===renderEpicSidebar._f);
+  rows.sort((a,b)=>(a.status==="closed")-(b.status==="closed")||(a.targetDate||"9999").localeCompare(b.targetDate||"9999")||b.updatedAt-a.updatedAt);
+  if(!rows.length){el.innerHTML=`<div class="empty">No epics${renderEpicSidebar._f?" with that status":""} yet.<br>Create one, then assign demands to it<br>from the demand's Edit dialog.</div>`;return;}
+  el.innerHTML=rows.map(e=>{const st=EPIC_STATUS[e.status],r=epicRollup(e);
+    const dc=dueClass(e.targetDate,e.status==="delivered"||e.status==="closed"?"closed":"open");
+    return `<div class="tcard s-${st.cls} ${e.id===activeEpicId?"active":""}" data-id="${e.id}">
+      <div class="demand">◆ ${esc(e.code||"epic")}</div>
+      <div class="ttitle">${esc(e.name)}</div>
+      <div class="meta"><span class="pill ${st.cls}">${st.label}</span>
+        <span class="faint">${r.ts.length} demand(s)${r.ts.length?` · ${r.done}/${r.ts.length} done`:""}</span>
+        ${r.overdue.length?`<span class="lc-badge" style="color:var(--red)">⚑ ${r.overdue.length}</span>`:""}
+        ${e.targetDate?`<span class="due ${dc}">🎯 ${e.targetDate}</span>`:""}</div></div>`;}).join("");
+  el.querySelectorAll(".tcard").forEach(x=>x.onclick=()=>{activeEpicId=x.dataset.id;renderApp();});
+}
+function renderEpicDetail(){
+  const e=activeEpic(),host=document.getElementById("detail");
+  if(!e){host.innerHTML=nopick("Select an epic, or create one to group<br>related demands under one initiative.");return;}
+  const st=EPIC_STATUS[e.status],r=epicRollup(e);
+  host.innerHTML=`<div class="detail-head"><div class="dh-top"><div style="flex:1">
+      <div class="dh-demand">◆ ${esc(e.code)||"— no code —"}</div>
+      <input id="ep-name" value="${esc(e.name)}" style="font-size:19px;font-weight:650;border-color:transparent;background:transparent;padding:2px 4px;width:100%">
+      <div class="dh-dates" style="margin-top:6px">
+        <span>Code <input id="ep-code" class="mono" value="${esc(e.code)}" placeholder="LUCA" style="width:110px"></span>
+        <span>Owner <input id="ep-owner" value="${esc(e.owner)}" placeholder="Who drives it" style="width:150px"></span>
+        <span>Target <input type="date" id="ep-target" value="${e.targetDate||""}" style="width:150px"></span>
+        <span>Status <select id="ep-status" style="width:130px">${Object.entries(EPIC_STATUS).map(([k,v])=>`<option value="${k}" ${k===e.status?"selected":""}>${v.label}</option>`).join("")}</select></span>
+      </div></div>
+      <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
+        <span class="pill ${st.cls}" style="font-size:12px">${st.label}</span>
+        <div style="display:flex;gap:6px"><button class="sm" id="ep-add">🔗 Assign demands</button><button class="sm danger" id="ep-del">🗑 Delete</button></div>
+      </div></div>
+      <div class="tabs"><button class="tab active">◆ Epic</button></div></div>
+    <div class="detail-body">
+      <div class="grid2" style="margin-bottom:6px">
+        <div class="field"><label>Description</label><textarea id="ep-desc" placeholder="What this initiative delivers, scope, background…">${esc(e.description)}</textarea></div>
+        <div class="field"><label>Notes</label><textarea id="ep-notes" placeholder="Running notes, decisions, links…">${esc(e.notes)}</textarea></div>
+      </div>
+      <div id="ep-links" style="margin-bottom:12px">${linkChips((e.description||"")+" "+(e.notes||""))}</div>
+      <div class="stats" style="margin:0 0 16px">
+        <div class="stat op"><b>${r.ts.length}</b>demands</div>
+        <div class="stat dl"><b>${r.done}</b>done</div>
+        <div class="stat ov"><b>${r.overdue.length}</b>overdue</div>
+        <div class="stat"><b>${r.objects.length}</b>objects</div>
+        <div class="stat"><b>${r.trs.length}</b>transports</div>
+      </div>
+      <div class="sec-title"><h3>Demands in this epic</h3><div class="ln"></div>
+        <span class="faint" style="font-size:12px">${Object.entries(r.counts).map(([k,v])=>`${v} ${STATUS[k].label.toLowerCase()}`).join(" · ")||"none yet"}</span></div>
+      <div id="ep-demands"></div>
+      <div class="sec-title" style="margin-top:20px"><h3>Go-live readiness across the epic</h3><div class="ln"></div></div>
+      <div id="ep-golive"></div>
+      <div class="sec-title" style="margin-top:20px"><h3>Objects touched</h3><div class="ln"></div><span class="faint" style="font-size:12px">${r.objects.length} across the epic</span></div>
+      <div id="ep-objects"></div>
+      <div class="sec-title" style="margin-top:20px"><h3>Transports</h3><div class="ln"></div><span class="faint" style="font-size:12px">${r.trs.length} across the epic</span></div>
+      <div id="ep-trs"></div>
+    </div>`;
+  const on=(sel,ev,fn)=>{const el=host.querySelector(sel);if(el)el[ev]=fn;};
+  on("#ep-name","onchange",ev=>{e.name=ev.target.value||"(untitled epic)";touch(e);renderApp();});
+  on("#ep-code","onchange",ev=>{e.code=ev.target.value.trim();touch(e);renderApp();});
+  on("#ep-owner","onchange",ev=>{e.owner=ev.target.value;touch(e);});
+  on("#ep-target","onchange",ev=>{e.targetDate=ev.target.value;touch(e);renderApp();});
+  on("#ep-status","onchange",ev=>{e.status=ev.target.value;touch(e);renderApp();});
+  on("#ep-desc","onchange",ev=>{e.description=ev.target.value;touch(e);const l=host.querySelector("#ep-links");if(l)l.innerHTML=linkChips((e.description||"")+" "+(e.notes||""));});
+  on("#ep-notes","onchange",ev=>{e.notes=ev.target.value;touch(e);const l=host.querySelector("#ep-links");if(l)l.innerHTML=linkChips((e.description||"")+" "+(e.notes||""));});
+  on("#ep-add","onclick",()=>openAssignDemandsToEpic(e));
+  on("#ep-del","onclick",()=>{
+    const n=tasksForEpic(e.id).length;
+    if(!confirm("Delete this epic?"+(n?"\n\n"+n+" demand(s) will simply become un-grouped — no demand is deleted.":"")))return;
+    state.tasks.forEach(t=>{if(t.epicId===e.id)t.epicId="";});
+    state.epics=state.epics.filter(x=>x.id!==e.id);activeEpicId=null;markDirty();renderApp();});
+  /* demands */
+  const dh=host.querySelector("#ep-demands");
+  if(!r.ts.length)dh.innerHTML=`<div class="faint" style="font-size:12px;padding:4px 2px">No demands yet. Use “🔗 Assign demands”, or set the epic on a demand's ✎ Edit dialog.</div>`;
+  else{
+    const sorted=r.ts.slice().sort((a,b)=>(earliestOpenDue(a)||"9999").localeCompare(earliestOpenDue(b)||"9999"));
+    dh.innerHTML=sorted.map(t=>{const s=STATUS[t.status],due=earliestOpenDue(t),dc=dueClass(due,t.status);
+      const g=golivePending(t);
+      return `<div class="actitem" data-id="${t.id}" style="cursor:pointer">
+        <span class="mono" style="flex:0 0 120px;color:var(--accent);font-size:12px">${esc(t.demandId||"—")}</span>
+        <span class="at" style="cursor:pointer">${esc(t.title)}</span>
+        <span class="pill ${s.cls}" style="flex:0 0 auto">${s.label}</span>
+        ${isWaiting(t)?`<span class="pill" style="flex:0 0 auto;color:var(--amber);border-color:var(--amber-line)">⏳ ${esc(t.waiting.on)}</span>`:""}
+        ${g?`<span class="lc-badge" style="color:var(--amber)">🚚 ${g.missing.length}→${g.target}</span>`:""}
+        <span class="du ${dc}" style="flex:0 0 100px;font-family:var(--mono);font-size:12px">${due||"—"}</span></div>`;}).join("");
+    dh.querySelectorAll(".actitem").forEach(row=>row.onclick=()=>{view="demands";activeId=row.dataset.id;activeTab="work";renderApp();});
+  }
+  /* go-live readiness */
+  const gh=host.querySelector("#ep-golive");
+  if(!r.trs.length)gh.innerHTML=`<div class="faint" style="font-size:12px;padding:4px 2px">No transports recorded on this epic's demands yet.</div>`;
+  else if(!r.pending.length)gh.innerHTML=`<div class="readybar ok"><b style="color:var(--green)">✓ every transport across ${r.ts.length} demand(s) has reached its go-live target</b></div>`;
+  else gh.innerHTML=`<div class="readybar warn"><span><b style="color:var(--amber)">⚠ ${r.pending.length} demand(s) still have transports short of their target:</b></span>
+    <span style="flex-basis:100%;font-size:12px">${r.pending.map(x=>`<span class="mono">${esc(x.t.demandId||x.t.title)}</span> — ${x.g.missing.length} TR(s) → ${x.g.target}${(()=>{const f=freezeFor(x.g.target);return f?` <span style="color:var(--teal)">❄ frozen until ${f.to}</span>`:"";})()}`).join("<br>")}</span></div>`;
+  /* objects */
+  const oh=host.querySelector("#ep-objects");
+  oh.innerHTML=r.objects.length?`<div class="tbl-wrap"><table><thead><tr><th style="width:26%">Object</th><th style="width:18%">Type</th><th style="width:12%">Action</th><th>Demand</th></tr></thead><tbody>
+    ${r.objects.map(({o,t})=>`<tr class="ep-obj" data-id="${t.id}" style="cursor:pointer"><td class="mono">${esc(o.name)}</td><td>${esc(o.type)}</td><td>${esc(o.action)}</td><td class="faint">${esc(t.demandId||t.title)}</td></tr>`).join("")}</tbody></table></div>`
+    :`<div class="faint" style="font-size:12px;padding:4px 2px">No objects logged yet.</div>`;
+  oh.querySelectorAll(".ep-obj").forEach(row=>row.onclick=()=>{view="demands";activeId=row.dataset.id;activeTab="objects";renderApp();});
+  /* transports */
+  const th=host.querySelector("#ep-trs");
+  th.innerHTML=r.trs.length?`<div class="tbl-wrap"><table><thead><tr><th style="width:22%">TR</th><th style="width:14%">Kind</th><th style="width:14%">Origin</th><th>Reached</th><th style="width:22%">Demand</th></tr></thead><tbody>
+    ${r.trs.map(({tr,t})=>{const cl=isCust(tr)&&tr.client?" / "+esc(tr.client):"";
+      return `<tr class="ep-tr" data-id="${t.id}" style="cursor:pointer"><td class="mono">${esc(tr.number||"(unnumbered)")}</td><td>${isCust(tr)?"🗂 Customizing":"🔧 Workbench"}</td><td class="mono">${esc(tr.system)}${cl}</td><td class="mono" style="font-size:11px">${[...reachedSystems(t,tr)].join(", ")||"—"}</td><td class="faint">${esc(t.demandId||t.title)}</td></tr>`;}).join("")}</tbody></table></div>`
+    :`<div class="faint" style="font-size:12px;padding:4px 2px">No transports yet.</div>`;
+  th.querySelectorAll(".ep-tr").forEach(row=>row.onclick=()=>{view="demands";activeId=row.dataset.id;activeTab="transports";renderApp();});
+}
+function openAssignDemandsToEpic(e){
+  const root=document.getElementById("modalRoot");
+  const rows=state.tasks.slice().sort((a,b)=>b.updatedAt-a.updatedAt);
+  root.innerHTML=`<div class="modal-bg"><div class="modal"><h2>Assign demands to “${esc(e.name)}”</h2>
+    <p class="faint" style="font-size:12px;margin-top:-8px">A demand belongs to one epic. Ticking here moves it to this epic; unticking leaves it un-grouped.</p>
+    ${rows.length?`<div class="picklist">${rows.map(t=>{const other=t.epicId&&t.epicId!==e.id?epicById(t.epicId):null;
+      return `<label class="pickrow"><input type="checkbox" data-id="${t.id}" ${t.epicId===e.id?"checked":""} style="width:auto"><div><div class="demand">${esc(t.demandId||"—")}</div><div>${esc(t.title)}</div>${other?`<div class="faint" style="font-size:11px">currently in ◆ ${esc(epicLabel(other))}</div>`:""}</div></label>`;}).join("")}</div>`:`<p class="faint">No demands yet.</p>`}
+    <div class="modal-foot"><button id="m-close" class="primary">Done</button></div></div></div>`;
+  const close=()=>{root.innerHTML="";renderApp();};
+  root.querySelectorAll("input[data-id]").forEach(cb=>cb.onchange=()=>{const t=state.tasks.find(x=>x.id===cb.dataset.id);
+    if(cb.checked)t.epicId=e.id;else if(t.epicId===e.id)t.epicId="";touch(t);});
+  root.querySelector("#m-close").onclick=close;
+  root.querySelector(".modal-bg").onclick=ev=>{if(ev.target===root.querySelector(".modal-bg"))close();};
 }
 
 /* ===================== PLAYBOOK (processes / FAQs / freezes / contacts) ===================== */
@@ -2590,7 +2824,7 @@ function runGlobalSearch(q){
   if(!q){box.classList.add("hide");return;}
   const hits=[];
   state.tasks.forEach(t=>{
-    if([t.demandId,t.title,t.description,t.notes,t.type,t.requestor,t.project,t.theme,(t.comments||[]).map(c=>c.text).join(" ")].join(" ").toLowerCase().includes(q))hits.push({k:"Demand",go:()=>{view="demands";activeId=t.id;activeTab="work";},label:`${t.demandId||"—"} · ${t.title}${t.project?" · ▦ "+t.project:""}${t.theme?" · "+t.theme:""}`});
+    if([t.demandId,t.title,t.description,t.notes,t.type,t.requestor,t.project,t.theme,(()=>{const e=epicById(t.epicId);return e?epicLabel(e):"";})(),(t.comments||[]).map(c=>c.text).join(" ")].join(" ").toLowerCase().includes(q))hits.push({k:"Demand",go:()=>{view="demands";activeId=t.id;activeTab="work";},label:`${t.demandId||"—"} · ${t.title}${t.project?" · ▦ "+t.project:""}${t.theme?" · "+t.theme:""}`});
     t.objects.forEach(o=>{if([o.name,o.type,o.desc].join(" ").toLowerCase().includes(q))hits.push({k:"Object",go:()=>{view="demands";activeId=t.id;activeTab="objects";},label:`${o.name||"(obj)"} — ${o.action} · ${t.demandId||t.title}`});});
     t.transports.forEach(tr=>{
       const toc=tocFor(t,tr);
@@ -2608,6 +2842,9 @@ function runGlobalSearch(q){
   state.credentials.forEach(c=>{if([c.system,c.client,c.label,c.username,c.url,c.notes].join(" ").toLowerCase().includes(q))hits.push({k:"Vault",go:()=>{view="vault";},label:`${c.system||""}${c.client?"/"+c.client:""} ${c.label||""} · ${c.username||""}`.trim()});});
   state.journal.forEach(j=>{if([j.date,j.title,j.body].join(" ").toLowerCase().includes(q))hits.push({k:"Journal",go:()=>{view="journal";journalTodos=false;activeJournalId=j.id;},label:`${j.date}${j.title?" · "+j.title:""}`});});
   state.todos.forEach(x=>{if(((x.text||"")+" "+(x.resolution||"")).toLowerCase().includes(q))hits.push({k:"To-do",go:()=>{view="journal";journalTodos=true;},label:`${x.done?"✓ ":""}${x.text}${x.resolution?" ↳ "+x.resolution:""}${x.due?" · due "+x.due:""}`});});
+  state.epics.forEach(e=>{
+    if([e.name,e.code,e.description,e.owner,e.notes].join(" ").toLowerCase().includes(q))
+      hits.push({k:"Epic",go:()=>{view="epics";activeEpicId=e.id;},label:`◆ ${epicLabel(e)} · ${tasksForEpic(e.id).length} demand(s)`});});
   state.playbook.forEach(p=>{
     const blob=[p.title,p.category,p.body,p.steps.map(s=>s.text).join(" "),p.people.map(x=>x.name+" "+x.role+" "+x.contact).join(" "),(p.systems||[]).join(" ")].join(" ").toLowerCase();
     if(blob.includes(q))hits.push({k:"Playbook",go:()=>{view="playbook";activePlayId=p.id;},label:`${PLAY_KINDS[p.kind].icon} ${p.title}${p.category?" · "+p.category:""}`});});
@@ -2678,7 +2915,7 @@ function openMenu(){
   root.querySelector("#mn-export").onclick=exportDownload;
   root.querySelector("#mn-import").onclick=()=>{close();importViaInput();};
   root.querySelector("#mn-snaps").onclick=()=>{close();openSnapshots();};
-  root.querySelector("#mn-restore").onclick=async()=>{const r=await loadBackup();if(r==="encrypted"){close();await unlockStartup();if(!pendingEncrypted){dirty=true;renderSaveState();}}else if(r){activeId=activeMeetingId=activeJournalId=activeDebugId=null;meetingRollup=journalTodos=false;dirty=true;close();renderApp();toast("Restored from local backup — Ctrl+S to write it to your file");}else toast("No local backup found",true);};
+  root.querySelector("#mn-restore").onclick=async()=>{const r=await loadBackup();if(r==="encrypted"){close();await unlockStartup();if(!pendingEncrypted){dirty=true;renderSaveState();}}else if(r){resetActive();dirty=true;close();renderApp();toast("Restored from local backup — Ctrl+S to write it to your file");}else toast("No local backup found",true);};
   const mf=root.querySelector("#mn-forget");if(mf)mf.onclick=async()=>{await forgetHandle();toast("Forgot the remembered file");close();};
   root.querySelector("#mn-close").onclick=close;
   root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
@@ -2695,12 +2932,14 @@ async function openSnapshots(){
   root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
   root.querySelectorAll(".pickrow[data-i]").forEach(el=>el.onclick=async()=>{const s=arr[+el.dataset.i];
     if(!confirm("Restore snapshot from "+s.date+"? Current unsaved changes will be replaced."))return;
-    try{if(await loadFromText(s.data,"snapshot "+s.date)){activeId=activeMeetingId=activeJournalId=activeDebugId=null;meetingRollup=journalTodos=false;dirty=true;close();renderApp();toast("Restored snapshot "+s.date+" — Ctrl+S to write it to your file");}}
+    try{if(await loadFromText(s.data,"snapshot "+s.date)){resetActive();dirty=true;close();renderApp();toast("Restored snapshot "+s.date+" — Ctrl+S to write it to your file");}}
     catch(e){toast("Snapshot is unreadable: "+e.message,true);}});
 }
 
 /* ===================== WIRE UP ===================== */
 document.querySelectorAll(".navbtn").forEach(b=>b.onclick=()=>{view=b.dataset.view;meetingRollup=false;journalTodos=false;renderApp();});
+/* keep the epic pointer valid across restores/imports */
+function resetActive(){activeId=activeMeetingId=activeJournalId=activeDebugId=activePlayId=activeEpicId=null;meetingRollup=journalTodos=false;}
 document.getElementById("btnOpen").onclick=openFile;
 document.getElementById("btnSave").onclick=saveFile;
 document.getElementById("btnMenu").onclick=openMenu;
@@ -2764,10 +3003,10 @@ async function unlockStartup(){
     catch(e){toast("Wrong password — try again",true);}}
 }
 function seedState(){
-    const tId=uid(), tocId=uid(), objId=uid();
+    const tId=uid(), tocId=uid(), objId=uid(), epId=uid();
     state=migrate({version:10,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{H0:["010"],H1:["030","040","050","150","190","560"]}},
       tasks:[{id:tId,demandId:"DMND-10421",type:"Report change",title:"Add cost-center filter to ZFI_AGEING report",
-        status:"progress",requestor:"Priya (FI)",project:"FI month-end pack",theme:"Finance",waiting:{on:"QA team",since:"2026-06-26"},receivedDate:"2026-06-15",dueDate:"2026-07-03",
+        status:"progress",requestor:"Priya (FI)",epicId:epId,project:"FI month-end pack",theme:"Finance",waiting:{on:"QA team",since:"2026-06-26"},receivedDate:"2026-06-15",dueDate:"2026-07-03",
         description:"Business wants the ageing report selectable by cost center; default = all.",
         notes:"Confirmed selection-screen layout with Priya. Watch the OpenSQL on BSID.",
         timeline:[{id:uid(),ts:Date.now()-86400000*8,type:"status",from:"",to:"open",note:""},{id:uid(),ts:Date.now()-86400000*3,type:"status",from:"open",to:"progress",note:""}],
@@ -2787,6 +3026,9 @@ function seedState(){
       todos:[{id:uid(),text:"Update the deployment checklist wiki",done:false,due:"2026-07-04",createdAt:Date.now(),doneAt:null},{id:uid(),text:"Book leave for August",done:false,due:"",createdAt:Date.now(),doneAt:null}],
       credentials:[{id:uid(),system:"H13",client:"150",label:"SAP GUI",url:"",username:"DEVELOPER",password:"«sample-not-real»",notes:"demo — replace with your own",updatedAt:Date.now()}],
       journal:[{id:uid(),date:todayStr(),title:"Rough notes",body:"- Looked at ZFI_AGEING perf; the BSID select is the bottleneck.\n- Asked Priya re: default cost center -> ALL.\n- TODO: check if FOR ALL ENTRIES table can be empty.",taskIds:[tId]}],
+      epics:[{id:epId,name:"FI ageing & month-end pack",code:"LUCA",owner:"Priya (FI)",targetDate:"2026-09-30",status:"active",
+        description:"Everything the FI month-end close needs from us: the ageing report rework, the cost-center connection, and the standard-object change that feeds it.",
+        notes:"Demands stay separate so each keeps its own transports and go-live target."}],
       playbook:[
         {id:uid(),kind:"process",title:"Request a new system role",category:"Access",pinned:true,
          body:"Roles are requested via the IAM portal, NOT by mailing Basis. Approval goes to your line manager first, then the system owner.",
