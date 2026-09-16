@@ -244,15 +244,49 @@ separate demands — set up a connection, build a report, modify a standard obje
 even when they share a ticket number.
 
 An epic is a real record, not just a label: **code** (e.g. `LUCA`), name,
-description, owner, target date, status (Active / On hold / Delivered / Closed)
-and notes. Its detail view rolls up everything underneath it:
-- **Demands** — status, waiting-on flag, outstanding go-live TRs and due date per
-  demand; click through to any of them.
+description, owner, target date, status (Active / On hold / Delivered / Closed),
+**my role** (*Lead* — I own it, or *Contributor* — I deliver one slice of a bigger
+programme) and **my part / scope**. Epics often run for more than a year, so the
+detail page has four tabs:
+
+**Overview** rolls up everything underneath it:
+- **Demands, grouped by wave** — give each demand a *Wave / phase* in its ✎ Edit
+  dialog (`Wave 1`, `Wave 2`, `Sync to backends`); waves are listed in the order
+  they arrived, each with a done count. Per demand: status, waiting-on flag,
+  received date, outstanding go-live TRs and next due date; click through.
+- A **⏸ Parked** banner when other teams still owe you something and none of your
+  own demands are in flight, with how long you've been waiting.
 - **Go-live readiness across the epic** — one line telling you whether *every*
   transport on *every* demand has reached its target, and which haven't (with a
   ❄ warning if the target system is inside a freeze period).
 - **Objects touched** and **Transports** — the full cross-demand list, so "what
   did LUCA actually change?" is one screen.
+
+**Story** — the epic's whole history on one timeline, grouped by month, newest or
+oldest first. Add your own dated entries (📝 note, 🏁 milestone, ⚖ decision,
+📞 follow-up) and **back-date them freely** to reconstruct what happened last
+year. Woven in automatically: each demand's arrival, status changes and history
+notes, transports reaching each system, meetings and journal entries linked to
+the epic's demands, epic status changes, and when other teams started blocking
+you or delivered. Toggle sources on/off with the chips.
+
+**Waiting on others** — for the months when your part is done but can't be
+transported until another team finishes. One row per dependency: team, what they
+owe, waiting since, expected date, last contact. **📞 Checked in** asks what they
+said (and a new expected date, if any) and writes it into the Story;
+**✓ Delivered** closes it and records how long it took. A row turns *follow-up
+due* when its expected date passes or nobody has chased it for N days (30 by
+default, set per epic) — those appear on **Today** as *Epic follow-ups*, and as
+📞 / ⏸ badges on the epic list.
+
+**Subtasks** — a branching checklist for work that belongs to the initiative, not
+to any single demand (alignment calls, cut-over prep, the hand-over note).
+
+**📄 Epic brief** turns all of it into one document — scope, demands by wave,
+dependencies, go-live readiness, objects, full story — to copy as Markdown,
+download, or print to PDF. Useful for handovers, or when someone asks what
+happened a year ago. Story entries, dependencies and epic subtasks are all in
+Ctrl+K search.
 
 Assign demands from the epic (**🔗 Assign demands**) or from the demand's own
 ✎ Edit dialog. Deleting an epic never deletes demands — they just become

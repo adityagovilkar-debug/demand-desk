@@ -242,6 +242,23 @@
   .cover.no{color:var(--amber);background:var(--cover-no-bg);border:1px solid var(--amber-line)}
   .readybar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;border:1px solid var(--line2);border-radius:8px;padding:9px 12px;margin-bottom:14px;font-size:13px;background:var(--panel)}
   .readybar.ok{border-color:var(--green-line)} .readybar.warn{border-color:var(--amber-line)}
+  /* epics: waves, story, dependencies */
+  .wavehead{display:flex;justify-content:space-between;align-items:baseline;margin:12px 0 4px;padding-bottom:3px;border-bottom:1px dashed var(--line2);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent2)}
+  .wavehead:first-child{margin-top:0}
+  .storyadd{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .storymonth{margin:16px 0 4px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:3px}
+  .storymonth:first-child{margin-top:0}
+  .storyrow{display:flex;gap:10px;align-items:baseline;padding:5px 4px;border-bottom:1px dotted var(--line);font-size:13px}
+  .storyrow .sd{flex:0 0 86px;font-size:11px;color:var(--muted)}
+  .storyrow .si{flex:0 0 20px;text-align:center}
+  .storyrow .st{flex:1;min-width:0;overflow-wrap:anywhere}
+  .storyrow .st.go{cursor:pointer} .storyrow .st.go:hover{color:var(--accent)}
+  .storyrow .sk{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent2);margin-right:2px}
+  .storyrow.src-log{background:var(--chip)}
+  .storyrow.src-dep .st{color:var(--amber)}
+  .storyrow .nact{opacity:0;transition:.12s} .storyrow:hover .nact{opacity:1}
+  .deptbl input{width:100%}
+  .deptbl tr.depdone td{opacity:.62}
   .syncrow{display:flex;gap:7px;align-items:center;margin-bottom:5px}
   .syncrow select{flex:0 0 200px} .syncrow input{flex:0 0 140px}
   .chiprow{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
@@ -502,6 +519,8 @@
   :root[data-theme="instrument"] .navbtn{font-family:var(--label);font-size:10px;letter-spacing:.15em;
     text-transform:uppercase;border-radius:2px;border:1px solid transparent;padding:5px 9px}
   :root[data-theme="instrument"] .navbtn.active{background:transparent;color:var(--txt);border-color:var(--rule-strong)}
+  :root[data-theme="instrument"] .wavehead,:root[data-theme="instrument"] .storymonth,:root[data-theme="instrument"] .storyrow .sk{font-family:var(--label);letter-spacing:.16em}
+  :root[data-theme="instrument"] .storyrow.src-log{background:transparent;box-shadow:inset 2px 0 0 var(--accent2)}
   :root[data-theme="instrument"] .tab{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
   :root[data-theme="instrument"] .tab .count{font-family:var(--mono);font-variant-numeric:tabular-nums;
     background:transparent;border:1px solid var(--rule-strong);border-radius:2px}
@@ -640,7 +659,7 @@ const OBJ_ACTIONS=["Created","Modified","Deleted","Analyzed"];
 const DEF_LANDSCAPES=["H0","H1","H2","H3","H4","H5","H6"];
 const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod / QA",short:"QA"},{d:"1",label:"Production",short:"PRD"}];
 
-let state={version:15,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
+let state={version:16,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false;
 let view="today";
 let activeId=null, activeTab="work", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -800,7 +819,7 @@ function updateReconnectUI(){const b=document.getElementById("btnReconnect");if(
 async function forgetHandle(){savedHandle=null;if(useIdb)await idbDel("handle");updateReconnectUI();}
 
 function migrate(d){
-  d.version=15;
+  d.version=16;
   d.settings=d.settings||{};
   d.settings.landscapes=d.settings.landscapes&&d.settings.landscapes.length?d.settings.landscapes:[...DEF_LANDSCAPES];
   d.settings.tiers=d.settings.tiers&&d.settings.tiers.length?d.settings.tiers:DEF_TIERS;
@@ -815,7 +834,7 @@ function migrate(d){
   /* referential integrity: a demand pointing at a deleted epic falls back to none,
      so a stale id can never render as a phantom grouping */
   {const eids=new Set(d.epics.map(e=>e.id));
-   d.tasks.forEach(t=>{if(t.epicId&&!eids.has(t.epicId))t.epicId="";});}
+   (d.tasks||[]).forEach(t=>{if(t.epicId&&!eids.has(t.epicId))t.epicId="";});}
   d.tasks=(d.tasks||[]).map(t=>{
     const tocs=(t.tocs||[]).map(normToc);
     const transports=(t.transports||[]).map(tr=>({
@@ -829,7 +848,7 @@ function migrate(d){
     transports.forEach(tr=>{ if(!tr.tocId && tr.toc){ let toc=tocs.find(x=>x.number===tr.toc); if(!toc){toc=normToc({number:tr.toc}); tocs.push(toc);} tr.tocId=toc.id; } tr.toc=""; });
     return {
     id:t.id||uid(),demandId:t.demandId||"",title:t.title||"(untitled)",type:t.type||"Other",status:t.status||"open",
-    requestor:t.requestor||"",epicId:t.epicId||"",project:t.project||"",theme:t.theme||"",
+    requestor:t.requestor||"",epicId:t.epicId||"",wave:t.wave||"",project:t.project||"",theme:t.theme||"",
     waiting:{on:(t.waiting&&t.waiting.on)||"",since:(t.waiting&&t.waiting.since)||""},goliveTarget:t.goliveTarget||"",
     receivedDate:t.receivedDate||"",dueDate:t.dueDate||"",description:t.description||"",notes:t.notes||"",
     timeline:(t.timeline||[]).map(e=>({id:e.id||uid(),ts:e.ts||Date.now(),type:e.type||"note",from:e.from||"",to:e.to||"",note:e.note||""})),
@@ -871,9 +890,21 @@ function normImage(x){return{id:x.id||uid(),file:x.file||"",label:x.label||"",ex
    which remain free-text labels. */
 const EPIC_STATUS={active:{label:"Active",cls:"open"},onhold:{label:"On hold",cls:"progress"},
   delivered:{label:"Delivered",cls:"delivered"},closed:{label:"Closed",cls:"closed"}};
+/* The epic's own story entries — dated by hand so a year-old history can be back-filled. */
+const EPIC_LOG={note:{label:"Note",icon:"📝"},milestone:{label:"Milestone",icon:"🏁"},decision:{label:"Decision",icon:"⚖"},followup:{label:"Follow-up",icon:"📞"}};
+/* role: "lead" = I own the whole initiative; "contributor" = I deliver one slice of a
+   larger programme and mostly can't see the rest of it. */
 function normEpic(e){return{id:e.id||uid(),name:e.name||"(untitled epic)",code:e.code||"",description:e.description||"",
   owner:e.owner||"",targetDate:e.targetDate||"",status:EPIC_STATUS[e.status]?e.status:"active",notes:e.notes||"",
+  role:e.role==="contributor"?"contributor":"lead",myScope:e.myScope||"",
+  followDays:(typeof e.followDays==="number"&&e.followDays>0)?e.followDays:30,
+  log:(e.log||[]).map(x=>({id:x.id||uid(),date:x.date||todayStr(),kind:EPIC_LOG[x.kind]?x.kind:"note",text:x.text||""})),
+  deps:(e.deps||[]).map(normDep),
+  subtasks:(e.subtasks||[]).map(normSub),
   createdAt:e.createdAt||Date.now(),updatedAt:e.updatedAt||Date.now()};}
+/* Something another team owes before my part of the epic can move. */
+function normDep(x){return{id:x.id||uid(),team:x.team||"",what:x.what||"",since:x.since||"",expected:x.expected||"",
+  lastCheck:x.lastCheck||"",done:!!x.done,doneDate:x.doneDate||"",note:x.note||""};}
 const PLAY_KINDS={
   process:{label:"Process / How-to",icon:"📋"},
   faq:{label:"FAQ",icon:"❓"},
@@ -1005,6 +1036,52 @@ function epicRollup(e){
   return {ts,counts,objects,trs,pending,overdue,openTs,
     done:ts.filter(t=>["delivered","closed"].includes(t.status)).length};
 }
+/* A dependency needs chasing when its expected date has passed, or nobody has
+   checked in with that team for the epic's follow-up interval. */
+function depFollowDue(e,x){
+  if(x.done)return "";
+  if(x.expected&&daysUntil(x.expected)<0)return "expected date passed";
+  const last=x.lastCheck||x.since;if(!last)return "";
+  const n=-daysUntil(last);return n>=e.followDays?`no contact for ${n}d`:"";
+}
+function epicFollowUps(e){return e.deps.filter(x=>depFollowDue(e,x));}
+/* "Parked" = other teams still owe something, and none of my demands are being worked. */
+function epicParked(e,r){
+  const open=e.deps.filter(x=>!x.done);if(!open.length)return null;
+  r=r||epicRollup(e);
+  const since=open.map(x=>x.since).filter(Boolean).sort()[0]||"";
+  return{parked:!r.ts.some(t=>["open","progress","bug"].includes(t.status)),open:open.length,since,days:since?Math.max(0,-daysUntil(since)):null};
+}
+function waveOrder(ts){ /* waves in the order they were first received */
+  const first={};ts.forEach(t=>{const w=t.wave||"";const d=t.receivedDate||"9999";if(!(w in first)||d<first[w])first[w]=d;});
+  return Object.keys(first).sort((a,b)=>(a==="")-(b==="")||first[a].localeCompare(first[b])||a.localeCompare(b));
+}
+/* Everything that ever happened to an epic, oldest→newest: its own log, each demand's
+   arrival / status changes / notes, transports reaching systems, linked meetings and
+   journal entries, and when other teams started blocking or delivered. */
+function epicStory(e){
+  const ev=[],ts=tasksForEpic(e.id),dl=t=>(t.demandId||t.title)+(t.wave?" ["+t.wave+"]":"");
+  e.log.forEach(x=>ev.push({date:x.date,src:"log",icon:EPIC_LOG[x.kind].icon,kind:x.kind,text:x.text,id:x.id,ord:0}));
+  ts.forEach(t=>{
+    if(t.receivedDate)ev.push({date:t.receivedDate,src:"demand",icon:"📥",text:`${dl(t)} received — ${t.title}`,tid:t.id,ord:1});
+    (t.timeline||[]).forEach(x=>{
+      if(x.type==="status"&&x.from){const to=STATUS[x.to]?STATUS[x.to].label:x.to;
+        ev.push({date:isoTs(x.ts),src:"demand",icon:x.to==="bug"?"↻":"↪",text:`${dl(t)} → ${to}${x.to==="bug"?" (rework)":""}`,tid:t.id,ord:2});}
+      else if(x.type==="note"&&x.note)ev.push({date:isoTs(x.ts),src:"demand",icon:"🗒",text:`${dl(t)}: ${x.note}`,tid:t.id,ord:2});});
+    t.transports.forEach(tr=>tr.syncs.forEach(s=>{if(s.date&&s.system)ev.push({date:s.date,src:"transport",icon:"🚚",text:`${tr.number||"(TR)"} reached ${s.system}${isCust(tr)&&tr.client?"/"+tr.client:""} · ${dl(t)}`,tid:t.id,ord:3});}));
+    (t.tocs||[]).forEach(c=>c.syncs.forEach(s=>{if(s.date&&s.system)ev.push({date:s.date,src:"transport",icon:"📦",text:`ToC ${c.number||"(unnamed)"} reached ${s.system} · ${dl(t)}`,tid:t.id,ord:3});}));
+  });
+  const ids=new Set(ts.map(t=>t.id)),seenM=new Set(),seenJ=new Set();
+  state.meetings.forEach(m=>{if(!seenM.has(m.id)&&m.taskIds.some(id=>ids.has(id))){seenM.add(m.id);
+    ev.push({date:m.date,src:"meeting",icon:"👥",text:`${m.title}${m.team?" · "+m.team:""}`,mid:m.id,ord:4});}});
+  state.journal.forEach(j=>{if(!seenJ.has(j.id)&&(j.taskIds||[]).some(id=>ids.has(id))){seenJ.add(j.id);
+    ev.push({date:j.date,src:"meeting",icon:"📓",text:j.title||(j.body||"").replace(/\s+/g," ").slice(0,80)||"(journal entry)",jid:j.id,ord:4});}});
+  e.deps.forEach(x=>{const who=x.team||"another team";
+    if(x.since)ev.push({date:x.since,src:"dep",icon:"⏸",text:`Started waiting on ${who}${x.what?": "+x.what:""}`,ord:5});
+    if(x.done&&x.doneDate)ev.push({date:x.doneDate,src:"dep",icon:"▶",text:`${who} delivered${x.what?": "+x.what:""}`,ord:5});});
+  return ev.sort((a,b)=>a.date.localeCompare(b.date)||a.ord-b.ord);
+}
+function monthsBetween(a,b){const x=new Date(a+"T00:00:00"),y=new Date(b+"T00:00:00");return (y.getFullYear()-x.getFullYear())*12+y.getMonth()-x.getMonth();}
 function meetingsForTask(id){return state.meetings.filter(m=>m.taskIds.includes(id));}
 function journalForTask(id){return state.journal.filter(j=>(j.taskIds||[]).includes(id));}
 function debugForTask(id){return state.debug.filter(s=>s.taskId===id);}
@@ -1102,6 +1179,9 @@ function renderToday(){
   card("Epics nearing target","◆","warn",epicsDue.map(e=>{const r=epicRollup(e),n=daysUntil(e.targetDate);
     return{main:esc(epicLabel(e)),sub:`${r.done}/${r.ts.length} done · ${n<0?(-n)+"d over":e.targetDate}`,
       go:()=>{view="epics";activeEpicId=e.id;renderApp();}};}));
+  const epicFU=[];state.epics.filter(e=>e.status!=="closed").forEach(e=>e.deps.forEach(x=>{const why=depFollowDue(e,x);if(why)epicFU.push({e,x,why});}));
+  card("Epic follow-ups — chase other teams","📞","warn",epicFU.map(({e,x,why})=>({main:`◆ ${esc(e.code||e.name)} — ${esc(x.team||"(team?)")}`,sub:`${esc(x.what||"")}${x.what?" · ":""}${why}`,
+    go:()=>{view="epics";activeEpicId=e.id;epicTab="deps";renderApp();}})));
   const recDue=state.playbook.filter(p=>p.kind==="recurring"&&p.due&&daysUntil(p.due)<=14).sort((a,b)=>a.due.localeCompare(b.due));
   card("Recurring processes due","🔁","warn",recDue.map(p=>({main:esc(p.title),sub:(daysUntil(p.due)<0?"⚠ overdue · ":"")+p.due,go:()=>{view="playbook";activePlayId=p.id;renderApp();}})));
   const frz=state.playbook.filter(p=>p.kind==="freeze"&&p.from&&p.to&&p.to>=todayStr()&&daysUntil(p.from)<=14).sort((a,b)=>a.from.localeCompare(b.from));
@@ -1200,7 +1280,7 @@ function renderList(){
       <div class="ttitle">${esc(t.title)}</div>
       <div class="meta"><span class="pill ${st.cls}">${st.label}</span>
         ${isWaiting(t)?`<span class="pill" style="color:var(--amber);border-color:var(--amber-line)">⏳ ${esc(t.waiting.on)}${waitDays(t)!=null?" "+waitDays(t)+"d":""}</span>`:""}
-        ${(()=>{const ep=epicById(t.epicId);return ep?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">◆ ${esc(ep.code||ep.name)}</span>`:"";})()}
+        ${(()=>{const ep=epicById(t.epicId);return ep?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">◆ ${esc(ep.code||ep.name)}${t.wave?" · "+esc(t.wave):""}</span>`:"";})()}
         ${t.project?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">▦ ${esc(t.project)}</span>`:""}
         ${t.theme?`<span class="pill type">${esc(t.theme)}</span>`:`<span class="pill type">${esc(t.type)}</span>`}
         ${t.requestor?`<span class="faint">👤 ${esc(t.requestor)}</span>`:""}
@@ -1221,7 +1301,7 @@ function renderDetail(){
       <div class="dh-top"><div style="flex:1">
         <div class="dh-demand">${esc(t.demandId||"— no demand id —")}</div>
         <h1>${esc(t.title)}</h1>
-        <div class="dh-dates"><span>Type: <b>${esc(t.type)}</b></span>${(()=>{const ep=epicById(t.epicId);return ep?`<span>Epic: <b class="ep-go" style="color:var(--accent2);cursor:pointer">◆ ${esc(epicLabel(ep))}</b></span>`:"";})()}${t.project?`<span>Project: <b>▦ ${esc(t.project)}</b></span>`:""}${t.theme?`<span>Theme: <b>${esc(t.theme)}</b></span>`:""}${t.requestor?`<span>Requestor: <b>👤 ${esc(t.requestor)}</b></span>`:""}<span>Received: <b class="mono">${t.receivedDate||"—"}</b></span><span>Due: <b class="mono due ${dueClass(t.dueDate,t.status)}">${t.dueDate||"—"}</b></span>${reworkCount(t)?`<span style="color:var(--red)">↻ ${reworkCount(t)} rework cycle(s)</span>`:""}</div>
+        <div class="dh-dates"><span>Type: <b>${esc(t.type)}</b></span>${(()=>{const ep=epicById(t.epicId);return ep?`<span>Epic: <b class="ep-go" style="color:var(--accent2);cursor:pointer">◆ ${esc(epicLabel(ep))}</b>${t.wave?` · <b>${esc(t.wave)}</b>`:""}</span>`:"";})()}${t.project?`<span>Project: <b>▦ ${esc(t.project)}</b></span>`:""}${t.theme?`<span>Theme: <b>${esc(t.theme)}</b></span>`:""}${t.requestor?`<span>Requestor: <b>👤 ${esc(t.requestor)}</b></span>`:""}<span>Received: <b class="mono">${t.receivedDate||"—"}</b></span><span>Due: <b class="mono due ${dueClass(t.dueDate,t.status)}">${t.dueDate||"—"}</b></span>${reworkCount(t)?`<span style="color:var(--red)">↻ ${reworkCount(t)} rework cycle(s)</span>`:""}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
         <span class="pill ${st.cls}" style="font-size:12px">${st.label}</span>
@@ -1337,7 +1417,8 @@ function drawPinned(host,t,pinned){
     row.querySelector(".p-copy").onclick=()=>{navigator.clipboard.writeText(r.value).then(()=>toast("Copied")).catch(()=>toast("Copy failed",true));};});
 }
 function mkSub(){return{id:uid(),title:"New subtask",done:false,receivedDate:todayStr(),dueDate:"",collapsed:false,comments:[],children:[]};}
-function renderTree(host,t,list){
+function renderTree(host,t,list,rr){
+  rr=rr||renderDetail;
   if(!list.length){if(host.classList.contains("tree"))host.innerHTML=`<div class="faint" style="font-size:12px;padding:4px 2px">No subtasks. Use “＋ Add subtask”, then branch each into sub-subtasks with “＋”.</div>`;return;}
   host.innerHTML="";
   list.forEach(s=>{const node=document.createElement("div");node.className="node";const dc=dueClass(s.dueDate,s.done?"closed":"open");const kids=s.children.length>0;const cc=(s.comments||[]).length;
@@ -1349,15 +1430,15 @@ function renderTree(host,t,list){
       <span class="nact"><button class="ghost sm a-cmt" title="Comments">💬${cc?`<span style="font-size:10px">${cc}</span>`:""}</button><button class="ghost sm a-add" title="Add sub-subtask">＋</button><button class="ghost sm danger a-del" title="Delete">🗑</button></span></div>
       <div class="children ${s.collapsed?"hide":""}"></div>`;
     const row=node.querySelector(".nrow");
-    row.querySelector(".twist").onclick=()=>{if(kids){s.collapsed=!s.collapsed;touch(t);renderDetail();}};
-    row.querySelector(".chk").onclick=()=>{s.done=!s.done;touch(t);renderDetail();};
-    const nm=row.querySelector(".nm");nm.onclick=()=>editInline(nm,s.title,v=>{s.title=v;touch(t);renderDetail();});
+    row.querySelector(".twist").onclick=()=>{if(kids){s.collapsed=!s.collapsed;touch(t);rr();}};
+    row.querySelector(".chk").onclick=()=>{s.done=!s.done;touch(t);rr();};
+    const nm=row.querySelector(".nm");nm.onclick=()=>editInline(nm,s.title,v=>{s.title=v;touch(t);rr();});
     row.querySelector(".d-rec").onchange=e=>{s.receivedDate=e.target.value;touch(t);};
-    row.querySelector(".d-due").onchange=e=>{s.dueDate=e.target.value;touch(t);renderDetail();};
-    row.querySelector(".a-cmt").onclick=()=>openSubCommentsModal(t,s);
-    row.querySelector(".a-add").onclick=()=>{s.children.push(mkSub());s.collapsed=false;touch(t);renderDetail();};
-    row.querySelector(".a-del").onclick=()=>{const r=findSub(t.subtasks,s.id);if(r){r.parent.splice(r.parent.indexOf(s),1);touch(t);renderDetail();}};
-    if(kids&&!s.collapsed)renderTree(node.querySelector(".children"),t,s.children);
+    row.querySelector(".d-due").onchange=e=>{s.dueDate=e.target.value;touch(t);rr();};
+    row.querySelector(".a-cmt").onclick=()=>openSubCommentsModal(t,s,rr);
+    row.querySelector(".a-add").onclick=()=>{s.children.push(mkSub());s.collapsed=false;touch(t);rr();};
+    row.querySelector(".a-del").onclick=()=>{const r=findSub(t.subtasks,s.id);if(r){r.parent.splice(r.parent.indexOf(s),1);touch(t);rr();}};
+    if(kids&&!s.collapsed)renderTree(node.querySelector(".children"),t,s.children,rr);
     host.appendChild(node);});
 }
 function editInline(span,val,cb){const inp=document.createElement("input");inp.value=val;inp.style.width="100%";span.replaceWith(inp);inp.focus();inp.select();const done=()=>cb(inp.value.trim());inp.onblur=done;inp.onkeydown=e=>{if(e.key==="Enter")inp.blur();if(e.key==="Escape"){inp.value=val;inp.blur();}};}
@@ -1375,11 +1456,11 @@ function renderComments(host,owner,onChange){
     el.querySelector(".c-del").onclick=()=>{if(confirm("Delete this comment?")){list.splice(list.indexOf(c),1);onChange();renderComments(host,owner,onChange);}};
     const txt=el.querySelector(".cmt-text");txt.onclick=e=>{if(e.target.tagName==="A")return;editInline(txt,c.text,v=>{if(v){c.text=v;}onChange();renderComments(host,owner,onChange);});};});
 }
-function openSubCommentsModal(t,s){
+function openSubCommentsModal(t,s,rr){
   const root=document.getElementById("modalRoot");
   root.innerHTML=`<div class="modal-bg"><div class="modal"><h2>💬 Comments — ${esc(s.title)}</h2><div id="subC"></div><div class="modal-foot"><button id="m-close" class="primary">Done</button></div></div></div>`;
   renderComments(root.querySelector("#subC"),s,()=>touch(t));
-  const close=()=>{root.innerHTML="";renderDetail();};
+  const close=()=>{root.innerHTML="";(rr||renderDetail)();};
   root.querySelector("#m-close").onclick=close;
   root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
 }
@@ -1786,7 +1867,8 @@ function openTaskModal(existing){
     <div class="grid2"><div class="field"><label>Demand ID</label><input id="m-demand" class="mono" value="${esc(t.demandId)||""}" placeholder="DMND-12345"></div>
       <div class="field"><label>Type</label><select id="m-type">${TASK_TYPES.map(x=>`<option ${x===t.type?"selected":""}>${x}</option>`).join("")}</select></div></div>
     <div class="field"><label>Title</label><input id="m-title" value="${esc(t.title)||""}" placeholder="Short description of the requirement"></div>
-    <div class="field"><label>◆ Epic</label><select id="m-epic"><option value="">— none —</option>${state.epics.slice().sort((a,b)=>epicLabel(a).localeCompare(epicLabel(b))).map(x=>`<option value="${x.id}" ${t.epicId===x.id?"selected":""}>${esc(epicLabel(x))}</option>`).join("")}</select></div>
+    <div class="grid2"><div class="field"><label>◆ Epic</label><select id="m-epic"><option value="">— none —</option>${state.epics.slice().sort((a,b)=>epicLabel(a).localeCompare(epicLabel(b))).map(x=>`<option value="${x.id}" ${(t.epicId||(!existing&&view==="epics"?activeEpicId:""))===x.id?"selected":""}>${esc(epicLabel(x))}</option>`).join("")}</select></div>
+      <div class="field"><label>Wave / phase within the epic</label><input id="m-wave" list="dl-wave" value="${esc(t.wave)||""}" placeholder="e.g. Wave 2, Sync to backends"><datalist id="dl-wave">${distinctVals("wave").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div></div>
     <div class="grid2"><div class="field"><label>Project (initiative)</label><input id="m-proj" list="dl-proj" value="${esc(t.project)||""}" placeholder="e.g. Sailpoint integration"><datalist id="dl-proj">${distinctVals("project").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div>
       <div class="field"><label>Theme (functional area)</label><input id="m-theme" list="dl-theme" value="${esc(t.theme)||""}" placeholder="e.g. Travel, TRem, Payroll"><datalist id="dl-theme">${distinctVals("theme").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div></div>
     <div class="grid2"><div class="field"><label>Requestor / who asked</label><input id="m-req" list="dl-req" value="${esc(t.requestor)||""}" placeholder="Name / team"><datalist id="dl-req">${distinctVals("requestor").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div>
@@ -1803,10 +1885,10 @@ function openTaskModal(existing){
   root.querySelector("#m-title").focus();
   root.querySelector("#m-save").onclick=()=>{const g=id=>root.querySelector(id).value;
     const won=g("#m-wait").trim();let wsince=g("#m-waitsince");if(won&&!wsince)wsince=todayStr();if(!won)wsince="";
-    const data={demandId:g("#m-demand").trim(),type:g("#m-type"),title:g("#m-title").trim()||"(untitled)",requestor:g("#m-req").trim(),epicId:g("#m-epic"),project:g("#m-proj").trim(),theme:g("#m-theme").trim(),waiting:{on:won,since:wsince},receivedDate:g("#m-rec"),dueDate:g("#m-due"),status:g("#m-status"),description:g("#m-desc")};
+    const data={demandId:g("#m-demand").trim(),type:g("#m-type"),title:g("#m-title").trim()||"(untitled)",requestor:g("#m-req").trim(),epicId:g("#m-epic"),wave:g("#m-wave").trim(),project:g("#m-proj").trim(),theme:g("#m-theme").trim(),waiting:{on:won,since:wsince},receivedDate:g("#m-rec"),dueDate:g("#m-due"),status:g("#m-status"),description:g("#m-desc")};
     if(existing){if(existing.status!==data.status)logTimeline(existing,"status",existing.status,data.status);Object.assign(existing,data);touch(existing);}
     else{const nt={id:uid(),...data,goliveTarget:"",notes:"",timeline:[],subtasks:[],objects:[],transports:[],tocs:[],comments:[],reference:[],createdAt:Date.now(),updatedAt:Date.now()};
-      if(view==="epics"&&activeEpicId&&!nt.epicId)nt.epicId=activeEpicId;logTimeline(nt,"status","",data.status);state.tasks.push(nt);activeId=nt.id;markDirty();}
+      logTimeline(nt,"status","",data.status);state.tasks.push(nt);activeId=nt.id;markDirty();}
     close();renderApp();};
 }
 function distinctVals(field){return [...new Set(state.tasks.map(t=>t[field]).filter(Boolean))].sort();}
@@ -2388,7 +2470,7 @@ function renderEpicSidebar(){
   let rows=state.epics.filter(e=>!renderEpicSidebar._f||e.status===renderEpicSidebar._f);
   rows.sort((a,b)=>(a.status==="closed")-(b.status==="closed")||(a.targetDate||"9999").localeCompare(b.targetDate||"9999")||b.updatedAt-a.updatedAt);
   if(!rows.length){el.innerHTML=`<div class="empty">No epics${renderEpicSidebar._f?" with that status":""} yet.<br>Create one, then assign demands to it<br>from the demand's Edit dialog.</div>`;return;}
-  el.innerHTML=rows.map(e=>{const st=EPIC_STATUS[e.status],r=epicRollup(e);
+  el.innerHTML=rows.map(e=>{const st=EPIC_STATUS[e.status],r=epicRollup(e),pk=epicParked(e,r),fu=epicFollowUps(e).length;
     const dc=dueClass(e.targetDate,e.status==="delivered"||e.status==="closed"?"closed":"open");
     return `<div class="tcard s-${st.cls} ${e.id===activeEpicId?"active":""}" data-id="${e.id}">
       <div class="demand">◆ ${esc(e.code||"epic")}</div>
@@ -2396,99 +2478,283 @@ function renderEpicSidebar(){
       <div class="meta"><span class="pill ${st.cls}">${st.label}</span>
         <span class="faint">${r.ts.length} demand(s)${r.ts.length?` · ${r.done}/${r.ts.length} done`:""}</span>
         ${r.overdue.length?`<span class="lc-badge" style="color:var(--red)">⚑ ${r.overdue.length}</span>`:""}
+        ${pk?`<span class="lc-badge" style="color:var(--amber)" title="${pk.parked?"Parked — waiting on other teams":"Open dependencies on other teams"}">${pk.parked?"⏸":"⏳"} ${pk.days!=null?pk.days+"d":pk.open}</span>`:""}
+        ${fu?`<span class="lc-badge" style="color:var(--red)" title="Follow-ups due">📞 ${fu}</span>`:""}
+        ${e.role==="contributor"?`<span class="faint" title="I contribute one slice">◐</span>`:""}
         ${e.targetDate?`<span class="due ${dc}">🎯 ${e.targetDate}</span>`:""}</div></div>`;}).join("");
   el.querySelectorAll(".tcard").forEach(x=>x.onclick=()=>{activeEpicId=x.dataset.id;renderApp();});
 }
+let epicTab="overview", epicStoryOpts={newest:true,off:{}};
+function goEpicDemand(id,tab){view="demands";activeId=id;activeTab=tab||"work";renderApp();}
 function renderEpicDetail(){
   const e=activeEpic(),host=document.getElementById("detail");
   if(!e){host.innerHTML=nopick("Select an epic, or create one to group<br>related demands under one initiative.");return;}
-  const st=EPIC_STATUS[e.status],r=epicRollup(e);
+  const st=EPIC_STATUS[e.status],r=epicRollup(e),pk=epicParked(e,r),fu=epicFollowUps(e);
+  const storyN=epicStory(e).length,openDeps=e.deps.filter(x=>!x.done).length,sub=countSubs(e.subtasks);
   host.innerHTML=`<div class="detail-head"><div class="dh-top"><div style="flex:1">
-      <div class="dh-demand">◆ ${esc(e.code)||"— no code —"}</div>
+      <div class="dh-demand">◆ ${esc(e.code)||"— no code —"} · ${e.role==="contributor"?"I contribute a part":"I lead this"}</div>
       <input id="ep-name" value="${esc(e.name)}" style="font-size:19px;font-weight:650;border-color:transparent;background:transparent;padding:2px 4px;width:100%">
       <div class="dh-dates" style="margin-top:6px">
         <span>Code <input id="ep-code" class="mono" value="${esc(e.code)}" placeholder="LUCA" style="width:110px"></span>
         <span>Owner <input id="ep-owner" value="${esc(e.owner)}" placeholder="Who drives it" style="width:150px"></span>
         <span>Target <input type="date" id="ep-target" value="${e.targetDate||""}" style="width:150px"></span>
         <span>Status <select id="ep-status" style="width:130px">${Object.entries(EPIC_STATUS).map(([k,v])=>`<option value="${k}" ${k===e.status?"selected":""}>${v.label}</option>`).join("")}</select></span>
+        <span>My role <select id="ep-role" style="width:190px"><option value="lead" ${e.role==="lead"?"selected":""}>Lead — I own it</option><option value="contributor" ${e.role==="contributor"?"selected":""}>Contributor — one slice</option></select></span>
       </div></div>
       <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
         <span class="pill ${st.cls}" style="font-size:12px">${st.label}</span>
-        <div style="display:flex;gap:6px"><button class="sm" id="ep-add">🔗 Assign demands</button><button class="sm danger" id="ep-del">🗑 Delete</button></div>
+        ${pk&&pk.parked?`<span class="pill" style="font-size:12px;color:var(--amber);border-color:var(--amber-line)">⏸ Parked${pk.days!=null?" · "+pk.days+"d":""}</span>`:""}
+        <div style="display:flex;gap:6px"><button class="sm" id="ep-brief" title="The whole epic as one document — for handovers, or when someone asks what happened a year ago">📄 Epic brief</button><button class="sm" id="ep-add">🔗 Assign demands</button><button class="sm danger" id="ep-del">🗑 Delete</button></div>
       </div></div>
-      <div class="tabs"><button class="tab active">◆ Epic</button></div></div>
-    <div class="detail-body">
-      <div class="grid2" style="margin-bottom:6px">
-        <div class="field"><label>Description</label><textarea id="ep-desc" placeholder="What this initiative delivers, scope, background…">${esc(e.description)}</textarea></div>
-        <div class="field"><label>Notes</label><textarea id="ep-notes" placeholder="Running notes, decisions, links…">${esc(e.notes)}</textarea></div>
-      </div>
-      <div id="ep-links" style="margin-bottom:12px">${linkChips((e.description||"")+" "+(e.notes||""))}</div>
-      <div class="stats" style="margin:0 0 16px">
-        <div class="stat op"><b>${r.ts.length}</b>demands</div>
-        <div class="stat dl"><b>${r.done}</b>done</div>
-        <div class="stat ov"><b>${r.overdue.length}</b>overdue</div>
-        <div class="stat"><b>${r.objects.length}</b>objects</div>
-        <div class="stat"><b>${r.trs.length}</b>transports</div>
-      </div>
-      <div class="sec-title"><h3>Demands in this epic</h3><div class="ln"></div>
-        <span class="faint" style="font-size:12px">${Object.entries(r.counts).map(([k,v])=>`${v} ${STATUS[k].label.toLowerCase()}`).join(" · ")||"none yet"}</span></div>
-      <div id="ep-demands"></div>
-      <div class="sec-title" style="margin-top:20px"><h3>Go-live readiness across the epic</h3><div class="ln"></div></div>
-      <div id="ep-golive"></div>
-      <div class="sec-title" style="margin-top:20px"><h3>Objects touched</h3><div class="ln"></div><span class="faint" style="font-size:12px">${r.objects.length} across the epic</span></div>
-      <div id="ep-objects"></div>
-      <div class="sec-title" style="margin-top:20px"><h3>Transports</h3><div class="ln"></div><span class="faint" style="font-size:12px">${r.trs.length} across the epic</span></div>
-      <div id="ep-trs"></div>
-    </div>`;
+      <div class="tabs">
+        <button class="tab ${epicTab==="overview"?"active":""}" data-tab="overview">Overview<span class="count">${r.ts.length}</span></button>
+        <button class="tab ${epicTab==="story"?"active":""}" data-tab="story">Story<span class="count">${storyN}</span></button>
+        <button class="tab ${epicTab==="deps"?"active":""}" data-tab="deps">Waiting on others<span class="count">${openDeps}${fu.length?" · 📞"+fu.length:""}</span></button>
+        <button class="tab ${epicTab==="subtasks"?"active":""}" data-tab="subtasks">Subtasks<span class="count">${sub.n}</span></button>
+      </div></div>
+    <div class="detail-body" id="epBody"></div>`;
   const on=(sel,ev,fn)=>{const el=host.querySelector(sel);if(el)el[ev]=fn;};
   on("#ep-name","onchange",ev=>{e.name=ev.target.value||"(untitled epic)";touch(e);renderApp();});
   on("#ep-code","onchange",ev=>{e.code=ev.target.value.trim();touch(e);renderApp();});
   on("#ep-owner","onchange",ev=>{e.owner=ev.target.value;touch(e);});
   on("#ep-target","onchange",ev=>{e.targetDate=ev.target.value;touch(e);renderApp();});
-  on("#ep-status","onchange",ev=>{e.status=ev.target.value;touch(e);renderApp();});
-  on("#ep-desc","onchange",ev=>{e.description=ev.target.value;touch(e);const l=host.querySelector("#ep-links");if(l)l.innerHTML=linkChips((e.description||"")+" "+(e.notes||""));});
-  on("#ep-notes","onchange",ev=>{e.notes=ev.target.value;touch(e);const l=host.querySelector("#ep-links");if(l)l.innerHTML=linkChips((e.description||"")+" "+(e.notes||""));});
+  on("#ep-status","onchange",ev=>{const was=e.status;e.status=ev.target.value;
+    e.log.push({id:uid(),date:todayStr(),kind:"milestone",text:`Epic status: ${EPIC_STATUS[was].label} → ${EPIC_STATUS[e.status].label}`});touch(e);renderApp();});
+  on("#ep-role","onchange",ev=>{e.role=ev.target.value;touch(e);renderEpicDetail();});
+  on("#ep-brief","onclick",()=>openEpicBrief(e));
   on("#ep-add","onclick",()=>openAssignDemandsToEpic(e));
   on("#ep-del","onclick",()=>{
     const n=tasksForEpic(e.id).length;
-    if(!confirm("Delete this epic?"+(n?"\n\n"+n+" demand(s) will simply become un-grouped — no demand is deleted.":"")))return;
+    if(!confirm("Delete this epic?"+(n?"\n\n"+n+" demand(s) will simply become un-grouped — no demand is deleted.":"")+"\n\nThe epic's own story, dependencies and subtasks are deleted with it."))return;
     state.tasks.forEach(t=>{if(t.epicId===e.id)t.epicId="";});
     state.epics=state.epics.filter(x=>x.id!==e.id);activeEpicId=null;markDirty();renderApp();});
-  /* demands */
-  const dh=host.querySelector("#ep-demands");
+  host.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{epicTab=b.dataset.tab;renderEpicDetail();});
+  const body=host.querySelector("#epBody");
+  if(epicTab==="story")renderEpicStory(body,e);
+  else if(epicTab==="deps")renderEpicDeps(body,e);
+  else if(epicTab==="subtasks")renderEpicSubtasks(body,e);
+  else renderEpicOverview(body,e,r,pk,fu);
+}
+function renderEpicOverview(body,e,r,pk,fu){
+  const story=epicStory(e),first=story.length?story[0].date:"";
+  const span=first?monthsBetween(first,todayStr()):0;
+  const waves=waveOrder(r.ts);
+  body.innerHTML=`
+    ${pk?`<div class="readybar ${pk.parked?"warn":""}"><span><b style="color:var(--amber)">${pk.parked?"⏸ Parked — nothing of mine is in flight; ":"⏳ "}waiting on ${pk.open} thing(s) from other teams${pk.days!=null?` for ${pk.days} day(s)`:""}.</b>
+      ${fu.length?` <span style="color:var(--red)">📞 ${fu.length} follow-up(s) due.</span>`:""}</span><button class="sm" id="ep-go-deps" style="margin-left:auto">Open ›</button></div>`:""}
+    <div class="grid2" style="margin-bottom:6px">
+      <div class="field"><label>Description — the epic as a whole</label><textarea id="ep-desc" placeholder="What this initiative delivers, scope, background…">${esc(e.description)}</textarea></div>
+      <div class="field"><label>${e.role==="contributor"?"My part in it":"My scope / approach"}</label><textarea id="ep-scope" placeholder="${e.role==="contributor"?"The slice I deliver, and where it plugs into the bigger picture. What I need from others before I can transport.":"How I'm splitting it into demands and waves."}">${esc(e.myScope)}</textarea></div>
+    </div>
+    <div class="field"><label>Notes</label><textarea id="ep-notes" rows="2" placeholder="Anything else — dated events belong on the Story tab.">${esc(e.notes)}</textarea></div>
+    <div id="ep-links" style="margin-bottom:12px">${linkChips([e.description,e.myScope,e.notes].join(" "))}</div>
+    <div class="stats" style="margin:0 0 16px">
+      <div class="stat op"><b>${r.ts.length}</b>demands</div>
+      <div class="stat dl"><b>${r.done}</b>done</div>
+      <div class="stat ov"><b>${r.overdue.length}</b>overdue</div>
+      <div class="stat"><b>${r.objects.length}</b>objects</div>
+      <div class="stat"><b>${r.trs.length}</b>transports</div>
+      <div class="stat" title="${first?"First event "+first:""}"><b>${first?(span>=1?span+" mo":"&lt;1 mo"):"—"}</b>running</div>
+    </div>
+    <div class="sec-title"><h3>Demands in this epic</h3><div class="ln"></div>
+      <span class="faint" style="font-size:12px">${Object.entries(r.counts).map(([k,v])=>`${v} ${STATUS[k].label.toLowerCase()}`).join(" · ")||"none yet"}</span></div>
+    <div id="ep-demands"></div>
+    <div class="sec-title" style="margin-top:20px"><h3>Go-live readiness across the epic</h3><div class="ln"></div></div>
+    <div id="ep-golive"></div>
+    <div class="sec-title" style="margin-top:20px"><h3>Objects touched</h3><div class="ln"></div><span class="faint" style="font-size:12px">${r.objects.length} across the epic</span></div>
+    <div id="ep-objects"></div>
+    <div class="sec-title" style="margin-top:20px"><h3>Transports</h3><div class="ln"></div><span class="faint" style="font-size:12px">${r.trs.length} across the epic</span></div>
+    <div id="ep-trs"></div>`;
+  const updL=()=>{body.querySelector("#ep-links").innerHTML=linkChips([e.description,e.myScope,e.notes].join(" "));};
+  body.querySelector("#ep-desc").onchange=ev=>{e.description=ev.target.value;touch(e);updL();};
+  body.querySelector("#ep-scope").onchange=ev=>{e.myScope=ev.target.value;touch(e);updL();};
+  body.querySelector("#ep-notes").onchange=ev=>{e.notes=ev.target.value;touch(e);updL();};
+  const gd=body.querySelector("#ep-go-deps");if(gd)gd.onclick=()=>{epicTab="deps";renderEpicDetail();};
+  /* demands, grouped by wave in the order the waves arrived */
+  const dh=body.querySelector("#ep-demands");
   if(!r.ts.length)dh.innerHTML=`<div class="faint" style="font-size:12px;padding:4px 2px">No demands yet. Use “🔗 Assign demands”, or set the epic on a demand's ✎ Edit dialog.</div>`;
   else{
-    const sorted=r.ts.slice().sort((a,b)=>(earliestOpenDue(a)||"9999").localeCompare(earliestOpenDue(b)||"9999"));
-    dh.innerHTML=sorted.map(t=>{const s=STATUS[t.status],due=earliestOpenDue(t),dc=dueClass(due,t.status);
-      const g=golivePending(t);
-      return `<div class="actitem" data-id="${t.id}" style="cursor:pointer">
-        <span class="mono" style="flex:0 0 120px;color:var(--accent);font-size:12px">${esc(t.demandId||"—")}</span>
-        <span class="at" style="cursor:pointer">${esc(t.title)}</span>
-        <span class="pill ${s.cls}" style="flex:0 0 auto">${s.label}</span>
-        ${isWaiting(t)?`<span class="pill" style="flex:0 0 auto;color:var(--amber);border-color:var(--amber-line)">⏳ ${esc(t.waiting.on)}</span>`:""}
-        ${g?`<span class="lc-badge" style="color:var(--amber)">🚚 ${g.missing.length}→${g.target}</span>`:""}
-        <span class="du ${dc}" style="flex:0 0 100px;font-family:var(--mono);font-size:12px">${due||"—"}</span></div>`;}).join("");
-    dh.querySelectorAll(".actitem").forEach(row=>row.onclick=()=>{view="demands";activeId=row.dataset.id;activeTab="work";renderApp();});
+    const grouped=waves.length>1||waves[0]!=="";
+    dh.innerHTML=waves.map(w=>{
+      const rows=r.ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"9999").localeCompare(b.receivedDate||"9999"));
+      const dn=rows.filter(t=>["delivered","closed"].includes(t.status)).length;
+      return (grouped?`<div class="wavehead"><span>${w?esc(w):"— no wave —"}</span><span class="faint">${dn}/${rows.length} done</span></div>`:"")+
+      rows.map(t=>{const s=STATUS[t.status],due=earliestOpenDue(t),dc=dueClass(due,t.status),g=golivePending(t);
+        return `<div class="actitem" data-id="${t.id}" style="cursor:pointer">
+          <span class="mono" style="flex:0 0 120px;color:var(--accent);font-size:12px">${esc(t.demandId||"—")}</span>
+          <span class="at" style="cursor:pointer">${esc(t.title)}</span>
+          <span class="pill ${s.cls}" style="flex:0 0 auto">${s.label}</span>
+          ${isWaiting(t)?`<span class="pill" style="flex:0 0 auto;color:var(--amber);border-color:var(--amber-line)">⏳ ${esc(t.waiting.on)}</span>`:""}
+          ${g?`<span class="lc-badge" style="color:var(--amber)">🚚 ${g.missing.length}→${g.target}</span>`:""}
+          <span class="mono faint" style="flex:0 0 92px;font-size:11px" title="Received">⇩ ${t.receivedDate||"—"}</span>
+          <span class="du ${dc}" style="flex:0 0 92px;font-family:var(--mono);font-size:12px" title="Next due">${due||"—"}</span></div>`;}).join("");}).join("");
+    dh.querySelectorAll(".actitem").forEach(row=>row.onclick=()=>goEpicDemand(row.dataset.id));
   }
-  /* go-live readiness */
-  const gh=host.querySelector("#ep-golive");
+  const gh=body.querySelector("#ep-golive");
   if(!r.trs.length)gh.innerHTML=`<div class="faint" style="font-size:12px;padding:4px 2px">No transports recorded on this epic's demands yet.</div>`;
   else if(!r.pending.length)gh.innerHTML=`<div class="readybar ok"><b style="color:var(--green)">✓ every transport across ${r.ts.length} demand(s) has reached its go-live target</b></div>`;
   else gh.innerHTML=`<div class="readybar warn"><span><b style="color:var(--amber)">⚠ ${r.pending.length} demand(s) still have transports short of their target:</b></span>
     <span style="flex-basis:100%;font-size:12px">${r.pending.map(x=>`<span class="mono">${esc(x.t.demandId||x.t.title)}</span> — ${x.g.missing.length} TR(s) → ${x.g.target}${(()=>{const f=freezeFor(x.g.target);return f?` <span style="color:var(--teal)">❄ frozen until ${f.to}</span>`:"";})()}`).join("<br>")}</span></div>`;
-  /* objects */
-  const oh=host.querySelector("#ep-objects");
+  const oh=body.querySelector("#ep-objects");
   oh.innerHTML=r.objects.length?`<div class="tbl-wrap"><table><thead><tr><th style="width:26%">Object</th><th style="width:18%">Type</th><th style="width:12%">Action</th><th>Demand</th></tr></thead><tbody>
     ${r.objects.map(({o,t})=>`<tr class="ep-obj" data-id="${t.id}" style="cursor:pointer"><td class="mono">${esc(o.name)}</td><td>${esc(o.type)}</td><td>${esc(o.action)}</td><td class="faint">${esc(t.demandId||t.title)}</td></tr>`).join("")}</tbody></table></div>`
     :`<div class="faint" style="font-size:12px;padding:4px 2px">No objects logged yet.</div>`;
-  oh.querySelectorAll(".ep-obj").forEach(row=>row.onclick=()=>{view="demands";activeId=row.dataset.id;activeTab="objects";renderApp();});
-  /* transports */
-  const th=host.querySelector("#ep-trs");
+  oh.querySelectorAll(".ep-obj").forEach(row=>row.onclick=()=>goEpicDemand(row.dataset.id,"objects"));
+  const th=body.querySelector("#ep-trs");
   th.innerHTML=r.trs.length?`<div class="tbl-wrap"><table><thead><tr><th style="width:22%">TR</th><th style="width:14%">Kind</th><th style="width:14%">Origin</th><th>Reached</th><th style="width:22%">Demand</th></tr></thead><tbody>
     ${r.trs.map(({tr,t})=>{const cl=isCust(tr)&&tr.client?" / "+esc(tr.client):"";
       return `<tr class="ep-tr" data-id="${t.id}" style="cursor:pointer"><td class="mono">${esc(tr.number||"(unnumbered)")}</td><td>${isCust(tr)?"🗂 Customizing":"🔧 Workbench"}</td><td class="mono">${esc(tr.system)}${cl}</td><td class="mono" style="font-size:11px">${[...reachedSystems(t,tr)].join(", ")||"—"}</td><td class="faint">${esc(t.demandId||t.title)}</td></tr>`;}).join("")}</tbody></table></div>`
     :`<div class="faint" style="font-size:12px;padding:4px 2px">No transports yet.</div>`;
-  th.querySelectorAll(".ep-tr").forEach(row=>row.onclick=()=>{view="demands";activeId=row.dataset.id;activeTab="transports";renderApp();});
+  th.querySelectorAll(".ep-tr").forEach(row=>row.onclick=()=>goEpicDemand(row.dataset.id,"transports"));
+}
+const STORY_SRC={log:"📝 Epic log",demand:"📥 Demands",transport:"🚚 Transports",meeting:"👥 Meetings & journal",dep:"⏸ Other teams"};
+function renderEpicStory(body,e){
+  const all=epicStory(e),o=epicStoryOpts;
+  let list=all.filter(x=>!o.off[x.src]);if(o.newest)list=list.slice().reverse();
+  const first=all.length?all[0].date:"",last=all.length?all[all.length-1].date:"";
+  body.innerHTML=`
+    <div class="storyadd">
+      <input type="date" id="st-date" value="${todayStr()}" style="width:150px">
+      <select id="st-kind" style="width:140px">${Object.entries(EPIC_LOG).map(([k,v])=>`<option value="${k}">${v.icon} ${v.label}</option>`).join("")}</select>
+      <input id="st-text" placeholder="What happened? e.g. “Wave 2 scope agreed — 4 more endpoints”  (Enter to add)" style="flex:1;min-width:200px">
+      <button class="primary sm" id="st-add">＋ Add to story</button>
+    </div>
+    <p class="faint" style="font-size:11px;margin:4px 0 10px">Back-date entries freely to reconstruct older history. Demand arrivals, status changes, transport moves, linked meetings/journal and other teams' hand-offs are woven in automatically.</p>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+      <div class="statchips" id="st-src">${Object.entries(STORY_SRC).map(([k,v])=>`<button class="statchip open ${o.off[k]?"":"on"}" data-s="${k}">${esc(v)}</button>`).join("")}</div>
+      <button class="sm ghost" id="st-order" style="margin-left:auto">${o.newest?"↓ Newest first":"↑ Oldest first"}</button>
+    </div>
+    ${all.length?`<div class="faint mono" style="font-size:11px;margin-bottom:8px">${all.length} event(s) · ${first} → ${last} · ${monthsBetween(first,last)} month(s)</div>`:""}
+    <div id="st-list"></div>`;
+  const add=()=>{const tx=body.querySelector("#st-text").value.trim();if(!tx)return;
+    e.log.push({id:uid(),date:body.querySelector("#st-date").value||todayStr(),kind:body.querySelector("#st-kind").value,text:tx});
+    touch(e);renderEpicDetail();};
+  body.querySelector("#st-add").onclick=add;
+  body.querySelector("#st-text").onkeydown=ev=>{if(ev.key==="Enter")add();};
+  body.querySelectorAll("#st-src .statchip").forEach(b=>b.onclick=()=>{o.off[b.dataset.s]=!o.off[b.dataset.s];renderEpicStory(body,e);});
+  body.querySelector("#st-order").onclick=()=>{o.newest=!o.newest;renderEpicStory(body,e);};
+  const host=body.querySelector("#st-list");
+  if(!list.length){host.innerHTML=`<div class="faint" style="font-size:12px;padding:4px 2px">${all.length?"Everything is filtered out — switch a source back on above.":"Nothing yet. Add the first entry above, or assign demands to this epic."}</div>`;return;}
+  let html="",month="";
+  list.forEach(x=>{const m=x.date.slice(0,7);
+    if(m!==month){month=m;const d=new Date(m+"-01T00:00:00");html+=`<div class="storymonth">${isNaN(d)?esc(m):d.toLocaleDateString(undefined,{month:"long",year:"numeric"})}</div>`;}
+    const goable=x.tid||x.mid||x.jid;
+    html+=`<div class="storyrow src-${x.src}" ${x.id?`data-log="${x.id}"`:""}>
+      <span class="mono sd">${esc(x.date)}</span><span class="si">${x.icon}</span>
+      <span class="st ${goable?"go":""}" ${x.tid?`data-tid="${x.tid}"`:""}${x.mid?` data-mid="${x.mid}"`:""}${x.jid?` data-jid="${x.jid}"`:""}>${x.src==="log"?`<span class="sk">${EPIC_LOG[x.kind].label}</span> `:""}${linkify(x.text)}</span>
+      ${x.id?`<span class="nact"><button class="ghost sm l-edit" title="Edit">✎</button><button class="ghost sm danger l-del" title="Delete">🗑</button></span>`:""}</div>`;});
+  host.innerHTML=html;
+  host.querySelectorAll(".st.go").forEach(s=>s.onclick=ev=>{if(ev.target.tagName==="A")return;
+    if(s.dataset.tid)goEpicDemand(s.dataset.tid);
+    else if(s.dataset.mid){view="meetings";meetingRollup=false;activeMeetingId=s.dataset.mid;renderApp();}
+    else if(s.dataset.jid){view="journal";journalTodos=false;activeJournalId=s.dataset.jid;renderApp();}});
+  host.querySelectorAll(".storyrow[data-log]").forEach(row=>{const x=e.log.find(l=>l.id===row.dataset.log);if(!x)return;
+    row.querySelector(".l-del").onclick=()=>{if(confirm("Delete this story entry?")){e.log=e.log.filter(l=>l.id!==x.id);touch(e);renderEpicDetail();}};
+    row.querySelector(".l-edit").onclick=()=>{
+      const tx=prompt("Entry text:",x.text);if(tx===null)return;
+      const dt=prompt("Date (YYYY-MM-DD):",x.date);if(dt===null)return;
+      if(tx.trim())x.text=tx.trim();if(/^\d{4}-\d{2}-\d{2}$/.test(dt.trim()))x.date=dt.trim();touch(e);renderEpicDetail();};});
+}
+function renderEpicDeps(body,e){
+  const rows=e.deps.slice().sort((a,b)=>a.done-b.done||(a.since||"9999").localeCompare(b.since||"9999"));
+  body.innerHTML=`
+    <div class="sec-title"><h3>What other teams owe before my part can move</h3><div class="ln"></div><button class="sm" id="dp-add">＋ Add dependency</button></div>
+    <p class="faint" style="font-size:12px;margin:-4px 0 10px">For the months where your work is done but can't be transported until someone else finishes. <b>📞 Checked in</b> records a follow-up in the Story. A row turns due when its expected date passes, or nobody has chased it for
+      <input type="number" id="dp-every" min="1" max="365" value="${e.followDays}" style="width:62px;padding:2px 5px"> days. Due follow-ups also show on <b>Today</b>.</p>
+    <div class="tbl-wrap"><table class="deptbl"><thead><tr><th style="width:17%">Team / person</th><th>What they owe</th><th style="width:130px">Waiting since</th><th style="width:130px">Expected</th><th style="width:110px">Last contact</th><th style="width:215px"></th></tr></thead><tbody id="dp-body"></tbody></table></div>`;
+  body.querySelector("#dp-every").onchange=ev=>{const n=parseInt(ev.target.value,10);if(n>0){e.followDays=n;touch(e);renderEpicDetail();}};
+  body.querySelector("#dp-add").onclick=()=>{e.deps.push(normDep({since:todayStr()}));touch(e);renderEpicDetail();};
+  const tb=body.querySelector("#dp-body");
+  if(!rows.length){tb.innerHTML=`<tr><td colspan="6" class="faint" style="padding:14px;text-align:center">Nothing blocking. Add a row when your part is waiting on another team's build, config or go-live.</td></tr>`;return;}
+  tb.innerHTML=rows.map(x=>{const due=depFollowDue(e,x),last=x.lastCheck||"";
+    const ago=last?-daysUntil(last):null;
+    return `<tr data-id="${x.id}" class="${x.done?"depdone":""}">
+      <td><input class="d-team" value="${esc(x.team)}" placeholder="e.g. LUCA integration team" ${x.done?"disabled":""}></td>
+      <td><input class="d-what" value="${esc(x.what)}" placeholder="e.g. middleware mapping deployed to QA" ${x.done?"disabled":""}>
+        ${due?`<div style="font-size:11px;color:var(--red);margin-top:3px">📞 follow-up due — ${due}</div>`:""}
+        ${x.done?`<div style="font-size:11px;color:var(--green);margin-top:3px">✓ delivered ${x.doneDate}${x.since&&x.doneDate?` · after ${Math.max(0,daysUntil(x.doneDate)-daysUntil(x.since))}d`:""}</div>`:""}</td>
+      <td><input type="date" class="d-since" value="${x.since}" ${x.done?"disabled":""}>${!x.done&&x.since?`<div class="faint mono" style="font-size:11px;margin-top:3px">${Math.max(0,-daysUntil(x.since))}d</div>`:""}</td>
+      <td><input type="date" class="d-exp" value="${x.expected}" ${x.done?"disabled":""}></td>
+      <td class="mono" style="font-size:11px">${last?`${last}<div class="faint">${ago}d ago</div>`:'<span class="faint">never</span>'}</td>
+      <td style="text-align:right;white-space:nowrap">${x.done?`<button class="ghost sm d-reopen">↺ Reopen</button>`:`<button class="sm d-check" title="I chased them — log it">📞 Checked in</button> <button class="sm d-done" title="They delivered">✓ Delivered</button>`} <button class="ghost sm danger d-del">🗑</button></td></tr>`;}).join("");
+  tb.querySelectorAll("tr[data-id]").forEach(tr=>{const x=e.deps.find(d=>d.id===tr.dataset.id);
+    const bind=(sel,k)=>{const el=tr.querySelector(sel);if(el)el.onchange=ev=>{x[k]=ev.target.value;touch(e);renderEpicDetail();};};
+    bind(".d-team","team");bind(".d-what","what");bind(".d-since","since");bind(".d-exp","expected");
+    const who=()=>x.team||"the other team";
+    const ck=tr.querySelector(".d-check");if(ck)ck.onclick=()=>{
+      const note=prompt(`What did ${who()} say? (goes into the epic's Story — blank is fine)`,"");if(note===null)return;
+      const nd=(prompt("New expected date, if they gave one (YYYY-MM-DD). Blank keeps: "+(x.expected||"none"),"")||"").trim();
+      x.lastCheck=todayStr();
+      const newExp=/^\d{4}-\d{2}-\d{2}$/.test(nd);if(newExp)x.expected=nd;
+      e.log.push({id:uid(),date:todayStr(),kind:"followup",text:`Checked with ${who()}${x.what?" re "+x.what:""}${note.trim()?": "+note.trim():""}${newExp?" · now expected "+nd:""}`});
+      touch(e);renderEpicDetail();toast("Follow-up logged in the Story");};
+    const dn=tr.querySelector(".d-done");if(dn)dn.onclick=()=>{x.done=true;x.doneDate=todayStr();x.lastCheck=todayStr();touch(e);
+      if(!e.deps.some(d=>!d.done))toast("Nothing left blocking this epic — time to move your transports?");
+      renderEpicDetail();};
+    const ro=tr.querySelector(".d-reopen");if(ro)ro.onclick=()=>{x.done=false;x.doneDate="";touch(e);renderEpicDetail();};
+    tr.querySelector(".d-del").onclick=()=>{if(confirm("Remove this dependency?")){e.deps=e.deps.filter(d=>d.id!==x.id);touch(e);renderEpicDetail();}};});
+}
+function renderEpicSubtasks(body,e){
+  body.innerHTML=`<div class="sec-title"><h3>Epic-level subtasks</h3><div class="ln"></div><button class="sm" id="es-add">＋ Add subtask</button></div>
+    <p class="faint" style="font-size:12px;margin:-4px 0 10px">Work that belongs to the initiative rather than any one demand — alignment calls, cut-over prep, the hand-over note, “raise the Wave 3 demand”.</p>
+    <div class="tree" id="es-tree"></div>`;
+  const rr=()=>renderEpicDetail();
+  body.querySelector("#es-add").onclick=()=>{e.subtasks.push(mkSub());touch(e);rr();};
+  renderTree(body.querySelector("#es-tree"),e,e.subtasks,rr);
+}
+/* ---------- epic brief: the whole initiative as one document ---------- */
+function epicBriefData(e){const r=epicRollup(e);return{r,pk:epicParked(e,r),story:epicStory(e),waves:waveOrder(r.ts)};}
+function buildEpicBriefHTML(e){
+  const {r,pk,story,waves}=epicBriefData(e);
+  const subs=list=>list.length?`<ul>${list.map(s=>`<li>${s.done?"✓ ":"☐ "}${esc(s.title)}${s.dueDate?` <i>(due ${s.dueDate})</i>`:""}${subs(s.children)}</li>`).join("")}</ul>`:"";
+  return `<h1>◆ ${esc(epicLabel(e))}</h1>
+    <p><b>Status:</b> ${EPIC_STATUS[e.status].label} · <b>My role:</b> ${e.role==="contributor"?"Contributor (one slice)":"Lead"}${e.owner?` · <b>Owner:</b> ${esc(e.owner)}`:""}${e.targetDate?` · <b>Target:</b> ${e.targetDate}`:""}${story.length?` · <b>Running since:</b> ${story[0].date}`:""}</p>
+    ${pk?`<p><b>${pk.parked?"⏸ Parked":"⏳ Waiting"}:</b> ${pk.open} open dependency(ies)${pk.days!=null?`, oldest ${pk.days} day(s)`:""}.</p>`:""}
+    ${e.description?`<h3>Description</h3><p style="white-space:pre-wrap">${esc(e.description)}</p>`:""}
+    ${e.myScope?`<h3>${e.role==="contributor"?"My part":"Scope / approach"}</h3><p style="white-space:pre-wrap">${esc(e.myScope)}</p>`:""}
+    <h3>Demands (${r.ts.length} · ${r.done} done)</h3>
+    ${r.ts.length?waves.map(w=>`${waves.length>1||w?`<h4>${w?esc(w):"No wave"}</h4>`:""}<table><tr><th>Demand</th><th>Title</th><th>Status</th><th>Received</th><th>Transports</th></tr>${r.ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"").localeCompare(b.receivedDate||"")).map(t=>`<tr><td>${esc(t.demandId||"—")}</td><td>${esc(t.title)}</td><td>${STATUS[t.status].label}</td><td>${t.receivedDate||"—"}</td><td>${t.transports.map(tr=>esc(tr.number||"(TR)")).join(", ")||"—"}</td></tr>`).join("")}</table>`).join(""):"<p><i>none</i></p>"}
+    ${e.deps.length?`<h3>Dependencies on other teams</h3><table><tr><th>Team</th><th>What</th><th>Since</th><th>Expected</th><th>State</th></tr>${e.deps.map(x=>`<tr><td>${esc(x.team)}</td><td>${esc(x.what)}</td><td>${x.since||"—"}</td><td>${x.expected||"—"}</td><td>${x.done?"✓ delivered "+x.doneDate:(x.lastCheck?"open · last chased "+x.lastCheck:"open")}</td></tr>`).join("")}</table>`:""}
+    <h3>Go-live readiness</h3><p>${!r.trs.length?"No transports recorded.":!r.pending.length?"✓ Every transport has reached its go-live target.":r.pending.map(x=>`${esc(x.t.demandId||x.t.title)} — ${x.g.missing.length} TR(s) not yet in ${x.g.target}`).join("<br>")}</p>
+    ${e.subtasks.length?`<h3>Epic subtasks</h3>${subs(e.subtasks)}`:""}
+    ${r.objects.length?`<h3>Objects touched</h3><table><tr><th>Object</th><th>Type</th><th>Action</th><th>Demand</th></tr>${r.objects.map(({o,t})=>`<tr><td>${esc(o.name)}</td><td>${esc(o.type)}</td><td>${esc(o.action)}</td><td>${esc(t.demandId||t.title)}</td></tr>`).join("")}</table>`:""}
+    <h3>Story</h3>${story.length?`<table><tr><th style="width:95px">Date</th><th>Event</th></tr>${story.map(x=>`<tr><td>${esc(x.date)}</td><td>${x.icon} ${x.src==="log"?`<b>${EPIC_LOG[x.kind].label}:</b> `:""}${esc(x.text)}</td></tr>`).join("")}</table>`:"<p><i>nothing recorded</i></p>"}
+    ${e.notes?`<h3>Notes</h3><p style="white-space:pre-wrap">${esc(e.notes)}</p>`:""}
+    <p style="color:#888;font-size:11px">Generated by Demand Desk on ${todayStr()}</p>`;
+}
+function buildEpicBriefMarkdown(e){
+  const {r,pk,story,waves}=epicBriefData(e),L=[];
+  const subs=(list,d)=>list.forEach(s=>{L.push(`${"  ".repeat(d)}- [${s.done?"x":" "}] ${s.title}${s.dueDate?` (due ${s.dueDate})`:""}`);subs(s.children,d+1);});
+  L.push(`# ◆ ${epicLabel(e)}`,``,`**Status:** ${EPIC_STATUS[e.status].label} · **My role:** ${e.role==="contributor"?"Contributor (one slice)":"Lead"}${e.owner?` · **Owner:** ${e.owner}`:""}${e.targetDate?` · **Target:** ${e.targetDate}`:""}${story.length?` · **Running since:** ${story[0].date}`:""}`,``);
+  if(pk)L.push(`**${pk.parked?"⏸ Parked":"⏳ Waiting"}:** ${pk.open} open dependency(ies)${pk.days!=null?`, oldest ${pk.days} day(s)`:""}.`,``);
+  if(e.description)L.push(`## Description`,e.description,``);
+  if(e.myScope)L.push(`## ${e.role==="contributor"?"My part":"Scope / approach"}`,e.myScope,``);
+  L.push(`## Demands (${r.ts.length} · ${r.done} done)`);
+  waves.forEach(w=>{if(waves.length>1||w)L.push(``,`### ${w||"No wave"}`);
+    L.push(`| Demand | Title | Status | Received | Transports |`,`|---|---|---|---|---|`);
+    r.ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"").localeCompare(b.receivedDate||"")).forEach(t=>L.push(`| ${t.demandId||"—"} | ${t.title} | ${STATUS[t.status].label} | ${t.receivedDate||"—"} | ${t.transports.map(tr=>tr.number||"(TR)").join(", ")||"—"} |`));});
+  L.push(``);
+  if(e.deps.length){L.push(`## Dependencies on other teams`,`| Team | What | Since | Expected | State |`,`|---|---|---|---|---|`);
+    e.deps.forEach(x=>L.push(`| ${x.team} | ${x.what} | ${x.since||"—"} | ${x.expected||"—"} | ${x.done?"delivered "+x.doneDate:(x.lastCheck?"open · last chased "+x.lastCheck:"open")} |`));L.push(``);}
+  L.push(`## Go-live readiness`,!r.trs.length?"No transports recorded.":!r.pending.length?"✓ Every transport has reached its go-live target.":r.pending.map(x=>`- ${x.t.demandId||x.t.title} — ${x.g.missing.length} TR(s) not yet in ${x.g.target}`).join("\n"),``);
+  if(e.subtasks.length){L.push(`## Epic subtasks`);subs(e.subtasks,0);L.push(``);}
+  L.push(`## Story`);
+  if(story.length)story.forEach(x=>L.push(`- **${x.date}** ${x.icon} ${x.src==="log"?EPIC_LOG[x.kind].label+": ":""}${x.text}`));else L.push("_nothing recorded_");
+  if(e.notes)L.push(``,`## Notes`,e.notes);
+  return L.join("\n");
+}
+function openEpicBrief(e){
+  const root=document.getElementById("modalRoot");
+  root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:820px"><h2>📄 Epic brief — ${esc(epicLabel(e))}</h2>
+    <p class="faint" style="font-size:12px;margin-top:-8px">The whole initiative in one document: scope, demands by wave, who you're waiting on, and the full story.</p>
+    <div class="specpaper specdoc">${buildEpicBriefHTML(e)}</div>
+    <div class="modal-foot"><button id="eb-copy">📋 Copy Markdown</button><button id="eb-md">⬇ Download .md</button><button id="eb-print">🖨 Print / Save PDF</button><button id="eb-close" class="primary">Close</button></div></div></div>`;
+  const close=()=>root.innerHTML="";
+  root.querySelector("#eb-close").onclick=close;
+  root.querySelector(".modal-bg").onclick=ev=>{if(ev.target===root.querySelector(".modal-bg"))close();};
+  root.querySelector("#eb-copy").onclick=()=>{navigator.clipboard.writeText(buildEpicBriefMarkdown(e)).then(()=>toast("Markdown copied to clipboard")).catch(()=>toast("Copy failed",true));};
+  root.querySelector("#eb-md").onclick=()=>{const b=new Blob([buildEpicBriefMarkdown(e)],{type:"text/markdown"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="epic-"+(e.code||e.name).replace(/[^\w.-]+/g,"_")+"-"+todayStr()+".md";a.click();URL.revokeObjectURL(a.href);};
+  root.querySelector("#eb-print").onclick=()=>{const pa=document.getElementById("printArea");pa.className="specdoc";pa.innerHTML=buildEpicBriefHTML(e);window.print();};
 }
 function openAssignDemandsToEpic(e){
   const root=document.getElementById("modalRoot");
@@ -2824,7 +3090,7 @@ function runGlobalSearch(q){
   if(!q){box.classList.add("hide");return;}
   const hits=[];
   state.tasks.forEach(t=>{
-    if([t.demandId,t.title,t.description,t.notes,t.type,t.requestor,t.project,t.theme,(()=>{const e=epicById(t.epicId);return e?epicLabel(e):"";})(),(t.comments||[]).map(c=>c.text).join(" ")].join(" ").toLowerCase().includes(q))hits.push({k:"Demand",go:()=>{view="demands";activeId=t.id;activeTab="work";},label:`${t.demandId||"—"} · ${t.title}${t.project?" · ▦ "+t.project:""}${t.theme?" · "+t.theme:""}`});
+    if([t.demandId,t.title,t.description,t.notes,t.type,t.requestor,t.project,t.theme,t.wave,(()=>{const e=epicById(t.epicId);return e?epicLabel(e):"";})(),(t.comments||[]).map(c=>c.text).join(" ")].join(" ").toLowerCase().includes(q))hits.push({k:"Demand",go:()=>{view="demands";activeId=t.id;activeTab="work";},label:`${t.demandId||"—"} · ${t.title}${t.project?" · ▦ "+t.project:""}${t.theme?" · "+t.theme:""}`});
     t.objects.forEach(o=>{if([o.name,o.type,o.desc].join(" ").toLowerCase().includes(q))hits.push({k:"Object",go:()=>{view="demands";activeId=t.id;activeTab="objects";},label:`${o.name||"(obj)"} — ${o.action} · ${t.demandId||t.title}`});});
     t.transports.forEach(tr=>{
       const toc=tocFor(t,tr);
@@ -2843,8 +3109,11 @@ function runGlobalSearch(q){
   state.journal.forEach(j=>{if([j.date,j.title,j.body].join(" ").toLowerCase().includes(q))hits.push({k:"Journal",go:()=>{view="journal";journalTodos=false;activeJournalId=j.id;},label:`${j.date}${j.title?" · "+j.title:""}`});});
   state.todos.forEach(x=>{if(((x.text||"")+" "+(x.resolution||"")).toLowerCase().includes(q))hits.push({k:"To-do",go:()=>{view="journal";journalTodos=true;},label:`${x.done?"✓ ":""}${x.text}${x.resolution?" ↳ "+x.resolution:""}${x.due?" · due "+x.due:""}`});});
   state.epics.forEach(e=>{
-    if([e.name,e.code,e.description,e.owner,e.notes].join(" ").toLowerCase().includes(q))
-      hits.push({k:"Epic",go:()=>{view="epics";activeEpicId=e.id;},label:`◆ ${epicLabel(e)} · ${tasksForEpic(e.id).length} demand(s)`});});
+    if([e.name,e.code,e.description,e.owner,e.notes,e.myScope].join(" ").toLowerCase().includes(q))
+      hits.push({k:"Epic",go:()=>{view="epics";activeEpicId=e.id;epicTab="overview";},label:`◆ ${epicLabel(e)} · ${tasksForEpic(e.id).length} demand(s)`});
+    e.log.forEach(x=>{if((x.text||"").toLowerCase().includes(q))hits.push({k:"Epic story",go:()=>{view="epics";activeEpicId=e.id;epicTab="story";},label:`${x.date} ${EPIC_LOG[x.kind].icon} ${x.text} · ◆ ${e.code||e.name}`});});
+    e.deps.forEach(x=>{if([x.team,x.what,x.note].join(" ").toLowerCase().includes(q))hits.push({k:"Waiting on",go:()=>{view="epics";activeEpicId=e.id;epicTab="deps";},label:`${x.done?"✓ ":"⏸ "}${x.team} — ${x.what} · ◆ ${e.code||e.name}`});});
+    (function w(a){a.forEach(s=>{if((s.title||"").toLowerCase().includes(q))hits.push({k:"Subtask",go:()=>{view="epics";activeEpicId=e.id;epicTab="subtasks";},label:`${s.title} · ◆ ${e.code||e.name}`});w(s.children);});})(e.subtasks);});
   state.playbook.forEach(p=>{
     const blob=[p.title,p.category,p.body,p.steps.map(s=>s.text).join(" "),p.people.map(x=>x.name+" "+x.role+" "+x.contact).join(" "),(p.systems||[]).join(" ")].join(" ").toLowerCase();
     if(blob.includes(q))hits.push({k:"Playbook",go:()=>{view="playbook";activePlayId=p.id;},label:`${PLAY_KINDS[p.kind].icon} ${p.title}${p.category?" · "+p.category:""}`});});
@@ -3006,7 +3275,7 @@ function seedState(){
     const tId=uid(), tocId=uid(), objId=uid(), epId=uid();
     state=migrate({version:10,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{H0:["010"],H1:["030","040","050","150","190","560"]}},
       tasks:[{id:tId,demandId:"DMND-10421",type:"Report change",title:"Add cost-center filter to ZFI_AGEING report",
-        status:"progress",requestor:"Priya (FI)",epicId:epId,project:"FI month-end pack",theme:"Finance",waiting:{on:"QA team",since:"2026-06-26"},receivedDate:"2026-06-15",dueDate:"2026-07-03",
+        status:"progress",requestor:"Priya (FI)",epicId:epId,wave:"Wave 1",project:"FI month-end pack",theme:"Finance",waiting:{on:"QA team",since:"2026-06-26"},receivedDate:"2026-06-15",dueDate:"2026-07-03",
         description:"Business wants the ageing report selectable by cost center; default = all.",
         notes:"Confirmed selection-screen layout with Priya. Watch the OpenSQL on BSID.",
         timeline:[{id:uid(),ts:Date.now()-86400000*8,type:"status",from:"",to:"open",note:""},{id:uid(),ts:Date.now()-86400000*3,type:"status",from:"open",to:"progress",note:""}],
@@ -3028,7 +3297,11 @@ function seedState(){
       journal:[{id:uid(),date:todayStr(),title:"Rough notes",body:"- Looked at ZFI_AGEING perf; the BSID select is the bottleneck.\n- Asked Priya re: default cost center -> ALL.\n- TODO: check if FOR ALL ENTRIES table can be empty.",taskIds:[tId]}],
       epics:[{id:epId,name:"FI ageing & month-end pack",code:"LUCA",owner:"Priya (FI)",targetDate:"2026-09-30",status:"active",
         description:"Everything the FI month-end close needs from us: the ageing report rework, the cost-center connection, and the standard-object change that feeds it.",
-        notes:"Demands stay separate so each keeps its own transports and go-live target."}],
+        notes:"Demands stay separate so each keeps its own transports and go-live target.",
+        role:"contributor",myScope:"My slice: the ageing report and its cost-center filter. The integration team owns the upstream feed — my transports can't go to Prod until their mapping is live in QA.",
+        log:[{date:"2026-05-28",kind:"milestone",text:"Epic kick-off with FI — waves agreed"},{date:"2026-06-30",kind:"decision",text:"Cost-center default = ALL (confirmed with Priya)"}],
+        deps:[{team:"Integration team",what:"Upstream feed mapping deployed to H12",since:"2026-07-01",expected:"2026-08-15",lastCheck:"2026-07-20"}],
+        subtasks:[{title:"Hand-over note for FI key users",done:false,dueDate:"2026-09-25",children:[]}]}],
       playbook:[
         {id:uid(),kind:"process",title:"Request a new system role",category:"Access",pinned:true,
          body:"Roles are requested via the IAM portal, NOT by mailing Basis. Approval goes to your line manager first, then the system owner.",
