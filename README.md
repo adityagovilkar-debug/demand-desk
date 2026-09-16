@@ -252,7 +252,9 @@ detail page has four tabs:
 **Overview** rolls up everything underneath it:
 - **Demands, grouped by wave** — give each demand a *Wave / phase* in its ✎ Edit
   dialog (`Wave 1`, `Wave 2`, `Sync to backends`); waves are listed in the order
-  they arrived, each with a done count. Per demand: status, waiting-on flag,
+  they arrived, each with a done count and its own **🎯 target date** (set it
+  right on the wave header; it shows "in 9d" / "6d over", and waves due within
+  21 days appear on **Today** under *Waves nearing target*). Per demand: status, waiting-on flag,
   received date, outstanding go-live TRs and next due date; click through.
 - A **⏸ Parked** banner when other teams still owe you something and none of your
   own demands are in flight, with how long you've been waiting.
@@ -270,11 +272,20 @@ notes, transports reaching each system, meetings and journal entries linked to
 the epic's demands, epic status changes, and when other teams started blocking
 you or delivered. Toggle sources on/off with the chips.
 
+**Linking meetings and journal entries to an epic.** Calls about the initiative
+as a whole don't have to be pinned to one demand: a meeting or journal entry's
+**🔗 Link** dialog now lists epics above demands, or use **🔗 Meetings** /
+**🔗 Journal** on the epic's Story tab. Linked epics show as ◆ chips; either kind
+of link puts the item in the epic's Story.
+
 **Waiting on others** — for the months when your part is done but can't be
 transported until another team finishes. One row per dependency: team, what they
 owe, waiting since, expected date, last contact. **📞 Checked in** asks what they
 said (and a new expected date, if any) and writes it into the Story;
-**✓ Delivered** closes it and records how long it took. A row turns *follow-up
+**✓ Delivered** closes it and records how long it took. **💤 Later** snoozes the
+nudges until a date you choose (a number of days, or a date) — e.g. "they said
+nothing happens before the November release"; ✕ cancels it, and a check-in
+clears it. A row turns *follow-up
 due* when its expected date passes or nobody has chased it for N days (30 by
 default, set per epic) — those appear on **Today** as *Epic follow-ups*, and as
 📞 / ⏸ badges on the epic list.

@@ -258,6 +258,10 @@
   .storyrow.src-dep .st{color:var(--amber)}
   .storyrow .nact{opacity:0;transition:.12s} .storyrow:hover .nact{opacity:1}
   .deptbl input{width:100%}
+  .wavehead .wvt{margin-left:auto;margin-right:12px;display:inline-flex;gap:6px;align-items:center;text-transform:none;letter-spacing:0;font-weight:500}
+  .wavehead .wv-date{width:140px;font-size:11px;padding:1px 4px}
+  .picksec{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:10px 0 4px}
+  .chip.epicchip{color:var(--accent2);border-color:var(--violet-line)}
   .deptbl tr.depdone td{opacity:.62}
   .syncrow{display:flex;gap:7px;align-items:center;margin-bottom:5px}
   .syncrow select{flex:0 0 200px} .syncrow input{flex:0 0 140px}
@@ -659,7 +663,7 @@ const OBJ_ACTIONS=["Created","Modified","Deleted","Analyzed"];
 const DEF_LANDSCAPES=["H0","H1","H2","H3","H4","H5","H6"];
 const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod / QA",short:"QA"},{d:"1",label:"Production",short:"PRD"}];
 
-let state={version:16,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
+let state={version:17,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false;
 let view="today";
 let activeId=null, activeTab="work", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -819,7 +823,7 @@ function updateReconnectUI(){const b=document.getElementById("btnReconnect");if(
 async function forgetHandle(){savedHandle=null;if(useIdb)await idbDel("handle");updateReconnectUI();}
 
 function migrate(d){
-  d.version=16;
+  d.version=17;
   d.settings=d.settings||{};
   d.settings.landscapes=d.settings.landscapes&&d.settings.landscapes.length?d.settings.landscapes:[...DEF_LANDSCAPES];
   d.settings.tiers=d.settings.tiers&&d.settings.tiers.length?d.settings.tiers:DEF_TIERS;
@@ -834,7 +838,8 @@ function migrate(d){
   /* referential integrity: a demand pointing at a deleted epic falls back to none,
      so a stale id can never render as a phantom grouping */
   {const eids=new Set(d.epics.map(e=>e.id));
-   (d.tasks||[]).forEach(t=>{if(t.epicId&&!eids.has(t.epicId))t.epicId="";});}
+   (d.tasks||[]).forEach(t=>{if(t.epicId&&!eids.has(t.epicId))t.epicId="";});
+   (d.meetings||[]).concat(d.journal||[],d.calls||[]).forEach(x=>{if(x&&x.epicIds)x.epicIds=x.epicIds.filter(id=>eids.has(id));});}
   d.tasks=(d.tasks||[]).map(t=>{
     const tocs=(t.tocs||[]).map(normToc);
     const transports=(t.transports||[]).map(tr=>({
@@ -868,7 +873,7 @@ function migrate(d){
   d.calls=[];d.teamMeetings=[];
   d.todos=(d.todos||[]).map(normTodo);
   d.credentials=(d.credentials||[]).map(c=>({id:c.id||uid(),system:c.system||"",client:c.client||"",label:c.label||"",url:c.url||"",username:c.username||"",password:c.password||"",notes:c.notes||"",updatedAt:c.updatedAt||Date.now()}));
-  d.journal=(d.journal||[]).map(j=>({id:j.id||uid(),date:j.date||todayStr(),title:j.title||"",body:j.body||"",taskIds:(j.taskIds||[]).slice(),createdAt:j.createdAt||Date.now(),updatedAt:j.updatedAt||Date.now()}));
+  d.journal=(d.journal||[]).map(j=>({id:j.id||uid(),date:j.date||todayStr(),title:j.title||"",body:j.body||"",taskIds:(j.taskIds||[]).slice(),epicIds:(j.epicIds||[]).slice(),createdAt:j.createdAt||Date.now(),updatedAt:j.updatedAt||Date.now()}));
   d.debug=(d.debug||[]).map(s=>({id:s.id||uid(),title:s.title||"(untitled debug)",demandId:s.demandId||"",taskId:s.taskId||"",status:s.status||"active",resume:s.resume||"",notes:s.notes||"",
     objects:(s.objects||[]).map(o=>({id:o.id||uid(),name:o.name||"",note:o.note||""})),
     breakpoints:(s.breakpoints||[]).map(b=>({id:b.id||uid(),object:b.object||"",line:b.line||"",condition:b.condition||"",hit:!!b.hit,note:b.note||""})),
@@ -880,7 +885,7 @@ function migrate(d){
 function normSub(s){return{id:s.id||uid(),title:s.title||"",done:!!s.done,receivedDate:s.receivedDate||"",dueDate:s.dueDate||"",collapsed:!!s.collapsed,comments:(s.comments||[]).map(normComment),children:(s.children||[]).map(normSub)};}
 function normComment(c){return{id:c.id||uid(),text:c.text||"",ts:c.ts||Date.now()};}
 function normAction(a){return{id:a.id||uid(),text:a.text||"",owner:a.owner||"",done:!!a.done,due:a.due||"",resolution:a.resolution||""};}
-function normMeeting(m){return{id:m.id||uid(),date:m.date||todayStr(),title:m.title||"(untitled meeting)",team:m.team||"",attendees:m.attendees||"",body:m.body||"",taskIds:(m.taskIds||[]).slice(),actions:(m.actions||[]).map(normAction),createdAt:m.createdAt||Date.now(),updatedAt:m.updatedAt||Date.now()};}
+function normMeeting(m){return{id:m.id||uid(),date:m.date||todayStr(),title:m.title||"(untitled meeting)",team:m.team||"",attendees:m.attendees||"",body:m.body||"",taskIds:(m.taskIds||[]).slice(),epicIds:(m.epicIds||[]).slice(),actions:(m.actions||[]).map(normAction),createdAt:m.createdAt||Date.now(),updatedAt:m.updatedAt||Date.now()};}
 function normTodo(x){return{id:x.id||uid(),text:x.text||"",done:!!x.done,due:x.due||"",resolution:x.resolution||"",createdAt:x.createdAt||Date.now(),doneAt:x.doneAt||null};}
 function normImage(x){return{id:x.id||uid(),file:x.file||"",label:x.label||"",expiry:x.expiry||"",links:(x.links||[]).filter(l=>l&&l.kind&&l.id).map(l=>({kind:l.kind,id:l.id})),addedAt:x.addedAt||Date.now()};}
 /* ---------- epics ----------
@@ -901,10 +906,11 @@ function normEpic(e){return{id:e.id||uid(),name:e.name||"(untitled epic)",code:e
   log:(e.log||[]).map(x=>({id:x.id||uid(),date:x.date||todayStr(),kind:EPIC_LOG[x.kind]?x.kind:"note",text:x.text||""})),
   deps:(e.deps||[]).map(normDep),
   subtasks:(e.subtasks||[]).map(normSub),
+  waves:(e.waves||[]).filter(w=>w&&w.name).map(w=>({name:w.name,target:w.target||""})),
   createdAt:e.createdAt||Date.now(),updatedAt:e.updatedAt||Date.now()};}
 /* Something another team owes before my part of the epic can move. */
 function normDep(x){return{id:x.id||uid(),team:x.team||"",what:x.what||"",since:x.since||"",expected:x.expected||"",
-  lastCheck:x.lastCheck||"",done:!!x.done,doneDate:x.doneDate||"",note:x.note||""};}
+  lastCheck:x.lastCheck||"",snoozeUntil:x.snoozeUntil||"",done:!!x.done,doneDate:x.doneDate||"",note:x.note||""};}
 const PLAY_KINDS={
   process:{label:"Process / How-to",icon:"📋"},
   faq:{label:"FAQ",icon:"❓"},
@@ -1040,10 +1046,15 @@ function epicRollup(e){
    checked in with that team for the epic's follow-up interval. */
 function depFollowDue(e,x){
   if(x.done)return "";
+  if(x.snoozeUntil&&x.snoozeUntil>todayStr())return "";
   if(x.expected&&daysUntil(x.expected)<0)return "expected date passed";
   const last=x.lastCheck||x.since;if(!last)return "";
   const n=-daysUntil(last);return n>=e.followDays?`no contact for ${n}d`:"";
 }
+function waveTarget(e,name){const w=name&&e.waves.find(x=>x.name===name);return w?w.target:"";}
+function setWaveTarget(e,name,date){let w=e.waves.find(x=>x.name===name);if(!w){w={name,target:""};e.waves.push(w);}w.target=date;}
+function meetingsForEpic(e){const ids=new Set(tasksForEpic(e.id).map(t=>t.id));return state.meetings.filter(m=>(m.epicIds||[]).includes(e.id)||m.taskIds.some(id=>ids.has(id)));}
+function journalForEpic(e){const ids=new Set(tasksForEpic(e.id).map(t=>t.id));return state.journal.filter(j=>(j.epicIds||[]).includes(e.id)||(j.taskIds||[]).some(id=>ids.has(id)));}
 function epicFollowUps(e){return e.deps.filter(x=>depFollowDue(e,x));}
 /* "Parked" = other teams still owe something, and none of my demands are being worked. */
 function epicParked(e,r){
@@ -1071,11 +1082,8 @@ function epicStory(e){
     t.transports.forEach(tr=>tr.syncs.forEach(s=>{if(s.date&&s.system)ev.push({date:s.date,src:"transport",icon:"🚚",text:`${tr.number||"(TR)"} reached ${s.system}${isCust(tr)&&tr.client?"/"+tr.client:""} · ${dl(t)}`,tid:t.id,ord:3});}));
     (t.tocs||[]).forEach(c=>c.syncs.forEach(s=>{if(s.date&&s.system)ev.push({date:s.date,src:"transport",icon:"📦",text:`ToC ${c.number||"(unnamed)"} reached ${s.system} · ${dl(t)}`,tid:t.id,ord:3});}));
   });
-  const ids=new Set(ts.map(t=>t.id)),seenM=new Set(),seenJ=new Set();
-  state.meetings.forEach(m=>{if(!seenM.has(m.id)&&m.taskIds.some(id=>ids.has(id))){seenM.add(m.id);
-    ev.push({date:m.date,src:"meeting",icon:"👥",text:`${m.title}${m.team?" · "+m.team:""}`,mid:m.id,ord:4});}});
-  state.journal.forEach(j=>{if(!seenJ.has(j.id)&&(j.taskIds||[]).some(id=>ids.has(id))){seenJ.add(j.id);
-    ev.push({date:j.date,src:"meeting",icon:"📓",text:j.title||(j.body||"").replace(/\s+/g," ").slice(0,80)||"(journal entry)",jid:j.id,ord:4});}});
+  meetingsForEpic(e).forEach(m=>ev.push({date:m.date,src:"meeting",icon:"👥",text:`${m.title}${m.team?" · "+m.team:""}`,mid:m.id,ord:4}));
+  journalForEpic(e).forEach(j=>ev.push({date:j.date,src:"meeting",icon:"📓",text:j.title||(j.body||"").replace(/\s+/g," ").slice(0,80)||"(journal entry)",jid:j.id,ord:4}));
   e.deps.forEach(x=>{const who=x.team||"another team";
     if(x.since)ev.push({date:x.since,src:"dep",icon:"⏸",text:`Started waiting on ${who}${x.what?": "+x.what:""}`,ord:5});
     if(x.done&&x.doneDate)ev.push({date:x.doneDate,src:"dep",icon:"▶",text:`${who} delivered${x.what?": "+x.what:""}`,ord:5});});
@@ -1179,6 +1187,15 @@ function renderToday(){
   card("Epics nearing target","◆","warn",epicsDue.map(e=>{const r=epicRollup(e),n=daysUntil(e.targetDate);
     return{main:esc(epicLabel(e)),sub:`${r.done}/${r.ts.length} done · ${n<0?(-n)+"d over":e.targetDate}`,
       go:()=>{view="epics";activeEpicId=e.id;renderApp();}};}));
+  const wavesDue=[];state.epics.filter(e=>!["delivered","closed"].includes(e.status)).forEach(e=>e.waves.forEach(w=>{
+    if(!w.target||daysUntil(w.target)>21)return;
+    const ws=tasksForEpic(e.id).filter(t=>t.wave===w.name);
+    if(!ws.length||ws.every(t=>["delivered","closed"].includes(t.status)))return;
+    wavesDue.push({e,w,ws});}));
+  wavesDue.sort((a,b)=>a.w.target.localeCompare(b.w.target));
+  card("Waves nearing target","🎯","warn",wavesDue.map(({e,w,ws})=>{const n=daysUntil(w.target);
+    return{main:`◆ ${esc(e.code||e.name)} · ${esc(w.name)}`,sub:`${ws.filter(t=>["delivered","closed"].includes(t.status)).length}/${ws.length} done · ${n<0?(-n)+"d over":w.target}`,
+      go:()=>{view="epics";activeEpicId=e.id;epicTab="overview";renderApp();}};}));
   const epicFU=[];state.epics.filter(e=>e.status!=="closed").forEach(e=>e.deps.forEach(x=>{const why=depFollowDue(e,x);if(why)epicFU.push({e,x,why});}));
   card("Epic follow-ups — chase other teams","📞","warn",epicFU.map(({e,x,why})=>({main:`◆ ${esc(e.code||e.name)} — ${esc(x.team||"(team?)")}`,sub:`${esc(x.what||"")}${x.what?" · ":""}${why}`,
     go:()=>{view="epics";activeEpicId=e.id;epicTab="deps";renderApp();}})));
@@ -1916,7 +1933,7 @@ function renderMeetingSidebar(){
     <div class="ttitle">⚑ All open action points</div><div class="meta faint">${totalOpen} open across ${state.meetings.length} meeting(s)</div></div>`;
   el.innerHTML=pinned+(rows.length?rows.map(m=>{const open=meetingOpenActions(m);return `<div class="tcard ${(!meetingRollup&&m.id===activeMeetingId)?"active":""}" data-id="${m.id}">
     <div class="demand">👥 ${m.date}${m.team?` · <span style="color:var(--accent2)">${esc(m.team)}</span>`:""}</div><div class="ttitle">${esc(m.title)}</div>
-    <div class="meta faint">${esc((m.attendees||"").slice(0,32))}${m.taskIds.length?`<span class="lc-badge">🔗 ${m.taskIds.length}</span>`:""}${m.actions.length?`<span class="lc-badge">${open?`⚑ ${open} open`:`✓ done`} / ${m.actions.length}</span>`:""}</div></div>`;}).join(""):`<div class="empty">No meetings${filter?" for "+esc(filter):""} yet.<br>Capture calls &amp; team meetings here.</div>`);
+    <div class="meta faint">${esc((m.attendees||"").slice(0,32))}${m.taskIds.length+(m.epicIds||[]).length?`<span class="lc-badge">🔗 ${m.taskIds.length+(m.epicIds||[]).length}</span>`:""}${m.actions.length?`<span class="lc-badge">${open?`⚑ ${open} open`:`✓ done`} / ${m.actions.length}</span>`:""}</div></div>`;}).join(""):`<div class="empty">No meetings${filter?" for "+esc(filter):""} yet.<br>Capture calls &amp; team meetings here.</div>`);
   el.querySelector("[data-roll]").onclick=()=>{meetingRollup=true;activeMeetingId=null;renderApp();};
   el.querySelectorAll(".tcard[data-id]").forEach(x=>x.onclick=()=>{meetingRollup=false;activeMeetingId=x.dataset.id;renderApp();});
 }
@@ -1937,7 +1954,7 @@ function renderMeetingDetail(){
     <div class="detail-body">
       <div class="field"><label>Notes</label><textarea id="mt-body" style="min-height:180px">${esc(m.body)}</textarea></div>
       <div id="mt-links">${linkChips(m.body)}</div>
-      <div class="sec-title" style="margin-top:12px"><h3>Linked demands</h3><div class="ln"></div><button class="sm" id="mt-link">🔗 Link demands</button></div>
+      <div class="sec-title" style="margin-top:12px"><h3>Linked epics &amp; demands</h3><div class="ln"></div><button class="sm" id="mt-link">🔗 Link</button></div>
       <div class="chiprow" id="mt-chips"></div>
       <div class="sec-title" style="margin-top:18px"><h3>Action points</h3><div class="ln"></div><button class="sm" id="mt-addact">＋ Add action point</button></div>
       <div id="mt-acts"></div>
@@ -1954,28 +1971,8 @@ function renderMeetingDetail(){
   drawMeetingChips(m);drawMeetingActions(m);
   renderImagesSection(host.querySelector("#mt-imgs"),"meeting",m.id);
 }
-function drawMeetingChips(m){
-  const host=document.getElementById("mt-chips");if(!host)return;
-  if(!m.taskIds.length){host.innerHTML=`<span class="faint" style="font-size:12px">No demands linked.</span>`;return;}
-  host.innerHTML="";
-  m.taskIds.forEach(id=>{const t=state.tasks.find(x=>x.id===id);if(!t)return;
-    const chip=document.createElement("span");chip.className="chip";
-    chip.innerHTML=`<span class="go">${esc(taskLabel(t))}</span> <span class="x">✕</span>`;
-    chip.querySelector(".go").onclick=()=>{view="demands";activeId=id;activeTab="work";renderApp();};
-    chip.querySelector(".x").onclick=()=>{m.taskIds=m.taskIds.filter(x=>x!==id);touch(m);drawMeetingChips(m);renderMeetingSidebar();};
-    host.appendChild(chip);});
-}
-function openLinkDemandsToMeeting(m){
-  const root=document.getElementById("modalRoot");
-  const rows=state.tasks.slice().sort((a,b)=>b.updatedAt-a.updatedAt);
-  root.innerHTML=`<div class="modal-bg"><div class="modal"><h2>Link demands to “${esc(m.title)}”</h2>
-    ${rows.length?`<div class="picklist">${rows.map(t=>`<label class="pickrow"><input type="checkbox" data-id="${t.id}" ${m.taskIds.includes(t.id)?"checked":""} style="width:auto"><div><div class="demand">${esc(t.demandId||"—")}</div><div>${esc(t.title)}</div></div></label>`).join("")}</div>`:`<p class="faint">No demands yet.</p>`}
-    <div class="modal-foot"><button id="m-close" class="primary">Done</button></div></div></div>`;
-  const close=()=>{root.innerHTML="";drawMeetingChips(m);renderMeetingSidebar();};
-  root.querySelectorAll("input[data-id]").forEach(cb=>cb.onchange=()=>{if(cb.checked){if(!m.taskIds.includes(cb.dataset.id))m.taskIds.push(cb.dataset.id);}else m.taskIds=m.taskIds.filter(id=>id!==cb.dataset.id);touch(m);});
-  root.querySelector("#m-close").onclick=close;
-  root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
-}
+function drawMeetingChips(m){drawLinkChips(document.getElementById("mt-chips"),m,()=>{drawMeetingChips(m);renderMeetingSidebar();},"No epics or demands linked.");}
+function openLinkDemandsToMeeting(m){openLinkPicker(m,`Link to “${esc(m.title)}”`,()=>{drawMeetingChips(m);renderMeetingSidebar();});}
 function drawMeetingActions(m){
   const host=document.getElementById("mt-acts");if(!host)return;
   if(!m.actions.length){host.innerHTML=`<div class="faint" style="font-size:12px;padding:4px 2px">No action points yet.</div>`;return;}
@@ -2254,7 +2251,7 @@ function renderJournalSidebar(){
     return `<div class="tcard ${(!journalTodos&&j.id===activeJournalId)?"active":""}" data-id="${j.id}">
       <div class="demand">📓 ${j.date}${j.date===todayStr()?" · today":""}</div>
       <div class="ttitle">${esc(j.title)||"<span class='faint' style='font-weight:400'>(no title)</span>"}</div>
-      <div class="meta faint">${esc(preview)||"empty"}${(j.taskIds&&j.taskIds.length)?`<span class="lc-badge">🔗 ${j.taskIds.length}</span>`:""}</div></div>`;}).join(""):`<div class="empty" style="padding:20px 12px">No journal entries yet.<br>Keep daily rough notes here.</div>`;
+      <div class="meta faint">${esc(preview)||"empty"}${((j.taskIds||[]).length+(j.epicIds||[]).length)?`<span class="lc-badge">🔗 ${(j.taskIds||[]).length+(j.epicIds||[]).length}</span>`:""}</div></div>`;}).join(""):`<div class="empty" style="padding:20px 12px">No journal entries yet.<br>Keep daily rough notes here.</div>`;
   el.innerHTML=pinned+list;
   el.querySelector("[data-todos]").onclick=()=>{journalTodos=true;renderApp();};
   el.querySelectorAll(".tcard[data-id]").forEach(x=>x.onclick=()=>{journalTodos=false;activeJournalId=x.dataset.id;renderApp();});
@@ -2309,7 +2306,7 @@ function renderJournalDetail(){
       <button class="sm danger" id="j-del" style="align-self:flex-start">🗑 Delete</button></div>
     <div class="tabs"><button class="tab active">Notes</button></div></div>
     <div class="detail-body"><div class="field"><label>Rough notes for the day</label><textarea id="j-body" class="jbody" placeholder="Anything — what you worked on, snippets, things to remember…">${esc(j.body)}</textarea></div><div id="j-links">${linkChips(j.body)}</div>
-      <div class="sec-title" style="margin-top:14px"><h3>Linked demands</h3><div class="ln"></div><button class="sm" id="j-link">🔗 Link demands</button></div>
+      <div class="sec-title" style="margin-top:14px"><h3>Linked epics &amp; demands</h3><div class="ln"></div><button class="sm" id="j-link">🔗 Link</button></div>
       <div class="chiprow" id="j-chips"></div>
       <div id="j-imgs" style="margin-top:18px"></div></div>`;
   host.querySelector("#j-title").onchange=e=>{j.title=e.target.value;touch(j);renderJournalSidebar();};
@@ -2322,29 +2319,36 @@ function renderJournalDetail(){
   drawJournalChips(j);
   renderImagesSection(host.querySelector("#j-imgs"),"journal",j.id);
 }
-function drawJournalChips(j){
-  const host=document.getElementById("j-chips");if(!host)return;
-  j.taskIds=j.taskIds||[];
-  if(!j.taskIds.length){host.innerHTML=`<span class="faint" style="font-size:12px">No demands linked — link the demands these notes are about.</span>`;return;}
+function drawJournalChips(j){drawLinkChips(document.getElementById("j-chips"),j,()=>{drawJournalChips(j);renderJournalSidebar();},"Nothing linked — link the epics or demands these notes are about.");}
+function openLinkDemandsToJournal(j){openLinkPicker(j,`Link journal ${j.date}`,()=>{drawJournalChips(j);renderJournalSidebar();});}
+/* Shared by meetings and journal entries: an item can link to whole epics
+   (epicIds — for epic-wide calls that aren't about one demand) and to demands (taskIds). */
+function drawLinkChips(host,o,redraw,emptyMsg){
+  if(!host)return;o.taskIds=o.taskIds||[];o.epicIds=o.epicIds||[];
+  const eps=o.epicIds.map(epicById).filter(Boolean),ts=o.taskIds.map(id=>state.tasks.find(x=>x.id===id)).filter(Boolean);
+  if(!eps.length&&!ts.length){host.innerHTML=`<span class="faint" style="font-size:12px">${emptyMsg}</span>`;return;}
   host.innerHTML="";
-  j.taskIds.forEach(id=>{const t=state.tasks.find(x=>x.id===id);if(!t)return;
-    const chip=document.createElement("span");chip.className="chip";
-    chip.innerHTML=`<span class="go">${esc(taskLabel(t))}</span> <span class="x">✕</span>`;
-    chip.querySelector(".go").onclick=()=>{view="demands";activeId=id;activeTab="work";renderApp();};
-    chip.querySelector(".x").onclick=()=>{j.taskIds=j.taskIds.filter(x=>x!==id);touch(j);drawJournalChips(j);renderJournalSidebar();};
-    host.appendChild(chip);});
+  const add=(label,go,remove,epic)=>{const chip=document.createElement("span");chip.className="chip"+(epic?" epicchip":"");
+    chip.innerHTML=`<span class="go">${esc(label)}</span> <span class="x">✕</span>`;
+    chip.querySelector(".go").onclick=go;chip.querySelector(".x").onclick=()=>{remove();touch(o);redraw();};host.appendChild(chip);};
+  eps.forEach(e=>add("◆ "+epicLabel(e),()=>{view="epics";activeEpicId=e.id;epicTab="story";renderApp();},()=>{o.epicIds=o.epicIds.filter(x=>x!==e.id);},true));
+  ts.forEach(t=>add(taskLabel(t),()=>{view="demands";activeId=t.id;activeTab="work";renderApp();},()=>{o.taskIds=o.taskIds.filter(x=>x!==t.id);},false));
 }
-function openLinkDemandsToJournal(j){
-  const root=document.getElementById("modalRoot");
-  j.taskIds=j.taskIds||[];
+function openLinkPicker(o,title,onClose){
+  const root=document.getElementById("modalRoot");o.taskIds=o.taskIds||[];o.epicIds=o.epicIds||[];
+  const eps=state.epics.slice().sort((a,b)=>(a.status==="closed")-(b.status==="closed")||epicLabel(a).localeCompare(epicLabel(b)));
   const rows=state.tasks.slice().sort((a,b)=>b.updatedAt-a.updatedAt);
-  root.innerHTML=`<div class="modal-bg"><div class="modal"><h2>Link demands to journal ${j.date}</h2>
-    ${rows.length?`<div class="picklist">${rows.map(t=>`<label class="pickrow"><input type="checkbox" data-id="${t.id}" ${j.taskIds.includes(t.id)?"checked":""} style="width:auto"><div><div class="demand">${esc(t.demandId||"—")}</div><div>${esc(t.title)}</div></div></label>`).join("")}</div>`:`<p class="faint">No demands yet.</p>`}
+  root.innerHTML=`<div class="modal-bg"><div class="modal"><h2>${title}</h2>
+    ${eps.length?`<div class="picksec">◆ Epics <span class="faint">— for talk about the initiative as a whole</span></div><div class="picklist" style="max-height:190px">${eps.map(e=>`<label class="pickrow"><input type="checkbox" data-ep="${e.id}" ${o.epicIds.includes(e.id)?"checked":""} style="width:auto"><div><div class="demand">◆ ${esc(e.code||"epic")}</div><div>${esc(e.name)}</div></div></label>`).join("")}</div>`:""}
+    <div class="picksec">Demands</div>
+    ${rows.length?`<div class="picklist">${rows.map(t=>{const ep=epicById(t.epicId);return `<label class="pickrow"><input type="checkbox" data-id="${t.id}" ${o.taskIds.includes(t.id)?"checked":""} style="width:auto"><div><div class="demand">${esc(t.demandId||"—")}${ep?` · ◆ ${esc(ep.code||ep.name)}`:""}</div><div>${esc(t.title)}</div></div></label>`;}).join("")}</div>`:`<p class="faint">No demands yet.</p>`}
     <div class="modal-foot"><button id="m-close" class="primary">Done</button></div></div></div>`;
-  const close=()=>{root.innerHTML="";drawJournalChips(j);renderJournalSidebar();};
-  root.querySelectorAll("input[data-id]").forEach(cb=>cb.onchange=()=>{if(cb.checked){if(!j.taskIds.includes(cb.dataset.id))j.taskIds.push(cb.dataset.id);}else j.taskIds=j.taskIds.filter(id=>id!==cb.dataset.id);touch(j);});
+  const toggle=(arr,id,on)=>on?(arr.includes(id)?arr:arr.concat(id)):arr.filter(x=>x!==id);
+  root.querySelectorAll("input[data-id]").forEach(cb=>cb.onchange=()=>{o.taskIds=toggle(o.taskIds,cb.dataset.id,cb.checked);touch(o);});
+  root.querySelectorAll("input[data-ep]").forEach(cb=>cb.onchange=()=>{o.epicIds=toggle(o.epicIds,cb.dataset.ep,cb.checked);touch(o);});
+  const close=()=>{root.innerHTML="";onClose();};
   root.querySelector("#m-close").onclick=close;
-  root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
+  root.querySelector(".modal-bg").onclick=ev=>{if(ev.target===root.querySelector(".modal-bg"))close();};
 }
 
 /* ===================== DEBUG TRACKER ===================== */
@@ -2527,6 +2531,7 @@ function renderEpicDetail(){
     const n=tasksForEpic(e.id).length;
     if(!confirm("Delete this epic?"+(n?"\n\n"+n+" demand(s) will simply become un-grouped — no demand is deleted.":"")+"\n\nThe epic's own story, dependencies and subtasks are deleted with it."))return;
     state.tasks.forEach(t=>{if(t.epicId===e.id)t.epicId="";});
+    state.meetings.concat(state.journal).forEach(x=>{if(x.epicIds)x.epicIds=x.epicIds.filter(id=>id!==e.id);});
     state.epics=state.epics.filter(x=>x.id!==e.id);activeEpicId=null;markDirty();renderApp();});
   host.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{epicTab=b.dataset.tab;renderEpicDetail();});
   const body=host.querySelector("#epBody");
@@ -2578,7 +2583,11 @@ function renderEpicOverview(body,e,r,pk,fu){
     dh.innerHTML=waves.map(w=>{
       const rows=r.ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"9999").localeCompare(b.receivedDate||"9999"));
       const dn=rows.filter(t=>["delivered","closed"].includes(t.status)).length;
-      return (grouped?`<div class="wavehead"><span>${w?esc(w):"— no wave —"}</span><span class="faint">${dn}/${rows.length} done</span></div>`:"")+
+      const wt=waveTarget(e,w),wn=wt?daysUntil(wt):null,wdone=dn===rows.length;
+      const wcls=wt&&!wdone?(wn<0?"over":wn<=14?"soon":""):"";
+      return (grouped?`<div class="wavehead"><span>${w?esc(w):"— no wave —"}</span>
+        ${w?`<span class="wvt" title="Target date for this wave">🎯 <input type="date" class="wv-date" data-w="${esc(w)}" value="${wt}">${wt&&!wdone?`<span class="due ${wcls}">${wn<0?(-wn)+"d over":wn===0?"today":"in "+wn+"d"}</span>`:""}${wt&&wdone?`<span style="color:var(--green)">✓ done</span>`:""}</span>`:""}
+        <span class="faint">${dn}/${rows.length} done</span></div>`:"")+
       rows.map(t=>{const s=STATUS[t.status],due=earliestOpenDue(t),dc=dueClass(due,t.status),g=golivePending(t);
         return `<div class="actitem" data-id="${t.id}" style="cursor:pointer">
           <span class="mono" style="flex:0 0 120px;color:var(--accent);font-size:12px">${esc(t.demandId||"—")}</span>
@@ -2589,6 +2598,7 @@ function renderEpicOverview(body,e,r,pk,fu){
           <span class="mono faint" style="flex:0 0 92px;font-size:11px" title="Received">⇩ ${t.receivedDate||"—"}</span>
           <span class="du ${dc}" style="flex:0 0 92px;font-family:var(--mono);font-size:12px" title="Next due">${due||"—"}</span></div>`;}).join("");}).join("");
     dh.querySelectorAll(".actitem").forEach(row=>row.onclick=()=>goEpicDemand(row.dataset.id));
+    dh.querySelectorAll(".wv-date").forEach(inp=>inp.onchange=()=>{setWaveTarget(e,inp.dataset.w,inp.value);touch(e);renderEpicDetail();});
   }
   const gh=body.querySelector("#ep-golive");
   if(!r.trs.length)gh.innerHTML=`<div class="faint" style="font-size:12px;padding:4px 2px">No transports recorded on this epic's demands yet.</div>`;
@@ -2622,7 +2632,9 @@ function renderEpicStory(body,e){
     <p class="faint" style="font-size:11px;margin:4px 0 10px">Back-date entries freely to reconstruct older history. Demand arrivals, status changes, transport moves, linked meetings/journal and other teams' hand-offs are woven in automatically.</p>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
       <div class="statchips" id="st-src">${Object.entries(STORY_SRC).map(([k,v])=>`<button class="statchip open ${o.off[k]?"":"on"}" data-s="${k}">${esc(v)}</button>`).join("")}</div>
-      <button class="sm ghost" id="st-order" style="margin-left:auto">${o.newest?"↓ Newest first":"↑ Oldest first"}</button>
+      <button class="sm" id="st-linkm" style="margin-left:auto" title="Link meetings about this epic that aren't tied to one demand">🔗 Meetings</button>
+      <button class="sm" id="st-linkj" title="Link journal entries about this epic">🔗 Journal</button>
+      <button class="sm ghost" id="st-order">${o.newest?"↓ Newest first":"↑ Oldest first"}</button>
     </div>
     ${all.length?`<div class="faint mono" style="font-size:11px;margin-bottom:8px">${all.length} event(s) · ${first} → ${last} · ${monthsBetween(first,last)} month(s)</div>`:""}
     <div id="st-list"></div>`;
@@ -2633,6 +2645,8 @@ function renderEpicStory(body,e){
   body.querySelector("#st-text").onkeydown=ev=>{if(ev.key==="Enter")add();};
   body.querySelectorAll("#st-src .statchip").forEach(b=>b.onclick=()=>{o.off[b.dataset.s]=!o.off[b.dataset.s];renderEpicStory(body,e);});
   body.querySelector("#st-order").onclick=()=>{o.newest=!o.newest;renderEpicStory(body,e);};
+  body.querySelector("#st-linkm").onclick=()=>openEpicLinkPicker(e,"meetings");
+  body.querySelector("#st-linkj").onclick=()=>openEpicLinkPicker(e,"journal");
   const host=body.querySelector("#st-list");
   if(!list.length){host.innerHTML=`<div class="faint" style="font-size:12px;padding:4px 2px">${all.length?"Everything is filtered out — switch a source back on above.":"Nothing yet. Add the first entry above, or assign demands to this epic."}</div>`;return;}
   let html="",month="";
@@ -2655,13 +2669,28 @@ function renderEpicStory(body,e){
       const dt=prompt("Date (YYYY-MM-DD):",x.date);if(dt===null)return;
       if(tx.trim())x.text=tx.trim();if(/^\d{4}-\d{2}-\d{2}$/.test(dt.trim()))x.date=dt.trim();touch(e);renderEpicDetail();};});
 }
+function openEpicLinkPicker(e,kind){
+  const root=document.getElementById("modalRoot"),isM=kind==="meetings";
+  const list=(isM?state.meetings:state.journal).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const viaDemand=new Set(tasksForEpic(e.id).map(t=>t.id));
+  root.innerHTML=`<div class="modal-bg"><div class="modal"><h2>Link ${isM?"meetings":"journal entries"} to ◆ ${esc(epicLabel(e))}</h2>
+    <p class="faint" style="font-size:12px;margin-top:-8px">Items already linked to one of this epic's demands show in its Story anyway — they're marked below.</p>
+    ${list.length?`<div class="picklist">${list.map(x=>{const via=(x.taskIds||[]).some(id=>viaDemand.has(id));
+      return `<label class="pickrow"><input type="checkbox" data-id="${x.id}" ${(x.epicIds||[]).includes(e.id)?"checked":""} style="width:auto"><div><div>${isM?"👥 "+esc(x.title):"📓 "+x.date+(x.title?" — "+esc(x.title):"")}</div><div class="faint" style="font-size:11px">${isM?x.date+(x.team?" · "+esc(x.team):""):esc((x.body||"").replace(/\s+/g," ").slice(0,70))}${via?" · already in story via a demand":""}</div></div></label>`;}).join("")}</div>`:`<p class="faint">No ${isM?"meetings":"journal entries"} yet.</p>`}
+    <div class="modal-foot"><button id="m-close" class="primary">Done</button></div></div></div>`;
+  root.querySelectorAll("input[data-id]").forEach(cb=>cb.onchange=()=>{const x=list.find(y=>y.id===cb.dataset.id);x.epicIds=x.epicIds||[];
+    if(cb.checked){if(!x.epicIds.includes(e.id))x.epicIds.push(e.id);}else x.epicIds=x.epicIds.filter(id=>id!==e.id);touch(x);});
+  const close=()=>{root.innerHTML="";renderEpicDetail();};
+  root.querySelector("#m-close").onclick=close;
+  root.querySelector(".modal-bg").onclick=ev=>{if(ev.target===root.querySelector(".modal-bg"))close();};
+}
 function renderEpicDeps(body,e){
   const rows=e.deps.slice().sort((a,b)=>a.done-b.done||(a.since||"9999").localeCompare(b.since||"9999"));
   body.innerHTML=`
     <div class="sec-title"><h3>What other teams owe before my part can move</h3><div class="ln"></div><button class="sm" id="dp-add">＋ Add dependency</button></div>
     <p class="faint" style="font-size:12px;margin:-4px 0 10px">For the months where your work is done but can't be transported until someone else finishes. <b>📞 Checked in</b> records a follow-up in the Story. A row turns due when its expected date passes, or nobody has chased it for
       <input type="number" id="dp-every" min="1" max="365" value="${e.followDays}" style="width:62px;padding:2px 5px"> days. Due follow-ups also show on <b>Today</b>.</p>
-    <div class="tbl-wrap"><table class="deptbl"><thead><tr><th style="width:17%">Team / person</th><th>What they owe</th><th style="width:130px">Waiting since</th><th style="width:130px">Expected</th><th style="width:110px">Last contact</th><th style="width:215px"></th></tr></thead><tbody id="dp-body"></tbody></table></div>`;
+    <div class="tbl-wrap"><table class="deptbl"><thead><tr><th style="width:17%">Team / person</th><th>What they owe</th><th style="width:130px">Waiting since</th><th style="width:130px">Expected</th><th style="width:110px">Last contact</th><th style="width:290px"></th></tr></thead><tbody id="dp-body"></tbody></table></div>`;
   body.querySelector("#dp-every").onchange=ev=>{const n=parseInt(ev.target.value,10);if(n>0){e.followDays=n;touch(e);renderEpicDetail();}};
   body.querySelector("#dp-add").onclick=()=>{e.deps.push(normDep({since:todayStr()}));touch(e);renderEpicDetail();};
   const tb=body.querySelector("#dp-body");
@@ -2672,11 +2701,12 @@ function renderEpicDeps(body,e){
       <td><input class="d-team" value="${esc(x.team)}" placeholder="e.g. LUCA integration team" ${x.done?"disabled":""}></td>
       <td><input class="d-what" value="${esc(x.what)}" placeholder="e.g. middleware mapping deployed to QA" ${x.done?"disabled":""}>
         ${due?`<div style="font-size:11px;color:var(--red);margin-top:3px">📞 follow-up due — ${due}</div>`:""}
+        ${!x.done&&x.snoozeUntil&&x.snoozeUntil>todayStr()?`<div style="font-size:11px;color:var(--muted);margin-top:3px">💤 reminders snoozed until <span class="mono">${x.snoozeUntil}</span> <button class="ghost sm d-unsnooze" title="Cancel the snooze" style="padding:0 5px">✕</button></div>`:""}
         ${x.done?`<div style="font-size:11px;color:var(--green);margin-top:3px">✓ delivered ${x.doneDate}${x.since&&x.doneDate?` · after ${Math.max(0,daysUntil(x.doneDate)-daysUntil(x.since))}d`:""}</div>`:""}</td>
       <td><input type="date" class="d-since" value="${x.since}" ${x.done?"disabled":""}>${!x.done&&x.since?`<div class="faint mono" style="font-size:11px;margin-top:3px">${Math.max(0,-daysUntil(x.since))}d</div>`:""}</td>
       <td><input type="date" class="d-exp" value="${x.expected}" ${x.done?"disabled":""}></td>
       <td class="mono" style="font-size:11px">${last?`${last}<div class="faint">${ago}d ago</div>`:'<span class="faint">never</span>'}</td>
-      <td style="text-align:right;white-space:nowrap">${x.done?`<button class="ghost sm d-reopen">↺ Reopen</button>`:`<button class="sm d-check" title="I chased them — log it">📞 Checked in</button> <button class="sm d-done" title="They delivered">✓ Delivered</button>`} <button class="ghost sm danger d-del">🗑</button></td></tr>`;}).join("");
+      <td style="text-align:right;white-space:nowrap">${x.done?`<button class="ghost sm d-reopen">↺ Reopen</button>`:`<button class="sm d-check" title="I chased them — log it">📞 Checked in</button> <button class="sm d-snooze" title="Don't flag this for follow-up until a later date">💤 Later</button> <button class="sm d-done" title="They delivered">✓ Delivered</button>`} <button class="ghost sm danger d-del">🗑</button></td></tr>`;}).join("");
   tb.querySelectorAll("tr[data-id]").forEach(tr=>{const x=e.deps.find(d=>d.id===tr.dataset.id);
     const bind=(sel,k)=>{const el=tr.querySelector(sel);if(el)el.onchange=ev=>{x[k]=ev.target.value;touch(e);renderEpicDetail();};};
     bind(".d-team","team");bind(".d-what","what");bind(".d-since","since");bind(".d-exp","expected");
@@ -2684,10 +2714,16 @@ function renderEpicDeps(body,e){
     const ck=tr.querySelector(".d-check");if(ck)ck.onclick=()=>{
       const note=prompt(`What did ${who()} say? (goes into the epic's Story — blank is fine)`,"");if(note===null)return;
       const nd=(prompt("New expected date, if they gave one (YYYY-MM-DD). Blank keeps: "+(x.expected||"none"),"")||"").trim();
-      x.lastCheck=todayStr();
+      x.lastCheck=todayStr();x.snoozeUntil="";
       const newExp=/^\d{4}-\d{2}-\d{2}$/.test(nd);if(newExp)x.expected=nd;
       e.log.push({id:uid(),date:todayStr(),kind:"followup",text:`Checked with ${who()}${x.what?" re "+x.what:""}${note.trim()?": "+note.trim():""}${newExp?" · now expected "+nd:""}`});
       touch(e);renderEpicDetail();toast("Follow-up logged in the Story");};
+    const sz=tr.querySelector(".d-snooze");if(sz)sz.onclick=()=>{
+      const v=prompt(`Remind me about ${who()} again in how many days?\n(or type a date, YYYY-MM-DD)`,"14");if(v===null)return;const t=v.trim();
+      let until="";if(/^\d{4}-\d{2}-\d{2}$/.test(t))until=t;else if(/^\d+$/.test(t)&&+t>0){const d=new Date();d.setDate(d.getDate()+(+t));until=isoD(d);}
+      if(!until||until<=todayStr()){toast("Give a number of days, or a future date",true);return;}
+      x.snoozeUntil=until;touch(e);renderEpicDetail();toast("No follow-up nudges until "+until);};
+    const us=tr.querySelector(".d-unsnooze");if(us)us.onclick=()=>{x.snoozeUntil="";touch(e);renderEpicDetail();};
     const dn=tr.querySelector(".d-done");if(dn)dn.onclick=()=>{x.done=true;x.doneDate=todayStr();x.lastCheck=todayStr();touch(e);
       if(!e.deps.some(d=>!d.done))toast("Nothing left blocking this epic — time to move your transports?");
       renderEpicDetail();};
@@ -2713,7 +2749,7 @@ function buildEpicBriefHTML(e){
     ${e.description?`<h3>Description</h3><p style="white-space:pre-wrap">${esc(e.description)}</p>`:""}
     ${e.myScope?`<h3>${e.role==="contributor"?"My part":"Scope / approach"}</h3><p style="white-space:pre-wrap">${esc(e.myScope)}</p>`:""}
     <h3>Demands (${r.ts.length} · ${r.done} done)</h3>
-    ${r.ts.length?waves.map(w=>`${waves.length>1||w?`<h4>${w?esc(w):"No wave"}</h4>`:""}<table><tr><th>Demand</th><th>Title</th><th>Status</th><th>Received</th><th>Transports</th></tr>${r.ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"").localeCompare(b.receivedDate||"")).map(t=>`<tr><td>${esc(t.demandId||"—")}</td><td>${esc(t.title)}</td><td>${STATUS[t.status].label}</td><td>${t.receivedDate||"—"}</td><td>${t.transports.map(tr=>esc(tr.number||"(TR)")).join(", ")||"—"}</td></tr>`).join("")}</table>`).join(""):"<p><i>none</i></p>"}
+    ${r.ts.length?waves.map(w=>`${waves.length>1||w?`<h4>${w?esc(w):"No wave"}${waveTarget(e,w)?` — target ${waveTarget(e,w)}`:""}</h4>`:""}<table><tr><th>Demand</th><th>Title</th><th>Status</th><th>Received</th><th>Transports</th></tr>${r.ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"").localeCompare(b.receivedDate||"")).map(t=>`<tr><td>${esc(t.demandId||"—")}</td><td>${esc(t.title)}</td><td>${STATUS[t.status].label}</td><td>${t.receivedDate||"—"}</td><td>${t.transports.map(tr=>esc(tr.number||"(TR)")).join(", ")||"—"}</td></tr>`).join("")}</table>`).join(""):"<p><i>none</i></p>"}
     ${e.deps.length?`<h3>Dependencies on other teams</h3><table><tr><th>Team</th><th>What</th><th>Since</th><th>Expected</th><th>State</th></tr>${e.deps.map(x=>`<tr><td>${esc(x.team)}</td><td>${esc(x.what)}</td><td>${x.since||"—"}</td><td>${x.expected||"—"}</td><td>${x.done?"✓ delivered "+x.doneDate:(x.lastCheck?"open · last chased "+x.lastCheck:"open")}</td></tr>`).join("")}</table>`:""}
     <h3>Go-live readiness</h3><p>${!r.trs.length?"No transports recorded.":!r.pending.length?"✓ Every transport has reached its go-live target.":r.pending.map(x=>`${esc(x.t.demandId||x.t.title)} — ${x.g.missing.length} TR(s) not yet in ${x.g.target}`).join("<br>")}</p>
     ${e.subtasks.length?`<h3>Epic subtasks</h3>${subs(e.subtasks)}`:""}
@@ -2730,7 +2766,7 @@ function buildEpicBriefMarkdown(e){
   if(e.description)L.push(`## Description`,e.description,``);
   if(e.myScope)L.push(`## ${e.role==="contributor"?"My part":"Scope / approach"}`,e.myScope,``);
   L.push(`## Demands (${r.ts.length} · ${r.done} done)`);
-  waves.forEach(w=>{if(waves.length>1||w)L.push(``,`### ${w||"No wave"}`);
+  waves.forEach(w=>{if(waves.length>1||w)L.push(``,`### ${w||"No wave"}${waveTarget(e,w)?` — target ${waveTarget(e,w)}`:""}`);
     L.push(`| Demand | Title | Status | Received | Transports |`,`|---|---|---|---|---|`);
     r.ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"").localeCompare(b.receivedDate||"")).forEach(t=>L.push(`| ${t.demandId||"—"} | ${t.title} | ${STATUS[t.status].label} | ${t.receivedDate||"—"} | ${t.transports.map(tr=>tr.number||"(TR)").join(", ")||"—"} |`));});
   L.push(``);
@@ -3301,7 +3337,8 @@ function seedState(){
         role:"contributor",myScope:"My slice: the ageing report and its cost-center filter. The integration team owns the upstream feed — my transports can't go to Prod until their mapping is live in QA.",
         log:[{date:"2026-05-28",kind:"milestone",text:"Epic kick-off with FI — waves agreed"},{date:"2026-06-30",kind:"decision",text:"Cost-center default = ALL (confirmed with Priya)"}],
         deps:[{team:"Integration team",what:"Upstream feed mapping deployed to H12",since:"2026-07-01",expected:"2026-08-15",lastCheck:"2026-07-20"}],
-        subtasks:[{title:"Hand-over note for FI key users",done:false,dueDate:"2026-09-25",children:[]}]}],
+        subtasks:[{title:"Hand-over note for FI key users",done:false,dueDate:"2026-09-25",children:[]}],
+        waves:[{name:"Wave 1",target:"2026-09-25"}]}],
       playbook:[
         {id:uid(),kind:"process",title:"Request a new system role",category:"Access",pinned:true,
          body:"Roles are requested via the IAM portal, NOT by mailing Basis. Approval goes to your line manager first, then the system owner.",
