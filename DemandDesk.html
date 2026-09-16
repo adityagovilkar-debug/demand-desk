@@ -144,6 +144,15 @@
   .statchip.on.bug{color:var(--red);border-color:var(--red)}
   .statchip.on.closed{color:var(--muted);border-color:var(--muted)}
   .statchip.clear{margin-left:auto}
+  /* demand list grouped by epic */
+  .egroup{border-bottom:1px solid var(--line)}
+  .eghead{display:flex;align-items:center;gap:6px;padding:7px 10px;cursor:pointer;font-size:12px;color:var(--accent2);background:var(--bg2);position:sticky;top:0;z-index:1;border-bottom:1px solid var(--line)}
+  .eghead:hover{background:var(--chip)}
+  .egtw{flex:0 0 12px;font-size:9px;color:var(--faint)}
+  .egname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .egcount{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .eggo{padding:0 6px;font-size:14px;line-height:1}
+  .egroup.shut .eghead{border-bottom:none}
   .statchip.clear.on{color:var(--txt);border-color:var(--faint)}
   .filters select{width:auto;flex:1;min-width:0;padding:5px 6px;font-size:12px}
   .stats{display:flex;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);font-size:11px}
@@ -525,6 +534,8 @@
   :root[data-theme="instrument"] .navbtn.active{background:transparent;color:var(--txt);border-color:var(--rule-strong)}
   :root[data-theme="instrument"] .wavehead,:root[data-theme="instrument"] .storymonth,:root[data-theme="instrument"] .storyrow .sk{font-family:var(--label);letter-spacing:.16em}
   :root[data-theme="instrument"] .storyrow.src-log{background:transparent;box-shadow:inset 2px 0 0 var(--accent2)}
+  :root[data-theme="instrument"] .eghead{font-family:var(--label);letter-spacing:.06em;background:var(--bg2)}
+  :root[data-theme="instrument"] .eghead:hover{background:var(--panel2)}
   :root[data-theme="instrument"] .tab{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
   :root[data-theme="instrument"] .tab .count{font-family:var(--mono);font-variant-numeric:tabular-nums;
     background:transparent;border:1px solid var(--rule-strong);border-radius:2px}
@@ -1237,6 +1248,7 @@ function renderDemandSidebar(){
         <button class="sm" id="btnAging" title="Time-in-status &amp; delivery lead times" style="flex:0 0 auto">📈 Aging</button>
       </div>
       <label style="display:flex;align-items:center;gap:7px;font-size:12px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted);margin:1px 1px"><input type="checkbox" id="fHideClosed" style="width:auto"> Hide closed demands</label>
+      <label style="display:flex;align-items:center;gap:7px;font-size:12px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted);margin:1px 1px"><input type="checkbox" id="fGroupEpic" style="width:auto"> Group by epic</label>
       <button class="primary" id="btnNew" style="width:100%">＋ New Demand / Task</button>
     </div>
     <div class="stats" id="stats"></div>
@@ -1263,6 +1275,7 @@ function renderDemandSidebar(){
   fp.onchange=()=>{renderDemandSidebar._fp=fp.value;renderList();};
   ft.onchange=()=>{renderDemandSidebar._ft=ft.value;renderList();};
   const hc=document.getElementById("fHideClosed");hc.checked=!!renderDemandSidebar._hc;hc.onchange=()=>{renderDemandSidebar._hc=hc.checked;renderStats();renderList();};
+  const ge=document.getElementById("fGroupEpic");ge.checked=groupByEpic();ge.onchange=()=>{setViewPref("groupEpic",ge.checked?"1":"0");renderList();};
   renderStats();renderList();
 }
 function renderStats(){const s={open:0,progress:0,delivered:0,bug:0,closed:0,overdue:0};
@@ -1282,6 +1295,29 @@ function demandFilter(){
     /* explicit chips win; hide-closed is only the default convenience */
     &&(sel.size?sel.has(t.status):!(hideClosed&&t.status==="closed"));
 }
+/* Per-viewer list preferences (not work data, so they live in localStorage, not the JSON). */
+function viewPref(k,def){try{const v=localStorage.getItem("demanddesk."+k);return v===null?def:v;}catch(e){return def;}}
+function setViewPref(k,v){try{localStorage.setItem("demanddesk."+k,v);}catch(e){}}
+function groupByEpic(){return viewPref("groupEpic","1")==="1";}
+function collapsedEpicGroups(){try{return new Set(JSON.parse(viewPref("epicCollapsed","[]")));}catch(e){return new Set();}}
+const EPIC_GROUP_RANK={active:0,onhold:1,delivered:2,closed:3};
+function demandCard(t,grouped){const st=STATUS[t.status],sub=countSubs(t.subtasks),due=earliestOpenDue(t),dc=dueClass(due,t.status);
+    const lc=linkedCount(t.id);
+    return `<div class="tcard s-${t.status} ${t.id===activeId?"active":""}" data-id="${t.id}">
+      <div class="demand">${esc(t.demandId||"— no demand id —")}</div>
+      <div class="ttitle">${esc(t.title)}</div>
+      <div class="meta"><span class="pill ${st.cls}">${st.label}</span>
+        ${isWaiting(t)?`<span class="pill" style="color:var(--amber);border-color:var(--amber-line)">⏳ ${esc(t.waiting.on)}${waitDays(t)!=null?" "+waitDays(t)+"d":""}</span>`:""}
+        ${(()=>{const ep=epicById(t.epicId);if(!ep)return "";if(grouped)return t.wave?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">${esc(t.wave)}</span>`:"";
+          return `<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">◆ ${esc(ep.code||ep.name)}${t.wave?" · "+esc(t.wave):""}</span>`;})()}
+        ${t.project?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">▦ ${esc(t.project)}</span>`:""}
+        ${t.theme?`<span class="pill type">${esc(t.theme)}</span>`:`<span class="pill type">${esc(t.type)}</span>`}
+        ${t.requestor?`<span class="faint">👤 ${esc(t.requestor)}</span>`:""}
+        ${sub.n?`<span class="faint">☑ ${sub.done}/${sub.n}</span>`:""}
+        ${lc?`<span class="lc-badge">🔗 ${lc}</span>`:""}
+        ${(t.reference&&t.reference.length)?`<span class="lc-badge">🔑 ${t.reference.length}</span>`:""}
+        ${reworkCount(t)?`<span class="lc-badge" style="color:var(--red)">↻ ${reworkCount(t)}</span>`:""}
+        ${due?`<span class="due ${dc}">⚑ ${due}${dc==="over"?" ("+(-daysUntil(due))+"d)":""}</span>`:""}</div></div>`;}
 function renderList(){
   const fSort=renderDemandSidebar._so||"due";
   let list=state.tasks.filter(demandFilter());
@@ -1290,22 +1326,34 @@ function renderList(){
   if(!list.length){el.innerHTML=state.tasks.length
     ?`<div class="empty">No demands match the current filters.<br>Click <b>All</b> above to clear the status filter.</div>`
     :`<div class="empty">No demands yet.<br>Click <b>＋ New Demand</b>.</div>`;return;}
-  el.innerHTML=list.map(t=>{const st=STATUS[t.status],sub=countSubs(t.subtasks),due=earliestOpenDue(t),dc=dueClass(due,t.status);
-    const lc=linkedCount(t.id);
-    return `<div class="tcard s-${t.status} ${t.id===activeId?"active":""}" data-id="${t.id}">
-      <div class="demand">${esc(t.demandId||"— no demand id —")}</div>
-      <div class="ttitle">${esc(t.title)}</div>
-      <div class="meta"><span class="pill ${st.cls}">${st.label}</span>
-        ${isWaiting(t)?`<span class="pill" style="color:var(--amber);border-color:var(--amber-line)">⏳ ${esc(t.waiting.on)}${waitDays(t)!=null?" "+waitDays(t)+"d":""}</span>`:""}
-        ${(()=>{const ep=epicById(t.epicId);return ep?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">◆ ${esc(ep.code||ep.name)}${t.wave?" · "+esc(t.wave):""}</span>`:"";})()}
-        ${t.project?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">▦ ${esc(t.project)}</span>`:""}
-        ${t.theme?`<span class="pill type">${esc(t.theme)}</span>`:`<span class="pill type">${esc(t.type)}</span>`}
-        ${t.requestor?`<span class="faint">👤 ${esc(t.requestor)}</span>`:""}
-        ${sub.n?`<span class="faint">☑ ${sub.done}/${sub.n}</span>`:""}
-        ${lc?`<span class="lc-badge">🔗 ${lc}</span>`:""}
-        ${(t.reference&&t.reference.length)?`<span class="lc-badge">🔑 ${t.reference.length}</span>`:""}
-        ${reworkCount(t)?`<span class="lc-badge" style="color:var(--red)">↻ ${reworkCount(t)}</span>`:""}
-        ${due?`<span class="due ${dc}">⚑ ${due}${dc==="over"?" ("+(-daysUntil(due))+"d)":""}</span>`:""}</div></div>`;}).join("");
+  if(!groupByEpic()){el.innerHTML=list.map(t=>demandCard(t,false)).join("");}
+  else{
+    /* one collapsible block per epic (open epics first), ungrouped demands last;
+       the list's own sort order is kept inside each block */
+    const groups=new Map();
+    list.forEach(t=>{const k=epicById(t.epicId)?t.epicId:"";if(!groups.has(k))groups.set(k,[]);groups.get(k).push(t);});
+    const keys=[...groups.keys()].sort((a,b)=>{if(!a)return 1;if(!b)return -1;const ea=epicById(a),eb=epicById(b);
+      return EPIC_GROUP_RANK[ea.status]-EPIC_GROUP_RANK[eb.status]||epicLabel(ea).localeCompare(epicLabel(eb));});
+    const coll=collapsedEpicGroups(),act=state.tasks.find(t=>t.id===activeId);
+    el.innerHTML=keys.map(k=>{const ts=groups.get(k),e=epicById(k),g=k||"__none";
+      const shut=coll.has(g)&&!(act&&(act.epicId||"")===k&&ts.includes(act));
+      const total=k?tasksForEpic(k).length:state.tasks.filter(t=>!epicById(t.epicId)).length;
+      const open=ts.filter(t=>!["delivered","closed"].includes(t.status)).length;
+      const over=ts.filter(t=>{const d=earliestOpenDue(t);return d&&daysUntil(d)<0;}).length;
+      return `<div class="egroup ${shut?"shut":""}" data-g="${g}">
+        <div class="eghead" title="${shut?"Expand":"Collapse"}">
+          <span class="egtw">${shut?"▶":"▼"}</span>
+          <span class="egname">${e?`◆ ${e.code?`<b>${esc(e.code)}</b> · `:""}${esc(e.name)}`:"No epic"}</span>
+          ${e&&e.status!=="active"?`<span class="pill ${EPIC_STATUS[e.status].cls}" style="font-size:9px;padding:0 5px">${EPIC_STATUS[e.status].label}</span>`:""}
+          ${over?`<span class="lc-badge" style="color:var(--red)">⚑ ${over}</span>`:""}
+          <span class="egcount" title="${ts.length} shown of ${total} in this group">${open?`${open} open · `:""}${ts.length}${ts.length<total?`<span class="faint">/${total}</span>`:""}</span>
+          ${e?`<button class="ghost sm eggo" title="Open the epic">›</button>`:""}
+        </div>
+        ${shut?"":`<div class="egbody">${ts.map(t=>demandCard(t,!!e)).join("")}</div>`}</div>`;}).join("");
+    el.querySelectorAll(".eghead").forEach(h=>h.onclick=ev=>{const g=h.parentElement.dataset.g;
+      if(ev.target.classList.contains("eggo")){view="epics";activeEpicId=g;epicTab="overview";renderApp();return;}
+      const c=collapsedEpicGroups();if(c.has(g))c.delete(g);else c.add(g);setViewPref("epicCollapsed",JSON.stringify([...c]));renderList();});
+  }
   el.querySelectorAll(".tcard").forEach(c=>c.onclick=()=>{activeId=c.dataset.id;activeTab="work";renderApp();});
 }
 

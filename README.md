@@ -203,6 +203,16 @@ stats row while a selection is active. There are also filters for epic, project,
 theme and requestor, and a **Hide closed demands** checkbox — that checkbox is
 the default convenience, so if you explicitly select *Closed* the chips win.
 
+**Group by epic** (on by default) splits the list into one block per epic —
+active epics first, then on-hold, delivered and closed — with ungrouped demands
+under **No epic** at the bottom. Each header shows the epic code and name, how
+many of its demands are open and shown (e.g. `2 open · 3`, or `2/3` when filters
+hide some), an ⚑ count if any are overdue, and **›** to jump to the epic. Click a
+header to collapse it; collapsed groups stay collapsed next time (remembered per
+browser, not in your data file), but a group re-opens automatically when the
+demand you're working on is inside it. Headers stick to the top while you scroll.
+Filters and sort still apply inside every group. Untick the box for the flat list.
+
 ### System landscape
 Sync targets are picked from your landscape grid, generated from `H0`–`H6` ×
 tier digit: **x3 = Development, x2 = Pre-prod/QA, x1 = Production** (e.g. `H03`,
