@@ -668,13 +668,23 @@ const todayStr=()=>dstr(new Date());
 
 const STATUS={open:{label:"Open",cls:"open"},progress:{label:"In progress",cls:"progress"},delivered:{label:"Delivered",cls:"delivered"},bug:{label:"Bug / Rework",cls:"bug"},closed:{label:"Closed",cls:"closed"}};
 const TASK_TYPES=["Report change","New development","Standard object mod","Infotype change","Troubleshooting","Enhancement","Other"];
-const OBJ_TYPES=["Report / Program","Include","Function Module","Class / Method","Structure","Table / View","Data Element / Domain","Infotype","Enhancement / BAdI","Smartform / Adobe","Transformation","Search Help","Other"];
+const DEF_OBJ_TYPES=["Report / Program","Include","Function Module","Class / Method","Structure","Table / View","Data Element / Domain","Infotype","Enhancement / BAdI","Smartform / Adobe","Transformation","Search Help","Other"];
 const OBJ_ACTIONS=["Created","Modified","Deleted","Analyzed"];
+/* Object types are editable (⋯ menu, or ⚙ on the Objects tab) — every ABAP shop
+   names its objects differently, and older objects keep a type even after it is
+   removed from the list. */
+function objTypes(){const a=state.settings.objTypes;return (a&&a.length)?a:DEF_OBJ_TYPES;}
+function objTypeOptions(selected){
+  let list=objTypes().slice();
+  if(selected&&!list.includes(selected))list=[selected,...list];
+  return list.map(x=>`<option ${x===selected?"selected":""}>${esc(x)}</option>`).join("");
+}
+function objTypeUsage(type){let n=0;state.tasks.forEach(t=>t.objects.forEach(o=>{if(o.type===type)n++;}));return n;}
 
 const DEF_LANDSCAPES=["H0","H1","H2","H3","H4","H5","H6"];
 const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod / QA",short:"QA"},{d:"1",label:"Production",short:"PRD"}];
 
-let state={version:18,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
+let state={version:19,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false;
 let view="today";
 let activeId=null, activeTab="work", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -834,7 +844,7 @@ function updateReconnectUI(){const b=document.getElementById("btnReconnect");if(
 async function forgetHandle(){savedHandle=null;if(useIdb)await idbDel("handle");updateReconnectUI();}
 
 function migrate(d){
-  d.version=18;
+  d.version=19;
   d.settings=d.settings||{};
   d.settings.landscapes=d.settings.landscapes&&d.settings.landscapes.length?d.settings.landscapes:[...DEF_LANDSCAPES];
   d.settings.tiers=d.settings.tiers&&d.settings.tiers.length?d.settings.tiers:DEF_TIERS;
@@ -842,6 +852,8 @@ function migrate(d){
   d.settings.encryption=!!d.settings.encryption;
   d.settings.autosave=d.settings.autosave!==false;
   d.settings.clients=(d.settings.clients&&typeof d.settings.clients==="object")?d.settings.clients:{};
+  {const a=(d.settings.objTypes||[]).map(x=>String(x||"").trim()).filter(Boolean);
+   d.settings.objTypes=[...new Set(a.length?a:DEF_OBJ_TYPES)];}
   d.settings.imageExpiryDays=(typeof d.settings.imageExpiryDays==="number")?d.settings.imageExpiryDays:90;
   d.images=(d.images||[]).map(normImage);
   d.playbook=(d.playbook||[]).map(normPlay);
@@ -1537,13 +1549,13 @@ function openSubCommentsModal(t,s,rr){
 }
 
 function renderObjects(body,t){
-  body.innerHTML=`<div class="sec-title"><h3>Objects touched / modified</h3><div class="ln"></div><button class="sm" id="addObj">＋ Add object</button></div>
+  body.innerHTML=`<div class="sec-title"><h3>Objects touched / modified</h3><div class="ln"></div><button class="sm" id="objTypes" title="Add or remove object types in the dropdown">⚙ Types</button><button class="sm" id="addObj">＋ Add object</button></div>
     <div class="tbl-wrap"><table><thead><tr><th style="width:22%">Object name</th><th style="width:16%">Type</th><th style="width:11%">Action</th><th>What was done</th><th style="width:16%">In transport(s)</th><th style="width:34px"></th></tr></thead><tbody id="objBody"></tbody></table></div>
     <p class="faint" style="font-size:12px">“In transport(s)” is derived from the Transports tab — tick objects on each TR there. The top search finds which demand touched a given object months later.</p>`;
   const tb=body.querySelector("#objBody");
   const draw=()=>{tb.innerHTML=t.objects.length?t.objects.map(o=>{const trs=trsForObject(t,o.id);return `<tr data-id="${o.id}">
     <td><input class="mono o-name" value="${esc(o.name)}" placeholder="ZRPS_..."></td>
-    <td><select class="o-type">${OBJ_TYPES.map(x=>`<option ${x===o.type?"selected":""}>${x}</option>`).join("")}</select></td>
+    <td><select class="o-type">${objTypeOptions(o.type)}</select></td>
     <td><select class="o-act">${OBJ_ACTIONS.map(x=>`<option ${x===o.action?"selected":""}>${x}</option>`).join("")}</select></td>
     <td><textarea class="o-desc" placeholder="Describe the change…">${esc(o.desc)}</textarea></td>
     <td class="mono" style="font-size:11px;color:var(--muted)">${trs.length?trs.map(tr=>esc(tr.number||"(unnumbered)")).join(", "):"—"}</td>
@@ -1554,7 +1566,8 @@ function renderObjects(body,t){
       tr.querySelector(".o-act").onchange=e=>{o.action=e.target.value;touch(t);};
       tr.querySelector(".o-desc").onchange=e=>{o.desc=e.target.value;touch(t);};
       tr.querySelector(".o-del").onclick=()=>{t.objects=t.objects.filter(x=>x.id!==o.id);t.transports.forEach(x=>{if(x.objectIds)x.objectIds=x.objectIds.filter(id=>id!==o.id);});touch(t);draw();renderDetail();};});};
-  body.querySelector("#addObj").onclick=()=>{t.objects.push({id:uid(),name:"",type:OBJ_TYPES[0],action:"Modified",desc:""});touch(t);draw();};
+  body.querySelector("#objTypes").onclick=()=>openObjTypes(()=>{draw();});
+  body.querySelector("#addObj").onclick=()=>{t.objects.push({id:uid(),name:"",type:objTypes()[0],action:"Modified",desc:""});touch(t);draw();};
   draw();
 }
 function openObjPicker(t,tr,cb){
@@ -2177,6 +2190,46 @@ async function openEncryptionDialog(){
 }
 
 /* ===================== OBJECT INDEX (cross-reference) ===================== */
+/* Add / rename / reorder / remove the object types offered in the Objects tab. */
+function openObjTypes(onDone){
+  const root=document.getElementById("modalRoot");
+  root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:460px"><h2>⚙ Object types</h2>
+    <p class="faint" style="font-size:12px;margin-top:-8px">These fill the <b>Type</b> dropdown on every demand's Objects tab. Renaming one here leaves objects already logged untouched; removing one keeps it on the objects that use it, it just stops being offered.</p>
+    <div id="ot-list"></div>
+    <div style="display:flex;gap:6px;margin-top:10px"><input id="ot-new" placeholder="New type, e.g. CDS View  (Enter to add)" style="flex:1"><button class="sm primary" id="ot-add">＋ Add</button></div>
+    <div class="modal-foot"><button id="ot-reset" class="ghost">↺ Restore defaults</button><button id="ot-close" class="primary">Done</button></div></div></div>`;
+  const draw=()=>{const host=root.querySelector("#ot-list"),list=objTypes();
+    host.innerHTML=`<div class="tbl-wrap" style="max-height:300px;overflow:auto"><table><tbody>${list.map((x,i)=>{const n=objTypeUsage(x);
+      return `<tr data-i="${i}"><td style="width:26px;text-align:right" class="faint mono">${i+1}</td>
+        <td><input class="ot-n" value="${esc(x)}"></td>
+        <td style="width:74px" class="faint" title="Objects logged with this type">${n?n+" used":""}</td>
+        <td style="width:96px;text-align:right;white-space:nowrap"><button class="ghost sm ot-up" ${i?"":"disabled"}>↑</button><button class="ghost sm ot-dn" ${i<list.length-1?"":"disabled"}>↓</button><button class="ghost sm danger ot-x">🗑</button></td></tr>`;}).join("")}</tbody></table></div>`;
+    const save=arr=>{state.settings.objTypes=arr;markDirty();draw();};
+    host.querySelectorAll("tr[data-i]").forEach(tr=>{const i=+tr.dataset.i,arr=objTypes().slice();
+      tr.querySelector(".ot-n").onchange=ev=>{const v=ev.target.value.trim();
+        if(!v){ev.target.value=arr[i];return;}
+        if(arr.some((y,j)=>j!==i&&y===v)){toast("That type already exists",true);ev.target.value=arr[i];return;}
+        arr[i]=v;save(arr);};
+      tr.querySelector(".ot-up").onclick=()=>{if(i){[arr[i-1],arr[i]]=[arr[i],arr[i-1]];save(arr);}};
+      tr.querySelector(".ot-dn").onclick=()=>{if(i<arr.length-1){[arr[i+1],arr[i]]=[arr[i],arr[i+1]];save(arr);}};
+      tr.querySelector(".ot-x").onclick=()=>{
+        if(arr.length===1){toast("Keep at least one type",true);return;}
+        const n=objTypeUsage(arr[i]);
+        if(n&&!confirm(`"${arr[i]}" is used by ${n} object(s).\n\nThose objects keep the type — it just won't be offered for new ones. Remove it from the list?`))return;
+        arr.splice(i,1);save(arr);};});};
+  const add=()=>{const el=root.querySelector("#ot-new"),v=el.value.trim();if(!v)return;
+    const arr=objTypes().slice();
+    if(arr.includes(v)){toast("That type already exists",true);return;}
+    arr.push(v);state.settings.objTypes=arr;markDirty();el.value="";draw();el.focus();};
+  root.querySelector("#ot-add").onclick=add;
+  root.querySelector("#ot-new").onkeydown=ev=>{if(ev.key==="Enter")add();};
+  root.querySelector("#ot-reset").onclick=()=>{if(confirm("Restore the built-in list of object types?\n\nObjects already logged keep their current type."))
+    {state.settings.objTypes=[...DEF_OBJ_TYPES];markDirty();draw();}};
+  const close=()=>{root.innerHTML="";if(onDone)onDone();};
+  root.querySelector("#ot-close").onclick=close;
+  root.querySelector(".modal-bg").onclick=ev=>{if(ev.target===root.querySelector(".modal-bg"))close();};
+  draw();
+}
 function openObjectIndex(){
   const root=document.getElementById("modalRoot");
   const map={},dmap={};
@@ -3251,6 +3304,10 @@ function openMenu(){
       <span style="flex-basis:100%;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px">Default expiry
         <input type="number" id="mn-imgexp" min="0" max="3650" value="${state.settings.imageExpiryDays}" style="width:70px;padding:3px 6px"> days (0 = never) — expired images surface on Today</span>
     </div>
+    <div style="display:flex;align-items:center;gap:10px;margin:8px 0;padding:9px 11px;border:1px solid var(--line2);border-radius:8px">
+      <span style="flex:1;font-size:13px">🧩 Object types <span class="faint" style="font-size:11px">(${objTypes().length} in the Objects-tab dropdown)</span></span>
+      <button class="sm" id="mn-objtypes">Edit…</button>
+    </div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
       <button id="mn-week">🗓 Weekly summary…</button>
       <button id="mn-csv">⬇ Export transports (CSV for Excel)</button>
@@ -3274,6 +3331,7 @@ function openMenu(){
   root.querySelector("#mn-imgdir").onclick=async()=>{imagesDir=null;imgDirSaved=null;if(await ensureImgDir(true)){close();openMenu();}};
   const mif=root.querySelector("#mn-imgforget");if(mif)mif.onclick=async()=>{await forgetImgDir();toast("Images folder forgotten (files untouched)");close();openMenu();};
   root.querySelector("#mn-imgexp").onchange=e=>{const n=Math.max(0,parseInt(e.target.value||"0",10)||0);state.settings.imageExpiryDays=n;markDirty();};
+  root.querySelector("#mn-objtypes").onclick=()=>{close();openObjTypes(()=>renderApp());};
   root.querySelector("#mn-week").onclick=()=>{close();openWeekly();};
   root.querySelector("#mn-csv").onclick=exportTransportsCSV;
   root.querySelector("#mn-export").onclick=exportDownload;

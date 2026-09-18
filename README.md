@@ -172,7 +172,12 @@ Label** within each group, so big landscapes stay scannable. Passwords are maske
 with reveal + copy buttons. Protect it with the master password (see Security
 above).
 - **Objects touched** — name, type, action (Created/Modified/Deleted), and a
-  free-text note of what was done.
+  free-text note of what was done. The **type** list is yours to edit: **⚙ Types**
+  on the Objects tab (or ⋯ menu → *Object types*) lets you add, rename, reorder
+  and remove entries, with **↺ Restore defaults** to go back to the built-in list.
+  Each row shows how many objects use that type; renaming or removing one never
+  touches objects already logged — a removed type simply stops being offered and
+  still shows on the objects that carry it.
 - **Transports** — TR number, description, origin system, released flag, and a
   list of **sync targets** (each system + import date). Transports are **ordered**
   (release order; reorder with ↑↓).
