@@ -109,6 +109,12 @@ it. Empty sections are hidden; if everything's clear it says so. A first-run
   working-notes log, and a **timestamped comments thread**.
 - **Subtasks** — branch infinitely; each has its own received/due dates, a done
   checkbox, overdue highlighting, and its **own comments** (💬 button → thread).
+- **Source system & client** — where the demand lives, e.g. `H03` / client `010`.
+  The system is picked from your landscape grid and the client list follows the
+  landscape (so H1x offers 030/040/050/150/190/560). It shows as a tier-coloured
+  chip on the card and in the demand header, filters the sidebar (**All systems**),
+  is searchable, and appears in the Tech Spec and Epic brief. New demands default
+  to your default system; a new transport starts from the demand's system.
 - **Project & Theme** — two grouping dimensions on each demand. **Project** = a
   named initiative spanning many demands (e.g. "Sailpoint integration"); **Theme**
   = a functional area (e.g. Travel, TRem, Payroll). Both have reuse-suggestions

@@ -674,7 +674,7 @@ const OBJ_ACTIONS=["Created","Modified","Deleted","Analyzed"];
 const DEF_LANDSCAPES=["H0","H1","H2","H3","H4","H5","H6"];
 const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod / QA",short:"QA"},{d:"1",label:"Production",short:"PRD"}];
 
-let state={version:17,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
+let state={version:18,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false;
 let view="today";
 let activeId=null, activeTab="work", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -834,7 +834,7 @@ function updateReconnectUI(){const b=document.getElementById("btnReconnect");if(
 async function forgetHandle(){savedHandle=null;if(useIdb)await idbDel("handle");updateReconnectUI();}
 
 function migrate(d){
-  d.version=17;
+  d.version=18;
   d.settings=d.settings||{};
   d.settings.landscapes=d.settings.landscapes&&d.settings.landscapes.length?d.settings.landscapes:[...DEF_LANDSCAPES];
   d.settings.tiers=d.settings.tiers&&d.settings.tiers.length?d.settings.tiers:DEF_TIERS;
@@ -864,7 +864,8 @@ function migrate(d){
     transports.forEach(tr=>{ if(!tr.tocId && tr.toc){ let toc=tocs.find(x=>x.number===tr.toc); if(!toc){toc=normToc({number:tr.toc}); tocs.push(toc);} tr.tocId=toc.id; } tr.toc=""; });
     return {
     id:t.id||uid(),demandId:t.demandId||"",title:t.title||"(untitled)",type:t.type||"Other",status:t.status||"open",
-    requestor:t.requestor||"",epicId:t.epicId||"",wave:t.wave||"",project:t.project||"",theme:t.theme||"",
+    requestor:t.requestor||"",epicId:t.epicId||"",wave:t.wave||"",
+    system:t.system||"",client:t.client||"",project:t.project||"",theme:t.theme||"",
     waiting:{on:(t.waiting&&t.waiting.on)||"",since:(t.waiting&&t.waiting.since)||""},goliveTarget:t.goliveTarget||"",
     receivedDate:t.receivedDate||"",dueDate:t.dueDate||"",description:t.description||"",notes:t.notes||"",
     timeline:(t.timeline||[]).map(e=>({id:e.id||uid(),ts:e.ts||Date.now(),type:e.type||"note",from:e.from||"",to:e.to||"",note:e.note||""})),
@@ -1235,6 +1236,7 @@ function renderDemandSidebar(){
       <div class="statchips" id="fStatus">${Object.entries(STATUS).map(([k,v])=>`<button class="statchip ${v.cls}" data-s="${k}">${v.label}</button>`).join("")}<button class="statchip clear" id="fStatusAll" title="Show every status">All</button></div>
       <div class="filters">
         <select id="fEpic"><option value="">All epics</option><option value="__none">— no epic —</option>${state.epics.slice().sort((a,b)=>epicLabel(a).localeCompare(epicLabel(b))).map(e=>`<option value="${e.id}">◆ ${esc(epicLabel(e))}</option>`).join("")}</select>
+        <select id="fSys"><option value="">All systems</option>${distinctVals("system").map(v=>`<option value="${esc(v)}">${esc(v)}${clientsUsedFor(v).length?" · "+clientsUsedFor(v).join("/"):""}</option>`).join("")}</select>
         <select id="fSort"><option value="due">Sort: Due</option><option value="received">Sort: Received</option><option value="updated">Sort: Updated</option><option value="demand">Sort: Demand ID</option></select>
       </div>
       <div class="filters">
@@ -1257,6 +1259,8 @@ function renderDemandSidebar(){
   document.getElementById("btnObjIdx").onclick=openObjectIndex;
   document.getElementById("btnPortfolio").onclick=openPortfolio;
   document.getElementById("btnAging").onclick=openAging;
+  const sy=document.getElementById("fSys");sy.value=renderDemandSidebar._fsy||"";
+  sy.onchange=()=>{renderDemandSidebar._fsy=sy.value;renderStats();renderList();};
   const so=document.getElementById("fSort"),fr=document.getElementById("fReq"),fp=document.getElementById("fProj"),ft=document.getElementById("fTheme"),fe=document.getElementById("fEpic");
   so.value=renderDemandSidebar._so||"due";fr.value=renderDemandSidebar._fr||"";fp.value=renderDemandSidebar._fp||"";ft.value=renderDemandSidebar._ft||"";fe.value=renderDemandSidebar._fe||"";
   /* multi-select statuses: a set, so "open + in progress" is one click each.
@@ -1289,8 +1293,9 @@ function statusSel(){const v=renderDemandSidebar._fs;
   return new Set(Array.isArray(v)?v:(v?[v]:[]));}
 function demandFilter(){
   const sel=statusSel(),fReq=renderDemandSidebar._fr||"",fProj=renderDemandSidebar._fp||"",
-        fTheme=renderDemandSidebar._ft||"",fEpic=renderDemandSidebar._fe||"",hideClosed=!!renderDemandSidebar._hc;
-  return t=>(!fReq||t.requestor===fReq)&&(!fProj||t.project===fProj)&&(!fTheme||t.theme===fTheme)
+        fTheme=renderDemandSidebar._ft||"",fEpic=renderDemandSidebar._fe||"",fSys=renderDemandSidebar._fsy||"",
+        hideClosed=!!renderDemandSidebar._hc;
+  return t=>(!fSys||t.system===fSys)&&(!fReq||t.requestor===fReq)&&(!fProj||t.project===fProj)&&(!fTheme||t.theme===fTheme)
     &&(!fEpic||(fEpic==="__none"?!t.epicId:t.epicId===fEpic))
     /* explicit chips win; hide-closed is only the default convenience */
     &&(sel.size?sel.has(t.status):!(hideClosed&&t.status==="closed"));
@@ -1307,6 +1312,7 @@ function demandCard(t,grouped){const st=STATUS[t.status],sub=countSubs(t.subtask
       <div class="demand">${esc(t.demandId||"— no demand id —")}</div>
       <div class="ttitle">${esc(t.title)}</div>
       <div class="meta"><span class="pill ${st.cls}">${st.label}</span>
+        ${t.system?sysPill(t.system,"",t.client):""}
         ${isWaiting(t)?`<span class="pill" style="color:var(--amber);border-color:var(--amber-line)">⏳ ${esc(t.waiting.on)}${waitDays(t)!=null?" "+waitDays(t)+"d":""}</span>`:""}
         ${(()=>{const ep=epicById(t.epicId);if(!ep)return "";if(grouped)return t.wave?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">${esc(t.wave)}</span>`:"";
           return `<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">◆ ${esc(ep.code||ep.name)}${t.wave?" · "+esc(t.wave):""}</span>`;})()}
@@ -1366,7 +1372,7 @@ function renderDetail(){
       <div class="dh-top"><div style="flex:1">
         <div class="dh-demand">${esc(t.demandId||"— no demand id —")}</div>
         <h1>${esc(t.title)}</h1>
-        <div class="dh-dates"><span>Type: <b>${esc(t.type)}</b></span>${(()=>{const ep=epicById(t.epicId);return ep?`<span>Epic: <b class="ep-go" style="color:var(--accent2);cursor:pointer">◆ ${esc(epicLabel(ep))}</b>${t.wave?` · <b>${esc(t.wave)}</b>`:""}</span>`:"";})()}${t.project?`<span>Project: <b>▦ ${esc(t.project)}</b></span>`:""}${t.theme?`<span>Theme: <b>${esc(t.theme)}</b></span>`:""}${t.requestor?`<span>Requestor: <b>👤 ${esc(t.requestor)}</b></span>`:""}<span>Received: <b class="mono">${t.receivedDate||"—"}</b></span><span>Due: <b class="mono due ${dueClass(t.dueDate,t.status)}">${t.dueDate||"—"}</b></span>${reworkCount(t)?`<span style="color:var(--red)">↻ ${reworkCount(t)} rework cycle(s)</span>`:""}</div>
+        <div class="dh-dates"><span>Type: <b>${esc(t.type)}</b></span>${t.system?`<span>System: ${sysPill(t.system,"",t.client)}</span>`:""}${(()=>{const ep=epicById(t.epicId);return ep?`<span>Epic: <b class="ep-go" style="color:var(--accent2);cursor:pointer">◆ ${esc(epicLabel(ep))}</b>${t.wave?` · <b>${esc(t.wave)}</b>`:""}</span>`:"";})()}${t.project?`<span>Project: <b>▦ ${esc(t.project)}</b></span>`:""}${t.theme?`<span>Theme: <b>${esc(t.theme)}</b></span>`:""}${t.requestor?`<span>Requestor: <b>👤 ${esc(t.requestor)}</b></span>`:""}<span>Received: <b class="mono">${t.receivedDate||"—"}</b></span><span>Due: <b class="mono due ${dueClass(t.dueDate,t.status)}">${t.dueDate||"—"}</b></span>${reworkCount(t)?`<span style="color:var(--red)">↻ ${reworkCount(t)} rework cycle(s)</span>`:""}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
         <span class="pill ${st.cls}" style="font-size:12px">${st.label}</span>
@@ -1571,7 +1577,7 @@ function renderTransports(body,t){
     <div class="sec-title" style="margin-top:22px"><h3>Transports of Copies (ToC)</h3><div class="ln"></div><button class="sm" id="addToc">＋ New ToC</button></div>
     <div id="tocList"></div>`;
   body.querySelector("#expTr").onclick=exportTransportsCSV;
-  body.querySelector("#addTr").onclick=()=>{t.transports.push({id:uid(),number:"",desc:"",system:state.settings.defaultSystem,released:false,kind:"workbench",client:"",syncs:[],tocId:"",toc:"",objectIds:[],notes:""});touch(t);renderTransports(body,t);renderDetail();};
+  body.querySelector("#addTr").onclick=()=>{t.transports.push({id:uid(),number:"",desc:"",system:t.system||state.settings.defaultSystem,released:false,kind:"workbench",client:"",syncs:[],tocId:"",toc:"",objectIds:[],notes:""});touch(t);renderTransports(body,t);renderDetail();};
   body.querySelector("#addToc").onclick=()=>{(t.tocs=t.tocs||[]).push(normToc({system:state.settings.defaultSystem}));touch(t);renderTransports(body,t);};
   drawReadiness();drawTrs();drawTocs();
 
@@ -1730,7 +1736,7 @@ function buildTechSpecHTML(t){
   const calls=meetingsForTask(t.id);
   return `<h1>Post-Delivery Technical Specification</h1>
    <h2>${esc(t.demandId||"(no demand id)")} — ${esc(t.title)}</h2>
-   <p class="meta"><b>Type:</b> ${esc(t.type)} &nbsp;|&nbsp; <b>Status:</b> ${STATUS[t.status].label} &nbsp;|&nbsp; <b>Requestor:</b> ${esc(t.requestor)||"—"} &nbsp;|&nbsp; <b>Received:</b> ${t.receivedDate||"—"} &nbsp;|&nbsp; <b>Due:</b> ${t.dueDate||"—"} &nbsp;|&nbsp; <b>Generated:</b> ${todayStr()}</p>
+   <p class="meta"><b>Type:</b> ${esc(t.type)} &nbsp;|&nbsp; <b>Status:</b> ${STATUS[t.status].label} &nbsp;|&nbsp; <b>System:</b> ${esc(t.system)||"—"}${t.client?" / "+esc(t.client):""} &nbsp;|&nbsp; <b>Requestor:</b> ${esc(t.requestor)||"—"} &nbsp;|&nbsp; <b>Received:</b> ${t.receivedDate||"—"} &nbsp;|&nbsp; <b>Due:</b> ${t.dueDate||"—"} &nbsp;|&nbsp; <b>Generated:</b> ${todayStr()}</p>
    ${(()=>{const e=epicById(t.epicId);return e?`<p class="meta"><b>Epic:</b> ${esc(epicLabel(e))}${e.owner?" ("+esc(e.owner)+")":""}</p>`:"";})()}
    ${(t.project||t.theme)?`<p class="meta"><b>Project:</b> ${esc(t.project)||"—"} &nbsp;|&nbsp; <b>Theme:</b> ${esc(t.theme)||"—"}</p>`:""}
    ${(reworkCount(t)||deliveredDates(t).length)?`<p class="meta"><b>Delivered:</b> ${deliveredDates(t).join(", ")||"—"} &nbsp;|&nbsp; <b>Rework cycles:</b> ${reworkCount(t)}</p>`:""}
@@ -1745,7 +1751,7 @@ function buildTechSpecHTML(t){
 function buildTechSpecMarkdown(t){
   const calls=meetingsForTask(t.id);const L=[];
   L.push(`# Post-Delivery Technical Specification`,``,`## ${t.demandId||"(no demand id)"} — ${t.title}`,``);
-  L.push(`- **Type:** ${t.type}`,`- **Status:** ${STATUS[t.status].label}`,`- **Requestor:** ${t.requestor||"—"}`);
+  L.push(`- **Type:** ${t.type}`,`- **Status:** ${STATUS[t.status].label}`,`- **System:** ${t.system||"—"}${t.client?" / "+t.client:""}`,`- **Requestor:** ${t.requestor||"—"}`);
   {const e=epicById(t.epicId);if(e)L.push(`- **Epic:** ${epicLabel(e)}${e.owner?" ("+e.owner+")":""}`);}
   if(t.project||t.theme)L.push(`- **Project:** ${t.project||"—"} | **Theme:** ${t.theme||"—"}`);
   L.push(`- **Received:** ${t.receivedDate||"—"} | **Due:** ${t.dueDate||"—"}`);
@@ -1934,6 +1940,8 @@ function openTaskModal(existing){
     <div class="field"><label>Title</label><input id="m-title" value="${esc(t.title)||""}" placeholder="Short description of the requirement"></div>
     <div class="grid2"><div class="field"><label>◆ Epic</label><select id="m-epic"><option value="">— none —</option>${state.epics.slice().sort((a,b)=>epicLabel(a).localeCompare(epicLabel(b))).map(x=>`<option value="${x.id}" ${(t.epicId||(!existing&&view==="epics"?activeEpicId:""))===x.id?"selected":""}>${esc(epicLabel(x))}</option>`).join("")}</select></div>
       <div class="field"><label>Wave / phase within the epic</label><input id="m-wave" list="dl-wave" value="${esc(t.wave)||""}" placeholder="e.g. Wave 2, Sync to backends"><datalist id="dl-wave">${distinctVals("wave").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div></div>
+    <div class="grid2"><div class="field"><label>Source system</label><select id="m-sys">${systemOptions(existing?t.system:(t.system||state.settings.defaultSystem))}</select></div>
+      <div class="field"><label>Client / mandant</label><select id="m-client">${clientOptions(existing?t.system:(t.system||state.settings.defaultSystem),t.client)}</select></div></div>
     <div class="grid2"><div class="field"><label>Project (initiative)</label><input id="m-proj" list="dl-proj" value="${esc(t.project)||""}" placeholder="e.g. Sailpoint integration"><datalist id="dl-proj">${distinctVals("project").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div>
       <div class="field"><label>Theme (functional area)</label><input id="m-theme" list="dl-theme" value="${esc(t.theme)||""}" placeholder="e.g. Travel, TRem, Payroll"><datalist id="dl-theme">${distinctVals("theme").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div></div>
     <div class="grid2"><div class="field"><label>Requestor / who asked</label><input id="m-req" list="dl-req" value="${esc(t.requestor)||""}" placeholder="Name / team"><datalist id="dl-req">${distinctVals("requestor").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div>
@@ -1947,15 +1955,18 @@ function openTaskModal(existing){
   const close=()=>root.innerHTML="";
   root.querySelector("#m-cancel").onclick=close;
   root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
+  {const sy=root.querySelector("#m-sys"),cl=root.querySelector("#m-client");
+   sy.onchange=()=>{cl.innerHTML=clientOptions(sy.value,"");};}
   root.querySelector("#m-title").focus();
   root.querySelector("#m-save").onclick=()=>{const g=id=>root.querySelector(id).value;
     const won=g("#m-wait").trim();let wsince=g("#m-waitsince");if(won&&!wsince)wsince=todayStr();if(!won)wsince="";
-    const data={demandId:g("#m-demand").trim(),type:g("#m-type"),title:g("#m-title").trim()||"(untitled)",requestor:g("#m-req").trim(),epicId:g("#m-epic"),wave:g("#m-wave").trim(),project:g("#m-proj").trim(),theme:g("#m-theme").trim(),waiting:{on:won,since:wsince},receivedDate:g("#m-rec"),dueDate:g("#m-due"),status:g("#m-status"),description:g("#m-desc")};
+    const data={demandId:g("#m-demand").trim(),type:g("#m-type"),title:g("#m-title").trim()||"(untitled)",requestor:g("#m-req").trim(),epicId:g("#m-epic"),wave:g("#m-wave").trim(),system:g("#m-sys"),client:g("#m-client"),project:g("#m-proj").trim(),theme:g("#m-theme").trim(),waiting:{on:won,since:wsince},receivedDate:g("#m-rec"),dueDate:g("#m-due"),status:g("#m-status"),description:g("#m-desc")};
     if(existing){if(existing.status!==data.status)logTimeline(existing,"status",existing.status,data.status);Object.assign(existing,data);touch(existing);}
     else{const nt={id:uid(),...data,goliveTarget:"",notes:"",timeline:[],subtasks:[],objects:[],transports:[],tocs:[],comments:[],reference:[],createdAt:Date.now(),updatedAt:Date.now()};
       logTimeline(nt,"status","",data.status);state.tasks.push(nt);activeId=nt.id;markDirty();}
     close();renderApp();};
 }
+function clientsUsedFor(sysId){return [...new Set(state.tasks.filter(t=>t.system===sysId&&t.client).map(t=>t.client))].sort();}
 function distinctVals(field){return [...new Set(state.tasks.map(t=>t[field]).filter(Boolean))].sort();}
 function logTimeline(t,type,from,to,note){(t.timeline=t.timeline||[]).push({id:uid(),ts:Date.now(),type,from,to,note:note||""});}
 function reworkCount(t){return (t.timeline||[]).filter(e=>e.type==="status"&&e.to==="bug").length;}
@@ -2797,7 +2808,7 @@ function buildEpicBriefHTML(e){
     ${e.description?`<h3>Description</h3><p style="white-space:pre-wrap">${esc(e.description)}</p>`:""}
     ${e.myScope?`<h3>${e.role==="contributor"?"My part":"Scope / approach"}</h3><p style="white-space:pre-wrap">${esc(e.myScope)}</p>`:""}
     <h3>Demands (${r.ts.length} · ${r.done} done)</h3>
-    ${r.ts.length?waves.map(w=>`${waves.length>1||w?`<h4>${w?esc(w):"No wave"}${waveTarget(e,w)?` — target ${waveTarget(e,w)}`:""}</h4>`:""}<table><tr><th>Demand</th><th>Title</th><th>Status</th><th>Received</th><th>Transports</th></tr>${r.ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"").localeCompare(b.receivedDate||"")).map(t=>`<tr><td>${esc(t.demandId||"—")}</td><td>${esc(t.title)}</td><td>${STATUS[t.status].label}</td><td>${t.receivedDate||"—"}</td><td>${t.transports.map(tr=>esc(tr.number||"(TR)")).join(", ")||"—"}</td></tr>`).join("")}</table>`).join(""):"<p><i>none</i></p>"}
+    ${r.ts.length?waves.map(w=>`${waves.length>1||w?`<h4>${w?esc(w):"No wave"}${waveTarget(e,w)?` — target ${waveTarget(e,w)}`:""}</h4>`:""}<table><tr><th>Demand</th><th>Title</th><th>System</th><th>Status</th><th>Received</th><th>Transports</th></tr>${r.ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"").localeCompare(b.receivedDate||"")).map(t=>`<tr><td>${esc(t.demandId||"—")}</td><td>${esc(t.title)}</td><td>${esc(t.system)||"—"}${t.client?" / "+esc(t.client):""}</td><td>${STATUS[t.status].label}</td><td>${t.receivedDate||"—"}</td><td>${t.transports.map(tr=>esc(tr.number||"(TR)")).join(", ")||"—"}</td></tr>`).join("")}</table>`).join(""):"<p><i>none</i></p>"}
     ${e.deps.length?`<h3>Dependencies on other teams</h3><table><tr><th>Team</th><th>What</th><th>Since</th><th>Expected</th><th>State</th></tr>${e.deps.map(x=>`<tr><td>${esc(x.team)}</td><td>${esc(x.what)}</td><td>${x.since||"—"}</td><td>${x.expected||"—"}</td><td>${x.done?"✓ delivered "+x.doneDate:(x.lastCheck?"open · last chased "+x.lastCheck:"open")}</td></tr>`).join("")}</table>`:""}
     <h3>Go-live readiness</h3><p>${!r.trs.length?"No transports recorded.":!r.pending.length?"✓ Every transport has reached its go-live target.":r.pending.map(x=>`${esc(x.t.demandId||x.t.title)} — ${x.g.missing.length} TR(s) not yet in ${x.g.target}`).join("<br>")}</p>
     ${e.subtasks.length?`<h3>Epic subtasks</h3>${subs(e.subtasks)}`:""}
@@ -2815,8 +2826,8 @@ function buildEpicBriefMarkdown(e){
   if(e.myScope)L.push(`## ${e.role==="contributor"?"My part":"Scope / approach"}`,e.myScope,``);
   L.push(`## Demands (${r.ts.length} · ${r.done} done)`);
   waves.forEach(w=>{if(waves.length>1||w)L.push(``,`### ${w||"No wave"}${waveTarget(e,w)?` — target ${waveTarget(e,w)}`:""}`);
-    L.push(`| Demand | Title | Status | Received | Transports |`,`|---|---|---|---|---|`);
-    r.ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"").localeCompare(b.receivedDate||"")).forEach(t=>L.push(`| ${t.demandId||"—"} | ${t.title} | ${STATUS[t.status].label} | ${t.receivedDate||"—"} | ${t.transports.map(tr=>tr.number||"(TR)").join(", ")||"—"} |`));});
+    L.push(`| Demand | Title | System | Status | Received | Transports |`,`|---|---|---|---|---|---|`);
+    r.ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"").localeCompare(b.receivedDate||"")).forEach(t=>L.push(`| ${t.demandId||"—"} | ${t.title} | ${t.system||"—"}${t.client?" / "+t.client:""} | ${STATUS[t.status].label} | ${t.receivedDate||"—"} | ${t.transports.map(tr=>tr.number||"(TR)").join(", ")||"—"} |`));});
   L.push(``);
   if(e.deps.length){L.push(`## Dependencies on other teams`,`| Team | What | Since | Expected | State |`,`|---|---|---|---|---|`);
     e.deps.forEach(x=>L.push(`| ${x.team} | ${x.what} | ${x.since||"—"} | ${x.expected||"—"} | ${x.done?"delivered "+x.doneDate:(x.lastCheck?"open · last chased "+x.lastCheck:"open")} |`));L.push(``);}
@@ -3174,7 +3185,7 @@ function runGlobalSearch(q){
   if(!q){box.classList.add("hide");return;}
   const hits=[];
   state.tasks.forEach(t=>{
-    if([t.demandId,t.title,t.description,t.notes,t.type,t.requestor,t.project,t.theme,t.wave,(()=>{const e=epicById(t.epicId);return e?epicLabel(e):"";})(),(t.comments||[]).map(c=>c.text).join(" ")].join(" ").toLowerCase().includes(q))hits.push({k:"Demand",go:()=>{view="demands";activeId=t.id;activeTab="work";},label:`${t.demandId||"—"} · ${t.title}${t.project?" · ▦ "+t.project:""}${t.theme?" · "+t.theme:""}`});
+    if([t.demandId,t.title,t.description,t.notes,t.type,t.requestor,t.project,t.theme,t.wave,t.system,t.client?"client "+t.client:"",(()=>{const e=epicById(t.epicId);return e?epicLabel(e):"";})(),(t.comments||[]).map(c=>c.text).join(" ")].join(" ").toLowerCase().includes(q))hits.push({k:"Demand",go:()=>{view="demands";activeId=t.id;activeTab="work";},label:`${t.demandId||"—"} · ${t.title}${t.system?" · "+t.system+(t.client?"/"+t.client:""):""}${t.project?" · ▦ "+t.project:""}${t.theme?" · "+t.theme:""}`});
     t.objects.forEach(o=>{if([o.name,o.type,o.desc].join(" ").toLowerCase().includes(q))hits.push({k:"Object",go:()=>{view="demands";activeId=t.id;activeTab="objects";},label:`${o.name||"(obj)"} — ${o.action} · ${t.demandId||t.title}`});});
     t.transports.forEach(tr=>{
       const toc=tocFor(t,tr);
@@ -3359,7 +3370,7 @@ function seedState(){
     const tId=uid(), tocId=uid(), objId=uid(), epId=uid();
     state=migrate({version:10,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{H0:["010"],H1:["030","040","050","150","190","560"]}},
       tasks:[{id:tId,demandId:"DMND-10421",type:"Report change",title:"Add cost-center filter to ZFI_AGEING report",
-        status:"progress",requestor:"Priya (FI)",epicId:epId,wave:"Wave 1",project:"FI month-end pack",theme:"Finance",waiting:{on:"QA team",since:"2026-06-26"},receivedDate:"2026-06-15",dueDate:"2026-07-03",
+        status:"progress",requestor:"Priya (FI)",epicId:epId,wave:"Wave 1",system:"H03",client:"010",project:"FI month-end pack",theme:"Finance",waiting:{on:"QA team",since:"2026-06-26"},receivedDate:"2026-06-15",dueDate:"2026-07-03",
         description:"Business wants the ageing report selectable by cost center; default = all.",
         notes:"Confirmed selection-screen layout with Priya. Watch the OpenSQL on BSID.",
         timeline:[{id:uid(),ts:Date.now()-86400000*8,type:"status",from:"",to:"open",note:""},{id:uid(),ts:Date.now()-86400000*3,type:"status",from:"open",to:"progress",note:""}],
