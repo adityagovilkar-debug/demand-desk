@@ -332,6 +332,14 @@
   .savestate.conflict{color:var(--red);cursor:pointer;font-weight:600}
   .peerwarn{display:flex;align-items:center;gap:10px;padding:6px 16px;background:var(--danger-bg);border-bottom:1px solid var(--red-line);color:var(--red);font-size:12.5px;flex:0 0 auto;position:relative;z-index:1}
   .peerwarn button{margin-left:auto;flex:0 0 auto}
+  /* object clashes + next action */
+  .clash{font-size:12px;color:var(--red);padding:3px 2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .clash a{cursor:pointer;font-weight:600;color:var(--red);text-decoration:underline}
+  .clash.ack,.clash.ack a{color:var(--faint)}
+  .clashrow td{padding:0 10px 6px}
+  .clashtag{font-size:10px;font-weight:700;color:var(--red);border:1px solid var(--red-line);border-radius:4px;padding:0 5px;white-space:nowrap;margin-left:4px}
+  .nextact{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted);border:1px dashed var(--line2);border-radius:7px;padding:3px 4px 3px 9px;width:fit-content;max-width:100%}
+  .nextact.due{color:var(--amber);border-color:var(--amber)}
 
   .gsearch{position:absolute;top:40px;left:0;width:420px;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:6px;max-height:60vh;overflow:auto;z-index:60;box-shadow:0 12px 40px rgba(0,0,0,.5)}
   .gsr{padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12px}
@@ -693,7 +701,7 @@ function objTypeUsage(type){let n=0;state.tasks.forEach(t=>t.objects.forEach(o=>
 const DEF_LANDSCAPES=["H0","H1","H2","H3","H4","H5","H6"];
 const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod / QA",short:"QA"},{d:"1",label:"Production",short:"PRD"}];
 
-let state={version:19,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
+let state={version:20,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false, diskConflict=null, fileSig=null, savePromise=null, backupUnreadable=false;
 let view="today";
 let activeId=null, activeTab="work", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -927,7 +935,7 @@ function updateReconnectUI(){const b=document.getElementById("btnReconnect");if(
 async function forgetHandle(){savedHandle=null;if(useIdb)await idbDel("handle");updateReconnectUI();}
 
 function migrate(d){
-  d.version=19;
+  d.version=20;
   d.settings=d.settings||{};
   d.settings.landscapes=d.settings.landscapes&&d.settings.landscapes.length?d.settings.landscapes:[...DEF_LANDSCAPES];
   d.settings.tiers=d.settings.tiers&&d.settings.tiers.length?d.settings.tiers:DEF_TIERS;
@@ -962,10 +970,11 @@ function migrate(d){
     requestor:t.requestor||"",epicId:t.epicId||"",wave:t.wave||"",
     system:t.system||"",client:t.client||"",project:t.project||"",theme:t.theme||"",
     waiting:{on:(t.waiting&&t.waiting.on)||"",since:(t.waiting&&t.waiting.since)||""},goliveTarget:t.goliveTarget||"",
+    nextAction:{date:(t.nextAction&&t.nextAction.date)||"",note:(t.nextAction&&t.nextAction.note)||""},
     receivedDate:t.receivedDate||"",dueDate:t.dueDate||"",description:t.description||"",notes:t.notes||"",
     timeline:(t.timeline||[]).map(e=>({id:e.id||uid(),ts:e.ts||Date.now(),type:e.type||"note",from:e.from||"",to:e.to||"",note:e.note||""})),
     subtasks:(t.subtasks||[]).map(normSub),
-    objects:(t.objects||[]).map(o=>({id:o.id||uid(),name:o.name||"",type:o.type||"",action:o.action||"Modified",desc:o.desc||""})),
+    objects:(t.objects||[]).map(o=>({id:o.id||uid(),name:o.name||"",type:o.type||"",action:o.action||"Modified",desc:o.desc||"",ackClash:(o.ackClash||[]).slice()})),
     transports, tocs,
     comments:(t.comments||[]).map(normComment),
     reference:(t.reference||[]).map(r=>({id:r.id||uid(),label:r.label||"",value:r.value||"",secret:!!r.secret,pinned:!!r.pinned})),
@@ -1253,6 +1262,7 @@ function renderToday(){
       <button id="qJournal" style="width:100%">📓 Today's journal</button>
       <button id="qDebug" style="width:100%">🐞 New debug session</button>
       <button id="qWeek" style="width:100%">🗓 Weekly summary</button>
+      <button id="qHand" style="width:100%">🧳 Handover pack</button>
     </div>
     <div class="stats" id="todayStats"></div>
     <div class="listwrap"><p class="faint" style="font-size:12px;padding:10px;line-height:1.6">Your cockpit — everything needing attention, pulled from all workspaces. Click any item to jump to it.</p></div>`;
@@ -1260,6 +1270,7 @@ function renderToday(){
   document.getElementById("qJournal").onclick=newJournalToday;
   document.getElementById("qDebug").onclick=()=>{const s={id:uid(),title:"New debug session",demandId:"",taskId:"",status:"active",resume:"",notes:"",objects:[],breakpoints:[],findings:[],watches:[],createdAt:Date.now(),updatedAt:Date.now()};state.debug.unshift(s);activeDebugId=s.id;view="debug";markDirty();renderApp();};
   document.getElementById("qWeek").onclick=openWeekly;
+  document.getElementById("qHand").onclick=openHandover;
   const active=tasks.filter(t=>["open","progress","bug"].includes(t.status)).length;
   const overdueC=tasks.filter(t=>{const d=earliestOpenDue(t);return d&&daysUntil(d)<0;}).length;
   document.getElementById("todayStats").innerHTML=`<div class="stat op"><b>${active}</b>active</div><div class="stat ov"><b>${overdueC}</b>overdue</div><div class="stat"><b>${tasks.filter(t=>t.status==="bug").length}</b>bugs</div><div class="stat"><b>${tasks.filter(isWaiting).length}</b>waiting</div>`;
@@ -1293,7 +1304,8 @@ function renderToday(){
   const bugs=tasks.filter(t=>t.status==="bug");
   const waiting=tasks.filter(isWaiting).sort((a,b)=>(a.waiting.since||"").localeCompare(b.waiting.since||""));
   const golive=tasks.filter(t=>["progress","delivered","bug"].includes(t.status)&&golivePending(t));
-  const stale=tasks.filter(t=>["open","progress"].includes(t.status)&&(Date.now()-t.updatedAt)>14*86400000);
+  /* a demand deliberately parked with a future next action isn't stale */
+  const stale=tasks.filter(t=>["open","progress"].includes(t.status)&&(Date.now()-t.updatedAt)>14*86400000&&!(t.nextAction&&t.nextAction.date>todayStr()));
   const actions=[];state.meetings.forEach(m=>m.actions.forEach(a=>{if(!a.done)actions.push({a,m});}));
   actions.sort((x,y)=>(x.a.due||"9999").localeCompare(y.a.due||"9999"));
   const mytodos=state.todos.filter(x=>!x.done).sort((a,b)=>(a.due||"9999").localeCompare(b.due||"9999"));
@@ -1303,6 +1315,13 @@ function renderToday(){
   const card=(title,icon,tone,items)=>{if(items.length)cards.push({title,icon,tone,items});};
   const dlabel=t=>`${t.demandId?esc(t.demandId)+" · ":""}${esc(t.title)}`;
   card("Overdue","⚑","alert",overdue.map(t=>({main:dlabel(t),sub:`${-daysUntil(earliestOpenDue(t))}d late`,go:goDemand(t.id)})));
+  {const cidx=clashIndex(),pairs=[],seen=new Set();
+   tasks.forEach(t=>taskClashes(t,cidx).forEach(({o,open})=>open.forEach(x=>{const k=objKey(o.name)+"|"+[t.id,x.t.id].sort().join("|");
+     if(seen.has(k))return;seen.add(k);pairs.push({t,o,x});})));
+   card("Object clashes — in flight in two demands","⚠","alert",pairs.map(({t,o,x})=>({main:`<span class="mono">${esc(o.name)}</span>`,
+     sub:`${esc(t.demandId||t.title)} ↔ ${esc(x.t.demandId||x.t.title)}`,go:goDemand(t.id,"objects")})));}
+  card("Next actions due","⏰","warn",tasks.filter(nextActionDue).sort((a,b)=>a.nextAction.date.localeCompare(b.nextAction.date))
+    .map(t=>({main:dlabel(t),sub:`${t.nextAction.note?esc(t.nextAction.note.length>38?t.nextAction.note.slice(0,37)+"…":t.nextAction.note)+" · ":""}${t.nextAction.date===todayStr()?"today":t.nextAction.date}`,go:goDemand(t.id)})));
   card("Bugs / Rework","🐞","alert",bugs.map(t=>({main:dlabel(t),sub:reworkCount(t)?`↻ ${reworkCount(t)}`:"",go:goDemand(t.id)})));
   card("Go-live: TRs not yet at Prod","🚚","warn",golive.map(t=>{const g=golivePending(t);return {main:dlabel(t),sub:`${g.missing.length} TR(s) → ${g.target}`,go:goDemand(t.id,"transports")};}));
   card("Waiting on","⏳","warn",waiting.map(t=>({main:dlabel(t),sub:`${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+"d":""}`,go:goDemand(t.id)})));
@@ -1422,7 +1441,7 @@ function setViewPref(k,v){try{localStorage.setItem("demanddesk."+k,v);}catch(e){
 function groupByEpic(){return viewPref("groupEpic","1")==="1";}
 function collapsedEpicGroups(){try{return new Set(JSON.parse(viewPref("epicCollapsed","[]")));}catch(e){return new Set();}}
 const EPIC_GROUP_RANK={active:0,onhold:1,delivered:2,closed:3};
-function demandCard(t,grouped){const st=STATUS[t.status],sub=countSubs(t.subtasks),due=earliestOpenDue(t),dc=dueClass(due,t.status);
+function demandCard(t,grouped,cidx){const st=STATUS[t.status],sub=countSubs(t.subtasks),due=earliestOpenDue(t),dc=dueClass(due,t.status);
     const lc=linkedCount(t.id);
     return `<div class="tcard s-${t.status} ${t.id===activeId?"active":""}" data-id="${t.id}">
       <div class="demand">${esc(t.demandId||"— no demand id —")}</div>
@@ -1439,16 +1458,18 @@ function demandCard(t,grouped){const st=STATUS[t.status],sub=countSubs(t.subtask
         ${lc?`<span class="lc-badge">🔗 ${lc}</span>`:""}
         ${(t.reference&&t.reference.length)?`<span class="lc-badge">🔑 ${t.reference.length}</span>`:""}
         ${reworkCount(t)?`<span class="lc-badge" style="color:var(--red)">↻ ${reworkCount(t)}</span>`:""}
+        ${(()=>{const n=openClashCount(t,cidx);return n?`<span class="clashtag" title="${n} object(s) also in flight in another demand">⚠ ${n} clash</span>`:"";})()}
+        ${t.nextAction&&t.nextAction.date&&t.status!=="closed"?`<span class="due ${nextActionDue(t)?"soon":""}" title="Next action${t.nextAction.note?": "+esc(t.nextAction.note):""}">⏰ ${t.nextAction.date.slice(5)}</span>`:""}
         ${due?`<span class="due ${dc}">⚑ ${due}${dc==="over"?" ("+(-daysUntil(due))+"d)":""}</span>`:""}</div></div>`;}
 function renderList(){
   const fSort=renderDemandSidebar._so||"due";
   let list=state.tasks.filter(demandFilter());
   list.sort((a,b)=>{if(fSort==="demand")return(a.demandId||"").localeCompare(b.demandId||"");if(fSort==="received")return(b.receivedDate||"").localeCompare(a.receivedDate||"");if(fSort==="updated")return b.updatedAt-a.updatedAt;const da=earliestOpenDue(a)||"9999",db=earliestOpenDue(b)||"9999";return da.localeCompare(db);});
-  const el=document.getElementById("taskList");
+  const el=document.getElementById("taskList"),cidx=clashIndex();
   if(!list.length){el.innerHTML=state.tasks.length
     ?`<div class="empty">No demands match the current filters.<br>Click <b>All</b> above to clear the status filter.</div>`
     :`<div class="empty">No demands yet.<br>Click <b>＋ New Demand</b>.</div>`;return;}
-  if(!groupByEpic()){el.innerHTML=list.map(t=>demandCard(t,false)).join("");}
+  if(!groupByEpic()){el.innerHTML=list.map(t=>demandCard(t,false,cidx)).join("");}
   else{
     /* one collapsible block per epic (open epics first), ungrouped demands last;
        the list's own sort order is kept inside each block */
@@ -1471,7 +1492,7 @@ function renderList(){
           <span class="egcount" title="${ts.length} shown of ${total} in this group">${open?`${open} open · `:""}${ts.length}${ts.length<total?`<span class="faint">/${total}</span>`:""}</span>
           ${e?`<button class="ghost sm eggo" title="Open the epic">›</button>`:""}
         </div>
-        ${shut?"":`<div class="egbody">${ts.map(t=>demandCard(t,!!e)).join("")}</div>`}</div>`;}).join("");
+        ${shut?"":`<div class="egbody">${ts.map(t=>demandCard(t,!!e,cidx)).join("")}</div>`}</div>`;}).join("");
     el.querySelectorAll(".eghead").forEach(h=>h.onclick=ev=>{const g=h.parentElement.dataset.g;
       if(ev.target.classList.contains("eggo")){view="epics";activeEpicId=g;epicTab="overview";renderApp();return;}
       const c=collapsedEpicGroups();if(c.has(g))c.delete(g);else c.add(g);setViewPref("epicCollapsed",JSON.stringify([...c]));renderList();});
@@ -1489,15 +1510,17 @@ function renderDetail(){
         <div class="dh-demand">${esc(t.demandId||"— no demand id —")}</div>
         <h1>${esc(t.title)}</h1>
         <div class="dh-dates"><span>Type: <b>${esc(t.type)}</b></span>${t.system?`<span>System: ${sysPill(t.system,"",t.client)}</span>`:""}${(()=>{const ep=epicById(t.epicId);return ep?`<span>Epic: <b class="ep-go" style="color:var(--accent2);cursor:pointer">◆ ${esc(epicLabel(ep))}</b>${t.wave?` · <b>${esc(t.wave)}</b>`:""}</span>`:"";})()}${t.project?`<span>Project: <b>▦ ${esc(t.project)}</b></span>`:""}${t.theme?`<span>Theme: <b>${esc(t.theme)}</b></span>`:""}${t.requestor?`<span>Requestor: <b>👤 ${esc(t.requestor)}</b></span>`:""}<span>Received: <b class="mono">${t.receivedDate||"—"}</b></span><span>Due: <b class="mono due ${dueClass(t.dueDate,t.status)}">${t.dueDate||"—"}</b></span>${reworkCount(t)?`<span style="color:var(--red)">↻ ${reworkCount(t)} rework cycle(s)</span>`:""}</div>
+        ${t.nextAction&&t.nextAction.date?`<div class="nextact ${nextActionDue(t)?"due":""}">⏰ Next action <b class="mono">${t.nextAction.date}</b>${(()=>{const n=daysUntil(t.nextAction.date);return n<0?` (${-n}d ago)`:n===0?" (today)":` (in ${n}d)`;})()}${t.nextAction.note?` — ${esc(t.nextAction.note)}`:""}
+          <button class="ghost sm" id="na-done" title="Did it — note it in History and clear">✓ Done</button><button class="ghost sm" id="na-edit" title="Change date or text">✎</button></div>`:""}
       </div>
       <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
         <select id="dh-status" class="pill ${st.cls} statsel" title="Change status — logged in History">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${k===t.status?"selected":""}>${v.label}</option>`).join("")}</select>
         ${isWaiting(t)?`<span class="pill" style="font-size:12px;color:var(--amber);border-color:var(--amber-line)">⏳ Waiting on ${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+"d":""}</span>`:""}
-        <div style="display:flex;gap:6px"><button class="sm" id="btnSpec" title="Generate post-delivery technical spec">📄 Tech Spec</button><button class="sm" id="btnEditTask">✎ Edit</button><button class="sm danger" id="btnDelTask">🗑 Delete</button></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="sm" id="btnNext" title="When should this demand come back up on Today?">⏰ Next action</button><button class="sm" id="btnSpec" title="Generate post-delivery technical spec">📄 Tech Spec</button><button class="sm" id="btnEditTask">✎ Edit</button><button class="sm danger" id="btnDelTask">🗑 Delete</button></div>
       </div></div>
       <div class="tabs">
         <button class="tab ${activeTab==="work"?"active":""}" data-tab="work">Work &amp; Subtasks<span class="count">${sub.n}</span></button>
-        <button class="tab ${activeTab==="objects"?"active":""}" data-tab="objects">Objects<span class="count">${t.objects.length}</span></button>
+        <button class="tab ${activeTab==="objects"?"active":""}" data-tab="objects">Objects<span class="count">${t.objects.length}</span>${(()=>{const n=openClashCount(t);return n?`<span class="clashtag" title="Object(s) also in flight in another demand">⚠ ${n}</span>`:"";})()}</button>
         <button class="tab ${activeTab==="transports"?"active":""}" data-tab="transports">Transports<span class="count">${t.transports.length}</span></button>
         <button class="tab ${activeTab==="reference"?"active":""}" data-tab="reference">Reference<span class="count">${(t.reference||[]).length}</span></button>
         <button class="tab ${activeTab==="calls"?"active":""}" data-tab="calls">Linked<span class="count">${lc}</span></button>
@@ -1508,6 +1531,8 @@ function renderDetail(){
   const epGo=host.querySelector(".ep-go");if(epGo)epGo.onclick=()=>{view="epics";activeEpicId=t.epicId;renderApp();};
   host.querySelector("#btnSpec").onclick=()=>openTechSpec(t);
   host.querySelector("#btnEditTask").onclick=()=>openTaskModal(t);
+  host.querySelector("#btnNext").onclick=()=>openNextAction(t);
+  {const d=host.querySelector("#na-done");if(d)d.onclick=()=>nextActionDone(t);const ed=host.querySelector("#na-edit");if(ed)ed.onclick=()=>openNextAction(t);}
   host.querySelector("#dh-status").onchange=ev=>{const v=ev.target.value;if(v===t.status)return;
     logTimeline(t,"status",t.status,v);t.status=v;touch(t);renderApp();toast("Status → "+STATUS[v].label);};
   host.querySelector("#btnDelTask").onclick=()=>{if(confirm("Delete this demand and all its subtasks, objects and transports?")){state.tasks=state.tasks.filter(x=>x.id!==t.id);state.meetings.forEach(m=>m.taskIds=m.taskIds.filter(id=>id!==t.id));state.journal.forEach(j=>j.taskIds=(j.taskIds||[]).filter(id=>id!==t.id));state.debug.forEach(s=>{if(s.taskId===t.id)s.taskId="";});state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="demand"&&l.id===t.id)));activeId=null;markDirty();renderApp();}};
@@ -1661,21 +1686,31 @@ function renderObjects(body,t){
     <div class="tbl-wrap"><table><thead><tr><th style="width:22%">Object name</th><th style="width:16%">Type</th><th style="width:11%">Action</th><th>What was done</th><th style="width:16%">In transport(s)</th><th style="width:34px"></th></tr></thead><tbody id="objBody"></tbody></table></div>
     <p class="faint" style="font-size:12px">“In transport(s)” is derived from the Transports tab — tick objects on each TR there. The top search finds which demand touched a given object months later.</p>`;
   const tb=body.querySelector("#objBody");
+  /* the warning line under an object: every other demand where it's also in flight */
+  const drawClash=(o,idx)=>{const row=tb.querySelector(`tr.clashrow[data-for="${o.id}"]`);if(!row)return 0;
+    const c=clashesFor(t,o,idx);row.classList.toggle("hide",!c.length);
+    row.firstElementChild.innerHTML=c.map(x=>`<div class="clash ${x.ack?"ack":""}">⚠ <b class="mono">${esc(o.name)}</b> is also in flight in <a class="cl-go" data-id="${x.t.id}">${esc(x.t.demandId||x.t.title)}</a> <span>— ${esc(clashWhere(x))}</span>
+      <button class="ghost sm cl-ack" data-id="${x.t.id}" title="${x.ack?"Flag this pair again":"You've agreed the order with the other demand — stop flagging this pair (on Today, the list and the run sheet)"}">${x.ack?"↺ Warn again":"✓ Sequenced — stop warning"}</button></div>`).join("");
+    row.querySelectorAll(".cl-go").forEach(a=>a.onclick=()=>{activeId=a.dataset.id;activeTab="objects";renderApp();});
+    row.querySelectorAll(".cl-ack").forEach(b=>b.onclick=()=>{const x=c.find(y=>y.t.id===b.dataset.id);setClashAck(t,o,x.t,!x.ack);renderDetail();});
+    return c.filter(x=>!x.ack).length;};
   const draw=()=>{tb.innerHTML=t.objects.length?t.objects.map(o=>{const trs=trsForObject(t,o.id);return `<tr data-id="${o.id}">
     <td><input class="mono o-name" value="${esc(o.name)}" placeholder="ZRPS_..."></td>
     <td><select class="o-type">${objTypeOptions(o.type)}</select></td>
     <td><select class="o-act">${OBJ_ACTIONS.map(x=>`<option ${x===o.action?"selected":""}>${x}</option>`).join("")}</select></td>
     <td><textarea class="o-desc" placeholder="Describe the change…">${esc(o.desc)}</textarea></td>
     <td class="mono" style="font-size:11px;color:var(--muted)">${trs.length?trs.map(tr=>esc(tr.number||"(unnumbered)")).join(", "):"—"}</td>
-    <td><button class="ghost sm danger o-del">🗑</button></td></tr>`;}).join(""):`<tr><td colspan="6" class="faint" style="padding:14px;text-align:center">No objects logged yet.</td></tr>`;
+    <td><button class="ghost sm danger o-del">🗑</button></td></tr><tr class="clashrow hide" data-for="${o.id}"><td colspan="6"></td></tr>`;}).join(""):`<tr><td colspan="6" class="faint" style="padding:14px;text-align:center">No objects logged yet.</td></tr>`;
     tb.querySelectorAll("tr[data-id]").forEach(tr=>{const o=t.objects.find(x=>x.id===tr.dataset.id);
-      tr.querySelector(".o-name").onchange=e=>{o.name=e.target.value;touch(t);};
+      tr.querySelector(".o-name").onchange=e=>{o.name=e.target.value;touch(t);
+        if(drawClash(o))toast(`⚠ ${o.name.trim()} is already in flight in another demand — see the warning under it`,true);};
       tr.querySelector(".o-type").onchange=e=>{o.type=e.target.value;touch(t);};
-      tr.querySelector(".o-act").onchange=e=>{o.action=e.target.value;touch(t);};
+      tr.querySelector(".o-act").onchange=e=>{o.action=e.target.value;touch(t);drawClash(o);};
       tr.querySelector(".o-desc").onchange=e=>{o.desc=e.target.value;touch(t);};
-      tr.querySelector(".o-del").onclick=()=>{if(o.name&&!confirm(`Remove ${o.name} from this demand's objects?`))return;t.objects=t.objects.filter(x=>x.id!==o.id);t.transports.forEach(x=>{if(x.objectIds)x.objectIds=x.objectIds.filter(id=>id!==o.id);});touch(t);draw();renderDetail();};});};
+      tr.querySelector(".o-del").onclick=()=>{if(o.name&&!confirm(`Remove ${o.name} from this demand's objects?`))return;t.objects=t.objects.filter(x=>x.id!==o.id);t.transports.forEach(x=>{if(x.objectIds)x.objectIds=x.objectIds.filter(id=>id!==o.id);});touch(t);draw();renderDetail();};});
+    const idx=clashIndex();t.objects.forEach(o=>drawClash(o,idx));};
   body.querySelector("#objTypes").onclick=()=>openObjTypes(()=>{draw();});
-  body.querySelector("#addObj").onclick=()=>{t.objects.push({id:uid(),name:"",type:objTypes()[0],action:"Modified",desc:""});touch(t);draw();};
+  body.querySelector("#addObj").onclick=()=>{t.objects.push({id:uid(),name:"",type:objTypes()[0],action:"Modified",desc:"",ackClash:[]});touch(t);draw();};
   draw();
 }
 function openObjPicker(t,tr,cb){
@@ -1692,12 +1727,13 @@ function openObjPicker(t,tr,cb){
 
 function renderTransports(body,t){
   body.innerHTML=`<div id="readiness"></div>
-    <div class="sec-title"><h3>Transport requests</h3><div class="ln"></div><button class="sm" id="expTr" title="Export all transports across all demands to CSV">⬇ CSV</button><button class="sm" id="addTr">＋ Add transport</button></div>
+    <div class="sec-title"><h3>Transport requests</h3><div class="ln"></div><button class="sm" id="runSheet" title="The import request for Basis: what's left to import into a system, in order">📋 Run sheet</button><button class="sm" id="expTr" title="Export all transports across all demands to CSV">⬇ CSV</button><button class="sm" id="addTr">＋ Add transport</button></div>
     <p class="faint" style="font-size:12px;margin:-4px 0 10px">Order = release order (use ↑↓). Add a sync target for each system a TR was imported to. If a TR is bundled in a <b>Transport of Copies</b>, its downstream systems are inherited from the ToC. Mark client-dependent config as <b>Customizing</b> to record its client (e.g. H13 / 150); <b>Workbench</b> TRs are client-independent.</p>
     <div id="trList"></div>
     <div class="sec-title" style="margin-top:22px"><h3>Transports of Copies (ToC)</h3><div class="ln"></div><button class="sm" id="addToc">＋ New ToC</button></div>
     <div id="tocList"></div>`;
   body.querySelector("#expTr").onclick=exportTransportsCSV;
+  body.querySelector("#runSheet").onclick=()=>openRunSheet([t],`${t.demandId?t.demandId+" — ":""}${t.title}`,goliveTargetFor(t));
   body.querySelector("#addTr").onclick=()=>{t.transports.push({id:uid(),number:"",desc:"",system:t.system||state.settings.defaultSystem,released:false,kind:"workbench",client:"",syncs:[],tocId:"",toc:"",objectIds:[],notes:""});touch(t);renderTransports(body,t);renderDetail();};
   body.querySelector("#addToc").onclick=()=>{(t.tocs=t.tocs||[]).push(normToc({system:state.settings.defaultSystem}));touch(t);renderTransports(body,t);};
   drawReadiness();drawTrs();drawTocs();
@@ -1720,7 +1756,7 @@ function renderTransports(body,t){
   }
 
   function drawTrs(){
-    const host=body.querySelector("#trList");host.innerHTML="";
+    const host=body.querySelector("#trList");host.innerHTML="";const cidx=clashIndex();
     if(!t.transports.length){host.innerHTML=`<div class="faint" style="font-size:12px;padding:4px 2px">No transports yet.</div>`;return;}
     t.transports.forEach((tr,idx)=>{
       const toc=tocFor(t,tr);const reached=reachedSystems(t,tr);const target=goliveTargetFor(t);const cust=isCust(tr);
@@ -1741,6 +1777,7 @@ function renderTransports(body,t){
           <button class="ghost sm danger del">🗑</button>
         </div>
         ${target?`<div class="cover ${reached.has(target)?"yes":"no"}">${reached.has(target)?"✓ reached "+target:"✗ not yet at "+target}${cust&&tr.client?" · 🗂 "+esc(tr.client):""}</div>`:""}
+        ${trClashHtml(t,tr,cidx)}
         <div style="display:flex;gap:14px;flex-wrap:wrap">
           <div style="flex:1;min-width:260px">
             <label>Synced to systems (directly)</label>
@@ -2088,7 +2125,7 @@ function openTaskModal(existing){
     const won=g("#m-wait").trim();let wsince=g("#m-waitsince");if(won&&!wsince)wsince=todayStr();if(!won)wsince="";
     const data={demandId:g("#m-demand").trim(),type:g("#m-type"),title:g("#m-title").trim()||"(untitled)",requestor:g("#m-req").trim(),epicId:g("#m-epic"),wave:g("#m-wave").trim(),system:g("#m-sys"),client:g("#m-client"),project:g("#m-proj").trim(),theme:g("#m-theme").trim(),waiting:{on:won,since:wsince},receivedDate:g("#m-rec"),dueDate:g("#m-due"),status:g("#m-status"),description:g("#m-desc")};
     if(existing){if(existing.status!==data.status)logTimeline(existing,"status",existing.status,data.status);Object.assign(existing,data);touch(existing);}
-    else{const nt={id:uid(),...data,goliveTarget:"",notes:"",timeline:[],subtasks:[],objects:[],transports:[],tocs:[],comments:[],reference:[],createdAt:Date.now(),updatedAt:Date.now()};
+    else{const nt={id:uid(),...data,goliveTarget:"",nextAction:{date:"",note:""},notes:"",timeline:[],subtasks:[],objects:[],transports:[],tocs:[],comments:[],reference:[],createdAt:Date.now(),updatedAt:Date.now()};
       logTimeline(nt,"status","",data.status);state.tasks.push(nt);activeId=nt.id;markDirty();}
     close();renderApp();};
 }
@@ -2351,10 +2388,11 @@ function openObjectIndex(){
     s.objects.forEach(o=>{const k=(o.name||"").trim().toUpperCase();if(!k)return;(dmap[k]=dmap[k]||[]).push({s,note:o.note});});
     s.breakpoints.forEach(b=>{const k=(b.object||"").trim().toUpperCase();if(!k)return;(dmap[k]=dmap[k]||[]).push({s,note:(b.line?"bp@"+b.line:"breakpoint")+(b.condition?" "+b.condition:"")});});
   });
-  const names=[...new Set([...Object.keys(map),...Object.keys(dmap)])].sort();
+  const names=[...new Set([...Object.keys(map),...Object.keys(dmap)])].sort(),cidx=clashIndex();
   root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:660px"><h2>⌕ Object cross-reference</h2>
     <p class="faint" style="font-size:12px;margin-top:-8px">Every demand and debug session that touched an object — for when the same issue resurfaces months later.</p>
-    <input id="oi-q" placeholder="Filter objects (e.g. ZFI_AGEING)…" autocomplete="off">
+    <div style="display:flex;gap:10px;align-items:center"><input id="oi-q" placeholder="Filter objects (e.g. ZFI_AGEING)…" autocomplete="off" style="flex:1">
+      <label style="display:flex;align-items:center;gap:6px;margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap"><input type="checkbox" id="oi-clash" style="width:auto"> only clashes (${cidx.size})</label></div>
     <div id="oi-list" class="picklist" style="margin-top:10px;max-height:48vh"></div>
     <div class="modal-foot"><button id="oi-close" class="primary">Close</button></div></div></div>`;
   const close=()=>root.innerHTML="";
@@ -2362,11 +2400,12 @@ function openObjectIndex(){
   root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
   const listEl=root.querySelector("#oi-list");
   const draw=q=>{q=(q||"").trim().toUpperCase();
-    const show=names.filter(n=>!q||n.includes(q));
+    const onlyC=root.querySelector("#oi-clash").checked;
+    const show=names.filter(n=>(!q||n.includes(q))&&(!onlyC||cidx.has(n)));
     if(!show.length){listEl.innerHTML=`<div class="pickrow faint">No objects logged${q?" match “"+esc(q)+"”":""}.</div>`;return;}
     listEl.innerHTML=show.map(n=>{const uses=map[n]||[],duses=dmap[n]||[];
       return `<div class="pickrow" style="display:block;cursor:default">
-        <div class="mono" style="color:var(--accent);font-weight:600">${esc(n)} <span class="faint" style="font-weight:400">· ${uses.length} demand(s)${duses.length?" · "+duses.length+" debug":""}</span></div>
+        <div class="mono" style="color:var(--accent);font-weight:600">${esc(n)} <span class="faint" style="font-weight:400">· ${uses.length} demand(s)${duses.length?" · "+duses.length+" debug":""}</span>${cidx.has(n)?`<span class="clashtag">⚠ in flight in ${new Set(cidx.get(n).map(x=>x.t.id)).size} demands</span>`:""}</div>
         ${uses.map(u=>{const trs=trsForObject(u.t,u.o.id);return `<div style="font-size:12px;margin:3px 0 0 6px"><a class="oi-go" data-id="${u.t.id}" style="cursor:pointer">📋 ${esc(u.t.demandId||u.t.title)}</a> <span class="faint">— ${esc(u.o.action)}${u.o.desc?": "+esc(u.o.desc):""}${trs.length?" · in "+trs.map(x=>esc(x.number||"(TR)")).join(", "):""}</span></div>`;}).join("")}
         ${duses.map(u=>`<div style="font-size:12px;margin:3px 0 0 6px"><a class="oi-dgo" data-id="${u.s.id}" style="cursor:pointer">🐞 ${esc(u.s.title)}</a> <span class="faint">${u.note?"— "+esc(u.note):""}</span></div>`).join("")}</div>`;}).join("");
     listEl.querySelectorAll(".oi-go").forEach(a=>a.onclick=()=>{view="demands";activeId=a.dataset.id;activeTab="objects";close();renderApp();});
@@ -2374,6 +2413,7 @@ function openObjectIndex(){
   };
   draw("");
   const q=root.querySelector("#oi-q");q.focus();q.oninput=()=>draw(q.value);
+  root.querySelector("#oi-clash").onchange=()=>draw(q.value);
 }
 
 /* ===================== PORTFOLIO (project / theme rollup) ===================== */
@@ -2793,7 +2833,7 @@ function renderEpicOverview(body,e,r,pk,fu){
     <div id="ep-golive"></div>
     <div class="sec-title" style="margin-top:20px"><h3>Objects touched</h3><div class="ln"></div><span class="faint" style="font-size:12px">${r.objects.length} across the epic</span></div>
     <div id="ep-objects"></div>
-    <div class="sec-title" style="margin-top:20px"><h3>Transports</h3><div class="ln"></div><span class="faint" style="font-size:12px">${r.trs.length} across the epic</span></div>
+    <div class="sec-title" style="margin-top:20px"><h3>Transports</h3><div class="ln"></div><span class="faint" style="font-size:12px">${r.trs.length} across the epic</span>${r.trs.length?`<button class="sm" id="ep-run" title="One import request for Basis covering every demand in the epic">📋 Run sheet</button>`:""}</div>
     <div id="ep-trs"></div>`;
   const updL=()=>{body.querySelector("#ep-links").innerHTML=linkChips([e.description,e.myScope,e.notes].join(" "));};
   body.querySelector("#ep-desc").onchange=ev=>{e.description=ev.target.value;touch(e);updL();};
@@ -2830,9 +2870,9 @@ function renderEpicOverview(body,e,r,pk,fu){
   else if(!r.pending.length)gh.innerHTML=`<div class="readybar ok"><b style="color:var(--green)">✓ every transport across ${r.ts.length} demand(s) has reached its go-live target</b></div>`;
   else gh.innerHTML=`<div class="readybar warn"><span><b style="color:var(--amber)">⚠ ${r.pending.length} demand(s) still have transports short of their target:</b></span>
     <span style="flex-basis:100%;font-size:12px">${r.pending.map(x=>`<span class="mono">${esc(x.t.demandId||x.t.title)}</span> — ${x.g.missing.length} TR(s) → ${x.g.target}${(()=>{const f=freezeFor(x.g.target);return f?` <span style="color:var(--teal)">❄ frozen until ${f.to}</span>`:"";})()}`).join("<br>")}</span></div>`;
-  const oh=body.querySelector("#ep-objects");
+  const oh=body.querySelector("#ep-objects"),cidx=clashIndex();
   oh.innerHTML=r.objects.length?`<div class="tbl-wrap"><table><thead><tr><th style="width:26%">Object</th><th style="width:18%">Type</th><th style="width:12%">Action</th><th>Demand</th></tr></thead><tbody>
-    ${r.objects.map(({o,t})=>`<tr class="ep-obj" data-id="${t.id}" style="cursor:pointer"><td class="mono">${esc(o.name)}</td><td>${esc(o.type)}</td><td>${esc(o.action)}</td><td class="faint">${esc(t.demandId||t.title)}</td></tr>`).join("")}</tbody></table></div>`
+    ${r.objects.map(({o,t})=>`<tr class="ep-obj" data-id="${t.id}" style="cursor:pointer"><td class="mono">${esc(o.name)}${clashesFor(t,o,cidx).some(x=>!x.ack)?`<span class="clashtag" title="Also in flight in another demand">⚠ clash</span>`:""}</td><td>${esc(o.type)}</td><td>${esc(o.action)}</td><td class="faint">${esc(t.demandId||t.title)}</td></tr>`).join("")}</tbody></table></div>`
     :`<div class="faint" style="font-size:12px;padding:4px 2px">No objects logged yet.</div>`;
   oh.querySelectorAll(".ep-obj").forEach(row=>row.onclick=()=>goEpicDemand(row.dataset.id,"objects"));
   const th=body.querySelector("#ep-trs");
@@ -2841,6 +2881,8 @@ function renderEpicOverview(body,e,r,pk,fu){
       return `<tr class="ep-tr" data-id="${t.id}" style="cursor:pointer"><td class="mono">${esc(tr.number||"(unnumbered)")}</td><td>${isCust(tr)?"🗂 Customizing":"🔧 Workbench"}</td><td class="mono">${esc(tr.system)}${cl}</td><td class="mono" style="font-size:11px">${[...reachedSystems(t,tr)].join(", ")||"—"}</td><td class="faint">${esc(t.demandId||t.title)}</td></tr>`;}).join("")}</tbody></table></div>`
     :`<div class="faint" style="font-size:12px;padding:4px 2px">No transports yet.</div>`;
   th.querySelectorAll(".ep-tr").forEach(row=>row.onclick=()=>goEpicDemand(row.dataset.id,"transports"));
+  {const b=body.querySelector("#ep-run");if(b)b.onclick=()=>{const ordered=waves.flatMap(w=>r.ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"9999").localeCompare(b.receivedDate||"9999")));
+    openRunSheet(ordered,"◆ "+epicLabel(e),commonTarget(r.ts));};}
 }
 const STORY_SRC={log:"📝 Epic log",demand:"📥 Demands",transport:"🚚 Transports",meeting:"👥 Meetings & journal",dep:"⏸ Other teams"};
 function renderEpicStory(body,e){
@@ -3350,13 +3392,281 @@ function gotoImage(im){
   renderApp();
 }
 
+/* ===================== OBJECT CLASHES ===================== */
+/* The same object changed in two demands at once is how transports overwrite each
+   other in QA or Prod. An object is "in flight" from the moment it's logged until the
+   transports carrying it reach that demand's go-live system. Objects only Analyzed,
+   and closed demands, never count. */
+const objKey=n=>String(n||"").trim().toUpperCase();
+function objectInFlight(t,o){
+  if(!objKey(o.name)||o.action==="Analyzed"||t.status==="closed")return false;
+  const trs=trsForObject(t,o.id),tgt=goliveTargetFor(t);
+  if(trs.length)return tgt?trs.some(tr=>!reachedSystems(t,tr).has(tgt)):t.status!=="delivered";
+  if(t.status!=="delivered")return true;
+  return !!golivePending(t); /* delivered, object not ticked on a TR: trust the demand's own go-live check */
+}
+/* object name → every in-flight use, kept only where 2+ different demands share it */
+function clashIndex(){const m=new Map();
+  state.tasks.forEach(t=>t.objects.forEach(o=>{if(!objectInFlight(t,o))return;const k=objKey(o.name);
+    if(!m.has(k))m.set(k,[]);m.get(k).push({t,o});}));
+  [...m.keys()].forEach(k=>{if(new Set(m.get(k).map(x=>x.t.id)).size<2)m.delete(k);});
+  return m;}
+/* the other demands where this object is also in flight; ack = "sequenced, stop warning" */
+function clashesFor(t,o,idx){if(!objectInFlight(t,o))return [];
+  const v=(idx||clashIndex()).get(objKey(o.name));if(!v)return [];
+  const seen=new Set();
+  return v.filter(x=>x.t.id!==t.id&&!seen.has(x.t.id)&&seen.add(x.t.id))
+    .map(x=>({t:x.t,o:x.o,ack:(o.ackClash||[]).includes(x.t.id)}));}
+function taskClashes(t,idx){idx=idx||clashIndex();const out=[];
+  t.objects.forEach(o=>{const c=clashesFor(t,o,idx);if(c.length)out.push({o,others:c,open:c.filter(x=>!x.ack)});});return out;}
+function openClashCount(t,idx){return taskClashes(t,idx).filter(x=>x.open.length).length;}
+/* acknowledging is mutual — both demands stop warning about each other for that object */
+function setClashAck(t,o,other,on){const k=objKey(o.name);
+  const flip=(obj,id)=>{obj.ackClash=obj.ackClash||[];
+    if(on){if(!obj.ackClash.includes(id))obj.ackClash.push(id);}else obj.ackClash=obj.ackClash.filter(x=>x!==id);};
+  t.objects.filter(x=>objKey(x.name)===k).forEach(x=>flip(x,other.id));
+  other.objects.filter(x=>objKey(x.name)===k).forEach(x=>flip(x,t.id));
+  other.updatedAt=Date.now();touch(t);}
+/* where the other demand's copy of the object stands, e.g. "In progress · H03K900812 at H02" */
+function clashWhere(x){const trs=trsForObject(x.t,x.o.id);
+  return STATUS[x.t.status].label+(trs.length
+    ?" · "+trs.map(tr=>{const r=[...reachedSystems(x.t,tr)];return (tr.number||"(TR)")+(r.length?" at "+r.join("/"):" not moved yet");}).join(", ")
+    :" · not on a transport yet");}
+function trClashHtml(t,tr,idx){const out=[];
+  (tr.objectIds||[]).forEach(id=>{const o=t.objects.find(x=>x.id===id);if(!o)return;
+    clashesFor(t,o,idx).filter(x=>!x.ack).forEach(x=>out.push(`⚠ Carries <b class="mono">${esc(o.name)}</b>, also in flight in <b>${esc(x.t.demandId||x.t.title)}</b> (${esc(clashWhere(x))}) — agree the import order.`));});
+  return out.map(x=>`<div class="clash">${x}</div>`).join("");}
+
+/* ===================== NEXT ACTION ===================== */
+/* "Look at this again on …" — a date (and what to do) that brings a demand back onto
+   Today, so it can be parked without being forgotten. */
+function nextActionDue(t){const n=t.nextAction;return !!(n&&n.date&&n.date<=todayStr()&&t.status!=="closed");}
+function openNextAction(t){
+  const n=t.nextAction||{date:"",note:""};
+  const plus=d=>{const x=new Date(todayStr()+"T00:00:00");x.setDate(x.getDate()+d);return isoD(x);};
+  const nextMon=(()=>{const x=new Date(todayStr()+"T00:00:00");x.setDate(x.getDate()+((8-x.getDay())%7||7));return isoD(x);})();
+  const quick=[["Tomorrow",plus(1)],["In 3 days",plus(3)],["Next Monday",nextMon],["In 1 week",plus(7)],["In 2 weeks",plus(14)],["In a month",plus(30)]];
+  const root=document.getElementById("modalRoot");
+  root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:460px"><h2>⏰ Next action — ${esc(t.demandId||t.title)}</h2>
+    <p class="faint" style="font-size:12px;margin-top:-8px">On this date the demand comes back up on <b>Today</b> — park it without forgetting it.</p>
+    <div class="field"><label>What to do</label><input id="na-note" value="${esc(n.note)}" placeholder="e.g. Chase QA for test results, check the TR reached H02"></div>
+    <div class="field"><label>On</label><input type="date" id="na-date" value="${n.date||plus(1)}" style="width:170px"></div>
+    <div class="chiprow">${quick.map(([l,d])=>`<button class="sm na-q" data-d="${d}" title="${d}">${l}</button>`).join("")}</div>
+    <div class="modal-foot">${n.date?`<button id="na-clear" class="ghost" style="margin-right:auto">Clear</button>`:""}<button id="na-cancel" class="ghost">Cancel</button><button id="na-save" class="primary">Set</button></div></div></div>`;
+  const close=()=>root.innerHTML="";
+  root.querySelectorAll(".na-q").forEach(b=>b.onclick=()=>{root.querySelector("#na-date").value=b.dataset.d;});
+  root.querySelector("#na-cancel").onclick=close;
+  root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
+  const clr=root.querySelector("#na-clear");if(clr)clr.onclick=()=>{t.nextAction={date:"",note:""};touch(t);close();renderApp();};
+  const save=()=>{const d=root.querySelector("#na-date").value;if(!d){toast("Pick a date",true);return;}
+    t.nextAction={date:d,note:root.querySelector("#na-note").value.trim()};touch(t);close();renderApp();
+    toast(d<=todayStr()?"Next action is due now — it's on Today":"Back on Today on "+d);};
+  root.querySelector("#na-save").onclick=save;
+  root.querySelectorAll("input").forEach(i=>i.onkeydown=e=>{if(e.key==="Enter")save();});
+  root.querySelector("#na-note").focus();
+}
+function nextActionDone(t){const n=t.nextAction;if(!n||!n.date)return;
+  logTimeline(t,"note","","",`Next action done${n.note?": "+n.note:""}`);
+  t.nextAction={date:"",note:""};touch(t);renderApp();toast("Done — noted in History. Set the next one with ⏰ when you know it.");}
+
+/* ===================== TRANSPORT RUN SHEET ===================== */
+/* What Basis has to import into one system, in release order. A ToC stands in for the
+   TRs bundled in it (imported once, where its first member sits in the order), customizing
+   TRs name their client, and whatever already reached the target is left off the request.
+   Only TRs routed through the target's landscape count — an H1x TR never goes to H01. */
+function runSheetData(tasks,target,showDone){
+  const rows=[];let other=0;
+  if(target){const L=landscapeOf(target);
+    tasks.forEach(t=>{const tocSeen=new Set();
+      t.transports.forEach(tr=>{
+        if(landscapeOf(tr.system)!==L&&!effectiveSyncs(t,tr).some(s=>landscapeOf(s.system)===L)){other++;return;}
+        const toc=tocFor(t,tr);
+        if(toc){if(tocSeen.has(toc.id))return;tocSeen.add(toc.id);
+          const members=t.transports.filter(x=>x.tocId===toc.id),hit=toc.syncs.find(s=>s.system===target);
+          rows.push({t,toc,members,number:toc.number||"(unnumbered ToC)",desc:toc.desc,type:"ToC",client:"",released:true,
+            done:!!hit||members.every(m=>reachedSystems(t,m).has(target)),doneDate:hit?hit.date:"",objIds:members.flatMap(m=>m.objectIds||[])});}
+        else{const hit=effectiveSyncs(t,tr).find(s=>s.system===target);
+          rows.push({t,tr,number:tr.number||"(unnumbered)",desc:tr.desc,type:isCust(tr)?"Customizing":"Workbench",client:isCust(tr)?tr.client:"",
+            released:tr.released,done:!!hit,doneDate:hit?hit.date:"",objIds:tr.objectIds||[]});}
+      });});
+    const cidx=clashIndex();
+    rows.forEach(r=>{r.warn=r.released?[]:["not released yet"];
+      [...new Set(r.objIds)].map(id=>r.t.objects.find(o=>o.id===id)).filter(Boolean).forEach(o=>
+        clashesFor(r.t,o,cidx).filter(x=>!x.ack).forEach(x=>r.warn.push(`${o.name} is also in flight in ${x.t.demandId||x.t.title} — check the order`)));});}
+  const todo=rows.filter(r=>!r.done);
+  return {rows,todo,list:showDone?rows:todo,other,tier:tierMeta(target),freeze:target?freezeFor(target):null,
+    multi:new Set(rows.map(r=>r.t.id)).size>1};
+}
+/* inline-styled so the table survives being pasted into Outlook or Teams */
+function runSheetHTML(d,target,label,notes){
+  const cell='style="border:1px solid #bbb;padding:4px 8px;text-align:left;vertical-align:top"';
+  let n=0;
+  return `<h1>Transport import request</h1><h2>${esc(target)}${d.tier?" · "+esc(d.tier.label):""} — ${esc(label)}</h2>
+    ${d.freeze?`<p><b style="color:#b3261e">❄ ${esc(target)} is in a change freeze until ${esc(d.freeze.to)} — ${esc(d.freeze.title)}.</b></p>`:""}
+    ${d.list.length?`<p>Please import in this order:</p>
+    <table style="border-collapse:collapse;font-size:12px"><tr><th ${cell}>#</th><th ${cell}>Transport</th><th ${cell}>Type</th><th ${cell}>Client</th><th ${cell}>Description</th>${d.multi?`<th ${cell}>Demand</th>`:""}<th ${cell}>Remarks</th></tr>
+    ${d.list.map(r=>`<tr${r.done?' style="color:#888"':""}><td ${cell}>${r.done?"✓":++n}</td><td ${cell}><b>${esc(r.number)}</b></td><td ${cell}>${r.type}</td><td ${cell}>${esc(r.client)||"—"}</td>
+      <td ${cell}>${esc(r.desc||"")}${r.members?`<br><i>contains ${r.members.map(m=>esc(m.number||"(TR)")).join(", ")}</i>`:""}</td>${d.multi?`<td ${cell}>${esc(r.t.demandId||r.t.title)}</td>`:""}
+      <td ${cell}>${r.done?"already in "+esc(target)+(r.doneDate?" ("+esc(r.doneDate)+")":""):r.warn.map(w=>"⚠ "+esc(w)).join("<br>")}</td></tr>`).join("")}</table>`
+    :`<p><i>Nothing left to import into ${esc(target)} — everything has reached it.</i></p>`}
+    ${notes?`<p><b>Notes:</b><br>${esc(notes).replace(/\n/g,"<br>")}</p>`:""}`;
+}
+function runSheetText(d,target,label,notes){
+  const L=[`Transport import request — ${target}${d.tier?" ("+d.tier.label+")":""}`,label,""];
+  if(d.freeze)L.push(`NOTE: ${target} is in a change freeze until ${d.freeze.to} (${d.freeze.title}).`,"");
+  if(!d.todo.length)L.push(`Nothing left to import into ${target}.`);
+  else{L.push("Please import in this order:");const w=Math.max(...d.todo.map(r=>r.number.length));
+    d.todo.forEach((r,i)=>{L.push(`${String(i+1).padStart(3)}. ${r.number.padEnd(w)}  ${r.type}${r.client?" → client "+r.client:""}${r.desc?" — "+r.desc:""}${r.members?` [contains ${r.members.map(m=>m.number||"(TR)").join(", ")}]`:""}${d.multi?` (${r.t.demandId||r.t.title})`:""}`);
+      r.warn.forEach(x=>L.push(`       ⚠ ${x}`));});}
+  if(notes)L.push("","Notes: "+notes);
+  return L.join("\n");
+}
+function commonTarget(ts){const c={};ts.forEach(t=>{if(!t.transports.length)return;const g=goliveTargetFor(t);if(g)c[g]=(c[g]||0)+1;});
+  return Object.keys(c).sort((a,b)=>c[b]-c[a])[0]||"";}
+function copyRich(html,text){
+  try{if(window.ClipboardItem&&navigator.clipboard&&navigator.clipboard.write)
+    return navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([`<div style="font-family:Segoe UI,Arial,sans-serif;font-size:13px">${html}</div>`],{type:"text/html"}),"text/plain":new Blob([text],{type:"text/plain"})})]);}catch(e){}
+  return navigator.clipboard.writeText(text);}
+function openRunSheet(tasks,label,defTarget){
+  const root=document.getElementById("modalRoot"),notes=openRunSheet._notes||(openRunSheet._notes={});
+  let target=defTarget||"",showDone=false;
+  const draw=()=>{
+    const d=runSheetData(tasks,target,showDone),nt=notes[label]||"";
+    root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:840px"><h2>📋 Transport run sheet — ${esc(label)}</h2>
+      <p class="faint" style="font-size:12px;margin-top:-8px">What Basis needs to import, in release order. A ToC replaces the TRs bundled in it; anything that already reached the target drops off the request.</p>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <span style="font-size:13px">Import into</span><select id="rs-sys" style="width:auto">${systemOptions(target)}</select>
+        <label style="display:flex;align-items:center;gap:6px;margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:500;color:var(--muted)"><input type="checkbox" id="rs-done" ${showDone?"checked":""} style="width:auto"> show what's already there</label>
+        <span class="faint" style="font-size:12px;margin-left:auto">${target?`${d.todo.length} to import${d.other?` · ${d.other} TR(s) from other landscapes left out`:""}`:""}</span></div>
+      <textarea id="rs-notes" rows="2" placeholder="Notes for Basis (optional) — e.g. import after 18:00, ToC first, ping me on Teams when done">${esc(nt)}</textarea>
+      <div class="specpaper specdoc" id="rs-prev" style="margin-top:10px">${target?runSheetHTML(d,target,label,nt):"<p><i>Pick the system to import into.</i></p>"}</div>
+      <div class="modal-foot">${d.todo.length?`<button id="rs-mark" style="margin-right:auto" title="Once Basis confirms: record the import on every transport / ToC in the list">✓ Mark all imported…</button>`:""}
+        <button id="rs-copy" ${target?"":"disabled"} title="Formatted table — paste into an email or Teams">📋 Copy for email</button><button id="rs-text" ${target?"":"disabled"} title="Plain text">📋 Copy as text</button><button id="rs-close" class="primary">Close</button></div></div></div>`;
+    const close=()=>{root.innerHTML="";renderApp();};
+    root.querySelector("#rs-close").onclick=close;
+    root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
+    root.querySelector("#rs-sys").onchange=e=>{target=e.target.value;draw();};
+    root.querySelector("#rs-done").onchange=e=>{showDone=e.target.checked;draw();};
+    /* notes update the preview in place — a full redraw would steal the cursor */
+    root.querySelector("#rs-notes").oninput=e=>{notes[label]=e.target.value;if(target)root.querySelector("#rs-prev").innerHTML=runSheetHTML(runSheetData(tasks,target,showDone),target,label,notes[label]);};
+    const cp=root.querySelector("#rs-copy");if(cp)cp.onclick=()=>{const x=runSheetData(tasks,target,false);
+      copyRich(runSheetHTML(x,target,label,notes[label]||""),runSheetText(x,target,label,notes[label]||"")).then(()=>toast("Copied — paste it into your mail to Basis")).catch(()=>toast("Copy failed",true));};
+    const tx=root.querySelector("#rs-text");if(tx)tx.onclick=()=>{navigator.clipboard.writeText(runSheetText(runSheetData(tasks,target,false),target,label,notes[label]||"")).then(()=>toast("Copied as text")).catch(()=>toast("Copy failed",true));};
+    const mk=root.querySelector("#rs-mark");if(mk)mk.onclick=()=>{
+      const v=prompt(`Basis imported all ${d.todo.length} item(s) into ${target}? Date of the import (YYYY-MM-DD):`,todayStr());if(v===null)return;
+      const dt=v.trim();if(!/^\d{4}-\d{2}-\d{2}$/.test(dt)){toast("Use the YYYY-MM-DD format",true);return;}
+      const touched=new Set();d.todo.forEach(r=>{(r.toc||r.tr).syncs.push({system:target,date:dt});touched.add(r.t);});
+      touched.forEach(t=>touch(t));draw();toast(`Recorded ${d.todo.length} import(s) into ${target} on ${dt}`);};
+  };
+  draw();
+}
+
+/* ===================== HANDOVER PACK ===================== */
+/* Everything a colleague needs to carry your open work while you're away: per demand,
+   where it stands, what's next and what's in flight — plus other teams you're waiting
+   on, and freezes / recurring duties that fall inside the period. */
+const HO_RANK={bug:0,progress:1,open:2,delivered:3,closed:4};
+function handoverDefaultIds(){return state.tasks.filter(t=>["open","progress","bug"].includes(t.status)||(t.status==="delivered"&&golivePending(t))).map(t=>t.id);}
+function hoOpenSubs(list,d,out){list.forEach(s=>{if(!s.done)out.push({s,d});hoOpenSubs(s.children,s.done?d:d+1,out);});return out;}
+function handoverDoc(s,ts){
+  const H=[],M=[],mdc=x=>String(x||"").replace(/\|/g,"\\|").replace(/\n/g," ");
+  const para=(label,txt)=>{if(!txt)return;H.push(`<p><b>${label}</b></p><div class="note">${esc(txt)}</div>`);M.push(`**${label}**`,``,txt,``);};
+  const list=(label,items)=>{if(!items.length)return;H.push(`<p><b>${label}</b></p><ul>${items.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`);M.push(`**${label}**`,``,...items.map(x=>"- "+x),``);};
+  const dl=t=>(t.demandId?t.demandId+" — ":"")+t.title;
+  const plus30=(()=>{const x=new Date(todayStr()+"T00:00:00");x.setDate(x.getDate()+30);return isoD(x);})();
+  const winStart=s.from||todayStr(),winEnd=s.until||plus30;
+  const period=(s.from||s.until)?`${s.from||"…"} → ${s.until||"…"}`:"";
+  const cidx=clashIndex();
+  H.push(`<h1>Handover${period?" · "+esc(period):""}</h1><p class="meta">${s.to?`<b>Handed over to:</b> ${esc(s.to)} &nbsp;|&nbsp; `:""}<b>Demands:</b> ${ts.length} &nbsp;|&nbsp; <b>Prepared:</b> ${todayStr()}</p>`);
+  M.push(`# Handover${period?" · "+period:""}`,``,`${s.to?`**Handed over to:** ${s.to} | `:""}**Demands:** ${ts.length} | **Prepared:** ${todayStr()}`,``);
+  if(s.intro){H.push(`<div class="note">${esc(s.intro)}</div>`);M.push(s.intro,``);}
+  const nextStep=t=>(t.nextAction&&t.nextAction.date)?`${t.nextAction.date}${t.nextAction.note?": "+t.nextAction.note:""}`:isWaiting(t)?`waiting on ${t.waiting.on}`:"";
+  if(ts.length){
+    H.push(`<h3>At a glance</h3><table><tr><th>Demand</th><th>Status</th><th>System</th><th>Due</th><th>Next step</th></tr>${ts.map(t=>`<tr><td>${esc(dl(t))}</td><td>${STATUS[t.status].label}</td><td>${esc(t.system)||"—"}${t.client?" / "+esc(t.client):""}</td><td>${earliestOpenDue(t)||"—"}</td><td>${esc(nextStep(t))||"—"}</td></tr>`).join("")}</table>`);
+    M.push(`## At a glance`,``,`| Demand | Status | System | Due | Next step |`,`|---|---|---|---|---|`,
+      ...ts.map(t=>`| ${mdc(dl(t))} | ${STATUS[t.status].label} | ${t.system||"—"}${t.client?" / "+t.client:""} | ${earliestOpenDue(t)||"—"} | ${mdc(nextStep(t))||"—"} |`),``);}
+  ts.forEach(t=>{
+    const ep=epicById(t.epicId),due=earliestOpenDue(t);
+    const meta=[STATUS[t.status].label,t.system?t.system+(t.client?" / "+t.client:""):"",ep?"◆ "+epicLabel(ep)+(t.wave?" · "+t.wave:""):"",
+      t.requestor?"asked by "+t.requestor:"",t.receivedDate?"received "+t.receivedDate:"",due?"due "+due:"",
+      isWaiting(t)?`waiting on ${t.waiting.on}${waitDays(t)!=null?" for "+waitDays(t)+"d":""}`:""].filter(Boolean).join(" · ");
+    H.push(`<h3>${esc(dl(t))}</h3><p class="meta">${esc(meta)}</p>`);M.push(`## ${dl(t)}`,``,`_${meta}_`,``);
+    if(t.nextAction&&t.nextAction.date)list("Next action",[`${t.nextAction.date}${t.nextAction.note?" — "+t.nextAction.note:""}`]);
+    para("What it is",t.description.length>700?t.description.slice(0,700)+"…":t.description);
+    para("Where it stands",t.notes);
+    list("Open subtasks",hoOpenSubs(t.subtasks,0,[]).map(({s:x,d})=>`${"› ".repeat(d)}${x.title||"(untitled)"}${x.dueDate?" (due "+x.dueDate+")":""}`));
+    const trs=t.transports.map(tr=>{const r=[...reachedSystems(t,tr)],toc=tocFor(t,tr);
+      return `${tr.number||"(unnumbered)"} — ${isCust(tr)?"customizing"+(tr.client?", client "+tr.client:""):"workbench"}${tr.released?"":", NOT released"}${r.length?", reached "+r.join("/"):", not moved yet"}${toc?", in ToC "+(toc.number||"(unnumbered)"):""}${tr.desc?" · "+tr.desc:""}`;});
+    const g=golivePending(t);if(g)trs.push(`⚠ ${g.missing.length} transport(s) not yet in ${g.target}: ${g.missing.map(x=>x.number||"(TR)").join(", ")}`);
+    list("Transports",trs);
+    list("⚠ Object clashes",taskClashes(t,cidx).flatMap(({o,open})=>open.map(x=>`${o.name} is also in flight in ${x.t.demandId||x.t.title} (${clashWhere(x)})`)));
+    if(s.refs)list("Reference",(t.reference||[]).filter(r=>r.label||r.value).map(r=>`${r.label||"(no label)"}: ${r.secret?"(secret — not included, ask me)":r.value}`));
+    list("Debugging in progress",debugForTask(t.id).filter(x=>["active","paused"].includes(x.status)).map(x=>`${x.title}${x.resume?" — resume here: "+x.resume.replace(/\s+/g," "):""}`));
+    list("Latest comments",(t.comments||[]).slice(-3).map(c=>`${isoTs(c.ts)} — ${c.text.replace(/\s+/g," ")}`));
+    if(s.actions){const acts=[];meetingsForTask(t.id).forEach(mt=>mt.actions.filter(a=>!a.done).forEach(a=>acts.push(`${a.text||"(no text)"}${a.owner?" ("+a.owner+")":""}${a.due?" — due "+a.due:""} · from ${mt.date} ${mt.title}`)));
+      list("Open action points",acts);}
+  });
+  const deps=[];[...new Set(ts.map(t=>t.epicId).filter(Boolean))].map(epicById).filter(Boolean)
+    .forEach(e=>e.deps.filter(x=>!x.done).forEach(x=>deps.push({e,x})));
+  if(deps.length){
+    H.push(`<h3>Waiting on other teams</h3><table><tr><th>Epic</th><th>Team</th><th>What they owe</th><th>Since</th><th>Expected</th><th>Last chased</th></tr>${deps.map(({e,x})=>`<tr><td>${esc(e.code||e.name)}</td><td>${esc(x.team)}</td><td>${esc(x.what)}</td><td>${x.since||"—"}</td><td>${x.expected||"—"}</td><td>${x.lastCheck||"never"}</td></tr>`).join("")}</table>`);
+    M.push(`## Waiting on other teams`,``,`| Epic | Team | What they owe | Since | Expected | Last chased |`,`|---|---|---|---|---|---|`,
+      ...deps.map(({e,x})=>`| ${mdc(e.code||e.name)} | ${mdc(x.team)} | ${mdc(x.what)} | ${x.since||"—"} | ${x.expected||"—"} | ${x.lastCheck||"never"} |`),``);}
+  const inWin=d=>d&&d>=winStart&&d<=winEnd;
+  const per=[
+    ...state.playbook.filter(p=>p.kind==="freeze"&&p.from&&p.to&&p.from<=winEnd&&p.to>=winStart).map(p=>`❄ Change freeze ${p.from} → ${p.to}: ${p.title}${(p.systems||[]).length?" ("+p.systems.join(", ")+")":""}`),
+    ...state.playbook.filter(p=>p.kind==="recurring"&&inWin(p.due)).map(p=>`🔁 ${p.due}: ${p.title}`),
+    ...(s.todos?state.todos.filter(x=>!x.done&&x.due&&x.due<=winEnd).map(x=>`☐ ${x.due}: ${x.text}`):[])];
+  if(per.length){H.push(`<h3>During this period (${esc(winStart)} → ${esc(winEnd)})</h3>`);M.push(`## During this period (${winStart} → ${winEnd})`,``);list("Coming up",per);}
+  return {html:H.join(""),md:M.join("\n")};
+}
+function openHandover(){
+  const s=openHandover._s||(openHandover._s={to:"",from:todayStr(),until:"",intro:"",ids:null,actions:true,refs:true,todos:false});
+  const live=new Set(state.tasks.map(t=>t.id));
+  s.ids=new Set([...(s.ids||handoverDefaultIds())].filter(id=>live.has(id)));
+  const cand=state.tasks.filter(t=>t.status!=="closed")
+    .sort((a,b)=>HO_RANK[a.status]-HO_RANK[b.status]||(earliestOpenDue(a)||"9999").localeCompare(earliestOpenDue(b)||"9999"));
+  const chosen=()=>cand.filter(t=>s.ids.has(t.id));
+  const root=document.getElementById("modalRoot");
+  const lbl='style="display:flex;align-items:center;gap:6px;margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:500;color:var(--muted)"';
+  root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:880px"><h2>🧳 Handover pack</h2>
+    <p class="faint" style="font-size:12px;margin-top:-8px">Everything a colleague needs to carry your open demands while you're away. The document below updates as you fill this in.</p>
+    <div class="grid2"><div class="field"><label>Handing over to</label><input id="ho-to" value="${esc(s.to)}" placeholder="Name"></div>
+      <div class="field"><label>Away from → back on</label><div style="display:flex;gap:6px;align-items:center"><input type="date" id="ho-from" value="${s.from}"><span class="faint">→</span><input type="date" id="ho-until" value="${s.until}"></div></div></div>
+    <div class="field"><label>Opening note</label><textarea id="ho-intro" rows="2" placeholder="General context — who to escalate to, anything urgent, where things live…">${esc(s.intro)}</textarea></div>
+    <details style="margin-bottom:10px"><summary style="cursor:pointer;font-size:13px">Demands included: <b id="ho-n">${s.ids.size}</b> of ${cand.length} not closed — choose…</summary>
+      <div style="display:flex;gap:6px;margin:8px 0"><button class="sm" id="ho-def" title="Open, in progress, bug, and delivered-but-not-yet-in-Prod">Open work</button><button class="sm" id="ho-all">All</button><button class="sm" id="ho-none">None</button></div>
+      <div class="picklist" id="ho-list" style="max-height:220px"></div></details>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px">${[["actions","Open action points from linked meetings"],["refs","Reference entries (secrets left out)"],["todos","My to-dos due before I'm back"]].map(([k,l])=>`<label ${lbl}><input type="checkbox" class="ho-opt" data-k="${k}" ${s[k]?"checked":""} style="width:auto"> ${l}</label>`).join("")}</div>
+    <div class="specpaper specdoc" id="ho-prev"></div>
+    <div class="modal-foot"><button id="ho-copy">📋 Copy Markdown</button><button id="ho-md">⬇ Download .md</button><button id="ho-print">🖨 Print / Save PDF</button><button id="ho-close" class="primary">Close</button></div></div></div>`;
+  const prev=()=>{root.querySelector("#ho-prev").innerHTML=handoverDoc(s,chosen()).html;root.querySelector("#ho-n").textContent=s.ids.size;};
+  const drawList=()=>{const host=root.querySelector("#ho-list");
+    host.innerHTML=cand.length?cand.map(t=>`<label class="pickrow"><input type="checkbox" data-id="${t.id}" ${s.ids.has(t.id)?"checked":""} style="width:auto"><div><div class="demand">${esc(t.demandId||"—")} · <span class="pill ${STATUS[t.status].cls}" style="font-size:9px">${STATUS[t.status].label}</span></div><div>${esc(t.title)}</div></div></label>`).join("")
+      :`<div class="pickrow faint">No demands that aren't closed.</div>`;
+    host.querySelectorAll("input[data-id]").forEach(cb=>cb.onchange=()=>{if(cb.checked)s.ids.add(cb.dataset.id);else s.ids.delete(cb.dataset.id);prev();});};
+  /* fields update the preview live (oninput, not onchange — so nothing redraws under the cursor) */
+  [["#ho-to","to"],["#ho-from","from"],["#ho-until","until"],["#ho-intro","intro"]].forEach(([sel,k])=>{root.querySelector(sel).oninput=e=>{s[k]=e.target.value;prev();};});
+  root.querySelector("#ho-def").onclick=()=>{s.ids=new Set(handoverDefaultIds());drawList();prev();};
+  root.querySelector("#ho-all").onclick=()=>{s.ids=new Set(cand.map(t=>t.id));drawList();prev();};
+  root.querySelector("#ho-none").onclick=()=>{s.ids=new Set();drawList();prev();};
+  root.querySelectorAll(".ho-opt").forEach(cb=>cb.onchange=()=>{s[cb.dataset.k]=cb.checked;prev();});
+  const close=()=>root.innerHTML="";
+  root.querySelector("#ho-close").onclick=close;
+  root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
+  root.querySelector("#ho-copy").onclick=()=>{navigator.clipboard.writeText(handoverDoc(s,chosen()).md).then(()=>toast("Markdown copied to clipboard")).catch(()=>toast("Copy failed",true));};
+  root.querySelector("#ho-md").onclick=()=>{const b=new Blob([handoverDoc(s,chosen()).md],{type:"text/markdown"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="handover-"+(s.from||todayStr())+".md";a.click();URL.revokeObjectURL(a.href);};
+  root.querySelector("#ho-print").onclick=()=>{const pa=document.getElementById("printArea");pa.className="specdoc";pa.innerHTML=handoverDoc(s,chosen()).html;window.print();};
+  drawList();prev();
+}
+
 /* ===================== GLOBAL SEARCH ===================== */
 function runGlobalSearch(q){
   const box=document.getElementById("gsearchResults");q=q.trim().toLowerCase();
   if(!q){box.classList.add("hide");return;}
   const hits=[];
   state.tasks.forEach(t=>{
-    if([t.demandId,t.title,t.description,t.notes,t.type,t.requestor,t.project,t.theme,t.wave,t.system,t.client?"client "+t.client:"",(()=>{const e=epicById(t.epicId);return e?epicLabel(e):"";})(),(t.comments||[]).map(c=>c.text).join(" ")].join(" ").toLowerCase().includes(q))hits.push({k:"Demand",go:()=>{view="demands";activeId=t.id;activeTab="work";},label:`${t.demandId||"—"} · ${t.title}${t.system?" · "+t.system+(t.client?"/"+t.client:""):""}${t.project?" · ▦ "+t.project:""}${t.theme?" · "+t.theme:""}`});
+    if([t.demandId,t.title,t.description,t.notes,t.type,t.requestor,t.project,t.theme,t.wave,t.system,t.client?"client "+t.client:"",(t.nextAction&&t.nextAction.note)||"",(()=>{const e=epicById(t.epicId);return e?epicLabel(e):"";})(),(t.comments||[]).map(c=>c.text).join(" ")].join(" ").toLowerCase().includes(q))hits.push({k:"Demand",go:()=>{view="demands";activeId=t.id;activeTab="work";},label:`${t.demandId||"—"} · ${t.title}${t.system?" · "+t.system+(t.client?"/"+t.client:""):""}${t.project?" · ▦ "+t.project:""}${t.theme?" · "+t.theme:""}`});
     t.objects.forEach(o=>{if([o.name,o.type,o.desc].join(" ").toLowerCase().includes(q))hits.push({k:"Object",go:()=>{view="demands";activeId=t.id;activeTab="objects";},label:`${o.name||"(obj)"} — ${o.action} · ${t.demandId||t.title}`});});
     t.transports.forEach(tr=>{
       const toc=tocFor(t,tr);
@@ -3428,6 +3738,7 @@ function openMenu(){
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
       <button id="mn-week">🗓 Weekly summary…</button>
+      <button id="mn-hand">🧳 Handover pack…</button>
       <button id="mn-csv">⬇ Export transports (CSV for Excel)</button>
       <button id="mn-export">⬇ Export / download a copy (.json)</button>
       <button id="mn-import">⬆ Import / open a .json file</button>
@@ -3451,6 +3762,7 @@ function openMenu(){
   root.querySelector("#mn-imgexp").onchange=e=>{const n=Math.max(0,parseInt(e.target.value||"0",10)||0);state.settings.imageExpiryDays=n;markDirty();};
   root.querySelector("#mn-objtypes").onclick=()=>{close();openObjTypes(()=>renderApp());};
   root.querySelector("#mn-week").onclick=()=>{close();openWeekly();};
+  root.querySelector("#mn-hand").onclick=()=>{close();openHandover();};
   root.querySelector("#mn-csv").onclick=exportTransportsCSV;
   root.querySelector("#mn-export").onclick=exportDownload;
   root.querySelector("#mn-import").onclick=()=>{close();importViaInput();};

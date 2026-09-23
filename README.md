@@ -53,6 +53,17 @@ first paint, with no flash.
   net, so an accidental close won't lose work. The **⋯ menu → Restore** brings
   that back.
 
+## 🧳 Handover pack
+Today sidebar or ⋯ menu. One document for the colleague covering your open work
+while you're away: who it's for, the away dates, an opening note, then an *at a
+glance* table and, per demand, where it stands, the next action, open subtasks,
+transports and what's still short of Prod, object clashes, reference entries
+(secrets left out), debugging in progress with its resume note, latest comments
+and open action points from linked meetings. It ends with other teams you're
+waiting on (from the epics) and freezes / recurring duties (optionally your
+to-dos) that fall in the period. Choose which demands go in (default: open work
+plus delivered-but-not-in-Prod). Copy as Markdown, download .md, or print to PDF.
+
 ## Portability
 Copy `DemandDesk.html` **and** your `.json` data file to any folder, USB stick,
 or OneDrive. Open the HTML there, then **📂 Open** the JSON. Identical anywhere.
@@ -139,6 +150,36 @@ it. Empty sections are hidden; if everything's clear it says so. A first-run
   it there without opening ✎ Edit. Every change is logged in History as before.
   A **closed** demand no longer counts as overdue or "waiting on" because of
   leftover subtasks or an old blocker.
+- **⚠ Object clash warnings** — the same object being changed in two demands at
+  once is how transports overwrite each other in QA/Prod. An object counts as
+  *in flight* from the moment it's logged until the transports carrying it reach
+  that demand's go-live system (objects marked *Analyzed*, and closed demands,
+  never count; names match regardless of case/spaces). When two demands have the
+  same object in flight you get:
+  - a red line under the object on the **Objects** tab naming the other demand
+    and where its copy stands (e.g. *In progress · H03K901000 at H02*) — plus a
+    warning the moment you type a clashing name;
+  - a **⚠ clash** badge on both demand cards and on the Objects tab;
+  - a line on each **transport** that carries it ("agree the import order");
+  - an **Object clashes** card on **Today**, a mark in the epic's object list,
+    and an **only clashes** filter in **⌕ Objects**.
+  Once you've agreed the order with the other demand, click **✓ Sequenced — stop
+  warning**; that silences the pair on both demands (↺ Warn again undoes it).
+  Clashes clear on their own when a transport reaches Prod or a demand closes.
+- **📋 Transport run sheet** (Transports tab, and the epic's Transports section
+  for every demand in the epic) — the import request for Basis. Pick the target
+  system; it lists what still has to be imported there, in release order. A ToC
+  replaces the TRs bundled in it, customizing TRs name their client, anything
+  already in the target drops off, TRs from other landscapes are left out.
+  Unreleased TRs, object clashes and active freezes are flagged. Add notes
+  ("after 18:00"), then **Copy for email** (a formatted table for Outlook/Teams)
+  or **Copy as text**. When Basis confirms, **✓ Mark all imported…** records the
+  import on every listed transport/ToC in one go.
+- **⏰ Next action** — "look at this again on…": a date plus what to do. Quick
+  picks (tomorrow, next Monday, in 2 weeks…). It shows under the demand title and
+  on its card, and the demand comes back on **Today → Next actions due** on that
+  date. **✓ Done** notes it in History and clears it. A demand parked with a
+  future next action isn't counted as stale.
 - **Delete safety** — deleting a subtask that has sub-subtasks or comments, a
   numbered transport (its sync history goes with it) or a named object asks first.
 - **Subtasks** — branch infinitely; each has its own received/due dates, a done
