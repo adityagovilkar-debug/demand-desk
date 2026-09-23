@@ -282,22 +282,50 @@ above).
 - **Images** — screenshots attached to the demand (see *Images & screenshots*
   below).
 
-**Filtering the demand list** — the status chips at the top of the sidebar are
-**multi-select**: click *Open* and *In progress* to see both, click a chip again
-to drop it, and **All** clears the selection. A "shown" counter appears in the
-stats row while a selection is active. There are also filters for epic, project,
-theme and requestor, and a **Hide closed demands** checkbox — that checkbox is
-the default convenience, so if you explicitly select *Closed* the chips win.
+**The demand list view** — the top of the Demands sidebar has four parts:
 
-**Group by epic** (on by default) splits the list into one block per epic —
-active epics first, then on-hold, delivered and closed — with ungrouped demands
-under **No epic** at the bottom. Each header shows the epic code and name, how
-many of its demands are open and shown (e.g. `2 open · 3`, or `2/3` when filters
-hide some), an ⚑ count if any are overdue, and **›** to jump to the epic. Click a
-header to collapse it; collapsed groups stay collapsed next time (remembered per
-browser, not in your data file), but a group re-opens automatically when the
-demand you're working on is inside it. Headers stick to the top while you scroll.
-Filters and sort still apply inside every group. Untick the box for the flat list.
+1. **Saved views** — one-click chips. Five starter views come built in:
+   **My active** (open, in progress and bugs, grouped by epic, by due date),
+   **Go-live** (transports not yet in Prod, grouped by system), **Waiting**
+   (longest wait first), **Clashes** (demands with object clashes) and
+   **Everything** (most recently updated first). The chip for the view you're on
+   is highlighted; change anything and a **★ Save view** chip appears to keep the
+   new combination under a name.
+2. **Quick filter box** — type part of a demand ID, title, object name, TR or ToC
+   number, requestor, project, theme, system or epic; the list narrows as you
+   type (several words must all match). `Esc` clears it.
+3. **⚙ View** — one panel for everything else, applied live as you click:
+   - **Group by:** no grouping, epic, epic wave, status, system, project, theme,
+     requestor, demand type, due date (overdue / within 7 days / within 30 days /
+     later / none) or next action.
+   - **Sort by:** due date, next action, received, last updated, age, time waiting,
+     status, object clashes, demand ID or title — ascending or descending. Demands
+     with no value (no due date, not waiting…) always go last.
+   - **Show:** tick statuses (none ticked = all), hide closed / delivered, and
+     *only* demands that are overdue, waiting on someone, with object clashes,
+     with transports not yet in Prod, or with a next action due. Plus dropdown
+     filters for epic (or "no epic"), system, project, theme, requestor and type.
+   - **Saved views** at the bottom: click a name to apply it, ← to move it left,
+     ✎ to rename, ✕ to delete, and **↺ starter views** brings back any built-in
+     view you deleted. **Reset** returns to a plain, ungrouped due-date list.
+   The small number on the ⚙ View button counts the active filters.
+4. **Summary chips** — what the current view is doing, e.g. `Group: Epic` ·
+   `Due date ↑` · `System: H03`. Click the group chip to open the panel, click the
+   sort chip to reverse the order, and ✕ on any filter chip to drop it
+   (**clear filters** removes them all).
+
+A **shown** counter appears in the stats row whenever the view hides some demands.
+
+**Groups** — each group is a collapsible block with a header that sticks to the
+top while you scroll. It shows how many are open and shown (e.g. `2 open · 3`,
+or `2/3` when filters hide some of an epic), an ⚑ count if any are overdue, and
+for epics a **›** to jump to the epic. Click a header to collapse it; collapsed
+groups are remembered separately for each grouping, and a group re-opens by
+itself when the demand you're working on is inside it. The sort order still
+applies inside every group.
+
+The view, saved views and collapsed groups are remembered per browser and are
+**not** stored in your data file.
 
 ### System landscape
 Sync targets are picked from your landscape grid, generated from `H0`–`H6` ×

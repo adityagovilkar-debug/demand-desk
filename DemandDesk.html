@@ -340,6 +340,48 @@
   .clashtag{font-size:10px;font-weight:700;color:var(--red);border:1px solid var(--red-line);border-radius:4px;padding:0 5px;white-space:nowrap;margin-left:4px}
   .nextact{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted);border:1px dashed var(--line2);border-radius:7px;padding:3px 4px 3px 9px;width:fit-content;max-width:100%}
   .nextact.due{color:var(--amber);border-color:var(--amber)}
+  /* demand list view: saved views, quick filter, summary chips, ⚙ View panel */
+  .dvviews{display:flex;gap:4px;flex-wrap:wrap}
+  .dvview{padding:2px 10px;font-size:11.5px;border-radius:14px;background:transparent;border:1px solid var(--line2);color:var(--muted)}
+  .dvview:hover{color:var(--txt);background:transparent}
+  .dvview.on{color:var(--accent);border-color:var(--accent);background:var(--chip);font-weight:600}
+  .dvview.save{border-style:dashed}
+  .dvbar{display:flex;gap:6px;align-items:center}
+  .dvq{position:relative;flex:1;min-width:0}
+  .dvq input{padding-right:28px}
+  .dvq button{position:absolute;right:3px;top:50%;transform:translateY(-50%)}
+  .dvn{display:inline-block;min-width:16px;padding:0 4px;margin-left:5px;border-radius:8px;background:var(--accent);color:var(--on-accent);font-size:10px;text-align:center}
+  .dvchips{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+  .dvchip{display:inline-flex;align-items:center;gap:2px;max-width:100%;font-size:11px;padding:1px 3px 1px 8px;border:1px solid var(--line2);border-radius:12px;color:var(--muted);background:var(--panel)}
+  .dvchip.act{cursor:pointer}.dvchip.act:hover{color:var(--txt);border-color:var(--faint)}
+  .dvchip:not(:has(.x)){padding-right:8px}
+  .dvchip .tx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dvchip .x{cursor:pointer;padding:0 5px;color:var(--faint);font-weight:700}.dvchip .x:hover{color:var(--red)}
+  .dvclear{font-size:11px;cursor:pointer;color:var(--accent);margin-left:2px}
+  .modal-bg.popbg{background:transparent;display:block}
+  .dvpanel{position:fixed;background:var(--panel);border:1px solid var(--line2);border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.35);padding:14px 16px;overflow:auto}
+  .dvcols{display:grid;grid-template-columns:150px 170px 1fr;gap:18px}
+  .dvpanel h4{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+  .dvpanel label.dvopt{display:flex;align-items:center;gap:7px;padding:3px 4px;margin:0;border-radius:5px;cursor:pointer;font-size:12.5px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--txt)}
+  .dvpanel label.dvopt:hover{background:var(--panel2)}
+  .dvpanel label.dvopt input{width:auto;margin:0}
+  .dvsub{font-size:11px;color:var(--faint);margin:12px 0 5px;font-weight:600}
+  .dvsub:first-of-type{margin-top:0}
+  .dvhide{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .dvfilters{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .dvfilters select{font-size:12px;padding:4px 6px}
+  .dvdir{display:flex;gap:4px;margin-top:8px}
+  .dvdir button.on{border-color:var(--accent);color:var(--accent)}
+  .dvfoot{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  .dvsaved{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;margin-bottom:4px}
+  .dvsv{display:inline-flex;align-items:center;border:1px solid var(--line2);border-radius:12px;padding:0 2px 0 9px}
+  .dvsv-n{cursor:pointer}.dvsv-n:hover{color:var(--accent)}
+  .dvsv button{padding:0 4px;font-size:11px}
+  @media (max-width:720px){.dvcols{grid-template-columns:1fr 1fr}.dvcols>div:last-child{grid-column:1/-1}}
+  :root[data-theme="instrument"] .dvview,:root[data-theme="instrument"] .dvchip,:root[data-theme="instrument"] .dvsv,:root[data-theme="instrument"] .dvn{border-radius:2px}
+  :root[data-theme="instrument"] .dvpanel{border-radius:3px;box-shadow:0 2px 10px rgba(18,20,26,.07)}
+  :root[data-theme="instrument"] .dvview,:root[data-theme="instrument"] .dvpanel h4,:root[data-theme="instrument"] .dvsub{font-family:var(--label);letter-spacing:.1em;text-transform:uppercase;font-size:9.5px}
+  :root[data-theme="instrument"] .dvpanel label.dvopt{font-family:var(--sans);font-size:12.5px;letter-spacing:0;color:var(--txt)}
 
   .gsearch{position:absolute;top:40px;left:0;width:420px;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:6px;max-height:60vh;overflow:auto;z-index:60;box-shadow:0 12px 40px rgba(0,0,0,.5)}
   .gsr{padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12px}
@@ -1364,28 +1406,143 @@ function renderToday(){
 }
 
 /* ===================== DEMANDS ===================== */
+/* ===================== DEMAND LIST VIEW =====================
+   One "view" decides what the list shows: grouping, sort order, statuses, field filters
+   and "only …" toggles. It's edited in the ⚙ View panel, summed up as removable chips
+   above the list, and can be saved as named one-click views. Per viewer (localStorage),
+   never in the data file. */
+const DV_GROUPS={none:"No grouping",epic:"Epic",wave:"Epic wave",status:"Status",system:"System",project:"Project",theme:"Theme",requestor:"Requestor",type:"Demand type",due:"Due date",next:"Next action"};
+const DV_SORTS={due:{label:"Due date",dir:"asc"},next:{label:"Next action",dir:"asc"},received:{label:"Received",dir:"desc"},updated:{label:"Last updated",dir:"desc"},
+  age:{label:"Age",dir:"desc"},waiting:{label:"Time waiting",dir:"desc"},status:{label:"Status",dir:"asc"},clash:{label:"Object clashes",dir:"desc"},
+  demand:{label:"Demand ID",dir:"asc"},title:{label:"Title",dir:"asc"}};
+const DV_ONLY={overdue:"Overdue",waiting:"Waiting on someone",clash:"With object clashes",notprod:"Transports not yet in Prod",next:"Next action due"};
+const DV_FIELDS={epic:"Epic",system:"System",project:"Project",theme:"Theme",requestor:"Requestor",type:"Type"};
+const STATUS_ORDER=Object.keys(STATUS),STATUS_RANK={bug:0,progress:1,open:2,delivered:3,closed:4};
+const DV_PRESETS=[
+  {name:"My active",view:{group:"epic",sort:"due",status:["open","progress","bug"]}},
+  {name:"Go-live",view:{group:"system",sort:"due",only:["notprod"]}},
+  {name:"Waiting",view:{group:"none",sort:"waiting",dir:"desc",only:["waiting"]}},
+  {name:"Clashes",view:{group:"none",sort:"clash",dir:"desc",only:["clash"]}},
+  {name:"Everything",view:{group:"none",sort:"updated",dir:"desc"}}];
+let dvQuery=""; /* the quick text filter is deliberately not part of a saved view */
+function dvBlank(){return{group:"none",sort:"due",dir:"asc",status:[],hideClosed:false,hideDelivered:false,only:[],f:{}};}
+/* normalised + canonically ordered, so two views compare equal as JSON */
+function dvNorm(v){v=(v&&typeof v==="object")?v:{};const f={};
+  Object.keys(DV_FIELDS).forEach(k=>{if(v.f&&v.f[k])f[k]=String(v.f[k]);});
+  return{group:DV_GROUPS[v.group]?v.group:"none",sort:DV_SORTS[v.sort]?v.sort:"due",
+    dir:v.dir==="desc"||(v.dir!=="asc"&&DV_SORTS[v.sort]&&DV_SORTS[v.sort].dir==="desc")?"desc":"asc",
+    status:STATUS_ORDER.filter(s=>Array.isArray(v.status)&&v.status.includes(s)),
+    hideClosed:!!v.hideClosed,hideDelivered:!!v.hideDelivered,
+    only:Object.keys(DV_ONLY).filter(k=>Array.isArray(v.only)&&v.only.includes(k)),f};}
+function dvGet(){let v=null;try{v=JSON.parse(viewPref("view","null"));}catch(e){}
+  return dvNorm(v||{group:groupByEpic()?"epic":"none"}); /* first run keeps the old group-by-epic choice */}
+function dvSet(v){setViewPref("view",JSON.stringify(dvNorm(v)));}
+function dvSame(a,b){return JSON.stringify(dvNorm(a))===JSON.stringify(dvNorm(b));}
+function dvSaved(){let a=null;try{a=JSON.parse(viewPref("savedViews","null"));}catch(e){}
+  if(!Array.isArray(a))a=DV_PRESETS.map(p=>({name:p.name,view:p.view}));
+  let fresh=false;
+  const out=a.filter(x=>x&&x.name).map(x=>{if(!x.id)fresh=true;return {id:x.id||uid(),name:String(x.name),view:dvNorm(x.view)};});
+  if(fresh)dvSetSaved(out); /* ids must be stable, or a chip click can't find its view */
+  return out;}
+function dvSetSaved(a){setViewPref("savedViews",JSON.stringify(a.map(x=>({id:x.id,name:x.name,view:dvNorm(x.view)}))));}
+function dvSaveCurrent(){const v=dvGet(),saved=dvSaved();
+  const name=(prompt("Name this view — it becomes a one-click chip above the list:","")||"").trim();if(!name)return false;
+  const ex=saved.find(s=>s.name.toLowerCase()===name.toLowerCase());
+  if(ex){if(!confirm(`Replace the saved view “${ex.name}” with the current settings?`))return false;ex.view=v;}
+  else saved.push({id:uid(),name,view:v});
+  dvSetSaved(saved);toast(`Saved view “${name}”`);return true;}
+
+function dvMatches(v,cidx){
+  const today=todayStr(),words=dvQuery.trim().toLowerCase().split(/\s+/).filter(Boolean),f=v.f;
+  return t=>{
+    if(v.status.length){if(!v.status.includes(t.status))return false;}
+    else if((v.hideClosed&&t.status==="closed")||(v.hideDelivered&&t.status==="delivered"))return false;
+    if(f.epic&&(f.epic==="__none"?!!epicById(t.epicId):t.epicId!==f.epic))return false;
+    if(f.system&&t.system!==f.system)return false;
+    if(f.project&&t.project!==f.project)return false;
+    if(f.theme&&t.theme!==f.theme)return false;
+    if(f.requestor&&t.requestor!==f.requestor)return false;
+    if(f.type&&t.type!==f.type)return false;
+    for(const k of v.only){
+      if(k==="overdue"){const d=earliestOpenDue(t);if(!(d&&d<today))return false;}
+      else if(k==="waiting"){if(!isWaiting(t))return false;}
+      else if(k==="clash"){if(!openClashCount(t,cidx))return false;}
+      else if(k==="notprod"){if(t.status==="closed"||!golivePending(t))return false;}
+      else if(k==="next"){if(!nextActionDue(t))return false;}}
+    if(words.length){const e=epicById(t.epicId);
+      const blob=[t.demandId,t.title,t.requestor,t.project,t.theme,t.wave,t.system,t.client,t.type,e?epicLabel(e):"",
+        ...t.objects.map(o=>o.name),...t.transports.map(tr=>tr.number),...(t.tocs||[]).map(c=>c.number)].join(" ").toLowerCase();
+      if(!words.every(w=>blob.includes(w)))return false;}
+    return true;};
+}
+function dvSortVal(t,k,cidx){
+  switch(k){
+    case "due":return earliestOpenDue(t)||null;
+    case "next":return (t.nextAction&&t.nextAction.date&&t.status!=="closed")?t.nextAction.date:null;
+    case "received":return t.receivedDate||null;
+    case "updated":return t.updatedAt||0;
+    case "age":return t.receivedDate?-daysUntil(t.receivedDate):Math.floor((Date.now()-t.createdAt)/86400000);
+    case "waiting":return isWaiting(t)?(waitDays(t)??0):null;
+    case "status":return STATUS_RANK[t.status];
+    case "clash":return openClashCount(t,cidx)||null;
+    case "demand":return (t.demandId||"").toLowerCase()||null;
+    default:return (t.title||"").toLowerCase();}
+}
+function dvSort(list,v,cidx){const m=v.dir==="desc"?-1:1,val=new Map(list.map(t=>[t,dvSortVal(t,v.sort,cidx)]));
+  return list.sort((a,b)=>{const x=val.get(a),y=val.get(b);
+    if(x==null)return y==null?0:1; /* empty values always last, whichever direction */
+    if(y==null)return -1;
+    const c=typeof x==="number"&&typeof y==="number"?x-y:String(x).localeCompare(String(y),undefined,{numeric:true});
+    return c*m||(earliestOpenDue(a)||"9999").localeCompare(earliestOpenDue(b)||"9999");});}
+/* which block a demand falls into for the chosen grouping */
+function dvGroupOf(t,g){
+  const none=label=>({k:"",label:`<span class="faint">${label}</span>`,rank:9});
+  switch(g){
+    case "epic":{const e=epicById(t.epicId);
+      return e?{k:e.id,label:`◆ ${e.code?`<b>${esc(e.code)}</b> · `:""}${esc(e.name)}`,rank:EPIC_GROUP_RANK[e.status],sl:epicLabel(e),epic:e}:none("No epic");}
+    case "wave":{const e=epicById(t.epicId);if(!e)return none("No epic");
+      const first=tasksForEpic(e.id).filter(x=>(x.wave||"")===(t.wave||"")).map(x=>x.receivedDate||"9999").sort()[0];
+      return{k:e.id+"|"+(t.wave||""),label:`◆ ${esc(e.code||e.name)} · ${t.wave?`<b>${esc(t.wave)}</b>`:"no wave"}${waveTarget(e,t.wave)?` <span class="faint">🎯 ${waveTarget(e,t.wave)}</span>`:""}`,
+        rank:EPIC_GROUP_RANK[e.status],sl:epicLabel(e)+"|"+first};}
+    case "status":return{k:t.status,label:`<span class="pill ${STATUS[t.status].cls}">${STATUS[t.status].label}</span>`,rank:STATUS_RANK[t.status]};
+    case "system":{if(!t.system)return none("No system");const m=tierMeta(t.system);
+      return{k:t.system,label:`<b class="mono">${esc(t.system)}</b>${m?` <span class="faint">${m.label}</span>`:""}`,rank:0,sl:t.system};}
+    case "due":{const d=earliestOpenDue(t);if(!d)return{k:"none",label:`<span class="faint">No due date</span>`,rank:4};const n=daysUntil(d);
+      return n<0?{k:"over",label:`<span style="color:var(--red)">⚑ Overdue</span>`,rank:0}:n<=7?{k:"week",label:"Due within 7 days",rank:1}
+        :n<=30?{k:"month",label:"Due within 30 days",rank:2}:{k:"later",label:"Due later",rank:3};}
+    case "next":{const n=t.nextAction;if(!n||!n.date||t.status==="closed")return{k:"none",label:`<span class="faint">No next action</span>`,rank:3};
+      return n.date<=todayStr()?{k:"due",label:`<span style="color:var(--amber)">⏰ Next action due</span>`,rank:0}
+        :daysUntil(n.date)<=7?{k:"week",label:"⏰ Within 7 days",rank:1}:{k:"later",label:"⏰ Later",rank:2};}
+    default:{const val=t[g];return val?{k:val,label:esc(val),rank:0,sl:val}:none("No "+DV_GROUPS[g].toLowerCase());}
+  }
+}
+function dvCollapsed(key){try{return new Set(JSON.parse(viewPref(key,"[]")));}catch(e){return new Set();}}
+/* the one-line summary of the view, as chips: click to change, ✕ to remove */
+function dvChipList(v){const c=[];
+  c.push({t:`▦ ${v.group==="none"?"Not grouped":"Group: "+DV_GROUPS[v.group]}`,open:1,rm:v.group!=="none"?x=>{x.group="none";}:null});
+  c.push({t:`↕ ${DV_SORTS[v.sort].label} ${v.dir==="asc"?"↑":"↓"}`,flip:1});
+  if(v.status.length)c.push({t:"Status: "+v.status.map(s=>STATUS[s].label).join(", "),rm:x=>{x.status=[];}});
+  else{if(v.hideClosed)c.push({t:"Closed hidden",rm:x=>{x.hideClosed=false;}});
+    if(v.hideDelivered)c.push({t:"Delivered hidden",rm:x=>{x.hideDelivered=false;}});}
+  Object.entries(v.f).forEach(([k,val])=>{const e=k==="epic"&&val!=="__none"?epicById(val):null;
+    c.push({t:`${DV_FIELDS[k]}: ${k==="epic"?(val==="__none"?"none":(e?epicLabel(e):"?")):val}`,rm:x=>{delete x.f[k];}});});
+  v.only.forEach(k=>c.push({t:"Only: "+DV_ONLY[k].toLowerCase(),rm:x=>{x.only=x.only.filter(y=>y!==k);}}));
+  return c;}
+function dvFilterCount(v){return dvChipList(v).length-2;}
 function renderDemandSidebar(){
-  const reqs=distinctVals("requestor"),projs=distinctVals("project"),themes=distinctVals("theme");
+  {const v=dvGet();if(v.f.epic&&v.f.epic!=="__none"&&!epicById(v.f.epic)){delete v.f.epic;dvSet(v);}} /* epic deleted since */
+  const v=dvGet(),saved=dvSaved(),n=dvFilterCount(v),cur=saved.find(s=>dvSame(s.view,v));
   document.getElementById("side").innerHTML=`
     <div class="side-tools">
-      <div class="statchips" id="fStatus">${Object.entries(STATUS).map(([k,v])=>`<button class="statchip ${v.cls}" data-s="${k}">${v.label}</button>`).join("")}<button class="statchip clear" id="fStatusAll" title="Show every status">All</button></div>
+      <div class="dvviews">${saved.map(s=>`<button class="dvview ${cur&&cur.id===s.id?"on":""}" data-id="${s.id}" title="Apply this saved view">${esc(s.name)}</button>`).join("")}${cur?"":`<button class="dvview save" id="dvSave" title="Save the current grouping, sort and filters as a one-click view">★ Save view</button>`}</div>
+      <div class="dvbar"><div class="dvq"><input id="dvQ" placeholder="Filter: ID, title, object, TR…" value="${esc(dvQuery)}" autocomplete="off"><button class="ghost sm ${dvQuery?"":"hide"}" id="dvQx" title="Clear">✕</button></div>
+        <button class="sm" id="dvOpen" title="Group, sort and filter the list">⚙ View${n?`<b class="dvn">${n}</b>`:""}</button></div>
+      <div class="dvchips" id="dvChips"></div>
       <div class="filters">
-        <select id="fEpic"><option value="">All epics</option><option value="__none">— no epic —</option>${state.epics.slice().sort((a,b)=>epicLabel(a).localeCompare(epicLabel(b))).map(e=>`<option value="${e.id}">◆ ${esc(epicLabel(e))}</option>`).join("")}</select>
-        <select id="fSys"><option value="">All systems</option>${distinctVals("system").map(v=>`<option value="${esc(v)}">${esc(v)}${clientsUsedFor(v).length?" · "+clientsUsedFor(v).join("/"):""}</option>`).join("")}</select>
-        <select id="fSort"><option value="due">Sort: Due</option><option value="received">Sort: Received</option><option value="updated">Sort: Updated</option><option value="demand">Sort: Demand ID</option></select>
+        <button class="sm" id="btnPortfolio" title="Project / theme overview" style="flex:1">▦ Portfolio</button>
+        <button class="sm" id="btnObjIdx" title="Object cross-reference index" style="flex:1">⌕ Objects</button>
+        <button class="sm" id="btnAging" title="Time-in-status &amp; delivery lead times" style="flex:1">📈 Aging</button>
       </div>
-      <div class="filters">
-        <select id="fProj"><option value="">All projects</option>${projs.map(r=>`<option>${esc(r)}</option>`).join("")}</select>
-        <select id="fTheme"><option value="">All themes</option>${themes.map(r=>`<option>${esc(r)}</option>`).join("")}</select>
-      </div>
-      <div class="filters">
-        <select id="fReq"><option value="">All requestors</option>${reqs.map(r=>`<option>${esc(r)}</option>`).join("")}</select>
-        <button class="sm" id="btnPortfolio" title="Project / theme overview" style="flex:0 0 auto">▦ Portfolio</button>
-        <button class="sm" id="btnObjIdx" title="Object cross-reference index" style="flex:0 0 auto">⌕ Objects</button>
-        <button class="sm" id="btnAging" title="Time-in-status &amp; delivery lead times" style="flex:0 0 auto">📈 Aging</button>
-      </div>
-      <label style="display:flex;align-items:center;gap:7px;font-size:12px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted);margin:1px 1px"><input type="checkbox" id="fHideClosed" style="width:auto"> Hide closed demands</label>
-      <label style="display:flex;align-items:center;gap:7px;font-size:12px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--muted);margin:1px 1px"><input type="checkbox" id="fGroupEpic" style="width:auto"> Group by epic</label>
       <button class="primary" id="btnNew" style="width:100%">＋ New Demand / Task</button>
     </div>
     <div class="stats" id="stats"></div>
@@ -1394,52 +1551,95 @@ function renderDemandSidebar(){
   document.getElementById("btnObjIdx").onclick=openObjectIndex;
   document.getElementById("btnPortfolio").onclick=openPortfolio;
   document.getElementById("btnAging").onclick=openAging;
-  const sy=document.getElementById("fSys");sy.value=renderDemandSidebar._fsy||"";
-  sy.onchange=()=>{renderDemandSidebar._fsy=sy.value;renderStats();renderList();};
-  const so=document.getElementById("fSort"),fr=document.getElementById("fReq"),fp=document.getElementById("fProj"),ft=document.getElementById("fTheme"),fe=document.getElementById("fEpic");
-  so.value=renderDemandSidebar._so||"due";fr.value=renderDemandSidebar._fr||"";fp.value=renderDemandSidebar._fp||"";ft.value=renderDemandSidebar._ft||"";fe.value=renderDemandSidebar._fe||"";
-  /* multi-select statuses: a set, so "open + in progress" is one click each.
-     Empty set = every status (and then the hide-closed convenience applies). */
-  const sel=statusSel();
-  const paint=()=>{document.querySelectorAll("#fStatus .statchip[data-s]").forEach(b=>b.classList.toggle("on",sel.has(b.dataset.s)));
-    document.getElementById("fStatusAll").classList.toggle("on",sel.size===0);};
-  document.querySelectorAll("#fStatus .statchip[data-s]").forEach(b=>b.onclick=()=>{
-    if(sel.has(b.dataset.s))sel.delete(b.dataset.s);else sel.add(b.dataset.s);
-    renderDemandSidebar._fs=[...sel];paint();renderStats();renderList();});
-  document.getElementById("fStatusAll").onclick=()=>{sel.clear();renderDemandSidebar._fs=[];paint();renderStats();renderList();};
-  paint();
-  fe.onchange=()=>{renderDemandSidebar._fe=fe.value;renderList();};
-  so.onchange=()=>{renderDemandSidebar._so=so.value;renderList();};
-  fr.onchange=()=>{renderDemandSidebar._fr=fr.value;renderList();};
-  fp.onchange=()=>{renderDemandSidebar._fp=fp.value;renderList();};
-  ft.onchange=()=>{renderDemandSidebar._ft=ft.value;renderList();};
-  const hc=document.getElementById("fHideClosed");hc.checked=!!renderDemandSidebar._hc;hc.onchange=()=>{renderDemandSidebar._hc=hc.checked;renderStats();renderList();};
-  const ge=document.getElementById("fGroupEpic");ge.checked=groupByEpic();ge.onchange=()=>{setViewPref("groupEpic",ge.checked?"1":"0");renderList();};
-  renderStats();renderList();
+  document.querySelectorAll(".dvview[data-id]").forEach(b=>b.onclick=()=>{const s=dvSaved().find(x=>x.id===b.dataset.id);if(s){dvSet(s.view);renderDemandSidebar();}});
+  {const sv=document.getElementById("dvSave");if(sv)sv.onclick=()=>{if(dvSaveCurrent())renderDemandSidebar();};}
+  document.getElementById("dvOpen").onclick=openViewPanel;
+  const q=document.getElementById("dvQ"),qx=document.getElementById("dvQx");
+  /* oninput only — the list updates as you type without redrawing the box under the cursor */
+  q.oninput=()=>{dvQuery=q.value;qx.classList.toggle("hide",!dvQuery);renderStats();renderList();};
+  q.onkeydown=e=>{if(e.key==="Escape"&&q.value){e.stopPropagation();q.value="";q.oninput();}};
+  qx.onclick=()=>{q.value="";q.oninput();q.focus();};
+  drawDvChips();renderStats();renderList();
+}
+function drawDvChips(){const host=document.getElementById("dvChips");if(!host)return;const cs=dvChipList(dvGet());
+  host.innerHTML=cs.map((c,i)=>`<span class="dvchip ${c.open||c.flip?"act":""}" data-i="${i}" title="${c.open?"Change the grouping":c.flip?"Click to reverse the order":""}"><span class="tx">${esc(c.t)}</span>${c.rm?`<span class="x" title="Remove">✕</span>`:""}</span>`).join("")
+    +(cs.length-2>1?`<a class="dvclear" id="dvClearAll">clear filters</a>`:"");
+  host.querySelectorAll(".dvchip").forEach(el=>{const c=cs[+el.dataset.i];
+    el.onclick=ev=>{const x=dvGet();
+      if(ev.target.classList.contains("x")){c.rm(x);dvSet(x);renderDemandSidebar();}
+      else if(c.open)openViewPanel();
+      else if(c.flip){x.dir=x.dir==="asc"?"desc":"asc";dvSet(x);renderDemandSidebar();}};});
+  const ca=host.querySelector("#dvClearAll");if(ca)ca.onclick=()=>{const x=dvGet();dvSet({group:x.group,sort:x.sort,dir:x.dir});renderDemandSidebar();};}
+/* ⚙ View — a light panel over the list; every change applies at once so you see the effect */
+function openViewPanel(){
+  const root=document.getElementById("modalRoot");
+  root.innerHTML=`<div class="modal-bg popbg"><div class="dvpanel"></div></div>`;
+  const bg=root.querySelector(".popbg"),panel=root.querySelector(".dvpanel");
+  const close=()=>{root.innerHTML="";};
+  bg.onclick=e=>{if(e.target===bg)close();};
+  const place=()=>{const a=document.getElementById("dvOpen");if(!a||!panel.isConnected)return;const r=a.getBoundingClientRect();
+    const w=Math.min(680,window.innerWidth-16),left=Math.max(8,Math.min(r.left-8,window.innerWidth-w-8));
+    panel.style.width=w+"px";panel.style.left=Math.round(left)+"px";panel.style.top=Math.round(r.bottom+6)+"px";
+    panel.style.maxHeight=Math.max(240,window.innerHeight-r.bottom-18)+"px";};
+  const update=fn=>{const v=dvGet();fn(v);dvSet(v);renderDemandSidebar();draw();};
+  const draw=()=>{const keep=panel.scrollTop,v=dvGet(),saved=dvSaved();
+    const opt=(type,name,val,on,label)=>`<label class="dvopt"><input type="${type}" name="${name}" value="${esc(val)}" ${on?"checked":""}> ${label}</label>`;
+    const vals={epic:[["__none","— no epic —"],...state.epics.slice().sort((a,b)=>epicLabel(a).localeCompare(epicLabel(b))).map(e=>[e.id,"◆ "+epicLabel(e)])],
+      system:distinctVals("system").map(x=>[x,x+(clientsUsedFor(x).length?" · "+clientsUsedFor(x).join("/"):"")]),
+      project:distinctVals("project").map(x=>[x,x]),theme:distinctVals("theme").map(x=>[x,x]),
+      requestor:distinctVals("requestor").map(x=>[x,x]),type:distinctVals("type").map(x=>[x,x])};
+    const plural={epic:"epics",system:"systems",project:"projects",theme:"themes",requestor:"requestors",type:"types"};
+    panel.innerHTML=`<div class="dvcols">
+      <div><h4>Group by</h4>${Object.entries(DV_GROUPS).map(([k,l])=>opt("radio","dvg",k,v.group===k,esc(l))).join("")}</div>
+      <div><h4>Sort by</h4>${Object.entries(DV_SORTS).map(([k,s])=>opt("radio","dvs",k,v.sort===k,esc(s.label))).join("")}
+        <div class="dvdir"><button class="sm ${v.dir==="asc"?"on":""}" data-dir="asc">↑ Ascending</button><button class="sm ${v.dir==="desc"?"on":""}" data-dir="desc">↓ Descending</button></div>
+        <p class="faint" style="font-size:11px;margin:6px 0 0">Demands with no value (no due date, not waiting…) always go last.</p></div>
+      <div><h4>Show</h4>
+        <div class="dvsub">Statuses <span style="font-weight:400">— none ticked = all</span></div>
+        <div class="statchips">${Object.entries(STATUS).map(([k,s])=>`<button class="statchip ${s.cls} ${v.status.includes(k)?"on":""}" data-st="${k}">${s.label}</button>`).join("")}</div>
+        <div class="dvhide" style="${v.status.length?"opacity:.45":""}" title="${v.status.length?"Ignored while specific statuses are ticked":""}">${opt("checkbox","dvh","hideClosed",v.hideClosed,"Hide closed")}${opt("checkbox","dvh","hideDelivered",v.hideDelivered,"Hide delivered")}</div>
+        <div class="dvsub">Only demands…</div>
+        ${Object.entries(DV_ONLY).map(([k,l])=>opt("checkbox","dvo",k,v.only.includes(k),esc(l))).join("")}
+        <div class="dvsub">Filter by</div>
+        <div class="dvfilters">${Object.keys(DV_FIELDS).map(k=>`<select data-f="${k}" title="${DV_FIELDS[k]}"><option value="">All ${plural[k]}</option>${vals[k].map(([val,lab])=>`<option value="${esc(val)}" ${v.f[k]===val?"selected":""}>${esc(lab)}</option>`).join("")}</select>`).join("")}</div>
+      </div></div>
+      <div class="dvfoot">
+        <div class="dvsaved"><span class="faint">Saved views:</span>${saved.length?saved.map((s,i)=>`<span class="dvsv" data-id="${s.id}"><span class="dvsv-n" title="Apply">${esc(s.name)}</span><button class="ghost sm sv-up" title="Move left" ${i?"":"disabled"}>←</button><button class="ghost sm sv-ren" title="Rename">✎</button><button class="ghost sm danger sv-del" title="Delete">✕</button></span>`).join(""):`<span class="faint">none yet</span>`}
+          ${DV_PRESETS.some(p=>!saved.some(s=>s.name===p.name))?`<a class="dvclear" id="sv-restore" title="Add back any starter view you deleted">↺ starter views</a>`:""}</div>
+        <button class="ghost" id="dv-reset" title="No grouping, due-date order, nothing filtered">Reset</button><span style="flex:1"></span>
+        <button id="dv-save">★ Save as view…</button><button class="primary" id="dv-done">Done</button></div>`;
+    panel.querySelectorAll('input[name="dvg"]').forEach(i=>i.onchange=()=>update(x=>{x.group=i.value;}));
+    panel.querySelectorAll('input[name="dvs"]').forEach(i=>i.onchange=()=>update(x=>{x.sort=i.value;x.dir=DV_SORTS[i.value].dir;}));
+    panel.querySelectorAll(".dvdir [data-dir]").forEach(b=>b.onclick=()=>update(x=>{x.dir=b.dataset.dir;}));
+    panel.querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>update(x=>{const s=b.dataset.st;x.status=x.status.includes(s)?x.status.filter(y=>y!==s):[...x.status,s];}));
+    panel.querySelectorAll('input[name="dvh"]').forEach(i=>i.onchange=()=>update(x=>{x[i.value]=i.checked;}));
+    panel.querySelectorAll('input[name="dvo"]').forEach(i=>i.onchange=()=>update(x=>{x.only=i.checked?[...x.only,i.value]:x.only.filter(y=>y!==i.value);}));
+    panel.querySelectorAll("select[data-f]").forEach(s=>s.onchange=()=>update(x=>{if(s.value)x.f[s.dataset.f]=s.value;else delete x.f[s.dataset.f];}));
+    panel.querySelector("#dv-reset").onclick=()=>update(x=>{Object.assign(x,dvBlank());});
+    panel.querySelector("#dv-done").onclick=close;
+    panel.querySelector("#dv-save").onclick=()=>{if(dvSaveCurrent()){renderDemandSidebar();draw();}};
+    panel.querySelectorAll(".dvsv").forEach(el=>{const id=el.dataset.id;
+      const edit=fn=>{const a=dvSaved(),i=a.findIndex(s=>s.id===id);if(i<0)return;if(fn(a,i)===false)return;dvSetSaved(a);renderDemandSidebar();draw();};
+      el.querySelector(".dvsv-n").onclick=()=>{const s=dvSaved().find(x=>x.id===id);if(s){dvSet(s.view);renderDemandSidebar();draw();}};
+      el.querySelector(".sv-up").onclick=()=>edit((a,i)=>{if(!i)return false;[a[i-1],a[i]]=[a[i],a[i-1]];});
+      el.querySelector(".sv-ren").onclick=()=>edit((a,i)=>{const nm=(prompt("Rename view:",a[i].name)||"").trim();if(!nm)return false;a[i].name=nm;});
+      el.querySelector(".sv-del").onclick=()=>edit((a,i)=>{if(!confirm(`Delete the saved view “${a[i].name}”?`))return false;a.splice(i,1);});});
+    const rs=panel.querySelector("#sv-restore");if(rs)rs.onclick=()=>{const a=dvSaved();
+      DV_PRESETS.forEach(p=>{if(!a.some(s=>s.name===p.name))a.push({id:uid(),name:p.name,view:dvNorm(p.view)});});dvSetSaved(a);renderDemandSidebar();draw();};
+    panel.scrollTop=keep;place();
+  };
+  draw();
 }
 function renderStats(){const s={open:0,progress:0,delivered:0,bug:0,closed:0,overdue:0};
   state.tasks.forEach(t=>{s[t.status]=(s[t.status]||0)+1;const d=earliestOpenDue(t);if(d&&daysUntil(d)<0)s.overdue++;});
   const el=document.getElementById("stats");if(!el)return;
-  const shown=state.tasks.filter(demandFilter()).length,sel=statusSel();
+  const shown=state.tasks.filter(dvMatches(dvGet(),clashIndex())).length;
   el.innerHTML=`<div class="stat op"><b>${s.open+s.progress}</b>active</div><div class="stat ov"><b>${s.overdue}</b>overdue</div><div class="stat"><b>${s.bug}</b>bugs</div><div class="stat dl"><b>${s.delivered}</b>delivered</div>`
-    +(sel.size?`<div class="stat" title="Matching the selected statuses"><b>${shown}</b>shown</div>`:"");}
-/* _fs is an array of statuses (legacy single-string values still load fine) */
-function statusSel(){const v=renderDemandSidebar._fs;
-  return new Set(Array.isArray(v)?v:(v?[v]:[]));}
-function demandFilter(){
-  const sel=statusSel(),fReq=renderDemandSidebar._fr||"",fProj=renderDemandSidebar._fp||"",
-        fTheme=renderDemandSidebar._ft||"",fEpic=renderDemandSidebar._fe||"",fSys=renderDemandSidebar._fsy||"",
-        hideClosed=!!renderDemandSidebar._hc;
-  return t=>(!fSys||t.system===fSys)&&(!fReq||t.requestor===fReq)&&(!fProj||t.project===fProj)&&(!fTheme||t.theme===fTheme)
-    &&(!fEpic||(fEpic==="__none"?!t.epicId:t.epicId===fEpic))
-    /* explicit chips win; hide-closed is only the default convenience */
-    &&(sel.size?sel.has(t.status):!(hideClosed&&t.status==="closed"));
-}
+    +(shown!==state.tasks.length?`<div class="stat" title="Demands in this view, of ${state.tasks.length}"><b>${shown}</b>shown</div>`:"");}
 /* Per-viewer list preferences (not work data, so they live in localStorage, not the JSON). */
 function viewPref(k,def){try{const v=localStorage.getItem("demanddesk."+k);return v===null?def:v;}catch(e){return def;}}
 function setViewPref(k,v){try{localStorage.setItem("demanddesk."+k,v);}catch(e){}}
 function groupByEpic(){return viewPref("groupEpic","1")==="1";}
-function collapsedEpicGroups(){try{return new Set(JSON.parse(viewPref("epicCollapsed","[]")));}catch(e){return new Set();}}
 const EPIC_GROUP_RANK={active:0,onhold:1,delivered:2,closed:3};
 function demandCard(t,grouped,cidx){const st=STATUS[t.status],sub=countSubs(t.subtasks),due=earliestOpenDue(t),dc=dueClass(due,t.status);
     const lc=linkedCount(t.id);
@@ -1462,44 +1662,43 @@ function demandCard(t,grouped,cidx){const st=STATUS[t.status],sub=countSubs(t.su
         ${t.nextAction&&t.nextAction.date&&t.status!=="closed"?`<span class="due ${nextActionDue(t)?"soon":""}" title="Next action${t.nextAction.note?": "+esc(t.nextAction.note):""}">⏰ ${t.nextAction.date.slice(5)}</span>`:""}
         ${due?`<span class="due ${dc}">⚑ ${due}${dc==="over"?" ("+(-daysUntil(due))+"d)":""}</span>`:""}</div></div>`;}
 function renderList(){
-  const fSort=renderDemandSidebar._so||"due";
-  let list=state.tasks.filter(demandFilter());
-  list.sort((a,b)=>{if(fSort==="demand")return(a.demandId||"").localeCompare(b.demandId||"");if(fSort==="received")return(b.receivedDate||"").localeCompare(a.receivedDate||"");if(fSort==="updated")return b.updatedAt-a.updatedAt;const da=earliestOpenDue(a)||"9999",db=earliestOpenDue(b)||"9999";return da.localeCompare(db);});
-  const el=document.getElementById("taskList"),cidx=clashIndex();
+  const el=document.getElementById("taskList");if(!el)return;
+  const v=dvGet(),cidx=clashIndex();
+  const list=dvSort(state.tasks.filter(dvMatches(v,cidx)),v,cidx);
   if(!list.length){el.innerHTML=state.tasks.length
-    ?`<div class="empty">No demands match the current filters.<br>Click <b>All</b> above to clear the status filter.</div>`
-    :`<div class="empty">No demands yet.<br>Click <b>＋ New Demand</b>.</div>`;return;}
-  if(!groupByEpic()){el.innerHTML=list.map(t=>demandCard(t,false,cidx)).join("");}
+    ?`<div class="empty">No demands match this view.<br><a id="dvNone" style="cursor:pointer">Clear the filters</a></div>`
+    :`<div class="empty">No demands yet.<br>Click <b>＋ New Demand</b>.</div>`;
+    const c=el.querySelector("#dvNone");if(c)c.onclick=()=>{dvQuery="";dvSet({group:v.group,sort:v.sort,dir:v.dir});renderDemandSidebar();};return;}
+  if(v.group==="none"){el.innerHTML=list.map(t=>demandCard(t,false,cidx)).join("");}
   else{
-    /* one collapsible block per epic (open epics first), ungrouped demands last;
-       the list's own sort order is kept inside each block */
+    /* one collapsible block per group; the chosen sort order is kept inside each block */
     const groups=new Map();
-    list.forEach(t=>{const k=epicById(t.epicId)?t.epicId:"";if(!groups.has(k))groups.set(k,[]);groups.get(k).push(t);});
-    const keys=[...groups.keys()].sort((a,b)=>{if(!a)return 1;if(!b)return -1;const ea=epicById(a),eb=epicById(b);
-      return EPIC_GROUP_RANK[ea.status]-EPIC_GROUP_RANK[eb.status]||epicLabel(ea).localeCompare(epicLabel(eb));});
-    const coll=collapsedEpicGroups(),act=state.tasks.find(t=>t.id===activeId);
-    el.innerHTML=keys.map(k=>{const ts=groups.get(k),e=epicById(k),g=k||"__none";
-      const shut=coll.has(g)&&!(act&&(act.epicId||"")===k&&ts.includes(act));
-      const total=k?tasksForEpic(k).length:state.tasks.filter(t=>!epicById(t.epicId)).length;
+    list.forEach(t=>{const g=dvGroupOf(t,v.group);if(!groups.has(g.k))groups.set(g.k,{...g,ts:[]});groups.get(g.k).ts.push(t);});
+    const gs=[...groups.values()].sort((a,b)=>a.rank-b.rank||String(a.sl??a.label).localeCompare(String(b.sl??b.label),undefined,{numeric:true}));
+    const ckey=v.group==="epic"?"epicCollapsed":"collapsed."+v.group; /* collapsed blocks remembered per grouping */
+    const coll=dvCollapsed(ckey),act=state.tasks.find(t=>t.id===activeId),today=todayStr();
+    el.innerHTML=gs.map(g=>{const gid=g.k||"__none",ts=g.ts;
+      const shut=coll.has(gid)&&!(act&&ts.includes(act));
+      const total=v.group==="epic"?(g.epic?tasksForEpic(g.epic.id).length:state.tasks.filter(t=>!epicById(t.epicId)).length):ts.length;
       const open=ts.filter(t=>!["delivered","closed"].includes(t.status)).length;
-      const over=ts.filter(t=>{const d=earliestOpenDue(t);return d&&daysUntil(d)<0;}).length;
-      return `<div class="egroup ${shut?"shut":""}" data-g="${g}">
+      const over=ts.filter(t=>{const d=earliestOpenDue(t);return d&&d<today;}).length;
+      return `<div class="egroup ${shut?"shut":""}" data-g="${esc(gid)}">
         <div class="eghead" title="${shut?"Expand":"Collapse"}">
           <span class="egtw">${shut?"▶":"▼"}</span>
-          <span class="egname">${e?`◆ ${e.code?`<b>${esc(e.code)}</b> · `:""}${esc(e.name)}`:"No epic"}</span>
-          ${e&&e.status!=="active"?`<span class="pill ${EPIC_STATUS[e.status].cls}" style="font-size:9px;padding:0 5px">${EPIC_STATUS[e.status].label}</span>`:""}
-          ${over?`<span class="lc-badge" style="color:var(--red)">⚑ ${over}</span>`:""}
-          <span class="egcount" title="${ts.length} shown of ${total} in this group">${open?`${open} open · `:""}${ts.length}${ts.length<total?`<span class="faint">/${total}</span>`:""}</span>
-          ${e?`<button class="ghost sm eggo" title="Open the epic">›</button>`:""}
+          <span class="egname">${g.label}</span>
+          ${g.epic&&g.epic.status!=="active"?`<span class="pill ${EPIC_STATUS[g.epic.status].cls}" style="font-size:9px;padding:0 5px">${EPIC_STATUS[g.epic.status].label}</span>`:""}
+          ${over&&v.group!=="due"?`<span class="lc-badge" style="color:var(--red)">⚑ ${over}</span>`:""}
+          <span class="egcount" title="${ts.length} shown${total>ts.length?" of "+total+" in this epic":""}">${open&&open<ts.length?`${open} open · `:""}${ts.length}${total>ts.length?`<span class="faint">/${total}</span>`:""}</span>
+          ${g.epic?`<button class="ghost sm eggo" data-e="${g.epic.id}" title="Open the epic">›</button>`:""}
         </div>
-        ${shut?"":`<div class="egbody">${ts.map(t=>demandCard(t,!!e,cidx)).join("")}</div>`}</div>`;}).join("");
-    el.querySelectorAll(".eghead").forEach(h=>h.onclick=ev=>{const g=h.parentElement.dataset.g;
-      if(ev.target.classList.contains("eggo")){view="epics";activeEpicId=g;epicTab="overview";renderApp();return;}
-      const c=collapsedEpicGroups();if(c.has(g))c.delete(g);else c.add(g);setViewPref("epicCollapsed",JSON.stringify([...c]));renderList();});
+        ${shut?"":`<div class="egbody">${ts.map(t=>demandCard(t,v.group==="epic"&&!!g.epic,cidx)).join("")}</div>`}</div>`;}).join("");
+    el.querySelectorAll(".eghead").forEach(h=>h.onclick=ev=>{
+      if(ev.target.classList.contains("eggo")){view="epics";activeEpicId=ev.target.dataset.e;epicTab="overview";renderApp();return;}
+      const gid=h.parentElement.dataset.g,c=dvCollapsed(ckey);if(c.has(gid))c.delete(gid);else c.add(gid);
+      setViewPref(ckey,JSON.stringify([...c]));renderList();});
   }
   el.querySelectorAll(".tcard").forEach(c=>c.onclick=()=>{activeId=c.dataset.id;activeTab="work";renderApp();});
 }
-
 function renderDetail(){
   const t=activeTask(),host=document.getElementById("detail");
   if(!t){host.innerHTML=nopick("Select a demand on the left,<br>or create a new one to begin.");return;}
@@ -2452,10 +2651,11 @@ function openPortfolio(){
       </div>`;}).join("");
     listEl.querySelectorAll(".pf-go").forEach(a=>a.onclick=()=>{view="demands";activeId=a.dataset.id;activeTab="work";close();renderApp();});
     listEl.querySelectorAll(".pf-filter").forEach(a=>a.onclick=()=>{const n=a.dataset.n;
-      renderDemandSidebar._fp=renderDemandSidebar._ft=renderDemandSidebar._fe="";
-      if(dim==="project")renderDemandSidebar._fp=n;
-      else if(dim==="theme")renderDemandSidebar._ft=n;
-      else{const e=state.epics.find(x=>epicLabel(x)===n);if(e)renderDemandSidebar._fe=e.id;}
+      const dv=dvGet();dv.f={};dv.status=[];dv.only=[];dvQuery="";
+      if(dim==="project")dv.f.project=n;
+      else if(dim==="theme")dv.f.theme=n;
+      else{const e=state.epics.find(x=>epicLabel(x)===n);if(e)dv.f.epic=e.id;}
+      dvSet(dv);
       view="demands";close();renderApp();});
   };
   root.querySelectorAll(".navbtn[data-dim]").forEach(b=>b.onclick=()=>{dim=b.dataset.dim;root.querySelectorAll(".navbtn[data-dim]").forEach(x=>x.classList.toggle("active",x===b));draw();});
