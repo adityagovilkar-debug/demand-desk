@@ -20,7 +20,7 @@
     --pin-bg:linear-gradient(180deg,#2a2410,#1c2230);
     --exp-bg:#2a1416; --exp-line:#5e2a2a;
     --alert-line:#5e2a2a; --warn-line:#5a4a1e;
-    --accent-line:#274b6e; --green-line:#274b2c; --amber-line:#5a4a1e; --red-line:#5e2a2a; --violet-line:#3a2f6b;
+    --accent-line:#274b6e; --green-line:#274b2c; --amber-line:#5a4a1e; --red-line:#5e2a2a; --violet-line:#3a2f6b; --teal-line:#1f4a45;
     --radius:9px; --mono:"Cascadia Code","Consolas",ui-monospace,monospace;
     --sans:"Segoe UI",system-ui,-apple-system,sans-serif;
   }
@@ -37,7 +37,7 @@
     --resume-bg:#eaf5ee; --pin-bg:#fbf3dd;
     --exp-bg:#ffe9e6; --exp-line:#f0b3ab;
     --alert-line:#f0b3ab; --warn-line:#e6d19a;
-    --accent-line:#b6d3f5; --green-line:#b7e0c3; --amber-line:#e6d19a; --red-line:#f0b3ab; --violet-line:#d0c4e4;
+    --accent-line:#b6d3f5; --green-line:#b7e0c3; --amber-line:#e6d19a; --red-line:#f0b3ab; --violet-line:#d0c4e4; --teal-line:#b3dfd9;
   }
   /* ---- INSTRUMENT WHITE ----
      Scientific-plotter look: white paper, hairlines, drafting-pen signal colours,
@@ -66,7 +66,7 @@
     --resume-bg:#FFFFFF; --pin-bg:#FFFFFF;
     --exp-bg:#FFFFFF; --exp-line:#F0C0B6;
     --alert-line:#F0C0B6; --warn-line:#E4D3A6;
-    --accent-line:#BFD0E6; --green-line:#B4D8CE; --amber-line:#E4D3A6; --red-line:#F0C0B6; --violet-line:#D0C4E4;
+    --accent-line:#BFD0E6; --green-line:#B4D8CE; --amber-line:#E4D3A6; --red-line:#F0C0B6; --violet-line:#D0C4E4; --teal-line:#B4D8CE;
     --radius:3px;
     --mono:ui-monospace,"Cascadia Mono","JetBrains Mono","SF Mono",Consolas,monospace;
     --sans:"Inter","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
@@ -174,13 +174,13 @@
   .pill{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--line2);background:var(--chip);white-space:nowrap}
   .pill.open{color:var(--accent);border-color:var(--accent-line)} .pill.progress{color:var(--amber);border-color:var(--amber-line)}
   .pill.delivered{color:var(--green);border-color:var(--green-line)} .pill.bug{color:var(--red);border-color:var(--red-line)}
-  .pill.closed{color:var(--faint)} .pill.type{color:var(--teal);border-color:#1f4a45;text-transform:none}
+  .pill.closed{color:var(--faint)} .pill.type{color:var(--teal);border-color:var(--teal-line);text-transform:none}
   .due{font-family:var(--mono);font-size:11px}
   .due.over{color:var(--red);font-weight:700} .due.soon{color:var(--amber)}
 
   /* system pills by tier */
   .sys{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;border:1px solid var(--line2);background:var(--chip)}
-  .sys.t3{color:var(--accent);border-color:#274b6e}
+  .sys.t3{color:var(--accent);border-color:var(--accent-line)}
   .sys.t2{color:var(--amber);border-color:var(--amber-line)}
   .sys.t1{color:var(--green);border-color:var(--green-line)}
   .sys .d{font-size:9px;opacity:.7;font-family:var(--sans);font-weight:600}
@@ -239,13 +239,13 @@
   .trcard .trtop .kind{flex:0 0 128px}
   .trcard .trtop .cli{flex:0 0 118px}
   .kindtag{flex:0 0 auto;font-size:10px;font-weight:700;border-radius:5px;padding:2px 7px;border:1px solid var(--line2);background:var(--chip)}
-  .kindtag.wb{color:var(--muted)} .kindtag.cust{color:var(--teal);border-color:#1f4a45}
+  .kindtag.wb{color:var(--muted)} .kindtag.cust{color:var(--teal);border-color:var(--teal-line)}
   .trcard .trtop .num,.trcard .trtop .cnum{flex:0 0 150px} .trcard .trtop .dsc,.trcard .trtop .cdsc{flex:1}
   .trcard .trtop .org{flex:0 0 140px}
   .trcard .seq{flex:0 0 20px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--faint);font-weight:700}
   .trcard .reorder{display:flex;flex-direction:column;gap:1px;flex:0 0 auto}
   .trcard .reorder button{padding:0 5px;line-height:1.1;font-size:11px}
-  .trcard .toctag{flex:0 0 auto;font-size:10px;font-weight:700;color:var(--accent2);border:1px solid #3a2f6b;background:var(--chip);border-radius:5px;padding:2px 7px}
+  .trcard .toctag{flex:0 0 auto;font-size:10px;font-weight:700;color:var(--accent2);border:1px solid var(--violet-line);background:var(--chip);border-radius:5px;padding:2px 7px}
   .cover{display:inline-block;font-size:11px;font-weight:700;border-radius:5px;padding:2px 8px;margin-bottom:8px}
   .cover.yes{color:var(--green);background:var(--cover-yes-bg);border:1px solid var(--green-line)}
   .cover.no{color:var(--amber);background:var(--cover-no-bg);border:1px solid var(--amber-line)}
@@ -324,6 +324,14 @@
   .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:9px 16px;font-size:13px;z-index:80;box-shadow:0 8px 30px rgba(0,0,0,.4);opacity:0;transition:.25s;pointer-events:none}
   .toast.show{opacity:1;bottom:26px}
   .toast.err{border-color:var(--red);color:#ffb4ae}
+  :root[data-theme="light"] .toast.err,:root[data-theme="instrument"] .toast.err{color:var(--red)}
+  /* status is changeable straight from the demand header */
+  .statsel{width:auto;font-size:12px;padding:2px 6px;cursor:pointer;font-family:inherit}
+  .statsel option{color:var(--txt);background:var(--panel)}
+  :root[data-theme="instrument"] .statsel{font-size:10px;padding:2px 4px}
+  .savestate.conflict{color:var(--red);cursor:pointer;font-weight:600}
+  .peerwarn{display:flex;align-items:center;gap:10px;padding:6px 16px;background:var(--danger-bg);border-bottom:1px solid var(--red-line);color:var(--red);font-size:12.5px;flex:0 0 auto;position:relative;z-index:1}
+  .peerwarn button{margin-left:auto;flex:0 0 auto}
 
   .gsearch{position:absolute;top:40px;left:0;width:420px;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:6px;max-height:60vh;overflow:auto;z-index:60;box-shadow:0 12px 40px rgba(0,0,0,.5)}
   .gsr{padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12px}
@@ -642,6 +650,7 @@
       <button id="btnMenu" class="ghost" title="More">⋯</button>
     </div>
   </header>
+  <div id="peerWarn" class="peerwarn hide"></div>
 
   <main>
     <aside id="side"></aside>
@@ -685,7 +694,7 @@ const DEF_LANDSCAPES=["H0","H1","H2","H3","H4","H5","H6"];
 const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod / QA",short:"QA"},{d:"1",label:"Production",short:"PRD"}];
 
 let state={version:19,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
-let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false;
+let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false, diskConflict=null, fileSig=null, savePromise=null, backupUnreadable=false;
 let view="today";
 let activeId=null, activeTab="work", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
 let activeJournalId=null, activeDebugId=null, journalTodos=false, activePlayId=null, activeEpicId=null;
@@ -753,21 +762,78 @@ function contentCount(){return state.tasks.length+state.epics.length+state.meeti
 function isValidState(s){return s&&typeof s==="object"&&Array.isArray(s.tasks)&&Array.isArray(s.epics)&&Array.isArray(s.meetings)&&Array.isArray(s.credentials)&&Array.isArray(s.journal)&&Array.isArray(s.todos)&&Array.isArray(s.debug)&&Array.isArray(s.images)&&Array.isArray(s.playbook);}
 function noteContent(){if(isValidState(state)&&contentCount()>0)hadContent=true;}
 /* defensive guard: returns true if it is SAFE to persist current state */
-function safeToPersist(){return isValidState(state)&&!(hadContent&&contentCount()===0);}
-function markDirty(){noteContent();dirty=true;renderSaveState();backupLocal();scheduleAutoSave();}
-function renderSaveState(){const el=document.getElementById("saveState");if(!el)return;
+/* never while the startup unlock is pending: the in-memory state is then an empty
+   placeholder, and persisting it would overwrite the real (encrypted) data */
+function safeToPersist(){return !pendingEncrypted&&isValidState(state)&&!(hadContent&&contentCount()===0);}
+/* editSeq counts edits, so a save only clears "dirty" if nothing changed while the file
+   was being written — an edit made mid-write stays unsaved and goes out with the next save. */
+let editSeq=0;
+function markDirty(){noteContent();dirty=true;editSeq++;renderSaveState();backupLocal();scheduleAutoSave();}
+function renderSaveState(){const el=document.getElementById("saveState");
+  document.title=(dirty?"● ":"")+"Demand Desk — ABAP Work Tracker";
+  if(!el)return;
   const lock=state.settings.encryption?" 🔒":"";
+  el.onclick=null;el.title="";
+  if(diskConflict){el.textContent="⚠ File changed on disk";el.className="savestate conflict";
+    el.title="Auto-save is paused so nothing gets overwritten — click to decide";el.onclick=()=>resolveDiskConflict();return;}
   if(dirty){el.textContent=(fileHandle?"● Unsaved":"● Not saved")+lock;el.className="savestate dirty";}
   else{el.textContent=(fileHandle?(lastSaveAuto?"✓ Auto-saved":"✓ Saved"):"")+lock;el.className="savestate saved";}}
 /* ---------- auto-save (writes to the connected file ~30s after the last change) ---------- */
 function scheduleAutoSave(){clearTimeout(autoSaveTimer);if(!state.settings.autosave||!supportsFS)return;autoSaveTimer=setTimeout(autoSaveNow,30000);}
 async function autoSaveNow(){
-  if(!state.settings.autosave||!fileHandle||!dirty)return;
+  if(!state.settings.autosave||!fileHandle||!dirty||diskConflict||pendingEncrypted)return;
   if(!isValidState(state)||(hadContent&&contentCount()===0))return; /* silent guard — never auto-write a suspicious state; manual Save still asks */
-  try{const w=await fileHandle.createWritable();await w.write(await serializeData());await w.close();
-    dirty=false;lastSaveAuto=true;renderSaveState();maybeSnapshot();}
+  if(savePromise){scheduleAutoSave();return;}
+  try{const f=await diskChanged();
+    if(f){diskConflict=f;renderSaveState();toast("Your data file was changed outside this window — auto-save paused. Click the red notice to decide.",true);return;}
+    await writeFile();lastSaveAuto=true;renderSaveState();maybeSnapshot();}
   catch(e){/* e.g. permission revoked — stay dirty; manual 💾 Save will surface the error */}
 }
+/* The one place that writes the data file. Serialised, so an auto-save and a Ctrl+S
+   can never interleave two writes to the same file. */
+function writeFile(){
+  const run=(savePromise||Promise.resolve()).catch(()=>{}).then(async()=>{
+    const seq=editSeq;
+    const w=await fileHandle.createWritable();await w.write(await serializeData());await w.close();
+    await noteFileSig();
+    if(editSeq===seq)dirty=false;else scheduleAutoSave();});
+  savePromise=run;
+  return run.finally(()=>{if(savePromise===run)savePromise=null;});
+}
+/* ---------- external-change guard ----------
+   fileSig is the file's timestamp + size as this window last wrote or read it. If the
+   file on disk no longer matches, something else changed it — another tab, another PC
+   via OneDrive, a copy restored over it — and writing blindly would erase that work. */
+async function noteFileSig(){if(!fileHandle)return;try{const f=await fileHandle.getFile();
+  fileSig={name:fileHandle.name,lm:f.lastModified,size:f.size};if(useIdb)idbSet("filesig",fileSig).catch(()=>{});}catch(e){}}
+async function diskChanged(){if(!fileHandle||!fileSig||fileSig.name!==fileHandle.name)return null;
+  try{const f=await fileHandle.getFile();return (f.lastModified!==fileSig.lm||f.size!==fileSig.size)?f:null;}catch(e){return null;}}
+function resolveDiskConflict(f){
+  f=f||diskConflict;if(!f||!fileHandle)return;
+  const root=document.getElementById("modalRoot");
+  root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:520px"><h2>⚠ Your data file changed on disk</h2>
+    <p style="font-size:13px"><b class="mono">${esc(fileHandle.name)}</b> was modified <b>${esc(new Date(f.lastModified).toLocaleString())}</b> — after this window last saved or opened it.</p>
+    <p class="faint" style="font-size:12px">Usually that means Demand Desk is open in another tab or window, the file was edited on another PC (OneDrive), or a copy was restored over it. Auto-save is paused until you choose, so nothing has been overwritten yet.</p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+      <button id="dc-load" class="primary">📂 Load the newer file from disk</button>
+      <span class="faint" style="font-size:11px;margin:-4px 0 4px 2px">What's on screen now is kept first as a snapshot (⋯ → Restore a daily snapshot).</span>
+      <button id="dc-keep" class="danger">💾 Overwrite the file with what's on screen</button>
+      <button id="dc-later" class="ghost">Decide later</button></div></div></div>`;
+  const close=()=>root.innerHTML="";
+  root.querySelector("#dc-later").onclick=close;
+  root.querySelector(".modal-bg").onclick=ev=>{if(ev.target===root.querySelector(".modal-bg"))close();};
+  root.querySelector("#dc-load").onclick=async()=>{close();
+    try{await snapshotNow("before reloading "+fileHandle.name);
+      const cur=await fileHandle.getFile();
+      if(!await loadFromText(await cur.text(),fileHandle.name))return;
+      diskConflict=null;dirty=false;await noteFileSig();backupLocal();renderApp();toast("Loaded the newer file from disk");}
+    catch(e){toast("Couldn't load it: "+e.message,true);}};
+  root.querySelector("#dc-keep").onclick=async()=>{close();diskConflict=null;await noteFileSig();saveFile();};
+}
+/* an extra, labelled restore point — e.g. just before a reload or an open replaces the screen */
+async function snapshotNow(label){try{const arr=await getSnapshots();
+  arr.push({date:todayStr()+" · "+label,ts:Date.now(),enc:isEncrypted(),data:await serializeData()});
+  while(arr.length>14)arr.shift();setSnapshots(arr);}catch(e){}}
 /* ---------- IndexedDB layer (optional; falls back to localStorage) ---------- */
 /* IndexedDB gives a larger, sturdier backup store and can hold the file handle
    so the app re-links to your .json on next launch. If IndexedDB or the File
@@ -804,7 +870,12 @@ async function loadBackup(){
   if(useIdb){try{const v=await idbGet("backup");if(v!=null)raw=v;}catch(e){}}
   if(raw==null){try{raw=localStorage.getItem(LS_KEY);}catch(e){}}
   if(raw==null)return false;
-  try{const p=JSON.parse(raw);if(p&&p._encrypted){pendingEncrypted=p;return "encrypted";}state=migrate(p);return true;}catch(e){return false;}
+  try{const p=JSON.parse(raw);if(p&&p._encrypted){pendingEncrypted=p;return "encrypted";}
+    if(!p||typeof p!=="object"||!Array.isArray(p.tasks))throw new Error("not Demand Desk data");
+    state=migrate(p);return true;}
+  catch(e){ /* keep the unreadable copy aside — the next edit would otherwise overwrite it */
+    backupUnreadable=true;try{if(useIdb)await idbSet("backup-unreadable",raw);else localStorage.setItem(LS_KEY+".unreadable",raw);}catch(e2){}
+    return false;}
 }
 async function getSnapshots(){
   if(useIdb){try{const v=await idbGet("snapshots");if(v!=null)return JSON.parse(v);}catch(e){}}
@@ -824,19 +895,31 @@ function rememberHandle(){if(useIdb&&fileHandle){savedHandle=fileHandle;idbSet("
 async function restoreHandle(){
   if(!useIdb||!supportsFS||fileHandle)return;
   try{savedHandle=await idbGet("handle");}catch(e){savedHandle=null;}
+  try{fileSig=(await idbGet("filesig"))||null;}catch(e){}
   if(!savedHandle)return;
   let perm="prompt";try{if(savedHandle.queryPermission)perm=await savedHandle.queryPermission({mode:"readwrite"});}catch(e){}
-  if(perm==="granted"){fileHandle=savedHandle;setFileLabel(savedHandle.name);}
+  if(perm==="granted"){fileHandle=savedHandle;setFileLabel(savedHandle.name);await checkLinkedFile(false);}
   updateReconnectUI();renderSaveState();
 }
-async function reconnectFile(){
-  if(!savedHandle)return;
+/* On (re)linking the file: if it changed since this browser last saved it, don't let
+   the local copy auto-save over it — flag it and let the user choose. */
+async function checkLinkedFile(ask){
+  const f=await diskChanged();
+  if(f){diskConflict=f;renderSaveState();
+    if(ask)resolveDiskConflict(f);else toast("Your data file changed since this browser last saved it — click the red notice to choose",true);return false;}
+  if(!fileSig||fileSig.name!==fileHandle.name)await noteFileSig();
+  return true;
+}
+async function reconnectFile(quiet){
+  if(!savedHandle)return false;
   try{
     let perm="prompt";if(savedHandle.queryPermission)perm=await savedHandle.queryPermission({mode:"readwrite"});
     if(perm!=="granted"&&savedHandle.requestPermission)perm=await savedHandle.requestPermission({mode:"readwrite"});
-    if(perm==="granted"){fileHandle=savedHandle;setFileLabel(savedHandle.name);updateReconnectUI();renderSaveState();if(dirty)scheduleAutoSave();toast("Reconnected → "+savedHandle.name+" · saves now go to your file");}
-    else toast("Permission not granted — use 📂 Open instead",true);
-  }catch(e){toast("Couldn't reconnect: "+e.message,true);}
+    if(perm==="granted"){fileHandle=savedHandle;setFileLabel(savedHandle.name);updateReconnectUI();
+      if(!await checkLinkedFile(true))return true;
+      renderSaveState();if(dirty)scheduleAutoSave();if(!quiet)toast("Reconnected → "+savedHandle.name+" · saves now go to your file");return true;}
+    toast("Permission not granted — use 📂 Open instead",true);return false;
+  }catch(e){toast("Couldn't reconnect: "+e.message,true);return false;}
 }
 function updateReconnectUI(){const b=document.getElementById("btnReconnect");if(!b)return;
   if(savedHandle&&!fileHandle){b.classList.remove("hide");b.textContent="🔌 Reconnect "+(savedHandle.name||"file");}
@@ -977,42 +1060,62 @@ function prodTargetFor(t){ /* default go-live target = production tier of the fi
   return prod?L+prod.d:"";
 }
 const WAIT_OPTIONS=["QA team","Functional team","Transport import","Business","Basis","Another team","Me (action needed)"];
-function isWaiting(t){return !!(t.waiting&&t.waiting.on);}
+function isWaiting(t){return !!(t.waiting&&t.waiting.on)&&t.status!=="closed";}
 function waitDays(t){return (t.waiting&&t.waiting.since)?Math.max(0,-daysUntil(t.waiting.since)):null;}
 function trsForObject(t,objId){return t.transports.filter(tr=>(tr.objectIds||[]).includes(objId));}
 function goliveTargetFor(t){return t.goliveTarget||prodTargetFor(t)||"";}
 function golivePending(t){const tgt=goliveTargetFor(t);if(!tgt||!t.transports.length)return null;const missing=t.transports.filter(tr=>!reachedSystems(t,tr).has(tgt));return missing.length?{target:tgt,missing}:null;}
 
+/* Refuses anything that isn't Demand Desk data — the same folder also holds Snip Desk
+   .marks.json sidecars and Team Desk files, and opening one would otherwise load as
+   an empty desk that the next save writes over that file. */
+const NOT_DD="that isn't a Demand Desk data file";
 async function loadFromText(txt,labelName){
   let parsed=JSON.parse(txt);
-  if(parsed&&parsed._encrypted){
+  if(!parsed||typeof parsed!=="object"||Array.isArray(parsed))throw new Error(NOT_DD);
+  if(parsed._encrypted){
+    if(parsed.app&&parsed.app!=="demand-desk")throw new Error("that file belongs to "+parsed.app+", not Demand Desk");
     while(true){const pw=await promptPassword("🔒 Enter master password"+(labelName?" for "+labelName:""));
       if(pw===null)return false;
-      try{state=migrate(await decryptEnvelope(parsed,pw));masterPassword=pw;break;}
-      catch(e){toast("Wrong password — try again",true);}}
-  }else{state=migrate(parsed);masterPassword=null;}
+      let dec;try{dec=await decryptEnvelope(parsed,pw);}catch(e){toast("Wrong password — try again",true);continue;}
+      if(!dec||!Array.isArray(dec.tasks))throw new Error(NOT_DD);
+      state=migrate(dec);masterPassword=pw;break;}
+  }else{if(!Array.isArray(parsed.tasks))throw new Error(NOT_DD);state=migrate(parsed);masterPassword=null;}
+  pendingEncrypted=null;
   return true;
 }
+const UNSAVED_MSG="You have changes that haven't reached your data file yet.\n\nOpening a different file replaces what's on screen (a copy is kept first — ⋯ → Restore a daily snapshot). Continue?";
 async function openFile(){if(!supportsFS)return importViaInput();
+  flushEdits();if(dirty&&!confirm(UNSAVED_MSG))return;
   try{const[h]=await window.showOpenFilePicker({types:[{description:"Demand Desk data",accept:{"application/json":[".json"]}}]});
-    const f=await h.getFile();if(!await loadFromText(await f.text(),h.name))return;
-    fileHandle=h;dirty=false;setFileLabel(h.name);rememberHandle();resetActive();backupLocal();renderApp();toast("Opened "+h.name);
+    const f=await h.getFile();const txt=await f.text();
+    if(dirty)await snapshotNow("before opening "+h.name);
+    if(!await loadFromText(txt,h.name))return;
+    fileHandle=h;diskConflict=null;dirty=false;setFileLabel(h.name);await noteFileSig();rememberHandle();resetActive();backupLocal();renderApp();toast("Opened "+h.name);
   }catch(e){if(e.name!=="AbortError")toast("Couldn't open: "+e.message,true);}}
 function saveGuardOk(action){
+  if(pendingEncrypted){toast("Unlock first — nothing can be saved while the data is still locked",true);return false;}
   if(!isValidState(state)){toast("Save blocked — data looks corrupted; your file was NOT overwritten.",true);return false;}
   if(hadContent&&contentCount()===0){return confirm("⚠ You're about to "+action+" an EMPTY dataset — every demand, debug session, journal entry etc. is currently empty.\n\nThis is unusual and may be a mistake. Continue anyway?");}
   return true;
 }
-async function saveFile(){if(!supportsFS)return exportDownload();
+async function saveFile(){flushEdits();if(!supportsFS)return exportDownload();
   if(!saveGuardOk("save"))return;
-  try{if(!fileHandle){fileHandle=await window.showSaveFilePicker({suggestedName:"demand-desk-data.json",types:[{description:"Demand Desk data",accept:{"application/json":[".json"]}}]});}
-    const w=await fileHandle.createWritable();await w.write(await serializeData());await w.close();
-    dirty=false;lastSaveAuto=false;setFileLabel(fileHandle.name);rememberHandle();renderSaveState();maybeSnapshot();toast("Saved → "+fileHandle.name+(isEncrypted()?" 🔒":""));
+  try{
+    /* a remembered file that just needs permission again: re-link it rather than
+       opening a Save-As dialog that could fork the data into a second file */
+    if(!fileHandle&&savedHandle){if(!await reconnectFile(true)||diskConflict)return;}
+    if(!fileHandle){fileHandle=await window.showSaveFilePicker({suggestedName:"demand-desk-data.json",types:[{description:"Demand Desk data",accept:{"application/json":[".json"]}}]});fileSig=null;}
+    if(savePromise)await savePromise.catch(()=>{});
+    const changed=await diskChanged();if(changed){diskConflict=changed;renderSaveState();resolveDiskConflict(changed);return;}
+    await writeFile();diskConflict=null;lastSaveAuto=false;setFileLabel(fileHandle.name);rememberHandle();renderSaveState();maybeSnapshot();toast("Saved → "+fileHandle.name+(isEncrypted()?" 🔒":""));
   }catch(e){if(e.name!=="AbortError")toast("Save failed: "+e.message,true);}}
 function setFileLabel(n){const el=document.getElementById("fileLabel");if(el)el.textContent=n?("— "+n):"";}
-async function exportDownload(){if(!saveGuardOk("download"))return;const b=new Blob([await serializeData()],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="demand-desk-data.json";a.click();URL.revokeObjectURL(a.href);dirty=false;renderSaveState();maybeSnapshot();toast("Downloaded data file"+(isEncrypted()?" 🔒":""));}
-function importViaInput(){const i=document.createElement("input");i.type="file";i.accept=".json,application/json";
-  i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{try{if(!await loadFromText(r.result,f.name))return;dirty=false;resetActive();backupLocal();renderApp();toast("Imported "+f.name);}catch(e){toast("Bad file: "+e.message,true);}};r.readAsText(f);};i.click();}
+async function exportDownload(){if(!saveGuardOk("download"))return;const b=new Blob([await serializeData()],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="demand-desk-data.json";a.click();URL.revokeObjectURL(a.href);if(!supportsFS)dirty=false; /* only when the download IS the save — otherwise the linked file is still behind */
+  renderSaveState();maybeSnapshot();toast("Downloaded data file"+(isEncrypted()?" 🔒":""));}
+function importViaInput(){flushEdits();if(dirty&&!confirm(UNSAVED_MSG))return;
+  const i=document.createElement("input");i.type="file";i.accept=".json,application/json";
+  i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{try{if(dirty)await snapshotNow("before importing "+f.name);if(!await loadFromText(r.result,f.name))return;dirty=false;resetActive();backupLocal();renderApp();toast("Imported "+f.name);}catch(e){toast("Bad file: "+e.message,true);}};r.readAsText(f);};i.click();}
 
 /* password prompt — returns Promise<string|null> */
 function promptPassword(title,confirm){
@@ -1038,7 +1141,7 @@ function activeMeeting(){return state.meetings.find(m=>m.id===activeMeetingId);}
 function touch(o){o.updatedAt=Date.now();markDirty();}
 function daysUntil(d){if(!d)return null;return Math.round((new Date(d+"T00:00:00")-new Date(todayStr()+"T00:00:00"))/86400000);}
 function dueClass(d,status){if(!d||status==="delivered"||status==="closed")return"";const n=daysUntil(d);if(n===null)return"";if(n<0)return"over";if(n<=3)return"soon";return"";}
-function esc(s){return(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));}
 /* linkify: escape text but render http(s) URLs as clickable links */
 const URL_RE=/(https?:\/\/[^\s<>"')\]]+)/g;
 function linkify(raw){return String(raw||"").split(URL_RE).map((p,i)=>i%2?`<a href="${esc(p)}" target="_blank" rel="noopener">${esc(p)}</a>`:esc(p)).join("");}
@@ -1047,7 +1150,8 @@ function linkChips(text){const m=String(text||"").match(URL_RE);if(!m)return"";c
 function toast(m,err){const t=document.getElementById("toast");t.textContent=m;t.className="toast show"+(err?" err":"");clearTimeout(toast._t);toast._t=setTimeout(()=>t.className="toast",2600);}
 function countSubs(list){let n=0,done=0;(function w(a){a.forEach(s=>{n++;if(s.done)done++;w(s.children);});})(list);return{n,done};}
 function findSub(list,id){for(const s of list){if(s.id===id)return{sub:s,parent:list};const r=findSub(s.children,id);if(r)return r;}return null;}
-function earliestOpenDue(t){let best=null;if(t.dueDate&&t.status!=="delivered"&&t.status!=="closed")best=t.dueDate;(function w(a){a.forEach(s=>{if(!s.done&&s.dueDate&&(!best||s.dueDate<best))best=s.dueDate;w(s.children);});})(t.subtasks);return best;}
+function earliestOpenDue(t){if(t.status==="closed")return null; /* a closed demand's leftover subtasks aren't overdue work */
+  let best=null;if(t.dueDate&&t.status!=="delivered"&&t.status!=="closed")best=t.dueDate;(function w(a){a.forEach(s=>{if(!s.done&&s.dueDate&&(!best||s.dueDate<best))best=s.dueDate;w(s.children);});})(t.subtasks);return best;}
 function activeEpic(){return state.epics.find(e=>e.id===activeEpicId);}
 function epicById(id){return id?state.epics.find(e=>e.id===id):null;}
 function tasksForEpic(id){return state.tasks.filter(t=>t.epicId===id);}
@@ -1387,7 +1491,7 @@ function renderDetail(){
         <div class="dh-dates"><span>Type: <b>${esc(t.type)}</b></span>${t.system?`<span>System: ${sysPill(t.system,"",t.client)}</span>`:""}${(()=>{const ep=epicById(t.epicId);return ep?`<span>Epic: <b class="ep-go" style="color:var(--accent2);cursor:pointer">◆ ${esc(epicLabel(ep))}</b>${t.wave?` · <b>${esc(t.wave)}</b>`:""}</span>`:"";})()}${t.project?`<span>Project: <b>▦ ${esc(t.project)}</b></span>`:""}${t.theme?`<span>Theme: <b>${esc(t.theme)}</b></span>`:""}${t.requestor?`<span>Requestor: <b>👤 ${esc(t.requestor)}</b></span>`:""}<span>Received: <b class="mono">${t.receivedDate||"—"}</b></span><span>Due: <b class="mono due ${dueClass(t.dueDate,t.status)}">${t.dueDate||"—"}</b></span>${reworkCount(t)?`<span style="color:var(--red)">↻ ${reworkCount(t)} rework cycle(s)</span>`:""}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
-        <span class="pill ${st.cls}" style="font-size:12px">${st.label}</span>
+        <select id="dh-status" class="pill ${st.cls} statsel" title="Change status — logged in History">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${k===t.status?"selected":""}>${v.label}</option>`).join("")}</select>
         ${isWaiting(t)?`<span class="pill" style="font-size:12px;color:var(--amber);border-color:var(--amber-line)">⏳ Waiting on ${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+"d":""}</span>`:""}
         <div style="display:flex;gap:6px"><button class="sm" id="btnSpec" title="Generate post-delivery technical spec">📄 Tech Spec</button><button class="sm" id="btnEditTask">✎ Edit</button><button class="sm danger" id="btnDelTask">🗑 Delete</button></div>
       </div></div>
@@ -1404,6 +1508,8 @@ function renderDetail(){
   const epGo=host.querySelector(".ep-go");if(epGo)epGo.onclick=()=>{view="epics";activeEpicId=t.epicId;renderApp();};
   host.querySelector("#btnSpec").onclick=()=>openTechSpec(t);
   host.querySelector("#btnEditTask").onclick=()=>openTaskModal(t);
+  host.querySelector("#dh-status").onchange=ev=>{const v=ev.target.value;if(v===t.status)return;
+    logTimeline(t,"status",t.status,v);t.status=v;touch(t);renderApp();toast("Status → "+STATUS[v].label);};
   host.querySelector("#btnDelTask").onclick=()=>{if(confirm("Delete this demand and all its subtasks, objects and transports?")){state.tasks=state.tasks.filter(x=>x.id!==t.id);state.meetings.forEach(m=>m.taskIds=m.taskIds.filter(id=>id!==t.id));state.journal.forEach(j=>j.taskIds=(j.taskIds||[]).filter(id=>id!==t.id));state.debug.forEach(s=>{if(s.taskId===t.id)s.taskId="";});state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="demand"&&l.id===t.id)));activeId=null;markDirty();renderApp();}};
   host.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{activeTab=b.dataset.tab;renderDetail();});
   const body=host.querySelector("#detailBody");
@@ -1520,11 +1626,13 @@ function renderTree(host,t,list,rr){
     row.querySelector(".d-due").onchange=e=>{s.dueDate=e.target.value;touch(t);rr();};
     row.querySelector(".a-cmt").onclick=()=>openSubCommentsModal(t,s,rr);
     row.querySelector(".a-add").onclick=()=>{s.children.push(mkSub());s.collapsed=false;touch(t);rr();};
-    row.querySelector(".a-del").onclick=()=>{const r=findSub(t.subtasks,s.id);if(r){r.parent.splice(r.parent.indexOf(s),1);touch(t);rr();}};
+    row.querySelector(".a-del").onclick=()=>{const n=countSubs(s.children).n,c=(s.comments||[]).length;
+      if((n||c)&&!confirm(`Delete “${s.title||"subtask"}”${n?` and the ${n} subtask(s) under it`:""}${c?` (${c} comment(s))`:""}?`))return;
+      const r=findSub(t.subtasks,s.id);if(r){r.parent.splice(r.parent.indexOf(s),1);touch(t);rr();}};
     if(kids&&!s.collapsed)renderTree(node.querySelector(".children"),t,s.children,rr);
     host.appendChild(node);});
 }
-function editInline(span,val,cb){const inp=document.createElement("input");inp.value=val;inp.style.width="100%";span.replaceWith(inp);inp.focus();inp.select();const done=()=>cb(inp.value.trim());inp.onblur=done;inp.onkeydown=e=>{if(e.key==="Enter")inp.blur();if(e.key==="Escape"){inp.value=val;inp.blur();}};}
+function editInline(span,val,cb){const inp=document.createElement("input");inp.value=val;inp.style.width="100%";span.replaceWith(inp);inp.focus();inp.select();const done=()=>cb(inp.value.trim());inp.onblur=done;inp.onkeydown=e=>{if(e.key==="Enter")inp.blur();if(e.key==="Escape"){e.stopPropagation();inp.value=val;inp.blur();}};}
 
 function fmtTs(ts){const d=new Date(ts);return d.toLocaleDateString()+" "+d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
 function renderComments(host,owner,onChange){
@@ -1565,7 +1673,7 @@ function renderObjects(body,t){
       tr.querySelector(".o-type").onchange=e=>{o.type=e.target.value;touch(t);};
       tr.querySelector(".o-act").onchange=e=>{o.action=e.target.value;touch(t);};
       tr.querySelector(".o-desc").onchange=e=>{o.desc=e.target.value;touch(t);};
-      tr.querySelector(".o-del").onclick=()=>{t.objects=t.objects.filter(x=>x.id!==o.id);t.transports.forEach(x=>{if(x.objectIds)x.objectIds=x.objectIds.filter(id=>id!==o.id);});touch(t);draw();renderDetail();};});};
+      tr.querySelector(".o-del").onclick=()=>{if(o.name&&!confirm(`Remove ${o.name} from this demand's objects?`))return;t.objects=t.objects.filter(x=>x.id!==o.id);t.transports.forEach(x=>{if(x.objectIds)x.objectIds=x.objectIds.filter(id=>id!==o.id);});touch(t);draw();renderDetail();};});};
   body.querySelector("#objTypes").onclick=()=>openObjTypes(()=>{draw();});
   body.querySelector("#addObj").onclick=()=>{t.objects.push({id:uid(),name:"",type:objTypes()[0],action:"Modified",desc:""});touch(t);draw();};
   draw();
@@ -1657,7 +1765,7 @@ function renderTransports(body,t){
       q(".rel").onchange=e=>{tr.released=e.target.checked;touch(t);};
       q(".notes").onchange=e=>{tr.notes=e.target.value;touch(t);};
       q(".tocsel").onchange=e=>{tr.tocId=e.target.value;touch(t);drawTrs();drawReadiness();};
-      q(".del").onclick=()=>{t.transports=t.transports.filter(x=>x.id!==tr.id);touch(t);renderTransports(body,t);renderDetail();};
+      q(".del").onclick=()=>{if((tr.number||tr.syncs.some(x=>x.system))&&!confirm(`Delete transport ${tr.number||"(unnumbered)"}? Its sync history goes with it.`))return;t.transports=t.transports.filter(x=>x.id!==tr.id);touch(t);renderTransports(body,t);renderDetail();};
       q(".up").onclick=()=>{if(idx>0){[t.transports[idx-1],t.transports[idx]]=[t.transports[idx],t.transports[idx-1]];touch(t);drawTrs();drawReadiness();}};
       q(".down").onclick=()=>{if(idx<t.transports.length-1){[t.transports[idx+1],t.transports[idx]]=[t.transports[idx],t.transports[idx+1]];touch(t);drawTrs();drawReadiness();}};
       const syncHost=q(".syncs");
@@ -1966,8 +2074,13 @@ function openTaskModal(existing){
     <div class="field"><label>Description</label><textarea id="m-desc">${esc(t.description)||""}</textarea></div>
     <div class="modal-foot"><button id="m-cancel" class="ghost">Cancel</button><button id="m-save" class="primary">${existing?"Save changes":"Create demand"}</button></div></div></div>`;
   const close=()=>root.innerHTML="";
+  /* a stray click outside (or Esc) no longer throws away a half-filled demand */
+  let edited=false;const md=root.querySelector(".modal");
+  md.addEventListener("input",()=>{edited=true;});md.addEventListener("change",()=>{edited=true;});
+  md.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();root.querySelector("#m-save").click();}});
   root.querySelector("#m-cancel").onclick=close;
-  root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
+  root.querySelector(".modal-bg").onclick=e=>{if(e.target!==root.querySelector(".modal-bg"))return;
+    if(!edited||confirm(existing?"Discard your changes to this demand?":"Discard this new demand?"))close();};
   {const sy=root.querySelector("#m-sys"),cl=root.querySelector("#m-client");
    sy.onchange=()=>{cl.innerHTML=clientOptions(sy.value,"");};}
   root.querySelector("#m-title").focus();
@@ -2820,8 +2933,9 @@ function renderEpicDeps(body,e){
       <td class="mono" style="font-size:11px">${last?`${last}<div class="faint">${ago}d ago</div>`:'<span class="faint">never</span>'}</td>
       <td style="text-align:right;white-space:nowrap">${x.done?`<button class="ghost sm d-reopen">↺ Reopen</button>`:`<button class="sm d-check" title="I chased them — log it">📞 Checked in</button> <button class="sm d-snooze" title="Don't flag this for follow-up until a later date">💤 Later</button> <button class="sm d-done" title="They delivered">✓ Delivered</button>`} <button class="ghost sm danger d-del">🗑</button></td></tr>`;}).join("");
   tb.querySelectorAll("tr[data-id]").forEach(tr=>{const x=e.deps.find(d=>d.id===tr.dataset.id);
-    const bind=(sel,k)=>{const el=tr.querySelector(sel);if(el)el.onchange=ev=>{x[k]=ev.target.value;touch(e);renderEpicDetail();};};
-    bind(".d-team","team");bind(".d-what","what");bind(".d-since","since");bind(".d-exp","expected");
+    /* text fields don't redraw (Tab to the next field keeps working); dates do, they drive the nudges */
+    const bind=(sel,k,redraw)=>{const el=tr.querySelector(sel);if(el)el.onchange=ev=>{x[k]=ev.target.value;touch(e);if(redraw)renderEpicDetail();};};
+    bind(".d-team","team");bind(".d-what","what");bind(".d-since","since",1);bind(".d-exp","expected",1);
     const who=()=>x.team||"the other team";
     const ck=tr.querySelector(".d-check");if(ck)ck.onclick=()=>{
       const note=prompt(`What did ${who()} say? (goes into the epic's Story — blank is fine)`,"");if(note===null)return;
@@ -3118,8 +3232,11 @@ async function saveImageBlob(blob,kind,id){
   const dir=await ensureImgDir(true);
   if(!dir){toast("Connect an images folder first (⋯ menu → Images)",true);return null;}
   const d=new Date(),p=n=>String(n).padStart(2,"0");
-  const name=`dd-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.png`;
+  const base=`dd-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+  let name=base+".png";
   try{
+    /* two pastes inside the same second must not overwrite each other's file */
+    for(let n=2;;n++){try{await dir.getFileHandle(name);}catch(e){break;}name=`${base}-${n}.png`;}
     const fh=await dir.getFileHandle(name,{create:true});const w=await fh.createWritable();await w.write(blob);await w.close();
     const im=normImage({file:name,label:"",expiry:defaultImgExpiry(),links:kind?[{kind,id}]:[]});
     state.images.push(im);markDirty();
@@ -3135,6 +3252,7 @@ function pasteTarget(){
   return null;
 }
 document.addEventListener("paste",async e=>{
+  if(screenLocked||pendingEncrypted)return;
   const items=[...(e.clipboardData&&e.clipboardData.items||[])];
   const it=items.find(x=>x.type&&x.type.startsWith("image/"));
   if(!it)return;
@@ -3365,7 +3483,7 @@ function resetActive(){activeId=activeMeetingId=activeJournalId=activeDebugId=ac
 document.getElementById("btnOpen").onclick=openFile;
 document.getElementById("btnSave").onclick=saveFile;
 document.getElementById("btnMenu").onclick=openMenu;
-document.getElementById("btnReconnect").onclick=reconnectFile;
+document.getElementById("btnReconnect").onclick=()=>reconnectFile();
 /* Theme is a UI preference kept in localStorage (NOT the encrypted data file), so
    it works on the lock screen and never sits behind the master password. Purely
    presentational — no logic reads it. */
@@ -3390,11 +3508,62 @@ gs.oninput=e=>{clearTimeout(gs._t);gs._t=setTimeout(()=>runGlobalSearch(e.target
 gs.onblur=()=>setTimeout(()=>document.getElementById("gsearchResults").classList.add("hide"),200);
 gs.onfocus=()=>{if(gs.value)runGlobalSearch(gs.value);};
 document.addEventListener("keydown",e=>{
+  if(screenLocked||pendingEncrypted)return;
+  /* Esc closes whatever is open on top: lightbox, dialog, then the search results */
+  if(e.key==="Escape"){const root=document.getElementById("modalRoot");
+    const lb=root.querySelector("#lb");if(lb){lb.click();return;}
+    const bg=root.querySelector(".modal-bg");if(bg&&bg.onclick){flushEdits();bg.click();return;}
+    if(document.activeElement===gs){gs.value="";document.getElementById("gsearchResults").classList.add("hide");gs.blur();}
+    return;}
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){e.preventDefault();saveFile();}
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();gs.focus();}
   if(e.altKey&&!e.ctrlKey&&!e.metaKey&&e.key.toLowerCase()==="n"){e.preventDefault();view="demands";renderApp();openTaskModal(null);}
 });
-window.addEventListener("beforeunload",e=>{if(dirty){e.preventDefault();e.returnValue="";}});
+window.addEventListener("beforeunload",e=>{flushEdits();if(dirty){e.preventDefault();e.returnValue="";}});
+
+/* ---------- never lose half-typed text ----------
+   Fields commit on "change", which only fires when you leave the field. Text typed but
+   not yet committed is tracked here: long-form text areas commit after a short pause in
+   typing (so the backup and auto-save see it), and Save / closing the window commit
+   every field first. Only fields with a change handler are touched. */
+const pendingEdit=new Set();
+document.addEventListener("input",e=>{const el=e.target;
+  if(!el||typeof el.onchange!=="function")return;
+  if(!(el.tagName==="TEXTAREA"||(el.tagName==="INPUT"&&!/^(date|checkbox|radio|number|file)$/.test(el.type))))return;
+  pendingEdit.add(el);
+  if(el.tagName==="TEXTAREA"){clearTimeout(el._commitT);el._commitT=setTimeout(()=>commitEdit(el),1200);}
+},true);
+document.addEventListener("change",e=>{pendingEdit.delete(e.target);},true);
+function commitEdit(el){if(!pendingEdit.delete(el)||!el.isConnected)return;el.dispatchEvent(new Event("change"));}
+function flushEdits(){[...pendingEdit].forEach(commitEdit);}
+
+/* ---------- one copy at a time ----------
+   Two open copies share one backup and one data file, and whichever writes last
+   silently wins. Each copy announces itself; any overlap raises a banner in both. */
+const INSTANCE=uid(),peers=new Map(); /* id → last heard from; a copy that stops pinging is gone */
+function drawPeerWarn(){const el=document.getElementById("peerWarn");if(!el)return;
+  if(!peers.size||drawPeerWarn._off){el.classList.add("hide");return;}
+  el.innerHTML=`<span>⚠ <b>Demand Desk is also open in another tab or window.</b> Both copies write to the same file and backup, so one can overwrite the other's changes — keep just one open.</span><button class="sm" id="pw-x">Dismiss</button>`;
+  el.classList.remove("hide");
+  el.querySelector("#pw-x").onclick=()=>{drawPeerWarn._off=true;drawPeerWarn();};}
+/* Two carriers, because pages opened straight from disk (file://) don't always get
+   BroadcastChannel, but they do share localStorage and its "storage" event. */
+const PRESENCE_KEY="demanddesk.presence";let peerBc=null;
+function announce(t){const m={t,id:INSTANCE,ts:Date.now()};
+  try{if(peerBc)peerBc.postMessage(m);}catch(e){}
+  try{localStorage.setItem(PRESENCE_KEY,JSON.stringify(m));}catch(e){}}
+function onPeerMsg(m){if(!m||!m.id||m.id===INSTANCE)return;
+  if(m.t==="bye")peers.delete(m.id);
+  else{const isNew=!peers.has(m.id);if(isNew)drawPeerWarn._off=false;peers.set(m.id,Date.now());
+    if(m.t==="hello")announce("here");}
+  drawPeerWarn();}
+try{peerBc=new BroadcastChannel("demanddesk");peerBc.onmessage=ev=>onPeerMsg(ev.data);}catch(e){peerBc=null;}
+window.addEventListener("storage",e=>{if(e.key===PRESENCE_KEY&&e.newValue){try{onPeerMsg(JSON.parse(e.newValue));}catch(x){}}});
+announce("hello");
+setInterval(()=>{announce("ping");
+  const cut=Date.now()-40000;let gone=false;peers.forEach((ts,id)=>{if(ts<cut){peers.delete(id);gone=true;}});
+  if(gone)drawPeerWarn();},15000);
+window.addEventListener("pagehide",()=>announce("bye"));
 
 /* ---------- idle lock (only when encryption is on) ---------- */
 const IDLE_MS=15*60*1000;
@@ -3402,7 +3571,7 @@ let lastActivity=Date.now(),screenLocked=false;
 ["mousemove","keydown","mousedown","wheel","touchstart"].forEach(ev=>document.addEventListener(ev,()=>{lastActivity=Date.now();},{passive:true}));
 setInterval(()=>{if(!screenLocked&&isEncrypted()&&Date.now()-lastActivity>IDLE_MS)lockScreen();},30000);
 function lockScreen(){
-  if(screenLocked)return;screenLocked=true;revealPw={};
+  if(screenLocked)return;flushEdits();screenLocked=true;revealPw={};
   const veil=document.createElement("div");veil.className="lockveil";
   veil.innerHTML=`<div class="modal" style="width:360px"><h2>🔒 Locked (idle)</h2>
     <p class="faint" style="font-size:12px">Locked after 15 minutes of inactivity. Nothing was lost — unsaved changes are kept.</p>
@@ -3419,10 +3588,21 @@ function lockScreen(){
 
 async function unlockStartup(){
   while(true){const pw=await promptPassword("🔒 Enter master password to unlock Demand Desk");
-    if(pw===null){document.getElementById("detail").innerHTML=nopick("🔒 Locked. <button class='sm' id='retry' style='margin-top:10px'>Unlock</button>");
-      const r=document.getElementById("retry");if(r)r.onclick=unlockStartup;return;}
+    if(pw===null){showStartupLock();return;}
     try{state=migrate(await decryptEnvelope(pendingEncrypted,pw));masterPassword=pw;pendingEncrypted=null;renderApp();toast("Unlocked 🔒");return;}
     catch(e){toast("Wrong password — try again",true);}}
+}
+/* Cancelled the unlock prompt: cover the app until unlocked — the empty placeholder
+   behind it must not be edited (it would be saved over the real encrypted data). */
+function showStartupLock(){
+  if(document.getElementById("bootLock"))return;
+  const veil=document.createElement("div");veil.className="lockveil";veil.id="bootLock";
+  veil.innerHTML=`<div class="modal" style="width:380px"><h2>🔒 Demand Desk is locked</h2>
+    <p class="faint" style="font-size:12px">Your data is encrypted. Nothing is shown or saved until you unlock it with the master password.</p>
+    <div class="modal-foot"><button id="bl-open">📂 Open another file</button><button id="bl-unlock" class="primary">Unlock…</button></div></div>`;
+  document.body.appendChild(veil);
+  veil.querySelector("#bl-unlock").onclick=()=>{veil.remove();unlockStartup();};
+  veil.querySelector("#bl-open").onclick=async()=>{veil.remove();await openFile();if(pendingEncrypted)showStartupLock();};
 }
 function seedState(){
     const tId=uid(), tocId=uid(), objId=uid(), epId=uid();
@@ -3481,7 +3661,8 @@ async function boot(){
   const res=await loadBackup();
   if(res==="encrypted"){ renderApp(); await unlockStartup(); }
   else {
-    if(!res){ seedState(); }
+    if(!res){ seedState();
+      if(backupUnreadable)toast("The browser's backup couldn't be read, so it was set aside untouched. Use 📂 Open to load your .json file.",true); }
     renderApp();
     let hadFile=false;try{hadFile=useIdb?!!(await idbGet("hadfile")):!!localStorage.getItem(LS_HANDLE_HINT);}catch(e){}
     if(res&&hadFile)toast("Loaded from local backup");

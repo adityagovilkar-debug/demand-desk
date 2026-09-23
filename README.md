@@ -87,6 +87,34 @@ it. Empty sections are hidden; if everything's clear it says so. A first-run
   saves straight to your file — no need to 📂 Open every time. If your browser/IT
   blocks this, nothing changes: you just use 📂 Open as before. "Forget remembered
   file" is in the ⋯ menu.
+- **Half-typed text is never lost** — fields normally commit when you leave them.
+  Long text boxes (notes, journal, meeting notes, descriptions) now also commit
+  after about a second's pause in typing, so the backup and auto-save include
+  them. `Ctrl+S` and closing the window commit whatever field you're still in.
+- **"⚠ File changed on disk"** — the app remembers the data file's timestamp from
+  its own last save. If the file changed since (another tab, another PC through
+  OneDrive, a copy restored over it), auto-save **pauses** instead of overwriting
+  it, and a red notice appears by the Save button. Click it to either **load the
+  newer file** (what was on screen is kept as a snapshot first) or **overwrite
+  the file** with what's on screen.
+- **Open in two tabs? You're warned** — a red banner appears in both copies when
+  Demand Desk is open more than once, since both write to the same file and
+  backup. It clears within about 40 seconds of closing the other copy.
+- **Saves never overlap** — an auto-save and a `Ctrl+S` queue one behind the
+  other, and anything you change *while* a save is writing stays marked unsaved
+  and goes out with the next save.
+- **Ctrl+S re-links your remembered file** instead of popping up a "Save as"
+  dialog that could split your data into a second file.
+- **Wrong-file protection** — 📂 Open refuses files that aren't Demand Desk data
+  (e.g. Snip Desk `.marks.json` sidecars or Team Desk files in the same folder),
+  and asks before replacing changes that haven't been saved yet (a copy is kept
+  as a snapshot either way).
+- **Locked means locked** — if you cancel the master-password prompt at start-up,
+  the app stays covered until you unlock or open another file, so nothing can be
+  typed into the empty placeholder and saved over your encrypted data.
+- **Unreadable backup is set aside, not overwritten** — if the browser's backup
+  is ever damaged, it's kept separately and you're told to 📂 Open your file.
+- The browser tab title shows **●** while there are unsaved changes.
 - Treat the saved `.json` as the source of truth; the local mirror and the 14
   daily snapshots are convenience/rollback only.
 
@@ -107,6 +135,12 @@ it. Empty sections are hidden; if everything's clear it says so. A first-run
 ### Demands
 - **Tasks** — Demand ID, type, title, received & due dates, status, description,
   working-notes log, and a **timestamped comments thread**.
+- **Quick status** — the status badge in the demand header is a dropdown: change
+  it there without opening ✎ Edit. Every change is logged in History as before.
+  A **closed** demand no longer counts as overdue or "waiting on" because of
+  leftover subtasks or an old blocker.
+- **Delete safety** — deleting a subtask that has sub-subtasks or comments, a
+  numbered transport (its sync history goes with it) or a named object asks first.
 - **Subtasks** — branch infinitely; each has its own received/due dates, a done
   checkbox, overdue highlighting, and its **own comments** (💬 button → thread).
 - **Source system & client** — where the demand lives, e.g. `H03` / client `010`.
@@ -401,11 +435,13 @@ link chips appears under the notes fields (demand notes, journal, meeting notes)
 collecting every URL found in the text.
 
 ## A note on "secure"
-The `.json` is **plain text, not encrypted** — it's as private as the folder it
-lives in. Keep it on your own drive, not a shared location. (Optional password
-encryption can be added later if you want it.)
+Unless you set a master password (see *Security & encryption*), the `.json` is
+**plain text** — it's as private as the folder it lives in. Keep it on your own
+drive, not a shared location.
 
 ## Keyboard
 - `Ctrl+S` — Save
 - `Ctrl+K` — Search
 - `Alt+N` — New demand
+- `Ctrl+Enter` — create / save in the demand dialog
+- `Esc` — close the open dialog or image (a half-filled demand asks first)
