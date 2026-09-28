@@ -9,10 +9,54 @@ Double-click `DemandDesk.html`. It opens in your default browser (use **Edge**
 or **Chrome** for the best file experience). Nothing to install.
 
 ## Appearance
-The header button cycles **three themes**: **dark → light → instrument white →
-dark**. The icon shows what you'd switch *to* (☀ light, ▦ instrument, 🌙 dark).
+**Bench is the default look** — the Instrument aesthetic from the Bench utility
+cockpit, in **Paper** (light) and **Backlit** (dark). Choose any theme under
+**⋯ → Settings → Appearance**:
 
-**Instrument White** is the scientific-plotter aesthetic from the Yantra
+| Family | Options |
+|---|---|
+| Bench | Follow Windows (default) · Paper · Backlit |
+| Classic | Dark · Light · Instrument White |
+
+The **☀ / 🌙** button in the title bar flips light ↔ dark *within* the family you
+picked (Paper ↔ Backlit, or Classic dark ↔ light), so there's no cycling through
+six themes. The classic themes keep the original layout exactly.
+
+**What Bench adds**
+- **Shell:** an icon rail on the left (with a sliding indicator, counts for
+  active demands, open to-dos and open meeting actions, and Settings at the
+  bottom), an animated wordmark and clock in the title bar, and a **status bar**:
+  which file you're linked to, whether it's saved, a live
+  **"autosave in N s"** countdown, and totals.
+- **Today becomes a cockpit**, read straight from your data file:
+  - a banner with the date, a greeting, your headline numbers, search and quick
+    actions, over a flow field whose colours are your demand statuses (more
+    demands in a status → more of that colour);
+  - **Active demands** ring (split by status), **Overdue radar** (distance from
+    the centre = days late; inner ring = due within 7 days), **Waiting** gauge
+    (longest open wait against a 30-day follow-up rule) and **Go-live** — each
+    tile opens the matching view of your demand list;
+  - **Transport pipeline:** every transport of an open demand, per landscape,
+    parked at the furthest system it has reached. Streams run along the routes
+    your transports have travelled; a hollow ring is not released, a pulse is
+    waiting for its next import; Prod shows an active or coming change freeze;
+  - **Epic rings** (share of demands done, follow-ups due) and a **10-week
+    calendar** of freezes, recurring duties, due dates and next actions;
+  - then the usual **Needs attention** cards and today's journal.
+- **Demands:** status is a segmented control; changing it sends a dot flying to
+  the demand's card, which flashes. Each transport card shows its **route**
+  Dev → QA → Prod (lit up to where it has reached, the go-live target ringed, a
+  dot travelling toward the next import, a pulsing ring if unreleased). Tabs have
+  a sliding indicator. An **object clash** shows as a band under the title
+  (in every theme) — with two orbiting dots in Bench.
+- **Entrances:** content rises in when you arrive somewhere, never on ordinary
+  edits.
+- **Motion** — ⋯ → Settings → Motion: *Follow Windows* (default; honours
+  Windows' "reduce animations"), *Full*, or *Off*. Off keeps every instrument,
+  just still.
+- **Greeting** — optionally put your first name in Settings.
+
+**Instrument White** (a classic theme) is the scientific-plotter aesthetic from the Yantra
 dashboard (see `instrument-white/`), the same one Team Desk offers: white paper
 with a faint engineering dot-grid, hairline rules, corner registration tics on
 every panel, uppercase silkscreen micro-labels, and tabular monospaced figures.
@@ -34,9 +78,9 @@ so numbers don't jitter as they change), and Segoe UI Variable for prose. The
 page sits on a faint engineering dot-grid, with each panel reading as a sheet of
 paper laid on the blueprint.
 
-Your choice is remembered on this browser (a display preference, not part of
-your data file — so it also works on the lock screen) and is applied before the
-first paint, with no flash.
+Theme, motion and greeting are remembered on this browser (display preferences,
+not part of your data file — so they also work on the lock screen) and the theme
+is applied before the first paint, with no flash.
 
 ## Saving your data
 - Click **💾 Save** (or `Ctrl+S`). The first time, pick where to keep your
