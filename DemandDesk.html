@@ -867,6 +867,155 @@
   .ck-empty{font-size:11.5px;color:var(--ink-3);padding:18px 0;text-align:center;line-height:1.6}
   @media (max-width:1250px){.ck-tiles{grid-template-columns:repeat(2,1fr)}.ck-grid{grid-template-columns:1fr 1fr}}
 
+
+  /* ---------------- Bench pages: headers, readouts, bands, panels, rows, timelines ---------------- */
+  :root[data-theme="bench"] .detail-head{padding:18px 26px 0}
+  :root[data-theme="bench"] .detail-body{padding:18px 26px 40px}
+  .bhead .bh-top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .bh-l{min-width:0;flex:1 1 360px}
+  .bh-no{font-family:var(--mono);font-size:11px;color:var(--pen);letter-spacing:.14em;text-transform:uppercase}
+  .bh-no a{color:var(--accent2);cursor:pointer}
+  .bh-no a:hover{text-decoration:underline}
+  .bhead h1{margin:5px 0 0;font-size:24px;font-weight:600;letter-spacing:-.015em;line-height:1.2;color:var(--ink)}
+  .bh-sub{font-size:12px;color:var(--ink-3);margin-top:5px}
+  .bh-acts{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+  .bh-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .bro{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:14px}
+  .bro-i{background:var(--paper);padding:8px 10px 9px;min-width:0}
+  .bro-i .k{display:block;font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+  .bro-i .v{display:block;font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+  .bro-i .v small{font-size:9.5px;color:var(--ink-3);margin-left:4px;font-weight:400}
+  .bro-i.bad .v{color:var(--bad)} .bro-i.warn .v{color:var(--watch)} .bro-i.good .v{color:var(--good)}
+  .bband{--pen:var(--ink-3);position:relative;display:flex;align-items:center;gap:12px;margin-top:12px;padding:7px 10px 7px 12px;border:1px solid var(--rule);border-radius:3px;font-size:12px;color:var(--ink-2);background:var(--paper)}
+  .bband::before,.bband::after{content:"";position:absolute;width:12px;height:12px;border:solid var(--pen);pointer-events:none}
+  .bband::before{top:-1px;left:-1px;border-width:1px 0 0 1px} .bband::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
+  .bband.watch{--pen:var(--watch)} .bband.alert{--pen:var(--bad)}
+  .bband .k{font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;color:var(--pen);white-space:nowrap}
+  .bband .tx{flex:1;min-width:0}
+  .bband .tx b{color:var(--ink);font-weight:600}
+  .bband canvas{width:34px;height:30px;flex:none}
+  :root[data-theme="bench"] .bhead .clashband{position:relative;width:auto;margin-top:12px;padding:5px 10px 5px 8px;border-color:var(--rule);color:var(--ink-2);background:var(--paper)}
+  :root[data-theme="bench"] .bhead .clashband::before,:root[data-theme="bench"] .bhead .clashband::after{content:"";position:absolute;width:12px;height:12px;border:solid var(--bad);pointer-events:none}
+  :root[data-theme="bench"] .bhead .clashband::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
+  :root[data-theme="bench"] .bhead .clashband::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
+  .clashband .ck{font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;color:var(--bad);margin-right:4px}
+  .clashband>span{flex:1;min-width:0}
+  :root[data-theme="bench"] .clashband a{color:var(--bad)}
+  .bhead .tabs{margin-top:14px}
+  /* other workspaces keep their header markup; Bench gives it the same voice */
+  :root[data-theme="bench"] .detail-head:not(.bhead) .dh-top{padding-bottom:14px}
+  :root[data-theme="bench"] .detail-head:not(.bhead) h1{font-size:24px;font-weight:600;letter-spacing:-.015em}
+  :root[data-theme="bench"] .detail-head:not(.bhead) .dh-top>div:first-child>input:first-child,
+  :root[data-theme="bench"] .detail-head:not(.bhead) .dh-top>div:first-child>input:first-of-type{font-size:23px!important;font-weight:600!important;letter-spacing:-.015em;padding:2px 0!important}
+  :root[data-theme="bench"] .dh-demand{font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+  :root[data-theme="bench"] .dh-dates{gap:16px;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);align-items:center}
+  :root[data-theme="bench"] .dh-dates input,:root[data-theme="bench"] .dh-dates select{font-size:12px;letter-spacing:0;text-transform:none;height:26px;padding:2px 7px;margin-left:4px}
+  :root[data-theme="bench"] .tabs:has(>.tab:only-child){display:none}
+  :root[data-theme="bench"] .tab .count{border:0;padding:0 0 0 2px}
+  /* panels */
+  :root[data-theme="bench"] .bsec{position:relative;background:var(--paper);border:1px solid var(--rule);border-radius:3px;padding:12px 15px 14px;margin-bottom:14px;min-width:0}
+  :root[data-theme="bench"] .bsec::before,:root[data-theme="bench"] .bsec::after{content:"";position:absolute;width:7px;height:7px;border:solid var(--rule-strong);pointer-events:none;transition:width .3s,height .3s,border-color .3s}
+  :root[data-theme="bench"] .bsec::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
+  :root[data-theme="bench"] .bsec::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
+  :root[data-theme="bench"] .bsec:hover::before,:root[data-theme="bench"] .bsec:hover::after{width:14px;height:14px;border-color:var(--ink-3)}
+  :root[data-theme="bench"] .bsec>.sec-title{margin:0 0 10px;padding-bottom:9px;border-bottom:1px solid var(--rule);gap:8px}
+  :root[data-theme="bench"] .bsec>.sec-title .ln{height:0;background:none}
+  :root[data-theme="bench"] .sec-title h3{font-family:var(--label);font-size:10px;letter-spacing:.2em;font-weight:600;color:var(--ink)}
+  :root[data-theme="bench"] .sec-title .ln{height:0;background:none;border-top:1px dotted var(--rule-strong)}
+  :root[data-theme="bench"] .bsec .tbl-wrap{border:0;margin-bottom:4px}
+  :root[data-theme="bench"] .bsec>p.faint:first-of-type{margin-top:0}
+  :root[data-theme="bench"] .detail-body .field:has(>textarea):not(.bsec .field):not(.modal .field){position:relative;border:1px solid var(--rule);border-radius:3px;padding:11px 14px 12px;background:var(--paper)}
+  :root[data-theme="bench"] .detail-body .field:has(>textarea):not(.bsec .field)>label{font-family:var(--label);font-size:10px;letter-spacing:.2em;color:var(--ink);padding-bottom:8px;margin-bottom:9px;border-bottom:1px solid var(--rule)}
+  :root[data-theme="bench"] .detail-body .field:has(>textarea):not(.bsec .field)>textarea{border:0;padding:0;background:transparent;min-height:96px;font-size:13px}
+  :root[data-theme="bench"] .pinbox::before,:root[data-theme="bench"] .pinbox::after{border-color:var(--amber)}
+  :root[data-theme="bench"] .resume-box::before,:root[data-theme="bench"] .resume-box::after{border-color:var(--green)}
+  :root[data-theme="bench"] .resume-box textarea{background:transparent}
+  /* rows: dotted rules, dot checkboxes */
+  :root[data-theme="bench"] .nrow,:root[data-theme="bench"] .actitem,:root[data-theme="bench"] .finding,:root[data-theme="bench"] .cmt{background:transparent;border:0;border-top:1px dotted var(--rule-strong);border-radius:0;margin:0;padding:7px 4px}
+  :root[data-theme="bench"] .nrow::before,:root[data-theme="bench"] .nrow::after,:root[data-theme="bench"] .actitem::before,:root[data-theme="bench"] .actitem::after,:root[data-theme="bench"] .finding::before,:root[data-theme="bench"] .finding::after,:root[data-theme="bench"] .cmt::before,:root[data-theme="bench"] .cmt::after{display:none}
+  :root[data-theme="bench"] .tree>.node:first-child>.nrow,:root[data-theme="bench"] .sec-title+* .actitem:first-child,:root[data-theme="bench"] .cmts>.cmt:first-child{border-top:0}
+  :root[data-theme="bench"] .nrow:hover,:root[data-theme="bench"] .actitem:hover{background:var(--paper-2)}
+  :root[data-theme="bench"] .node .children{border-left:1px dotted var(--rule-strong);margin-left:11px;padding-left:12px;margin-top:0}
+  :root[data-theme="bench"] .nrow .nm{font-size:12.5px}
+  :root[data-theme="bench"] .nrow .ndates input{font-family:var(--mono);font-size:10.5px!important;border-color:transparent;background:transparent}
+  :root[data-theme="bench"] .nrow .ndates input:hover{border-color:var(--rule)}
+  :root[data-theme="bench"] .nrow .chk,:root[data-theme="bench"] .actitem .chk{width:14px;height:14px;flex:0 0 14px;border-radius:50%;border:1px solid var(--ink-3);font-size:0;background:transparent}
+  :root[data-theme="bench"] .nrow .chk::after,:root[data-theme="bench"] .actitem .chk::after{content:"";width:7px;height:7px;border-radius:50%;background:var(--good);transform:scale(0);transition:transform .3s cubic-bezier(.2,1.6,.4,1)}
+  :root[data-theme="bench"] .nrow .chk.done,:root[data-theme="bench"] .actitem .chk.done{background:transparent;border-color:var(--good)}
+  :root[data-theme="bench"] .nrow .chk.done::after,:root[data-theme="bench"] .actitem .chk.done::after{transform:scale(1)}
+  :root[data-theme="bench"] .finding .fk{font-family:var(--label);font-size:9px;letter-spacing:.14em;text-transform:uppercase}
+  :root[data-theme="bench"] .cmt-meta{font-family:var(--mono);font-size:10px}
+  :root[data-theme="bench"] .trcard{padding:12px 15px 13px}
+  :root[data-theme="bench"] .trcard.toc{border-left:2px solid var(--accent2)}
+  :root[data-theme="bench"] .trcard .trtop input,:root[data-theme="bench"] .trcard .trtop select{height:28px}
+  /* timelines: History and Story share a drawn spine with a pen dot per event */
+  :root[data-theme="bench"] .btl,:root[data-theme="bench"] #st-list{position:relative;padding-left:24px}
+  :root[data-theme="bench"] .btl::before,:root[data-theme="bench"] #st-list::before{content:"";position:absolute;left:7px;top:6px;bottom:6px;border-left:1px solid var(--rule-strong);transform-origin:top}
+  :root[data-theme="bench"] #app[class*="enter-"] .btl::before,:root[data-theme="bench"] #app[class*="enter-"] #st-list::before{animation:spine 1.1s cubic-bezier(.3,.6,.2,1) both}
+  @keyframes spine{from{transform:scaleY(0)}to{transform:none}}
+  :root[data-theme="bench"] .btl .actitem{border:0;padding:5px 4px 6px;position:relative}
+  :root[data-theme="bench"] .btl .actitem::before{display:block;content:"";position:absolute;left:-20px;top:11px;width:7px;height:7px;border-radius:50%;background:var(--pen,var(--ink-3));box-shadow:0 0 0 3px var(--paper)}
+  :root[data-theme="bench"] .btl .actitem .du{flex:0 0 118px!important}
+  .btl-mo{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:12px 0 3px}
+  .btl-mo:first-child{margin-top:0}
+  :root[data-theme="bench"] .storyrow{--pen:var(--ink-3);border-bottom:0;padding:5px 4px 6px;position:relative;background:transparent;box-shadow:none}
+  :root[data-theme="bench"] .storyrow.src-log{--pen:var(--pen-5);background:transparent;box-shadow:none}
+  :root[data-theme="bench"] .storyrow.src-demand{--pen:var(--pen-2)} :root[data-theme="bench"] .storyrow.src-transport{--pen:var(--pen-3)}
+  :root[data-theme="bench"] .storyrow.src-meeting{--pen:var(--pen-4)} :root[data-theme="bench"] .storyrow.src-dep{--pen:var(--pen-4)}
+  :root[data-theme="bench"] .storyrow::before{content:"";position:absolute;left:-20px;top:11px;width:7px;height:7px;border-radius:50%;background:var(--pen);box-shadow:0 0 0 3px var(--paper)}
+  :root[data-theme="bench"] .storyrow.src-dep::before{background:var(--paper);border:1px solid var(--pen);width:5px;height:5px}
+  :root[data-theme="bench"] .storyrow .si{display:none}
+  :root[data-theme="bench"] .storyrow .sd{flex:0 0 78px}
+  :root[data-theme="bench"] .storyrow .sk{color:var(--pen)}
+  :root[data-theme="bench"] .storymonth{border-bottom:0;padding-bottom:0;margin:14px 0 3px;font-family:var(--label);letter-spacing:.2em;font-size:9px}
+  :root[data-theme="bench"] .storyadd{padding:0 0 10px;border-bottom:1px dotted var(--rule-strong);margin-bottom:6px}
+  :root[data-theme="bench"] #epBody>.readybar:first-child,:root[data-theme="bench"] #epBody>.stats{display:none}
+  /* epic overview: story left, the rest beside it */
+  .ep2{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr);gap:14px;align-items:start}
+  .ep-side{min-width:0}
+  .dep2{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 0;border-top:1px dotted var(--rule-strong)}
+  .sec-title+.dep2{border-top:0}
+  .dep2 canvas{width:62px;height:46px}
+  .dep2 .dn{font-size:12.5px;font-weight:600;color:var(--ink)}
+  .dep2 .dw{font-size:11.5px;color:var(--ink-2);margin-top:1px}
+  .dep2 .dm{font-family:var(--mono);font-size:10px;color:var(--ink-3);margin-top:4px;line-height:1.5}
+  .dep2 .dm b{color:var(--bad);font-weight:600}
+  .dep2-a{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+  .dep2-a button{height:24px;padding:0 8px;font-size:10.5px}
+  .wav2{display:grid;grid-template-columns:minmax(0,1fr) 38px auto 78px;gap:10px;align-items:center;padding:7px 0;border-top:1px dotted var(--rule-strong);font-size:12px}
+  .sec-title+.wav2{border-top:0}
+  .wav2 .wn{font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wav2 .wc{font-size:10.5px;color:var(--ink-3);text-align:right}
+  .wav2 .wt{font-size:10.5px;text-align:right;color:var(--ink-2)}
+  .wav2 .wt.bad,.dem2 .dd.bad{color:var(--bad)} .wav2 .wt.warn{color:var(--watch)} .wav2 .wt.good{color:var(--good)}
+  .dem2{display:grid;grid-template-columns:7px 96px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 2px;border-top:1px dotted var(--rule-strong);font-size:12px;cursor:pointer}
+  .sec-title+.dem2{border-top:0}
+  .dem2:hover{background:var(--paper-2)}
+  .dem2 i{width:7px;height:7px;border-radius:50%;background:var(--pen)}
+  .dem2 .di{font-size:10.5px;color:var(--pen);letter-spacing:.04em}
+  .dem2 .dt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+  .dem2 .dd{font-size:10.5px;color:var(--ink-3)}
+  .bempty{font-size:11.5px;color:var(--ink-3);padding:10px 0;text-align:center;line-height:1.6}
+  .bmore{display:inline-block;font-size:11px;color:var(--accent);cursor:pointer;margin-top:8px}
+  .bmore:hover{text-decoration:underline}
+  .dbar{display:block;flex:none}
+  @media (max-width:1150px){.ep2{grid-template-columns:1fr}}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*){animation:rise .45s cubic-bezier(.2,.8,.2,1) both;animation-delay:760ms}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(1){animation-delay:120ms}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(2){animation-delay:165ms}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(3){animation-delay:210ms}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(4){animation-delay:255ms}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(5){animation-delay:300ms}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(6){animation-delay:345ms}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(7){animation-delay:390ms}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(8){animation-delay:435ms}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(9){animation-delay:480ms}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(10){animation-delay:525ms}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(11){animation-delay:570ms}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(12){animation-delay:615ms}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(13){animation-delay:660ms}
+  :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(14){animation-delay:705ms}
+
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -1938,7 +2087,7 @@ function renderDetail(){
   const t=activeTask(),host=document.getElementById("detail");
   if(!t){host.innerHTML=nopick("Select a demand on the left,<br>or create a new one to begin.");return;}
   const st=STATUS[t.status],sub=countSubs(t.subtasks),lc=linkedCount(t.id);
-  host.innerHTML=`
+  host.innerHTML=benchOn()?demandHeadBench(t,sub,lc):`
     <div class="detail-head">
       <div class="dh-top"><div style="flex:1">
         <div class="dh-demand">${esc(t.demandId||"— no demand id —")}</div>
@@ -1974,7 +2123,8 @@ function renderDetail(){
    host.querySelectorAll("#dh-seg button").forEach(b=>b.onclick=()=>setDemandStatus(t,b.dataset.s,b));
    const cg=host.querySelector(".cb-go");if(cg)cg.onclick=()=>{activeId=cg.dataset.id;activeTab="objects";renderApp();};
    const co=host.querySelector(".cb-obj");if(co)co.onclick=()=>{activeTab="objects";renderDetail();enterPulse("detail");};
-   const ob=host.querySelector(".clashband canvas");if(ob&&benchOn())DK.scope(ob,drawOrbit);}
+   const ob=host.querySelector(".clashband canvas");if(ob&&benchOn())DK.scope(ob,drawOrbit);
+   const nt=host.querySelector(".natick");if(nt)DK.scope(nt,drawTick);}
   host.querySelector("#btnDelTask").onclick=()=>{if(confirm("Delete this demand and all its subtasks, objects and transports?")){state.tasks=state.tasks.filter(x=>x.id!==t.id);state.meetings.forEach(m=>m.taskIds=m.taskIds.filter(id=>id!==t.id));state.journal.forEach(j=>j.taskIds=(j.taskIds||[]).filter(id=>id!==t.id));state.debug.forEach(s=>{if(s.taskId===t.id)s.taskId="";});state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="demand"&&l.id===t.id)));activeId=null;markDirty();renderApp();}};
   host.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{activeTab=b.dataset.tab;renderDetail();enterPulse("detail");});
   const body=host.querySelector("#detailBody");
@@ -2029,12 +2179,15 @@ function renderHistory(body,t){
   body.querySelector("#addEvt").onclick=()=>{const n=prompt("Timeline note (e.g. 'QA raised bug on PA0008'):");if(n){logTimeline(t,"note","","",n);touch(t);renderHistory(body,t);}};
   const host=body.querySelector("#tlList");
   if(!tl.length){host.innerHTML=`<div class="faint" style="font-size:12px">No history yet. Status changes are logged automatically.</div>`;return;}
+  const bench=benchOn();let lastM="",idx=0;host.classList.toggle("btl",bench);
   host.innerHTML=tl.map(e=>{
+    let mo="";if(bench){const m=new Date(e.ts).toLocaleDateString("en-GB",{month:"long",year:"numeric"});if(m!==lastM){lastM=m;mo=`<div class="btl-mo">${m}</div>`;}}
+    const pen=e.type==="status"?(STATUS_PEN[e.to]||"var(--faint)"):"var(--accent2)";
     let label;
     if(e.type==="status"){const to=STATUS[e.to]?STATUS[e.to].label:e.to;const fr=e.from?(STATUS[e.from]?STATUS[e.from].label:e.from):"created";
       const danger=e.to==="bug";label=`<span class="pill ${STATUS[e.to]?STATUS[e.to].cls:""}">${to}</span> <span class="faint">from ${fr}</span>${danger?' <span style="color:var(--red)">↻ rework</span>':""}`;}
     else label=esc(e.note);
-    return `<div class="actitem" data-id="${e.id}"><span class="du mono" style="flex:0 0 150px;font-size:11px;color:var(--muted)">${fmtTs(e.ts)}</span><span class="at" style="cursor:default">${label}</span><span class="nact"><button class="ghost sm danger e-del">🗑</button></span></div>`;
+    return mo+`<div class="actitem" data-id="${e.id}" style="--pen:${pen}"><span class="du mono" style="flex:0 0 150px;font-size:11px;color:var(--muted)">${fmtTs(e.ts)}</span><span class="at" style="cursor:default">${label}</span><span class="nact"><button class="ghost sm danger e-del">🗑</button></span></div>`;
   }).join("");
   host.querySelectorAll(".actitem").forEach(row=>row.querySelector(".e-del").onclick=()=>{t.timeline=t.timeline.filter(x=>x.id!==row.dataset.id);touch(t);renderHistory(body,t);renderDetail();});
 }
@@ -3204,7 +3357,7 @@ function renderEpicDetail(){
   if(!e){host.innerHTML=nopick("Select an epic, or create one to group<br>related demands under one initiative.");return;}
   const st=EPIC_STATUS[e.status],r=epicRollup(e),pk=epicParked(e,r),fu=epicFollowUps(e);
   const storyN=epicStory(e).length,openDeps=e.deps.filter(x=>!x.done).length,sub=countSubs(e.subtasks);
-  host.innerHTML=`<div class="detail-head"><div class="dh-top"><div style="flex:1">
+  host.innerHTML=benchOn()?epicHeadBench(e,r,pk,fu,storyN,openDeps,sub):`<div class="detail-head"><div class="dh-top"><div style="flex:1">
       <div class="dh-demand">◆ ${esc(e.code)||"— no code —"} · ${e.role==="contributor"?"I contribute a part":"I lead this"}</div>
       <input id="ep-name" value="${esc(e.name)}" style="font-size:19px;font-weight:650;border-color:transparent;background:transparent;padding:2px 4px;width:100%">
       <div class="dh-dates" style="margin-top:6px">
@@ -3245,7 +3398,10 @@ function renderEpicDetail(){
     state.epics=state.epics.filter(x=>x.id!==e.id);activeEpicId=null;markDirty();renderApp();});
   host.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{epicTab=b.dataset.tab;renderEpicDetail();enterPulse("detail");});
   const body=host.querySelector("#epBody");
-  if(epicTab==="story")renderEpicStory(body,e);
+  if(benchOn()){wireEpicHeadBench(host,e);const tb=epicBenchTab();
+    if(tb==="deps")renderEpicDeps(body,e);else if(tb==="subtasks")renderEpicSubtasks(body,e);
+    else if(tb==="details")renderEpicOverview(body,e,r,pk,fu);else renderEpicOverviewBench(body,e,r);}
+  else if(epicTab==="story")renderEpicStory(body,e);
   else if(epicTab==="deps")renderEpicDeps(body,e);
   else if(epicTab==="subtasks")renderEpicSubtasks(body,e);
   else renderEpicOverview(body,e,r,pk,fu);
@@ -3424,26 +3580,28 @@ function renderEpicDeps(body,e){
     /* text fields don't redraw (Tab to the next field keeps working); dates do, they drive the nudges */
     const bind=(sel,k,redraw)=>{const el=tr.querySelector(sel);if(el)el.onchange=ev=>{x[k]=ev.target.value;touch(e);if(redraw)renderEpicDetail();};};
     bind(".d-team","team");bind(".d-what","what");bind(".d-since","since",1);bind(".d-exp","expected",1);
-    const who=()=>x.team||"the other team";
-    const ck=tr.querySelector(".d-check");if(ck)ck.onclick=()=>{
-      const note=prompt(`What did ${who()} say? (goes into the epic's Story — blank is fine)`,"");if(note===null)return;
-      const nd=(prompt("New expected date, if they gave one (YYYY-MM-DD). Blank keeps: "+(x.expected||"none"),"")||"").trim();
-      x.lastCheck=todayStr();x.snoozeUntil="";
-      const newExp=/^\d{4}-\d{2}-\d{2}$/.test(nd);if(newExp)x.expected=nd;
-      e.log.push({id:uid(),date:todayStr(),kind:"followup",text:`Checked with ${who()}${x.what?" re "+x.what:""}${note.trim()?": "+note.trim():""}${newExp?" · now expected "+nd:""}`});
-      touch(e);renderEpicDetail();toast("Follow-up logged in the Story");};
-    const sz=tr.querySelector(".d-snooze");if(sz)sz.onclick=()=>{
-      const v=prompt(`Remind me about ${who()} again in how many days?\n(or type a date, YYYY-MM-DD)`,"14");if(v===null)return;const t=v.trim();
-      let until="";if(/^\d{4}-\d{2}-\d{2}$/.test(t))until=t;else if(/^\d+$/.test(t)&&+t>0){const d=new Date();d.setDate(d.getDate()+(+t));until=isoD(d);}
-      if(!until||until<=todayStr()){toast("Give a number of days, or a future date",true);return;}
-      x.snoozeUntil=until;touch(e);renderEpicDetail();toast("No follow-up nudges until "+until);};
+    const ck=tr.querySelector(".d-check");if(ck)ck.onclick=()=>depCheckIn(e,x);
+    const sz=tr.querySelector(".d-snooze");if(sz)sz.onclick=()=>depSnooze(e,x);
     const us=tr.querySelector(".d-unsnooze");if(us)us.onclick=()=>{x.snoozeUntil="";touch(e);renderEpicDetail();};
-    const dn=tr.querySelector(".d-done");if(dn)dn.onclick=()=>{x.done=true;x.doneDate=todayStr();x.lastCheck=todayStr();touch(e);
-      if(!e.deps.some(d=>!d.done))toast("Nothing left blocking this epic — time to move your transports?");
-      renderEpicDetail();};
+    const dn=tr.querySelector(".d-done");if(dn)dn.onclick=()=>depDelivered(e,x);
     const ro=tr.querySelector(".d-reopen");if(ro)ro.onclick=()=>{x.done=false;x.doneDate="";touch(e);renderEpicDetail();};
     tr.querySelector(".d-del").onclick=()=>{if(confirm("Remove this dependency?")){e.deps=e.deps.filter(d=>d.id!==x.id);touch(e);renderEpicDetail();}};});
 }
+function depCheckIn(e,x){const who=x.team||"the other team";
+  const note=prompt(`What did ${who} say? (goes into the epic's Story — blank is fine)`,"");if(note===null)return;
+  const nd=(prompt("New expected date, if they gave one (YYYY-MM-DD). Blank keeps: "+(x.expected||"none"),"")||"").trim();
+  x.lastCheck=todayStr();x.snoozeUntil="";
+  const newExp=/^\d{4}-\d{2}-\d{2}$/.test(nd);if(newExp)x.expected=nd;
+  e.log.push({id:uid(),date:todayStr(),kind:"followup",text:`Checked with ${who}${x.what?" re "+x.what:""}${note.trim()?": "+note.trim():""}${newExp?" · now expected "+nd:""}`});
+  touch(e);renderEpicDetail();toast("Follow-up logged in the Story");}
+function depSnooze(e,x){const who=x.team||"the other team";
+  const v=prompt(`Remind me about ${who} again in how many days?\n(or type a date, YYYY-MM-DD)`,"14");if(v===null)return;const t=v.trim();
+  let until="";if(/^\d{4}-\d{2}-\d{2}$/.test(t))until=t;else if(/^\d+$/.test(t)&&+t>0){const d=new Date();d.setDate(d.getDate()+(+t));until=isoD(d);}
+  if(!until||until<=todayStr()){toast("Give a number of days, or a future date",true);return;}
+  x.snoozeUntil=until;touch(e);renderEpicDetail();toast("No follow-up nudges until "+until);}
+function depDelivered(e,x){x.done=true;x.doneDate=todayStr();x.lastCheck=todayStr();touch(e);
+  if(!e.deps.some(d=>!d.done))toast("Nothing left blocking this epic — time to move your transports?");
+  renderEpicDetail();}
 function renderEpicSubtasks(body,e){
   body.innerHTML=`<div class="sec-title"><h3>Epic-level subtasks</h3><div class="ln"></div><button class="sm" id="es-add">＋ Add subtask</button></div>
     <p class="faint" style="font-size:12px;margin:-4px 0 10px">Work that belongs to the initiative rather than any one demand — alignment calls, cut-over prep, the hand-over note, “raise the Wave 3 demand”.</p>
@@ -4567,6 +4725,169 @@ function toggleTheme(){const t=currentTheme();let nx;
   else nx=t==="dark"?"light":"dark";
   setTheme(nx);toast("Theme: "+THEME_OPTS[nx]);}
 darkMQ.addEventListener("change",()=>{if(currentTheme()==="bench"){applyTheme("bench");renderApp();}});
+
+/* ===================== BENCH LAYOUTS: pages, panels, story =====================
+   Bench gives the Demand and Epic pages their own header (ID line, title, readouts,
+   status control, bands) and the Epic overview its story-first layout. Every other
+   view keeps its renderer: Bench frames each titled section as a panel on the live
+   page (wrapSections), so all editing code stays exactly the same in every theme. */
+const U=(v,u)=>`${v}<small>${u}</small>`;
+/* "03 Jul" this year, "03 Jul 25" otherwise — readouts stay short enough not to clip */
+const shortD=s=>{if(!s)return "—";const d=new Date(s+"T00:00:00");return d.toLocaleDateString("en-GB",d.getFullYear()===new Date().getFullYear()?{day:"2-digit",month:"short"}:{day:"2-digit",month:"short",year:"2-digit"});};
+function roHTML(items){return `<div class="bro">${items.filter(Boolean).map(x=>`<div class="bro-i ${x.cls||""}"${x.title?` title="${esc(x.title)}"`:""}><span class="k">${x.k}</span><span class="v">${x.v}</span></div>`).join("")}</div>`;}
+function dotBarSVG(frac,n=12,pen="var(--ink)"){let s=`<svg class="dbar" width="${n*5}" height="6" aria-hidden="true">`;const lit=Math.round(Math.max(0,Math.min(1,frac||0))*n);
+  for(let i=0;i<n;i++)s+=i<lit?`<circle cx="${i*5+2.5}" cy="3" r="2" style="fill:${pen}"/>`:`<circle cx="${i*5+2.5}" cy="3" r="1.1" style="fill:var(--ink-4)"/>`;return s+"</svg>";}
+/* a clock face of dots filling toward the next action */
+function drawTick(ctx,w,h,t){const {dot,C,TAU}=DK,cx=w/2,cy=h/2,R=Math.min(w,h)/2-3,sec=motionOn()?((t/1000)%60)/60:.25;
+  for(let i=0;i<24;i++){const a=-Math.PI/2+i/24*TAU,on=i/24<=sec;dot(ctx,cx+Math.cos(a)*R,cy+Math.sin(a)*R,on?1.5:.9,on?C.watch:C["ink-4"]);}
+  const a=-Math.PI/2+sec*TAU;ctx.globalAlpha=.7;ctx.strokeStyle=C.watch;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*(R-4),cy+Math.sin(a)*(R-4));ctx.stroke();dot(ctx,cx,cy,1.5,C.watch);}
+
+/* ---------- Demand page header ---------- */
+function demandHeadBench(t,sub,lc){
+  const ep=epicById(t.epicId),open=!["delivered","closed"].includes(t.status),dn=t.dueDate&&open?daysUntil(t.dueDate):null;
+  const tgt=goliveTargetFor(t),at=tgt?t.transports.filter(tr=>reachedSystems(t,tr).has(tgt)).length:0;
+  const age=t.receivedDate?Math.max(0,-daysUntil(t.receivedDate)):Math.floor((Date.now()-t.createdAt)/864e5);
+  const na=t.nextAction&&t.nextAction.date&&t.status!=="closed"?t.nextAction:null,nad=na?daysUntil(na.date):0;
+  const cl=taskClashes(t).filter(x=>x.open.length),rw=reworkCount(t),nClash=openClashCount(t);
+  return `<div class="detail-head bhead" style="--pen:${STATUS_PEN[t.status]}">
+    <div class="bh-top"><div class="bh-l">
+        <div class="bh-no">${esc(t.demandId||"no demand id")}${ep?` · <a class="ep-go" title="Open the epic">◆ ${esc(ep.code||ep.name)}</a>`:""}${t.wave?` · ${esc(t.wave)}`:""}</div>
+        <h1>${esc(t.title)}</h1>
+        <div class="bh-sub">${esc(t.type)}${t.requestor?` · asked by ${esc(t.requestor)}`:""}${t.project?` · ▦ ${esc(t.project)}`:""}${t.theme?` · ${esc(t.theme)}`:""}</div></div>
+      <div class="bh-acts">${statusSegHTML(t)}
+        <div class="bh-btns"><button class="sm" id="btnNext" title="When should this demand come back up on Today?">⏰ Next action</button><button class="sm" id="btnSpec" title="Generate post-delivery technical spec">📄 Tech spec</button><button class="sm" id="btnEditTask">✎ Edit</button><button class="sm ghost danger" id="btnDelTask" title="Delete this demand">🗑</button></div></div></div>
+    ${roHTML([
+      {k:"Received",v:shortD(t.receivedDate)},
+      {k:"Due",v:t.dueDate?shortD(t.dueDate)+(dn!=null&&dn<0?`<small>${-dn} d late</small>`:dn!=null&&dn<=7?`<small>in ${dn} d</small>`:""):"—",cls:dn!=null&&dn<0?"bad":dn!=null&&dn<=3?"warn":""},
+      {k:"Age",v:U(age,"days")},
+      {k:"System",v:t.system?esc(t.system)+(t.client?`<small>client ${esc(t.client)}</small>`:""):"—"},
+      {k:tgt?"Go-live · "+esc(tgt):"Go-live",v:t.transports.length?U(`${at}/${t.transports.length}`,"TRs there"):"—",cls:t.transports.length?(at<t.transports.length?"warn":"good"):"",title:"Transports that have reached the go-live system"},
+      {k:"Subtasks",v:sub.n?U(`${sub.done}/${sub.n}`,"done"):"—"},
+      {k:"Rework",v:U(rw,rw===1?"cycle":"cycles"),cls:rw?"bad":""},
+      isWaiting(t)?{k:"Waiting on",v:esc(t.waiting.on)+(waitDays(t)!=null?`<small>${waitDays(t)} d</small>`:""),cls:"warn"}:null])}
+    ${na?`<div class="bband ${nad<=0?"watch":""}"><canvas class="natick"></canvas><span class="k">Next action · ${nad<0?(-nad)+" d ago":nad===0?"today":"in "+nad+" d"}</span><span class="tx"><b>${esc(na.note||"(no note)")}</b> <span class="mono faint">${na.date}</span></span><button class="sm" id="na-done" title="Did it — note it in History and clear">✓ Done</button><button class="sm ghost" id="na-edit" title="Change date or text">✎</button></div>`:""}
+    ${cl.length?(()=>{const x=cl[0],o=x.open[0],more=cl.reduce((n,y)=>n+y.open.length,0)-1;
+      return `<div class="clashband"><canvas class="orbit"></canvas><span><span class="ck">Object clash</span> <b class="mono">${esc(x.o.name)}</b> is also in flight in <a class="cb-go" data-id="${o.t.id}">${esc(o.t.demandId||o.t.title)}</a> <span class="clw">— ${esc(clashWhere(o))}${more>0?` · +${more} more`:""}. Agree the import order.</span></span><button class="sm cb-obj">Objects ›</button></div>`;})():""}
+    <div class="tabs">
+      <button class="tab ${activeTab==="work"?"active":""}" data-tab="work">Work<span class="count">${sub.n}</span></button>
+      <button class="tab ${activeTab==="objects"?"active":""}" data-tab="objects">Objects<span class="count">${t.objects.length}</span>${nClash?`<span class="clashtag" title="Object(s) also in flight in another demand">⚠ ${nClash}</span>`:""}</button>
+      <button class="tab ${activeTab==="transports"?"active":""}" data-tab="transports">Transports<span class="count">${t.transports.length}</span></button>
+      <button class="tab ${activeTab==="reference"?"active":""}" data-tab="reference">Reference<span class="count">${(t.reference||[]).length}</span></button>
+      <button class="tab ${activeTab==="calls"?"active":""}" data-tab="calls">Linked<span class="count">${lc}</span></button>
+      <button class="tab ${activeTab==="images"?"active":""}" data-tab="images">Images<span class="count">${imagesFor("demand",t.id).length}</span></button>
+      <button class="tab ${activeTab==="history"?"active":""}" data-tab="history">History<span class="count">${(t.timeline||[]).length}</span></button>
+      <span class="tind"></span>
+    </div></div><div class="detail-body" id="detailBody"></div>`;}
+
+/* ---------- Epic page header ---------- */
+const EPIC_PEN={active:"var(--accent)",onhold:"var(--amber)",delivered:"var(--green)",closed:"var(--faint)"};
+function epicBenchTab(){return epicTab==="story"?"overview":epicTab;}
+function epicHeadBench(e,r,pk,fu,storyN,openDeps,sub){
+  const story=epicStory(e),first=story.length?story[0].date:"",months=first?monthsBetween(first,todayStr()):0;
+  const live=!["delivered","closed"].includes(e.status),tn=e.targetDate?daysUntil(e.targetDate):null,short=r.pending.reduce((n,x)=>n+x.g.missing.length,0),tab=epicBenchTab();
+  return `<div class="detail-head bhead" style="--pen:var(--accent2)">
+    <div class="bh-top"><div class="bh-l">
+        <div class="bh-no">◆ ${esc(e.code||"no code")} · ${e.role==="contributor"?"I contribute a part":"I lead this"}</div>
+        <h1>${esc(e.name)}</h1>
+        <div class="bh-sub">${[e.owner?"owner "+esc(e.owner):"",e.targetDate?"target "+e.targetDate:"",first?"running "+(months>=1?months+" month"+(months>1?"s":""):"under a month")+" · since "+first:"no history yet"].filter(Boolean).join(" · ")}</div></div>
+      <div class="bh-acts"><div class="seg" id="ep-seg" title="Epic status — changes are noted in the story">${Object.entries(EPIC_STATUS).map(([k,v])=>`<button data-s="${k}" class="${k===e.status?"on":""}" style="--pen:${EPIC_PEN[k]}"><i></i>${v.label}</button>`).join("")}</div>
+        <div class="bh-btns"><button class="sm" id="ep-edit">✎ Edit</button><button class="sm" id="ep-brief" title="The whole epic as one document">📄 Epic brief</button><button class="sm" id="ep-run" title="Import request for Basis across every demand in the epic">📋 Run sheet</button><button class="sm" id="ep-add">🔗 Assign demands</button><button class="sm ghost danger" id="ep-del" title="Delete this epic">🗑</button></div></div></div>
+    ${roHTML([
+      {k:"Demands",v:r.ts.length},
+      {k:"Done",v:U(r.done,"of "+r.ts.length),cls:r.ts.length&&r.done===r.ts.length?"good":""},
+      {k:"Overdue",v:r.overdue.length,cls:r.overdue.length?"bad":""},
+      {k:"Transports",v:U(r.trs.length,r.trs.length?(short?short+" short":"all at go-live"):""),title:"Transports across the epic · how many haven't reached their go-live system",cls:short?"warn":r.trs.length?"good":""},
+      {k:"Waiting on others",v:U(openDeps,fu.length?fu.length+" follow-up due":"open"),cls:fu.length?"bad":openDeps?"warn":""},
+      {k:"Target",v:e.targetDate?(tn<0?U(-tn,"d over"):U(tn,"d left")):"—",cls:live&&tn!=null&&tn<0?"bad":live&&tn!=null&&tn<=14?"warn":""},
+      {k:"Story",v:U(storyN,"events")}])}
+    ${pk&&pk.parked?`<div class="bband watch"><span class="k">⏸ Parked</span><span class="tx">Nothing of yours is in flight — waiting on <b>${pk.open}</b> thing${pk.open>1?"s":""} from other teams${pk.days!=null?` for <b>${pk.days} days</b>`:""}.${fu.length?` <b style="color:var(--bad)">${fu.length} follow-up${fu.length>1?"s":""} due.</b>`:""}</span></div>`:""}
+    <div class="tabs">
+      <button class="tab ${tab==="overview"?"active":""}" data-tab="overview">Overview<span class="count">${storyN}</span></button>
+      <button class="tab ${tab==="details"?"active":""}" data-tab="details">Scope &amp; go-live<span class="count">${r.ts.length}</span></button>
+      <button class="tab ${tab==="deps"?"active":""}" data-tab="deps">Waiting on others<span class="count">${openDeps}${fu.length?" · 📞"+fu.length:""}</span></button>
+      <button class="tab ${tab==="subtasks"?"active":""}" data-tab="subtasks">Subtasks<span class="count">${sub.n}</span></button>
+      <span class="tind"></span>
+    </div></div><div class="detail-body" id="epBody"></div>`;}
+function epicOrderedDemands(e){const ts=tasksForEpic(e.id);return waveOrder(ts).flatMap(w=>ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"9999").localeCompare(b.receivedDate||"9999")));}
+function wireEpicHeadBench(host,e){
+  host.querySelectorAll("#ep-seg button").forEach(b=>b.onclick=()=>{const v=b.dataset.s;if(v===e.status)return;const was=e.status;e.status=v;
+    e.log.push({id:uid(),date:todayStr(),kind:"milestone",text:`Epic status: ${EPIC_STATUS[was].label} → ${EPIC_STATUS[v].label}`});touch(e);
+    flyDot(b,document.querySelector(`#epicList .tcard[data-id="${e.id}"]`),EPIC_PEN[v]);renderApp();toast("Epic status → "+EPIC_STATUS[v].label+" · noted in the story");});
+  const ed=host.querySelector("#ep-edit");if(ed)ed.onclick=()=>openEpicEdit(e);
+  const rs=host.querySelector("#ep-run");if(rs)rs.onclick=()=>openRunSheet(epicOrderedDemands(e),"◆ "+epicLabel(e),commonTarget(tasksForEpic(e.id)));}
+/* the classic header edits inline; Bench keeps the header clean and edits here */
+function openEpicEdit(e){
+  const root=document.getElementById("modalRoot");
+  root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:520px"><h2>✎ Edit epic</h2>
+    <div class="field"><label>Name</label><input id="ee-name" value="${esc(e.name)}"></div>
+    <div class="grid2"><div class="field"><label>Code</label><input id="ee-code" class="mono" value="${esc(e.code)}" placeholder="LUCA"></div>
+      <div class="field"><label>Owner — who drives it</label><input id="ee-owner" value="${esc(e.owner)}"></div></div>
+    <div class="grid2"><div class="field"><label>Target date</label><input type="date" id="ee-target" value="${e.targetDate||""}"></div>
+      <div class="field"><label>Status</label><select id="ee-status">${Object.entries(EPIC_STATUS).map(([k,v])=>`<option value="${k}" ${k===e.status?"selected":""}>${v.label}</option>`).join("")}</select></div></div>
+    <div class="grid2"><div class="field"><label>My role</label><select id="ee-role"><option value="lead" ${e.role==="lead"?"selected":""}>Lead — I own it</option><option value="contributor" ${e.role==="contributor"?"selected":""}>Contributor — one slice</option></select></div>
+      <div class="field"><label>Chase other teams every</label><div style="display:flex;gap:6px;align-items:center"><input type="number" id="ee-follow" min="1" max="365" value="${e.followDays}" style="width:90px"><span class="faint">days</span></div></div></div>
+    <div class="modal-foot"><button id="ee-cancel" class="ghost">Cancel</button><button id="ee-save" class="primary">Save</button></div></div></div>`;
+  const q=s=>root.querySelector(s),close=()=>root.innerHTML="";
+  q("#ee-cancel").onclick=close;q(".modal-bg").onclick=ev=>{if(ev.target===q(".modal-bg"))close();};
+  const save=()=>{const was=e.status,ns=q("#ee-status").value,fd=parseInt(q("#ee-follow").value,10);
+    e.name=q("#ee-name").value.trim()||"(untitled epic)";e.code=q("#ee-code").value.trim();e.owner=q("#ee-owner").value.trim();
+    e.targetDate=q("#ee-target").value;e.role=q("#ee-role").value;if(fd>0)e.followDays=fd;
+    if(ns!==was){e.status=ns;e.log.push({id:uid(),date:todayStr(),kind:"milestone",text:`Epic status: ${EPIC_STATUS[was].label} → ${EPIC_STATUS[ns].label}`});}
+    touch(e);close();renderApp();toast("Epic saved");};
+  q("#ee-save").onclick=save;
+  root.querySelectorAll("input").forEach(i=>i.onkeydown=ev=>{if(ev.key==="Enter")save();});
+  q("#ee-name").focus();}
+
+/* ---------- Epic overview: the story first, with who you're waiting on beside it ---------- */
+function renderEpicOverviewBench(body,e,r){
+  const story=epicStory(e),waves=waveOrder(r.ts),open=e.deps.filter(x=>!x.done).sort((a,b)=>(depFollowDue(e,b)?1:0)-(depFollowDue(e,a)?1:0)||(a.since||"9999").localeCompare(b.since||"9999"));
+  const doneN=e.deps.length-open.length,today=todayStr();
+  const depRow=x=>{const last=x.lastCheck||x.since,ago=last?Math.max(0,-daysUntil(last)):null,due=depFollowDue(e,x),snz=x.snoozeUntil&&x.snoozeUntil>today;
+    return `<div class="dep2 ${due?"due":""}" data-id="${x.id}"><canvas data-f="${ago==null?0:ago/e.followDays}" data-due="${due?1:0}" data-ago="${ago==null?"":ago}"></canvas>
+      <div class="dep2-t"><div class="dn">${esc(x.team||"(which team?)")}</div><div class="dw">${esc(x.what||"")}</div>
+        <div class="dm">${[x.since?`waiting ${Math.max(0,-daysUntil(x.since))} d`:"",ago!=null?`last contact ${ago} d ago`:"never chased",x.expected?`expected ${x.expected}`:""].filter(Boolean).join(" · ")}${due?` · <b>${esc(due)}</b>`:""}${snz?` · 💤 until ${x.snoozeUntil}`:""}</div></div>
+      <div class="dep2-a"><button class="sm d2-check" title="You chased them — log it in the story">📞 Checked in</button><span><button class="sm ghost d2-snooze" title="Don't nudge me about this until later">💤</button><button class="sm ghost d2-done" title="They delivered">✓</button></span></div></div>`;};
+  const waveRow=w=>{const rows=r.ts.filter(t=>(t.wave||"")===w),dn=rows.filter(t=>["delivered","closed"].includes(t.status)).length,tg=waveTarget(e,w),n=tg?daysUntil(tg):null,all=rows.length&&dn===rows.length;
+    return `<div class="wav2"><span class="wn">${w?esc(w):"<span class='faint'>no wave</span>"}</span><span class="wc mono">${dn}/${rows.length}</span>${dotBarSVG(rows.length?dn/rows.length:0,12,"var(--accent2)")}
+      <span class="wt mono ${all?"good":n!=null&&n<0?"bad":n!=null&&n<=14?"warn":""}">${all?"✓ done":tg?(n<0?(-n)+" d over":n===0?"today":"in "+n+" d"):"no target"}</span></div>`;};
+  const demRow=t=>{const d=earliestOpenDue(t),n=d?daysUntil(d):null;
+    return `<div class="dem2" data-id="${t.id}" style="--pen:${STATUS_PEN[t.status]}"><i></i><span class="mono di">${esc(t.demandId||"—")}</span><span class="dt">${esc(t.title)}${t.wave?` <span class="faint">· ${esc(t.wave)}</span>`:""}</span><span class="mono dd ${n!=null&&n<0?"bad":""}">${d?(n<0?(-n)+" d late":shortD(d)):STATUS[t.status].label.toLowerCase()}</span></div>`;};
+  body.innerHTML=`<div class="ep2">
+    <div class="bsec ep-story"><div class="sec-title"><h3>Story</h3><div class="ln"></div><span class="faint mono" style="font-size:10.5px">${story.length?`${story.length} events · ${story[0].date} → ${story[story.length-1].date}`:"nothing yet"}</span></div><div id="ep2Story"></div></div>
+    <div class="ep-side">
+      <div class="bsec"><div class="sec-title"><h3>Waiting on others</h3><div class="ln"></div><span class="faint" style="font-size:10.5px">chase every ${e.followDays} d</span><button class="sm ghost" id="ep2Add" title="Add something another team owes">＋</button></div>
+        ${open.length?open.map(depRow).join(""):`<div class="bempty">Nothing blocking — this epic is yours to drive.</div>`}
+        ${doneN||open.length?`<a class="bmore" id="ep2All">${doneN?doneN+" delivered · ":""}edit dates &amp; details ›</a>`:""}</div>
+      ${waves.length>1||(waves.length===1&&waves[0])?`<div class="bsec"><div class="sec-title"><h3>Waves</h3><div class="ln"></div><a class="bmore" id="ep2Waves" style="margin:0">targets ›</a></div>${waves.map(waveRow).join("")}</div>`:""}
+      <div class="bsec"><div class="sec-title"><h3>Demands</h3><div class="ln"></div><span class="faint mono" style="font-size:10.5px">${r.done}/${r.ts.length} done</span></div>
+        ${r.ts.length?epicOrderedDemands(e).map(demRow).join(""):`<div class="bempty">No demands yet — use 🔗 Assign demands above.</div>`}</div>
+    </div></div>`;
+  renderEpicStory(body.querySelector("#ep2Story"),e);
+  body.querySelectorAll(".dep2").forEach(row=>{const x=e.deps.find(d=>d.id===row.dataset.id);if(!x)return;
+    row.querySelector(".d2-check").onclick=()=>depCheckIn(e,x);
+    row.querySelector(".d2-snooze").onclick=()=>depSnooze(e,x);
+    row.querySelector(".d2-done").onclick=()=>depDelivered(e,x);
+    const cv=row.querySelector("canvas"),f=+cv.dataset.f,due=cv.dataset.due==="1",ago=cv.dataset.ago,st={v:motionOn()?0:Math.min(1,f)};
+    DK.scope(cv,(ctx,w,h)=>{st.v+=(Math.min(1,f)-st.v)*.06;DK.dotArc(ctx,w/2,h/2+5,Math.min(w/2,h/1.45)-4,st.v,26,due?DK.C.bad:DK.C.watch,1.8);
+      DK.label(ctx,ago===""?"—":ago+"d",w/2,h/2+13,{font:DK.MONO,size:9,weight:600,color:due?DK.C.bad:DK.C.ink});});});
+  body.querySelectorAll(".dem2").forEach(row=>row.onclick=()=>goEpicDemand(row.dataset.id));
+  const q=s=>body.querySelector(s);
+  if(q("#ep2Add"))q("#ep2Add").onclick=()=>{e.deps.push(normDep({since:todayStr()}));touch(e);epicTab="deps";renderEpicDetail();};
+  if(q("#ep2All"))q("#ep2All").onclick=()=>{epicTab="deps";renderEpicDetail();enterPulse("detail");};
+  if(q("#ep2Waves"))q("#ep2Waves").onclick=()=>{epicTab="details";renderEpicDetail();enterPulse("detail");};
+}
+
+/* ---------- panels: frame each titled section, on the live page ---------- */
+function wrapSections(root){if(!root||!benchOn())return;
+  root.querySelectorAll(".sec-title").forEach(h=>{const p=h.parentElement;
+    if(!p||h.closest(".bsec,.modal,.trcard,.ck-unit,.dashcard,.resume-box,.pinbox"))return;
+    const box=document.createElement("div");box.className="bsec";p.insertBefore(box,h);
+    /* a section runs to the next heading — or to a block that carries its own heading (it becomes its own panel) */
+    let n=h;while(n){const next=n.nextElementSibling;box.appendChild(n);n=next;if(n&&(n.classList.contains("sec-title")||n.querySelector(".sec-title")))break;}});}
+{const detail=document.getElementById("detail");let queued=false;
+  const obs=new MutationObserver(()=>{if(queued)return;queued=true;
+    queueMicrotask(()=>{obs.disconnect();try{wrapSections(detail);}finally{queued=false;obs.observe(detail,{childList:true,subtree:true});}});});
+  obs.observe(detail,{childList:true,subtree:true});}
 
 /* ===================== WIRE UP ===================== */
 document.querySelectorAll(".navbtn,.rb[data-view]").forEach(b=>b.onclick=()=>{view=b.dataset.view;meetingRollup=false;journalTodos=false;renderApp();});

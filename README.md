@@ -49,6 +49,26 @@ six themes. The classic themes keep the original layout exactly.
   dot travelling toward the next import, a pulsing ring if unreleased). Tabs have
   a sliding indicator. An **object clash** shows as a band under the title
   (in every theme) — with two orbiting dots in Bench.
+- **Demand page:** a header with the ID line (◆ epic and wave link to the
+  epic), a large title, and a readouts strip — received, due (days late),
+  age, system/client, go-live (TRs at the target), subtasks, rework, waiting
+  on. Next action and object clash appear as bands under it. Every tab's
+  sections sit in framed panels; notes are writing panels; subtasks, actions
+  and comments are dotted rows with dot checkboxes; **History is a timeline**
+  with a dot per event in its status colour.
+- **Epic page:** a header with the epic's status control and ✎ Edit (name,
+  code, owner, target, status, role, how often to chase), 📄 Epic brief,
+  📋 Run sheet and 🔗 Assign demands; readouts for demands, done, overdue,
+  transports short of go-live, waiting on others, days to target and story
+  size; a ⏸ Parked band when nothing of yours is moving. **Overview puts the
+  Story first** — add entries, filter sources, every event on one timeline —
+  with a side column: **Waiting on others** (a gauge per team of days since you
+  last chased them against your follow-up interval, and 📞 Checked in / 💤 /
+  ✓ right there), **Waves** (progress and target) and the epic's **Demands**.
+  *Scope & go-live* holds the description, wave targets, go-live readiness,
+  objects and transports; *Waiting on others* keeps the full editable table.
+- **Every other workspace** (Debug, Journal, Meetings, Playbook, Vault) gets the
+  same voice: large titles, labelled fields, panels per section, dotted rows.
 - **Entrances:** content rises in when you arrive somewhere, never on ordinary
   edits.
 - **Motion** — ⋯ → Settings → Motion: *Follow Windows* (default; honours
