@@ -1,0 +1,848 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Effort — mockup</title>
+<script>try{var t=localStorage.getItem("ddmock3.theme")||"light";document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme="light";}</script>
+<style>
+/* ======================================================================
+   MOCKUP — logging effort on demands, and a workspace to see it.
+   Sample data only (26 weeks, generated). Tokens/shell as in Bench.
+   ====================================================================== */
+:root{
+  --paper:#FFFFFF; --paper-2:#FBFAF7; --grid-dot:#DEDDD6; --rule:#E7E6DF; --rule-strong:#D6D5CC;
+  --ink:#12141A; --ink-2:#5A5E68; --ink-3:#9A9EA8; --ink-4:#C3C5CB;
+  --pen-1:#D93A1E; --pen-2:#1B4FA0; --pen-3:#0E7C63; --pen-4:#B07500; --pen-5:#6B3FA0; --pen-6:#C2410C; --pen-7:#1F8AA8; --pen-8:#A8336E;
+  --good:#0E7C63; --watch:#B07500; --bad:#D93A1E;
+  --mono:"Cascadia Mono","JetBrains Mono",Consolas,ui-monospace,monospace;
+  --sans:"Segoe UI Variable Text","Segoe UI","Inter",system-ui,sans-serif;
+  --r:3px; --gap:14px; color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --paper:#0E0F12; --paper-2:#15161B; --grid-dot:#24262D; --rule:#1F2127; --rule-strong:#30333B;
+  --ink:#E8E9EC; --ink-2:#A6AAB3; --ink-3:#6E727C; --ink-4:#383B43;
+  --pen-1:#FF5A3C; --pen-2:#5B8DEF; --pen-3:#2BC29B; --pen-4:#E0A526; --pen-5:#A57BE8; --pen-6:#F07A3A; --pen-7:#4CC3E0; --pen-8:#E36BA8;
+  --good:#2BC29B; --watch:#E0A526; --bad:#FF5A3C; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden;font-size:13px}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+button:disabled{opacity:.35;cursor:default}
+input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:1.5px solid var(--ink-2);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.lbl{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.dim{color:var(--ink-3)}
+kbd{font-family:var(--mono);font-size:9.5px;border:1px solid var(--rule-strong);border-bottom-width:2px;border-radius:3px;padding:1px 5px;color:var(--ink-2);background:var(--paper)}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:var(--rule-strong);border:3px solid var(--paper);border-radius:6px}::-webkit-scrollbar-track{background:transparent}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.rise{animation:rise .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*55ms)}
+
+/* ---------------- shell (as Bench) ---------------- */
+.app{display:grid;grid-template-columns:58px minmax(0,1fr);grid-template-rows:42px minmax(0,1fr) 26px;height:100vh}
+.tb{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:0 12px 0 16px;border-bottom:1px solid var(--rule);background:var(--paper);z-index:5}
+.wm{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:12px;letter-spacing:.34em;font-weight:600;white-space:nowrap}
+.wm em{font-style:normal;font-family:var(--sans);letter-spacing:.2em;font-size:8.5px;color:var(--ink-3);font-weight:600;text-transform:uppercase}
+.mark{width:18px;height:18px;display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:2px}
+.mark i{width:4px;height:4px;border-radius:50%;background:var(--ink-4)}.mark i.on{background:var(--ink)}
+.crumb{font-family:var(--mono);font-size:11px;color:var(--ink-3);white-space:nowrap}.crumb b{color:var(--ink);font-weight:500}
+.mockbadge{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--pen-5);border:1px dashed var(--pen-5);border-radius:var(--r);padding:2px 6px;white-space:nowrap}
+.scn{display:flex;border:1px solid var(--rule-strong);border-radius:var(--r);overflow:hidden;height:26px;margin-left:auto}
+.scn button{padding:0 12px;font-size:10.5px;color:var(--ink-3);border-left:1px solid var(--rule);letter-spacing:.03em;white-space:nowrap}
+.scn button:first-child{border-left:0}
+.scn button.on{color:var(--ink);background:var(--paper-2);box-shadow:inset 0 -2px 0 var(--ink)}
+.iconbtn{width:26px;height:26px;display:grid;place-items:center;border-radius:var(--r);color:var(--ink-2)}.iconbtn:hover{background:var(--rule)}
+.rail{grid-row:2;border-right:1px solid var(--rule);display:flex;flex-direction:column;align-items:center;padding:10px 0;gap:4px;position:relative;background:var(--paper)}
+.rail .ind{position:absolute;left:0;top:0;width:2px;height:26px;background:var(--pen-2);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.rb{position:relative;width:38px;height:38px;display:grid;place-items:center;border-radius:var(--r);color:var(--ink-3)}
+.rb.on{color:var(--ink)}.rb:hover{color:var(--ink);background:var(--paper-2)}
+.rb svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.35;stroke-linecap:round;stroke-linejoin:round}
+.rb .new{position:absolute;right:3px;top:4px;width:5px;height:5px;border-radius:50%;background:var(--pen-5)}
+.rail .sep{width:22px;border-top:1px solid var(--rule);margin:6px 0}
+.sb{grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 14px;border-top:1px solid var(--rule);font-family:var(--mono);font-size:10px;color:var(--ink-3);white-space:nowrap;background:var(--paper);z-index:5}
+.sb .led{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px}.sb .r{margin-left:auto}
+.tmr{display:inline-flex;align-items:center;gap:8px;color:var(--ink)}
+.tmr i{width:7px;height:7px;border-radius:50%;background:var(--bad);animation:blink 1.4s infinite}
+.tmr button{font-family:var(--mono);font-size:10px;color:var(--ink-2);border:1px solid var(--rule-strong);border-radius:3px;padding:1px 7px}
+.tmr button:hover{border-color:var(--ink-2);color:var(--ink)}
+@keyframes blink{50%{opacity:.2}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:28px;padding:0 11px;border:1px solid var(--rule-strong);border-radius:var(--r);font-size:11px;letter-spacing:.03em;color:var(--ink);background:var(--paper);white-space:nowrap;transition:border-color .18s}
+.btn:hover{border-color:var(--ink-2)}
+.btn.pri{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.pri kbd{background:transparent;color:var(--paper);border-color:color-mix(in srgb,var(--paper) 40%,transparent)}
+.btn.sm{height:24px;padding:0 8px;font-size:10.5px}
+.btn.ghost{border-color:transparent}.btn.ghost:hover{border-color:var(--rule-strong)}
+.inp{height:28px;border:1px solid var(--rule);border-radius:var(--r);background:var(--paper);padding:0 9px;font-size:12px;outline:0;width:100%;transition:border-color .2s}
+.inp:focus{border-color:var(--ink-2)}
+select.inp{padding:0 6px}
+.tag{display:inline-flex;align-items:center;gap:5px;height:18px;padding:0 6px;border:1px solid var(--rule);border-radius:var(--r);font-family:var(--mono);font-size:9.5px;color:var(--ink-2);white-space:nowrap;background:var(--paper)}
+.tag.pen{color:var(--pen);border-color:color-mix(in srgb,var(--pen) 36%,var(--rule))}
+.tag .t{font-size:8.5px;color:var(--ink-3)}
+.pdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--pen,var(--ink-3));flex:none}
+.late{color:var(--bad)}.soon{color:var(--watch)}.good{color:var(--good)}
+.unit{position:relative;min-width:0;background:var(--paper);border:1px solid var(--rule);border-radius:var(--r);padding:12px 15px 14px}
+.unit::before,.unit::after{content:"";position:absolute;width:7px;height:7px;border:solid var(--rule-strong);pointer-events:none;transition:width .3s,height .3s,border-color .3s}
+.unit::before{top:-1px;left:-1px;border-width:1px 0 0 1px}.unit::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
+.unit:hover::before,.unit:hover::after{width:14px;height:14px;border-color:var(--ink-3)}
+.head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding-bottom:9px;margin-bottom:10px;border-bottom:1px solid var(--rule)}
+.head h2{margin:0;font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;white-space:nowrap}
+.meta{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.paper{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle at 1px 1px,var(--grid-dot) 1px,transparent 0);background-size:22px 22px;opacity:.5;-webkit-mask-image:radial-gradient(ellipse 130% 100% at 50% 0%,#000 30%,transparent 92%)}
+.ro{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule)}
+.ro>div{background:var(--paper);padding:8px 10px 9px;min-width:0}
+.ro .k{display:block;font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px;white-space:nowrap;font-weight:600}
+.ro .v{display:block;font-family:var(--mono);font-size:15px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ro .v small{font-size:9.5px;color:var(--ink-3);margin-left:4px}
+.ro .v small.good{color:var(--good)}.ro .v small.late{color:var(--bad)}
+.ro .ed{cursor:pointer}.ro .ed:hover{background:var(--paper-2)}
+.ro .ed .k::after{content:" ✎";letter-spacing:0}
+.ro .ed input{width:70px;height:22px;font-family:var(--mono);font-size:13px}
+.legend{display:flex;gap:14px;font-size:10.5px;color:var(--ink-3);margin-top:8px;flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:6px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap)}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--gap)}
+.gw{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:var(--gap);align-items:start}
+.stack{display:grid;gap:var(--gap)}
+#main{grid-row:2;min-height:0;position:relative;display:grid}
+
+/* ---------------- scene A: a demand ---------------- */
+.dsc{display:grid;grid-template-columns:330px minmax(0,1fr);min-height:0;position:relative}
+.lp{display:flex;flex-direction:column;min-height:0;border-right:1px solid var(--rule);background:var(--paper);position:relative;z-index:1}
+.lp-top{padding:12px 12px 10px;display:grid;gap:8px;border-bottom:1px solid var(--rule)}
+.lp-list{flex:1;overflow:auto;padding-bottom:20px}
+.lr{position:relative;display:grid;gap:4px;padding:10px 12px 10px 16px;border-bottom:1px dotted var(--rule-strong);cursor:pointer;transition:background .2s}
+.lr::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:2px;background:var(--pen);transition:top .25s,bottom .25s}
+.lr:hover,.lr.on{background:var(--paper-2)}
+.lr.on::before{top:0;bottom:0;width:3px}
+.lr.on::after{content:"";position:absolute;right:-1px;top:50%;width:8px;height:8px;background:var(--paper);border-left:1px solid var(--rule);border-top:1px solid var(--rule);transform:translateY(-50%) rotate(-45deg)}
+.lr .l1{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;color:var(--pen);letter-spacing:.05em}
+.lr .l1 .ep{color:var(--pen-5)}
+.lr .l1 .when{margin-left:auto;color:var(--ink-3)}
+.lr .tt{font-size:12.5px;font-weight:600;line-height:1.35}
+.lr .l3{display:flex;align-items:center;gap:6px}
+.lr .l3 svg{margin-left:auto}
+.lr.closed{opacity:.55}
+.dd{min-height:0;overflow:auto;position:relative;z-index:1}
+.dd-in{padding:20px 26px 60px;max-width:1240px}
+.hd .l1{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;color:var(--pen);letter-spacing:.14em;text-transform:uppercase}
+.hd .l1 a{color:var(--pen-5)}
+.hd .top{display:flex;gap:18px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.hd h1{margin:5px 0 0;font-size:25px;font-weight:600;letter-spacing:-.015em;line-height:1.2}
+.hd .sub{font-size:12px;color:var(--ink-3);margin-top:5px}
+.hd .acts{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.hd .acts .row{display:flex;gap:6px}
+.hd .ro{margin-top:14px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--rule);margin:18px 0 16px;position:relative}
+.tabs button{padding:9px 12px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3);font-weight:600;display:flex;gap:7px;align-items:baseline}
+.tabs button:hover{color:var(--ink-2)}.tabs button.on{color:var(--ink)}
+.tabs button .n{font-family:var(--mono);font-size:10px;letter-spacing:0;font-weight:400;color:var(--ink-3)}
+.tabs button .nw{font-size:7.5px;letter-spacing:.14em;color:var(--pen-5);border:1px dashed var(--pen-5);border-radius:2px;padding:0 3px}
+.tabs .tind{position:absolute;bottom:-1px;height:2px;background:var(--pen);transition:left .35s,width .35s}
+.pane{display:grid;gap:var(--gap)}
+/* instruments */
+.ins{display:flex;align-items:center;gap:12px;padding:12px 14px}
+.ins canvas{width:58px;height:58px;flex:none}
+.ins .k{font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.ins .v{font-family:var(--mono);font-size:18px;margin-top:3px;white-space:nowrap}
+.ins .v small{font-size:10px;color:var(--ink-3);margin-left:3px}
+.ins .s{font-size:10.5px;color:var(--ink-3);margin-top:2px}
+canvas.lifec{width:100%;height:220px;display:block}
+/* the log */
+.wkh{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:16px 0 0;padding-bottom:5px;border-bottom:1px solid var(--rule)}
+.wkh:first-child{margin-top:0}
+.wkh b{font-family:var(--mono);letter-spacing:0;color:var(--ink-2);font-weight:500}
+.ent{display:grid;grid-template-columns:52px 92px minmax(0,1fr) auto;gap:10px;align-items:start;padding:8px 0;border-top:1px dotted var(--rule-strong);font-size:12px;line-height:1.45}
+.wkh+.ent{border-top:0}
+.ent .d{font-family:var(--mono);font-size:10px;color:var(--ink-3);padding-top:2px}
+.ent .h{display:grid;gap:3px;font-family:var(--mono);font-size:11px}
+.ent .x{display:grid;gap:4px;color:var(--ink)}
+.ent .x .tg{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ent .x .sb2{font-size:10.5px;color:var(--ink-3)}
+.ent .ops{opacity:0;display:flex;gap:2px;transition:opacity .15s}.ent:hover .ops{opacity:1}
+.ent.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%{background:color-mix(in srgb,var(--good) 18%,var(--paper))}100%{background:transparent}}
+.more{margin-top:10px}
+.brow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 10px;padding:6px 0;border-top:1px dotted var(--rule-strong);font-size:11.5px;align-items:center}
+.brow:first-child{border-top:0}
+.brow .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;gap:6px;align-items:center}
+.brow .v{font-family:var(--mono);font-size:10.5px;text-align:right;color:var(--ink-2)}
+.brow svg{grid-column:1/-1;display:block}
+
+/* composer (inline + modal) */
+.qc{display:grid;gap:12px}
+.qrow{display:flex;gap:26px;flex-wrap:wrap}
+.fl{display:grid;gap:5px;min-width:0}
+.fl>span{font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.dayp,.hrs,.acts{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.dayp input{width:136px;font-family:var(--mono);font-size:11.5px}
+.hin{width:76px;font-family:var(--mono)}
+.chip{height:26px;padding:0 9px;border:1px solid var(--rule);border-radius:var(--r);font-size:11px;color:var(--ink-2);background:var(--paper);display:inline-flex;align-items:center;gap:6px;transition:border-color .15s,background .15s,color .15s;white-space:nowrap}
+.chip:hover{border-color:var(--ink-3);color:var(--ink)}
+.chip.on{border-color:var(--pen,var(--ink));color:var(--ink);background:var(--paper-2);box-shadow:inset 0 -2px 0 var(--pen,var(--ink))}
+.note{height:auto;min-height:52px;padding:7px 9px;resize:vertical;line-height:1.5}
+.qfoot{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.dsf{margin-right:auto;display:flex;align-items:center;gap:10px;font-size:11px;color:var(--ink-3)}
+.dsf b{color:var(--ink);font-weight:500}
+.shake{animation:shake .35s}
+@keyframes shake{20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
+.ov{position:fixed;inset:0;z-index:40;background:rgba(10,12,16,.3);display:none;place-items:start center;padding-top:9vh}
+.ov.on{display:grid;animation:fadein .2s both}
+.ov>.unit{width:min(660px,94vw);padding:16px 18px;box-shadow:0 30px 80px rgba(0,0,0,.2);animation:rise .3s both}
+
+/* ---------------- scene B: the Effort workspace ---------------- */
+.ew{overflow:auto;min-height:0;position:relative}
+.ew-in{position:relative;z-index:1;padding:20px 26px 60px;max-width:1440px;display:grid;gap:var(--gap)}
+.ewh{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.ewh .l1{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--pen-2);text-transform:uppercase}
+.ewh h1{margin:5px 0 0;font-size:25px;font-weight:600;letter-spacing:-.015em}
+.ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sg{display:flex;border:1px solid var(--rule-strong);border-radius:var(--r);overflow:hidden;height:28px}
+.sg .cap{padding:0 8px;display:flex;align-items:center;font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);font-weight:600;background:var(--paper-2);border-right:1px solid var(--rule)}
+.sg button{padding:0 10px;font-size:10.5px;color:var(--ink-3);border-left:1px solid var(--rule);white-space:nowrap}
+.sg .cap+button{border-left:0}
+.sg button:hover{color:var(--ink)}
+.sg button.on{color:var(--ink);background:var(--paper-2);box-shadow:inset 0 -2px 0 var(--ink)}
+.lgrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.lgi{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border:1px solid var(--rule);border-radius:var(--r);font-size:11px;color:var(--ink-2);background:var(--paper);transition:all .2s}
+.lgi b{font-family:var(--mono);font-weight:500;font-size:10px;color:var(--ink-3)}
+.lgi:hover{border-color:var(--ink-3)}
+.lgi.on{border-color:var(--pen);color:var(--ink);box-shadow:inset 0 -2px 0 var(--pen)}
+.lgi.off{opacity:.4}
+canvas.cal{width:100%;height:270px;display:block}
+canvas.wkc{width:100%;height:260px;display:block}
+.mixw{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;align-items:center}
+.mixw canvas{width:150px;height:150px}
+.mrow{display:grid;grid-template-columns:8px minmax(0,1fr) auto 34px;gap:8px;align-items:center;font-size:11.5px;padding:4px 0;border-top:1px dotted var(--rule-strong)}
+.mrow:first-child{border-top:0}
+.mrow i{width:7px;height:7px;border-radius:50%;background:var(--pen)}
+.mrow .h{font-family:var(--mono);font-size:10.5px}
+.mrow .p{font-family:var(--mono);font-size:10px;color:var(--ink-3);text-align:right}
+.nt{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 0;border-top:1px dotted var(--rule-strong);font-size:12.5px;color:var(--ink-2)}
+.nt:first-of-type{border-top:0}
+.nt i{width:7px;height:7px;border-radius:50%;background:var(--pen)}
+.nt b{color:var(--ink);font-weight:600}
+.wnav{display:flex;gap:4px;align-items:center}
+.sheet{width:100%;border-collapse:collapse}
+.sheet th{font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);font-weight:600;padding:6px;text-align:left;border-bottom:1px solid var(--rule);white-space:nowrap}
+.sheet th.c{text-align:center}
+.sheet th small{display:block;font-family:var(--mono);letter-spacing:0;font-size:9.5px;font-weight:400;margin-top:2px;text-transform:none}
+.sheet td{padding:7px 6px;border-bottom:1px dotted var(--rule-strong);font-size:12px}
+.sheet td.c{text-align:center;font-family:var(--mono);width:84px;cursor:pointer;transition:background .15s}
+.sheet td.c.has{color:var(--ink)}
+.sheet td.c:hover{background:var(--paper-2)}
+.sheet td.c.e:hover::after{content:"＋";color:var(--ink-3)}
+.sheet td.c.fu{cursor:default}.sheet td.c.fu:hover::after{content:""}
+.sheet .we{background:color-mix(in srgb,var(--paper-2) 80%,transparent);color:var(--ink-3)}
+.sheet .td{background:color-mix(in srgb,var(--pen-2) 6%,transparent)}
+.sheet th.td{color:var(--pen-2)}
+.sheet .rl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:420px}
+.sheet .tt{text-align:right;font-family:var(--mono);font-weight:600;width:70px}
+.sheet tfoot td{border-bottom:0;border-top:1px solid var(--rule);font-family:var(--mono);font-size:11px;text-align:center;vertical-align:top}
+.sheet tfoot td.rl{text-align:left;font-family:var(--sans)}
+.sheet tfoot svg{display:block;margin:2px auto 3px}
+.sheet .pin{animation:flash 1.6s ease-out}
+.erow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:7px 0;border-top:1px dotted var(--rule-strong);font-size:11.5px;cursor:pointer}
+.erow:first-child{border-top:0}
+.erow:hover .n b{text-decoration:underline}
+.erow .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.erow .v{font-family:var(--mono);font-size:10.5px;text-align:right}
+.erow svg{grid-column:1/-1;display:block}
+.big{font-family:var(--mono);font-size:24px}
+.big small{font-size:11px;color:var(--ink-3);margin-left:4px}
+.rh{display:flex;justify-content:space-around;align-items:flex-end;height:140px;padding-top:6px}
+.rh>div{display:flex;flex-direction:column;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--ink-3)}
+.rh>div b{font-weight:500;color:var(--ink-2)}
+.rh>div.mx b{color:var(--ink)}
+/* day drawer */
+.drw{position:fixed;top:42px;right:0;bottom:26px;width:min(440px,92vw);background:var(--paper);border-left:1px solid var(--rule-strong);box-shadow:-20px 0 60px rgba(0,0,0,.12);z-index:30;transform:translateX(102%);transition:transform .4s cubic-bezier(.2,.8,.2,1);overflow:auto;padding:18px 20px 30px}
+.drw.on{transform:none}
+.drw .close{position:absolute;top:14px;right:16px}
+.drw h2{margin:6px 0 8px;font-size:20px;font-weight:600}
+.dsum{display:flex;gap:10px;align-items:center;font-size:11.5px;color:var(--ink-3);padding-bottom:12px;border-bottom:1px solid var(--rule);margin-bottom:4px}
+.de{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:4px 10px;padding:10px 0;border-top:1px dotted var(--rule-strong);font-size:12px;line-height:1.5}
+.de:first-of-type{border-top:0}
+.de>i{width:7px;height:7px;border-radius:50%;background:var(--pen);margin-top:6px}
+.de .t{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:3px}
+.de.hi{background:color-mix(in srgb,var(--pen) 8%,transparent);margin:0 -10px;padding:10px}
+/* tooltip, toast, explain */
+.tip{position:fixed;z-index:70;pointer-events:none;background:var(--paper);border:1px solid var(--rule-strong);border-radius:var(--r);padding:8px 10px;font-size:11px;color:var(--ink-2);box-shadow:0 10px 30px rgba(0,0,0,.14);min-width:190px;max-width:330px;display:none;line-height:1.55}
+.tip.on{display:block}
+.tip b{color:var(--ink)}
+.tip .r{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:7px;align-items:center}
+.tip .r i{width:6px;height:6px;border-radius:50%;background:var(--pen)}
+.tip .r span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tip .r span:last-child{font-family:var(--mono)}
+.tip .hint{margin-top:4px;font-size:10px;color:var(--ink-3)}
+.toast{position:fixed;bottom:40px;left:50%;transform:translate(-50%,20px);opacity:0;z-index:60;background:var(--ink);color:var(--paper);padding:9px 14px;border-radius:var(--r);font-size:11.5px;transition:all .3s;pointer-events:none;display:flex;gap:10px;align-items:center}
+.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}.toast .p{width:6px;height:6px;border-radius:50%}
+.toast button{color:var(--paper);border:1px solid color-mix(in srgb,var(--paper) 40%,transparent);border-radius:3px;padding:1px 8px;font-size:11px}
+.explain{position:fixed;left:74px;bottom:38px;z-index:35;width:380px;padding:12px 14px;font-size:11.5px;line-height:1.55;color:var(--ink-2);display:none;box-shadow:0 20px 60px rgba(0,0,0,.12)}
+.explain.on{display:block;animation:rise .4s both}
+.explain b{color:var(--ink)}
+.explain ol{margin:6px 0 0;padding-left:18px}
+.explain li{margin-bottom:3px}
+.explain code{font-family:var(--mono);font-size:10.5px;color:var(--ink)}
+@media (max-width:1280px){.g4{grid-template-columns:1fr 1fr}.gw{grid-template-columns:1fr}.g3{grid-template-columns:1fr 1fr}}
+@media (max-width:1180px){.dsc{grid-template-columns:280px minmax(0,1fr)}.g3{grid-template-columns:1fr}.mockbadge{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="tb">
+    <div class="wm"><div class="mark" id="mark"></div>DEMAND DESK<em>abap work tracker</em></div>
+    <div class="crumb" id="crumb"></div>
+    <span class="mockbadge">effort mockup · sample data</span>
+    <div class="scn" id="scn"><button data-s="demand">① Logging, on a demand</button><button data-s="effort">② The Effort workspace</button></div>
+    <button class="btn sm ghost" id="whatBtn">What's in it?</button>
+    <button class="btn sm pri" id="logBtn">⏱ Log time <kbd>T</kbd></button>
+    <button class="iconbtn" id="themeBtn" title="Paper / Backlit"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="6"/><path d="M8 2a6 6 0 0 0 0 12z" fill="currentColor"/></svg></button>
+  </header>
+  <nav class="rail" id="rail">
+    <div class="ind" id="ind"></div>
+    <button class="rb" data-r="today" title="Today"><svg viewBox="0 0 18 18"><rect x="2.5" y="2.5" width="5" height="5"/><rect x="10.5" y="2.5" width="5" height="5"/><rect x="2.5" y="10.5" width="5" height="5"/><rect x="10.5" y="10.5" width="5" height="5"/></svg></button>
+    <div class="sep"></div>
+    <button class="rb" data-r="demand" title="Demands"><svg viewBox="0 0 18 18"><path d="M3 4.5h12M3 9h12M3 13.5h7"/><circle cx="14" cy="13.5" r="1.4"/></svg></button>
+    <button class="rb" data-r="x" title="Epics"><svg viewBox="0 0 18 18"><path d="M9 2.5l6.5 6.5L9 15.5 2.5 9z"/><path d="M9 6v6"/></svg></button>
+    <button class="rb" data-r="x" title="Debug"><svg viewBox="0 0 18 18"><rect x="5" y="5" width="8" height="10" rx="4"/><path d="M9 5V3M5 9H2.5M15.5 9H13"/></svg></button>
+    <button class="rb" data-r="x" title="Journal"><svg viewBox="0 0 18 18"><path d="M4 2.5h9a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4z"/><path d="M7 6.5h4M7 9.5h4"/></svg></button>
+    <button class="rb" data-r="x" title="Meetings"><svg viewBox="0 0 18 18"><circle cx="6.5" cy="7" r="2.3"/><circle cx="12.5" cy="7.5" r="1.8"/><path d="M2.5 15c.6-2.4 2.2-3.6 4-3.6s3.4 1.2 4 3.6"/></svg></button>
+    <button class="rb" data-r="effort" title="Effort (new)"><svg viewBox="0 0 18 18"><circle cx="9" cy="10" r="5.8"/><path d="M9 7v3.2l2.2 1.4M7.3 2.5h3.4M9 2.5v1.7"/></svg><span class="new"></span></button>
+  </nav>
+  <main id="main"></main>
+  <footer class="sb">
+    <span><span class="led" style="background:var(--good)"></span>local-only · no network</span>
+    <span>demand-desk-data.json</span>
+    <span id="sbToday"></span>
+    <span id="tmr"></span>
+    <span class="r">effort · mockup</span>
+  </footer>
+</div>
+
+<div class="ov" id="ov"><div class="unit"><div class="head"><h2 id="ovT">Log time</h2><span class="meta">Ctrl+Enter logs · Esc closes</span></div><div id="ovBody"></div></div></div>
+<aside class="drw" id="drw"></aside>
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"><span class="p" id="toastP"></span><span id="toastT"></span><button id="toastA" style="display:none"></button></div>
+<div class="unit explain" id="explain"><b>What this mockup proposes</b><ol>
+  <li><b>Log from anywhere</b> — <b>⏱ Log time</b> or <kbd>T</kbd>. Pick the day, the hours (<code>2</code>, <code>1.5</code>, <code>2h30</code>, <code>90m</code>), an activity and what you did. The bar shows how full that day already is.</li>
+  <li><b>A timer</b> in the status bar: start it on a demand, stop it and the hours are filled in for you.</li>
+  <li><b>Effort tab on every demand</b> — how the hours fell across its life, with the status line above and the running total against an <b>estimate</b>. Hours logged while it was in <b>Bug</b> count as <b>rework</b> automatically.</li>
+  <li><b>Effort workspace</b> (new rail icon) — 26 weeks in dots, where the hours went (by demand · epic · activity · theme), the activity mix, a <b>week sheet</b> you can copy into your timesheet, estimate vs actual, rework cost, your weekday rhythm, and things worth noticing.</li>
+  <li><b>Not every hour is a demand</b>: meetings, admin, support and learning are buckets too, so your days add up.</li>
+  <li>In the real app, <b>Today</b> would also show “logged today 3.5 / 8 h” and nudge you about days with no log.</li>
+  <li>Data: one list in your JSON — <code>efforts[{date, hours, demand or bucket, activity, note, subtask}]</code>. Nothing else changes.</li></ol>
+  <button class="btn sm" style="margin-top:8px" id="explainX">Got it</button></div>
+
+<script>
+"use strict";
+/* ---------- dots + one animation loop (as Bench) ---------- */
+const TAU=Math.PI*2,C={};let MONO="monospace",SANS="sans-serif";
+const KEYS=["paper","paper-2","ink","ink-2","ink-3","ink-4","rule","rule-strong","pen-1","pen-2","pen-3","pen-4","pen-5","pen-6","pen-7","pen-8","good","watch","bad"];
+const scopes=[];
+function readColors(){const cs=getComputedStyle(document.documentElement);KEYS.forEach(k=>C[k]=cs.getPropertyValue("--"+k).trim());MONO=cs.getPropertyValue("--mono").trim();SANS=cs.getPropertyValue("--sans").trim();scopes.forEach(s=>s.w=0);}
+function dot(c,x,y,r,col,a=1){c.globalAlpha=a;c.fillStyle=col;c.beginPath();c.arc(x,y,Math.max(.1,r),0,TAU);c.fill();}
+function ring(c,x,y,r,col,a=1,lw=1){c.globalAlpha=a;c.strokeStyle=col;c.lineWidth=lw;c.beginPath();c.arc(x,y,r,0,TAU);c.stroke();}
+function label(c,t,x,y,{font=SANS,size=9,weight=600,color=C["ink-3"],align="center",base="middle"}={}){c.globalAlpha=1;c.fillStyle=color;c.font=`${weight} ${size}px ${font}`;c.textAlign=align;c.textBaseline=base;c.fillText(t,x,y);}
+function dotRing(c,cx,cy,R,frac,n,col){for(let i=0;i<n;i++){const t=i/n,a=-Math.PI/2+t*TAU,x=cx+Math.cos(a)*R,y=cy+Math.sin(a)*R;if(t<frac)dot(c,x,y,1.7,col,.55+.45*(t/frac));else dot(c,x,y,1.05,C["ink-4"]);}}
+function dotArc(c,cx,cy,R,frac,n,col){const a0=.78*Math.PI,sw=1.44*Math.PI,f=Math.max(0,Math.min(1,frac));for(let i=0;i<n;i++){const t=i/(n-1),a=a0+sw*t;if(t<=f&&f>0)dot(c,cx+Math.cos(a)*R,cy+Math.sin(a)*R,1.8,col,.5+.5*t/f);else dot(c,cx+Math.cos(a)*R,cy+Math.sin(a)*R,1.05,C["ink-4"]);}}
+function scope(cv,draw){if(!cv)return null;const r={cv,draw,ctx:cv.getContext("2d"),w:0,h:0,born:performance.now(),hits:[],hv:null};scopes.push(r);return r;}
+let last=performance.now();
+(function frame(t){const dt=Math.min(64,t-last);last=t;const dpr=devicePixelRatio||1;
+  for(let i=scopes.length-1;i>=0;i--){const s=scopes[i];if(!s.cv.isConnected){scopes.splice(i,1);continue;}if(s.cv.offsetParent===null)continue;
+    const w=s.cv.clientWidth,h=s.cv.clientHeight;if(!w||!h)continue;if(w!==s.w||h!==s.h){s.w=w;s.h=h;s.cv.width=w*dpr;s.cv.height=h*dpr;}
+    s.ctx.setTransform(dpr,0,0,dpr,0,0);s.ctx.clearRect(0,0,w,h);s.ctx.globalAlpha=1;try{s.draw(s.ctx,w,h,t,dt,s);}catch(e){console.error(e);scopes.splice(i,1);}}
+  requestAnimationFrame(frame);})(last);
+const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const prog=(s,ms)=>reduced?1:Math.min(1,(performance.now()-s.born)/ms),ease=x=>1-Math.pow(1-Math.max(0,Math.min(1,x)),3);
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const p2=n=>String(n).padStart(2,"0"),iso=d=>`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;
+const dd=n=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()+n);return iso(d);};
+const TODAY=dd(0),days=s=>Math.round((new Date(s+"T00:00:00")-new Date(TODAY+"T00:00:00"))/864e5);
+const dow=s=>new Date(s+"T00:00:00").getDay();
+const sh=s=>new Date(s+"T00:00:00").toLocaleDateString("en-GB",{day:"2-digit",month:"short"});
+const wdl=s=>new Date(s+"T00:00:00").toLocaleDateString("en-GB",{weekday:"short",day:"2-digit",month:"short"});
+const wdLong=s=>new Date(s+"T00:00:00").toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
+const wdd=s=>new Date(s+"T00:00:00").toLocaleDateString("en-GB",{weekday:"short"})+" "+new Date(s+"T00:00:00").getDate();
+const mondayOff=off=>off-((dow(dd(off))+6)%7);
+const fh=h=>{const r=Math.round(h*100)/100;return Number.isInteger(r)?String(r):String(r).replace(/0+$/,"");};
+const sumH=a=>a.reduce((s,e)=>s+e.h,0);
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+function parseH(s){s=String(s||"").trim().toLowerCase().replace(",",".");if(!s)return 0;let m;
+  if((m=s.match(/^(\d+(?:\.\d+)?)\s*h(?:\s*(\d+)\s*m?)?$/)))return +m[1]+(m[2]?+m[2]/60:0);
+  if((m=s.match(/^(\d+)\s*m(?:in)?$/)))return +m[1]/60;
+  if((m=s.match(/^(\d+):(\d{1,2})$/)))return +m[1]+ +m[2]/60;
+  if(/^\d+(\.\d+)?$/.test(s))return +s;return NaN;}
+
+/* ---------- sample world ---------- */
+const STATUS={open:{l:"Open",pen:"pen-2"},progress:{l:"In progress",pen:"pen-4"},bug:{l:"Bug / rework",pen:"pen-1"},delivered:{l:"Delivered",pen:"pen-3"},closed:{l:"Closed",pen:"ink-3"}};
+const EPICS={LUCA:{name:"FI ageing & month-end pack",pen:"pen-5"},HRX:{name:"OData HR services",pen:"pen-2"}};
+const ACT=[["Analysis","pen-2"],["Build","pen-3"],["Testing","pen-6"],["Debug / fix","pen-1"],["Transport & Basis","pen-4"],["Documentation","pen-5"],["Meetings & admin","ink-3"],["Support","pen-7"],["Learning","pen-8"]];
+const ACTC=Object.fromEntries(ACT),ACT_ORD=ACT.map(a=>a[0]),DEMAND_ACTS=ACT_ORD.slice(0,6);
+const THEMEC={Finance:"pen-2",HR:"pen-3",Payroll:"pen-1",Travel:"pen-4",Controlling:"pen-6"};
+const NON={_mtg:{l:"Meetings",act:"Meetings & admin"},_adm:{l:"Admin & email",act:"Meetings & admin"},_sup:{l:"Support & small asks",act:"Support"},_lrn:{l:"Learning (Fiori)",act:"Learning"}};
+const PAL=["pen-2","pen-3","pen-4","pen-5","pen-6","pen-7","pen-8"];
+const T=[
+ {id:"DMND-29810",title:"HR org-unit extract for SuccessFactors",epic:"HRX",theme:"HR",req:"HR portal team",from:-181,to:-106,span:75,w:.8,fac:.9,hist:[[-190,"open"],[-181,"progress"],[-112,"delivered"],[-95,"closed"]],
+  n:{obj:["ZHR_ORG_EXTRACT","ZCL_HR_ORG_READER"],feat:["org-unit hierarchy walk","delta extraction by AEDTM","the SFTP file layout"],bug:["missing positions for vacant chairs"],tr:["H13K900301","H13K900322"]}},
+ {id:"DMND-29655",title:"GL balance interface to BW",theme:"Finance",req:"Rahul (CO)",from:-176,to:-118,span:58,w:1,fac:1.15,hist:[[-178,"open"],[-176,"progress"],[-122,"delivered"],[-100,"closed"]],
+  n:{obj:["ZFI_GL_BAL_EXTR","ZFI_GL_BAL_F01"],feat:["period balances from FAGLFLEXT","currency translation","the BW extract structure"],bug:["carry-forward period 000"],tr:["H03K900610"]}},
+ {id:"DMND-29970",title:"Retire old vendor-ageing variant",theme:"Finance",req:"Priya (FI)",from:-160,to:-128,span:32,w:.9,fac:1,hist:[[-160,"open"],[-150,"progress"],[-132,"delivered"],[-120,"closed"]],
+  n:{obj:["ZFI_VEND_AGE"],feat:["variant cleanup","where-used check on the variant"],bug:["a job still using the variant"],tr:["H03K900655"]}},
+ {id:"DMND-30002",title:"Vendor master: bank-detail validation BAdI",theme:"Finance",req:"Priya (FI)",from:-120,to:-62,span:58,w:.9,fac:1.05,hist:[[-121,"open"],[-118,"progress"],[-66,"delivered"],[-50,"closed"]],
+  n:{obj:["ZCL_VENDOR_BANK_CHECK","ZFI_BANK_RULES"],feat:["IBAN check per country","the rules table","error messages in class ZFI_MSG"],bug:["IBAN check for DE with spaces"],tr:["H03K900701","H03K900712"]}},
+ {id:"DMND-10421",title:"Add cost-center filter to ZFI_AGEING report",epic:"LUCA",theme:"Finance",req:"Priya (FI)",from:-105,to:0,span:125,w:.55,pw:.42,fac:.82,hist:[[-105,"open"],[-96,"progress"],[-60,"delivered"],[-41,"bug"],[-30,"progress"]],
+  subs:["Selection screen + S_KOSTL","ALV field catalog","Cost-center authority check","Regression run with FI key users"],
+  n:{obj:["ZFI_AGEING","ZFI_AGEING_F01","ZFI_AGE_TOL"],feat:["the S_KOSTL select-option","the cost-center range in the BSID fetch","the ALV field catalog","the authority check on KOSTL","tolerance-days table maintenance"],bug:["zero totals for CC 4711","the initial range being ignored in the BSID select"],tr:["H03K900812","H03K900840","H03K900877"]}},
+ {id:"DMND-29990",title:"HR mini-master PDF form: date format",theme:"HR",req:"Sneha (Payroll)",from:-92,to:-72,span:20,w:2.2,fac:1.2,hist:[[-93,"open"],[-92,"progress"],[-74,"delivered"],[-60,"closed"]],
+  n:{obj:["ZHR_MINIMASTER_FORM"],feat:["the date format per country","form layout"],bug:["DD.MM for the UK plant"],tr:["H13K900350"]}},
+ {id:"DMND-30025",title:"Month-end job-chain monitor",epic:"LUCA",theme:"Finance",req:"Priya (FI)",from:-75,to:-35,span:40,w:1,fac:1,hist:[[-76,"open"],[-75,"progress"],[-38,"delivered"],[-20,"closed"]],
+  n:{obj:["ZFI_JOB_MONITOR","ZFI_JOBS_CFG"],feat:["the TBTCO read","the traffic-light ALV","the config table"],bug:["time-zone offset on job start"],tr:["H03K900760"]}},
+ {id:"DMND-10512",title:"OData Wave 2: absence endpoints",epic:"HRX",theme:"HR",req:"HR portal team",from:-50,to:0,span:62,w:1.3,fac:1.15,hist:[[-50,"open"],[-44,"progress"]],
+  n:{obj:["ZHR_EMP_SRV","ZHR_ABS_READ","ZCL_ZHR_EMP_DPC_EXT"],feat:["the absence entity set","$filter on BEGDA","paging with $top/$skip","navigation Employee → Absences"],bug:["$skip off by one"],tr:["H13K900410"]}},
+ {id:"DMND-20001",title:"Ageing: split totals by profit center",epic:"LUCA",theme:"Finance",req:"Priya (FI)",from:-40,to:0,span:60,w:1.2,fac:1.35,hist:[[-40,"open"],[-33,"progress"]],
+  n:{obj:["ZFI_AGEING","ZFI_AGEING_F02"],feat:["profit-center derivation","totals per profit center"],bug:["PRCTR blank for old items"],tr:["H03K901000"]}},
+ {id:"DMND-30010",title:"Payroll: IT0008 amounts zero for mid-month actions",theme:"Payroll",req:"Sneha (Payroll)",from:-30,to:0,span:34,w:1,fac:.72,hist:[[-30,"open"],[-27,"progress"],[-20,"delivered"],[-6,"bug"]],
+  n:{obj:["ZHR_PAYRUN_F01"],feat:["the PA0008 read by BEGDA/ENDDA"],bug:["IT0008 zero for mid-month actions","split periods in the payroll simulation"],tr:["H13K900455"]}},
+ {id:"DMND-30044",title:"Travel expense BAdI: per-diem rounding",theme:"Travel",req:"Travel team",from:-25,to:-9,span:16,w:2.4,fac:1.1,hist:[[-25,"open"],[-23,"progress"],[-11,"delivered"]],
+  n:{obj:["ZCL_TRV_PERDIEM"],feat:["per-diem rounding to 2 decimals"],bug:["rounding on foreign currency"],tr:["H03K900990"]}},
+ {id:"DMND-30120",title:"New cost-center derivation for CO allocations",theme:"Controlling",req:"Rahul (CO)",from:-1,to:0,span:40,w:3,fac:1,hist:[[-1,"open"]],
+  n:{obj:["ZCO_ALLOC_DERIVE"],feat:["the derivation rules"],bug:["—"],tr:["—"]}},
+];
+const TM=Object.fromEntries(T.map(t=>[t.id,t]));
+T.forEach((t,i)=>t.pen=PAL[i%PAL.length]);
+const statusAt=(t,off)=>{let s=t.hist[0][1];for(const [d,st] of t.hist)if(d<=off)s=st;return s;};
+const curStatus=t=>statusAt(t,0);
+
+/* generate 26 weeks of believable entries (seeded so it's the same every load) */
+function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const R=mulberry(20260930),pick=a=>a[Math.floor(R()*a.length)],half=x=>Math.max(.5,Math.round(x*2)/2);
+const TPL={
+ "Analysis":["Went through the spec with {req}; mapped the fields to {obj}","Where-used and impact analysis on {obj}","Clarified {feat} with {req}","Analysed data volumes for {feat}"],
+ "Build":["{obj}: {feat}","Built {feat} in {obj}","First cut of {feat} in {obj}","Refactored {obj} for {feat}"],
+ "Testing":["Unit-tested {feat} in the dev system","Test cases for {feat}; two edge cases found","Supported {req} in QA testing of {feat}"],
+ "Debug / fix":["Debugged {bug}","Root cause for {bug} found in {obj}","Fix and retest — {bug}"],
+ "Transport & Basis":["Released {tr}; asked Basis to import to QA","Followed up the import of {tr} with Basis","Prepared the run sheet for {tr}"],
+ "Documentation":["Updated the tech spec for {feat}","Handover notes for {req}","Documented the {obj} changes"]};
+const MTG=["Daily stand-up","Portal team sync","1:1 with the lead","Estimation session"],ADM=["Mail and approvals","Timesheet and access requests","Inbox and follow-ups"],
+  SUP=["Short-dump analysis for a user","Authorisation issue for the FI team","Job failure check in H01","Small ask from payroll: report variant"],
+  LRN=["Fiori elements: list report tutorial","CDS annotations for Fiori","RAP basics — managed business object","UI5 walkthrough, steps 10–18"];
+const fill=(tp,t)=>tp.replace(/\{(\w+)\}/g,(_,k)=>k==="req"?t.req:pick(t.n[k]));
+const pWork=(t,off)=>{const st=statusAt(t,off);return st==="bug"?.95:st==="delivered"||st==="closed"?.12:st==="open"?(t.to===0&&t.from>-3?1:.4):(t.pw||.62);};
+function actFor(t,off){const st=statusAt(t,off),r=R();if(st==="bug")return r<.8?"Debug / fix":"Testing";
+  if(st==="delivered"||st==="closed")return r<.45?"Transport & Basis":r<.75?"Documentation":"Testing";
+  if(st==="open")return r<.85?"Analysis":"Documentation";
+  const p=(off-t.from)/t.span;
+  if(p<.16)return r<.85?"Analysis":"Documentation";
+  if(p<.62)return r<.72?"Build":r<.9?"Testing":"Analysis";
+  if(p<.85)return r<.45?"Testing":r<.8?"Build":"Transport & Basis";
+  return r<.45?"Transport & Basis":r<.7?"Documentation":"Testing";}
+const E=[];let eid=0;
+const isWd=off=>{const g=dow(dd(off));return g>0&&g<6;};
+const WD=[];for(let o=-1;o>=-181;o--)if(isWd(o))WD.push(o);
+const LEAVE=new Set([...[-80,-79,-78,-77,-76,-75,-74].filter(isWd),WD[15]]);
+const SKIP=new Set([WD[1],WD[6],WD[38]]);   /* days he forgot to log */
+for(let off=-181;off<=0;off++){if(!isWd(off)||LEAVE.has(off)||SKIP.has(off))continue;
+  const g=dow(dd(off)),total=off===0?3.5:half(6.5+R()*2.2);let used=0;
+  const put=(task,h,act,note,sub)=>{h=Math.min(h,total-used);if(h<=0)return;E.push({id:"e"+(++eid),off,d:dd(off),task,h,act,note,sub:sub||null});used+=h;};
+  if(g===1)put("_mtg",1,"Meetings & admin","Sprint planning");else if(R()<.75)put("_mtg",.5,"Meetings & admin",pick(MTG));
+  if(g===4&&R()<.8)put("_mtg",1,"Meetings & admin","Governance call — Portal + P&C IT");
+  if(R()<.3)put("_adm",.5,"Meetings & admin",pick(ADM));
+  if(R()<.26)put("_sup",half(.5+R()*1.5),"Support",pick(SUP));
+  if(g===5&&R()<.5)put("_lrn",1,"Learning",pick(LRN));
+  const act=T.filter(t=>t.from<=off&&off<=t.to&&R()<pWork(t,off));
+  act.forEach(t=>t._s=(statusAt(t,off)==="bug"?1.2:0)+(t.w||1)*R());act.sort((a,b)=>b._s-a._s);
+  const ch=act.slice(0,R()<.55?2:R()<.3?3:1);
+  if(!ch.length){put("_sup",half(1+R()*2),"Support",pick(SUP));put("_lrn",total-used,"Learning",pick(LRN));continue;}
+  const rem=total-used,ws=ch.map(t=>t._s+.3),sw=ws.reduce((a,b)=>a+b,0);
+  ch.forEach((t,i)=>{const h=i===ch.length-1?total-used:half(rem*ws[i]/sw);if(h<=0)return;const a=actFor(t,off);
+    const sub=t.subs&&["Build","Testing"].includes(a)?t.subs[Math.min(t.subs.length-1,Math.floor(Math.max(0,off-t.from)/t.span*t.subs.length))]:null;
+    if(h>=3&&a==="Build"&&R()<.4){const h1=half(h*.6);put(t.id,h1,"Build",fill(pick(TPL.Build),t),sub);put(t.id,h-h1,"Testing",fill(pick(TPL.Testing),t),sub);}
+    else put(t.id,h,a,fill(pick(TPL[a]),t),sub);});}
+const totOf=id=>sumH(E.filter(e=>e.task===id));
+T.forEach(t=>t.est=Math.max(4,Math.round(totOf(t.id)*t.fac/2)*2));
+const penOf=k=>TM[k]?TM[k].pen:"ink-3";
+const nameOf=k=>TM[k]?k:NON[k].l;
+
+/* ---------- small svg helpers ---------- */
+function dayBar(have,add=0,n=18,pitch=5){const tot=have+add,N=Math.max(n,Math.ceil(tot*2));let s=`<svg width="${N*pitch}" height="8">`;
+  for(let i=0;i<N;i++){const x=i*pitch+pitch/2;const f=i<have*2-.01?"var(--ink-2)":i<tot*2-.01?(i>=16?"var(--bad)":"var(--good)"):null;
+    s+=f?`<circle cx="${x}" cy="4" r="${pitch*.38}" style="fill:${f}"/>`:`<circle cx="${x}" cy="4" r="${pitch*.2}" style="fill:var(--ink-4)"/>`;}return s+"</svg>";}
+function hdots(h,pen){const n=Math.round(h*2);let s=`<svg width="${Math.min(n,16)*5}" height="${Math.ceil(n/16)*5}">`;for(let i=0;i<n;i++)s+=`<circle cx="${(i%16)*5+2.5}" cy="${Math.floor(i/16)*5+2.5}" r="1.8" style="fill:var(--${pen})"/>`;return s+"</svg>";}
+function barDots(h,unit,max,pen){const n=Math.round(h/unit);let s=`<svg width="${max*6}" height="8">`;for(let i=0;i<max;i++)s+=i<n?`<circle cx="${i*6+3}" cy="4" r="2.2" style="fill:var(--${pen})"/>`:`<circle cx="${i*6+3}" cy="4" r="1" style="fill:var(--ink-4)"/>`;return s+"</svg>";}
+function spark(t){const m0=mondayOff(0);let s=`<svg width="${10*7}" height="16" aria-label="last 10 weeks">`;
+  for(let i=0;i<10;i++){const a=m0-(9-i)*7,h=sumH(E.filter(e=>e.task===t.id&&e.off>=a&&e.off<=a+6)),n=Math.min(5,Math.ceil(h/3));
+    if(!n)s+=`<circle cx="${i*7+3}" cy="14" r=".9" style="fill:var(--ink-4)"/>`;for(let j=0;j<n;j++)s+=`<circle cx="${i*7+3}" cy="${14-j*3}" r="1.3" style="fill:var(--${t.pen})"/>`;}return s+"</svg>";}
+
+/* ---------- tooltip / toast ---------- */
+function showTip(html,x,y){const t=$("#tip");t.innerHTML=html;t.classList.add("on");const w=t.offsetWidth,h=t.offsetHeight;t.style.left=Math.min(innerWidth-w-10,x+14)+"px";t.style.top=(y+h+20>innerHeight?y-h-10:y+14)+"px";}
+function hideTip(){$("#tip").classList.remove("on");}
+function hoverable(rec,html,click){if(!rec)return;const cv=rec.cv;
+  cv.addEventListener("mousemove",ev=>{const b=cv.getBoundingClientRect(),x=ev.clientX-b.left,y=ev.clientY-b.top;let hit=null;
+    for(const h of rec.hits)if(Math.abs(x-h.x)<=h.rx&&Math.abs(y-h.y)<=h.ry){hit=h;break;}
+    rec.hv=hit;if(!hit){hideTip();cv.style.cursor="";return;}cv.style.cursor=click?"pointer":"";showTip(html(hit),ev.clientX,ev.clientY);});
+  cv.addEventListener("mouseleave",()=>{rec.hv=null;hideTip();});
+  if(click)cv.addEventListener("click",()=>{if(rec.hv){hideTip();click(rec.hv);}});}
+function toast(m,pen="var(--good)",act){const t=$("#toast"),b=$("#toastA");$("#toastT").textContent=m;$("#toastP").style.background=pen;
+  if(act){b.style.display="";b.textContent=act.l;b.onclick=()=>{t.classList.remove("on");act.fn();};}else b.style.display="none";
+  t.classList.add("on");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove("on"),act?5200:2600);}
+
+/* ---------- the composer: used inline on a demand and in the ⏱ dialog ---------- */
+const shiftD=(s,n)=>{const d=new Date(s+"T00:00:00");d.setDate(d.getDate()+n);return iso(d);};
+const actList=task=>task.startsWith("_")?ACT_ORD.slice(6):DEMAND_ACTS;
+function guessAct(task,date){if(task.startsWith("_"))return NON[task].act;const t=TM[task];if(statusAt(t,days(date))==="bug")return "Debug / fix";
+  const l=[...E].reverse().find(e=>e.task===task);return l?l.act:"Analysis";}
+function taskOptions(sel){const live=T.filter(t=>curStatus(t)!=="closed").reverse(),old=T.filter(t=>curStatus(t)==="closed");
+  const o=t=>`<option value="${t.id}" ${t.id===sel?"selected":""}>${t.id} — ${esc(t.title)}</option>`;
+  return `<optgroup label="Demands">${live.map(o).join("")}</optgroup><optgroup label="Not a demand">${Object.entries(NON).map(([k,v])=>`<option value="${k}" ${k===sel?"selected":""}>${v.l}</option>`).join("")}</optgroup><optgroup label="Closed demands">${old.map(o).join("")}</optgroup>`;}
+function mountComposer(host,o,done){
+  const st={task:o.task,date:o.date||TODAY,hs:o.h!=null?String(o.h):"",act:o.act||guessAct(o.task,o.date||TODAY),note:o.note||"",sub:o.sub||""};
+  const q=s=>host.querySelector(s);
+  const draw=()=>{if(!actList(st.task).includes(st.act))st.act=guessAct(st.task,st.date);const t=TM[st.task];
+    host.innerHTML=`<div class="qc">
+      ${o.modal?`<div class="fl"><span>Against</span><select class="inp" data-f="task">${taskOptions(st.task)}</select></div>`:""}
+      <div class="qrow">
+        <div class="fl"><span>Day</span><div class="dayp"><button class="btn sm ghost" data-f="prev" title="Day before">‹</button><input type="date" class="inp" data-f="date" max="${TODAY}"><button class="btn sm ghost" data-f="next" title="Day after">›</button><button class="chip" data-day="0">Today</button><button class="chip" data-day="-1">Yesterday</button></div></div>
+        <div class="fl"><span>Hours</span><div class="hrs">${[.5,1,1.5,2,3,4].map(v=>`<button class="chip mono" data-h="${v}">${v}</button>`).join("")}<input class="inp hin" data-f="hours" placeholder="2h30" value="${esc(st.hs)}"></div></div>
+      </div>
+      <div class="fl"><span>Activity</span><div class="acts">${actList(st.task).map(a=>`<button class="chip" data-a="${a}" style="--pen:var(--${ACTC[a]})"><span class="pdot"></span>${a}</button>`).join("")}</div></div>
+      <div class="fl"><span>What I did</span><textarea class="inp note" data-f="note" rows="2" placeholder="${t?"e.g. Built the cost-center range into the BSID fetch; unit-tested with CC 4711":"e.g. Stand-up, then the governance call"}">${esc(st.note)}</textarea></div>
+      ${t&&t.subs?`<div class="fl"><span>Against a subtask (optional)</span><select class="inp" data-f="sub" style="max-width:340px"><option value="">—</option>${t.subs.map(s=>`<option ${s===st.sub?"selected":""}>${esc(s)}</option>`).join("")}</select></div>`:""}
+      <div class="qfoot"><div class="dsf" data-f="dsf"></div>${o.modal?"":`<button class="btn sm" data-f="timer">▶ Start timer</button>`}<button class="btn pri" data-f="log">Log</button></div></div>`;
+    wire();sync();};
+  const wire=()=>{
+    if(q("[data-f=task]"))q("[data-f=task]").onchange=e=>{st.task=e.target.value;st.act=guessAct(st.task,st.date);st.sub="";draw();};
+    q("[data-f=date]").onchange=e=>{if(e.target.value)st.date=e.target.value>TODAY?TODAY:e.target.value;sync();};
+    q("[data-f=prev]").onclick=()=>{st.date=shiftD(st.date,-1);sync();};
+    q("[data-f=next]").onclick=()=>{if(st.date<TODAY)st.date=shiftD(st.date,1);sync();};
+    host.querySelectorAll("[data-day]").forEach(b=>b.onclick=()=>{st.date=dd(+b.dataset.day);sync();});
+    host.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{st.hs=b.dataset.h;q("[data-f=hours]").value=st.hs;sync();});
+    q("[data-f=hours]").oninput=e=>{st.hs=e.target.value;sync();};
+    host.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{st.act=b.dataset.a;sync();});
+    q("[data-f=note]").oninput=e=>{st.note=e.target.value;};
+    if(q("[data-f=sub]"))q("[data-f=sub]").onchange=e=>{st.sub=e.target.value;};
+    const go=()=>{const h=Math.round(parseH(st.hs)*4)/4;
+      if(!h||isNaN(h)||h>16){const hi=q("[data-f=hours]");hi.classList.remove("shake");void hi.offsetWidth;hi.classList.add("shake");hi.focus();toast("How many hours? e.g. 2 · 1.5 · 2h30 · 90m","var(--bad)");return;}
+      const e={id:o.editId||"e"+(++eid),off:days(st.date),d:st.date,task:st.task,h,act:st.act,note:st.note.trim()||"(no details)",sub:st.sub||null};
+      if(o.editId){const i=E.findIndex(x=>x.id===o.editId);E[i]=e;}else E.push(e);
+      E.sort((x,y)=>x.off-y.off);done(e);};
+    q("[data-f=log]").onclick=go;
+    host.querySelectorAll("textarea,input").forEach(el=>el.addEventListener("keydown",ev=>{if((ev.ctrlKey||ev.metaKey)&&ev.key==="Enter"){ev.preventDefault();go();}}));
+    if(q("[data-f=timer]"))q("[data-f=timer]").onclick=()=>{TIMER={task:st.task,start:Date.now()};updTimer();toast(`Timer running on ${nameOf(st.task)} — stop it in the status bar`,"var(--bad)");};};
+  const sync=()=>{q("[data-f=date]").value=st.date;const hv=parseH(st.hs);
+    host.querySelectorAll("[data-h]").forEach(b=>b.classList.toggle("on",+b.dataset.h===hv));
+    host.querySelectorAll("[data-day]").forEach(b=>b.classList.toggle("on",dd(+b.dataset.day)===st.date));
+    host.querySelectorAll("[data-a]").forEach(b=>b.classList.toggle("on",b.dataset.a===st.act));
+    const have=sumH(E.filter(e=>e.d===st.date&&e.id!==o.editId)),add=isNaN(hv)?0:Math.round(hv*4)/4;
+    q("[data-f=dsf]").innerHTML=`${dayBar(have,add)}<span><b class="mono">${wdl(st.date)}</b> · ${fh(have)} h logged${add?` <span class="good">+ ${fh(add)}</span> = <b class="mono">${fh(have+add)} h</b>`:""} of 8</span>`;
+    q("[data-f=log]").textContent=(o.editId?"Save":"Log")+(add?" "+fh(add)+" h":"");};
+  draw();}
+
+/* ---------- the ⏱ dialog + timer ---------- */
+let SCENE="demand",SEL="DMND-10421",WK=0,G="demand",RG="q",FOCUS=null,LOGN=5,lastTask="DMND-10421";
+let TIMER={task:"DMND-10512",start:Date.now()-(72*60+4)*1000};
+function openLog(o={}){const task=o.task||(SCENE==="demand"?SEL:lastTask);$("#ovT").textContent=o.editId?"Edit time entry":"Log time";$("#ov").classList.add("on");
+  mountComposer($("#ovBody"),{...o,task,modal:true},e=>{closeLog();afterLog(e,!!o.editId);});
+  setTimeout(()=>{const h=$("#ovBody [data-f=hours]");if(h)h.focus();},60);}
+function closeLog(){$("#ov").classList.remove("on");}
+function afterLog(e,edited){lastTask=e.task;toast(`${edited?"Updated":"Logged"} ${fh(e.h)} h · ${nameOf(e.task)} · ${e.act}`);rerender(e.id);updToday();}
+function updTimer(){const el=$("#tmr");if(!TIMER){el.innerHTML=`<span class="tmr"><button id="tmGo">▶ start a timer</button></span>`;$("#tmGo").onclick=()=>{TIMER={task:SCENE==="demand"?SEL:lastTask,start:Date.now()};updTimer();};return;}
+  const s=Math.floor((Date.now()-TIMER.start)/1000);el.innerHTML=`<span class="tmr"><i></i>${nameOf(TIMER.task)} · ${Math.floor(s/3600)}:${p2(Math.floor(s/60)%60)}:${p2(s%60)}<button id="tmStop">■ stop &amp; log</button></span>`;
+  $("#tmStop").onclick=()=>{const h=Math.max(.25,Math.round((Date.now()-TIMER.start)/36e5*4)/4),task=TIMER.task;TIMER=null;updTimer();openLog({task,h,date:TODAY});};}
+setInterval(()=>{if(TIMER)updTimer();},1000);
+function updToday(){const h=sumH(E.filter(e=>e.off===0));$("#sbToday").innerHTML=`today ${fh(h)} / 8 h`;}
+
+/* =======================================================================
+   SCENE ①: a demand, with its new Effort tab
+   ======================================================================= */
+function renderDemandScene(){
+  $("#main").innerHTML=`<div class="dsc"><div class="paper"></div>
+    <section class="lp"><div class="lp-top"><div class="lbl">Demands · with hours logged</div><input class="inp" id="qf" placeholder="Filter — ID or title…" autocomplete="off"></div><div class="lp-list" id="list"></div></section>
+    <section class="dd" id="dd"></section></div>`;
+  $("#qf").oninput=renderDList;renderDList();renderDemand();}
+function renderDList(){const q=($("#qf")||{}).value||"",ql=q.toLowerCase();
+  const L=[...T].filter(t=>!ql||(t.id+" "+t.title).toLowerCase().includes(ql)).sort((a,b)=>(b.to===0)-(a.to===0)||b.from-a.from);
+  $("#list").innerHTML=L.map(t=>{const st=curStatus(t),tot=totOf(t.id),over=tot>t.est;
+    return `<div class="lr ${t.id===SEL?"on":""} ${st==="closed"?"closed":""}" data-id="${t.id}" style="--pen:var(--${STATUS[st].pen})">
+      <div class="l1">${t.id}${t.epic?`<span class="ep">◆ ${t.epic}</span>`:""}<span class="when">${STATUS[st].l.toLowerCase()}</span></div>
+      <div class="tt">${esc(t.title)}</div>
+      <div class="l3"><span class="tag ${over?"pen":""}" style="${over?"--pen:var(--bad)":""}" title="logged / estimate">⏱ ${fh(tot)} h <span class="t">/ ${t.est}</span></span>${spark(t)}</div></div>`;}).join("");
+  $$("#list .lr").forEach(r=>r.onclick=()=>{SEL=r.dataset.id;$$("#list .lr").forEach(x=>x.classList.toggle("on",x===r));renderDemand();});}
+function renderDemand(flashId){const t=TM[SEL],host=$("#dd"),keep=host.scrollTop,es=E.filter(e=>e.task===t.id),tot=sumH(es),st=curStatus(t);
+  const daysW=new Set(es.map(e=>e.off)),lastE=es[es.length-1],rw=sumH(es.filter(e=>statusAt(t,e.off)==="bug"));
+  const d0=days(dd(t.hist[0][0])),since=t.hist[t.hist.length-1][0];
+  host.innerHTML=`<div class="dd-in">
+    <div class="hd rise"><div class="l1" style="--pen:var(--${STATUS[st].pen})">${t.id}${t.epic?` · <a>◆ ${t.epic}</a>`:""} · ${esc(t.theme)}</div>
+      <div class="top"><div><h1>${esc(t.title)}</h1><div class="sub">asked by ${esc(t.req)}</div></div>
+        <div class="acts"><span class="tag pen" style="--pen:var(--${STATUS[st].pen})"><span class="pdot"></span>${STATUS[st].l} since ${sh(dd(since))}</span>
+          <div class="row"><button class="btn sm" id="hdLog">⏱ Log time</button><button class="btn sm" id="hdTimer">▶ Timer</button></div></div></div>
+      <div class="ro">
+        <div><span class="k">Received</span><span class="v">${sh(dd(d0))}</span></div>
+        <div><span class="k">Logged</span><span class="v">${fh(tot)}<small class="${tot>t.est?"late":""}">h${tot>t.est?" · over":""}</small></span></div>
+        <div class="ed" id="estRo" title="Click to change the estimate"><span class="k">Estimate</span><span class="v">${t.est}<small>h</small></span></div>
+        <div><span class="k">Days worked</span><span class="v">${daysW.size}<small>days</small></span></div>
+        <div><span class="k">Rework</span><span class="v ${rw?"late":""}">${fh(rw)}<small>h</small></span></div>
+        <div><span class="k">Last worked</span><span class="v">${lastE?wdd(lastE.d):"—"}</span></div></div></div>
+    <div class="tabs" id="tabs"><button>Overview</button><button>Work</button><button>Objects</button><button>Transports</button><button class="on">Effort <span class="n">${fh(tot)} h</span><span class="nw">new</span></button><button>History</button><div class="tind" id="tind"></div></div>
+    <div class="pane">
+      <div class="unit rise" style="--i:1"><div class="head"><h2>Log time on ${t.id}</h2><span class="meta">Ctrl+Enter logs · <kbd>T</kbd> from anywhere · 2 · 1.5 · 2h30 · 90m</span></div><div id="qcHost"></div></div>
+      <div class="g4 rise" style="--i:2">
+        <div class="unit ins"><canvas data-k="est"></canvas><div><div class="k">Logged vs estimate</div><div class="v">${fh(tot)}<small>/ ${t.est} h</small></div><div class="s ${tot>t.est?"late":""}">${tot>t.est?fh(tot-t.est)+" h over":fh(t.est-tot)+" h left"}</div></div></div>
+        <div class="unit ins"><canvas data-k="days"></canvas><div><div class="k">Days worked</div><div class="v">${daysW.size}<small>days</small></div><div class="s">avg ${fh(Math.round(tot/Math.max(1,daysW.size)*10)/10)} h on a day you touched it</div></div></div>
+        <div class="unit ins"><canvas data-k="rw"></canvas><div><div class="k">Rework</div><div class="v">${fh(rw)}<small>h</small></div><div class="s ${rw?"late":""}">${rw?pct(rw,tot)+"% — hours logged while in Bug":"none — never bounced"}</div></div></div>
+        <div class="unit ins"><canvas data-k="last"></canvas><div><div class="k">Last worked</div><div class="v">${lastE?wdd(lastE.d):"—"}</div><div class="s">${lastE?`${fh(sumH(es.filter(e=>e.off===lastE.off)))} h · ${lastE.act}`:"never"}</div></div></div></div>
+      <div class="unit rise" style="--i:3"><div class="head"><h2>Effort over its life</h2><span class="meta">status above · each dot = ½ h, coloured by activity · line = running total against the estimate</span></div>
+        <canvas class="lifec" id="life"></canvas>
+        <div class="legend">${DEMAND_ACTS.filter(a=>es.some(e=>e.act===a)).map(a=>`<span><span class="pdot" style="--pen:var(--${ACTC[a]})"></span>${a}</span>`).join("")}<span style="margin-left:auto"><span style="width:14px;border-top:1px dashed var(--ink-3)"></span>estimate</span></div></div>
+      <div class="gw rise" style="--i:4">
+        <div class="unit"><div class="head"><h2>Log</h2><span class="meta">${es.length} entries · by week · hover to edit</span></div><div id="logList"></div></div>
+        <div class="stack">
+          <div class="unit"><div class="head"><h2>By activity</h2><span class="meta">${fh(tot)} h</span></div>${actRows(es)}</div>
+          ${t.subs?`<div class="unit"><div class="head"><h2>By subtask</h2><span class="meta">optional link on each entry</span></div>${subRows(es,t)}</div>`:""}
+          <div class="unit"><div class="head"><h2>In the Overview tab</h2></div><div style="font-size:12px;color:var(--ink-2);line-height:1.55">The four Overview instruments would gain an <b>Effort</b> gauge — logged vs estimate — and the <b>journey</b> would show dots under the days you worked.</div></div>
+        </div></div></div></div>`;
+  host.scrollTop=keep;
+  const tb=host.querySelector("#tabs .on"),ti=host.querySelector("#tind");ti.style.left=tb.offsetLeft+"px";ti.style.width=tb.offsetWidth+"px";ti.style.setProperty("--pen","var(--pen-5)");
+  host.querySelectorAll("#tabs button:not(.on)").forEach(b=>b.onclick=()=>toast("Other tabs are as in the Demands redesign — this mockup is about Effort","var(--ink-3)"));
+  host.querySelector("#hdLog").onclick=()=>openLog({task:t.id});
+  host.querySelector("#hdTimer").onclick=()=>{TIMER={task:t.id,start:Date.now()};updTimer();toast(`Timer running on ${t.id} — stop it in the status bar`,"var(--bad)");};
+  host.querySelector("#estRo").onclick=e=>{const c=e.currentTarget;if(c.querySelector("input"))return;c.querySelector(".v").innerHTML=`<input class="inp" type="number" min="1" value="${t.est}">`;const i=c.querySelector("input");i.focus();i.select();
+    const ok=()=>{const v=Math.round(+i.value);if(v>0)t.est=v;renderDemand();renderDList();};i.onkeydown=ev=>{if(ev.key==="Enter")ok();if(ev.key==="Escape")renderDemand();};i.onblur=ok;};
+  mountComposer(host.querySelector("#qcHost"),{task:t.id},e=>{lastTask=e.task;toast(`Logged ${fh(e.h)} h · ${e.act}`);renderDemand(e.id);renderDList();updToday();});
+  renderLog(t,flashId);
+  const cvs=host.querySelectorAll(".ins canvas"),since0=lastE?-lastE.off:99,frac={est:Math.min(1,tot/t.est),days:daysW.size/Math.max(1,(Math.min(0,t.to)-t.from+1)*5/7),rw:tot?rw/tot:0,last:1-Math.min(1,since0/14)};
+  cvs.forEach(cv=>{const k=cv.dataset.k,f=frac[k],sv={v:reduced?f:0};scope(cv,(c,w,h)=>{sv.v+=(f-sv.v)*.06;
+    if(k==="est")dotArc(c,w/2,h/2+4,w/2-5,sv.v,24,tot>t.est?C.bad:C.good);
+    else if(k==="last")dotArc(c,w/2,h/2+4,w/2-5,sv.v,22,since0<=3?C.good:since0<=10?C.watch:C["ink-3"]);
+    else dotRing(c,w/2,h/2,w/2-5,sv.v,30,k==="rw"?C.bad:C["pen-2"]);});});
+  hoverable(scope(host.querySelector("#life"),lifeDraw(t)),hit=>{const list=E.filter(e=>e.task===t.id&&e.off===hit.off);
+    return `<b>${wdl(dd(hit.off))}</b> · ${fh(sumH(list))} h · <span style="color:var(--${STATUS[statusAt(t,hit.off)].pen})">${STATUS[statusAt(t,hit.off)].l}</span>`+list.map(e=>`<div class="r" style="--pen:var(--${ACTC[e.act]})"><i></i><span>${esc(e.note)}</span><span>${fh(e.h)}</span></div>`).join("");},hit=>openDay(hit.off,t.id));}
+function actRows(es){const tot=sumH(es)||1,rows=DEMAND_ACTS.map(a=>[a,sumH(es.filter(e=>e.act===a))]).filter(r=>r[1]>0).sort((a,b)=>b[1]-a[1]);const mx=Math.max(...rows.map(r=>r[1]),1);
+  return rows.map(([a,h])=>`<div class="brow"><span class="n"><span class="pdot" style="--pen:var(--${ACTC[a]})"></span>${a}</span><span class="v">${fh(h)} h · ${pct(h,tot)}%</span>${barDots(h,mx/34,34,ACTC[a])}</div>`).join("")||`<div class="dim">Nothing logged yet.</div>`;}
+function subRows(es,t){const rows=[...t.subs.map(s=>[s,sumH(es.filter(e=>e.sub===s))]),["Not against a subtask",sumH(es.filter(e=>!e.sub))]].filter(r=>r[1]>0);const mx=Math.max(...rows.map(r=>r[1]),1);
+  return rows.map(([s,h],i)=>`<div class="brow"><span class="n ${i===rows.length-1&&s.startsWith("Not")?"dim":""}">${esc(s)}</span><span class="v">${fh(h)} h</span>${barDots(h,mx/34,34,s.startsWith("Not")?"ink-3":"pen-3")}</div>`).join("");}
+function renderLog(t,flashId){const host=$("#logList"),es=E.filter(e=>e.task===t.id).sort((a,b)=>b.off-a.off||(+b.id.slice(1))-(+a.id.slice(1)));
+  if(!es.length){host.innerHTML=`<div class="dim" style="padding:10px 0">Nothing logged yet — use the box above.</div>`;return;}
+  const W=new Map();es.forEach(e=>{const m=mondayOff(e.off);(W.get(m)||W.set(m,[]).get(m)).push(e);});
+  const weeks=[...W.entries()],show=weeks.slice(0,LOGN);
+  host.innerHTML=show.map(([m,list])=>`<div class="wkh"><span>Week of ${sh(dd(m))}${m===mondayOff(0)?" · this week":""}</span><b>${fh(sumH(list))} h</b></div>`+
+    list.map(e=>`<div class="ent ${e.id===flashId?"flash":""}" data-id="${e.id}"><span class="d">${wdd(e.d)}</span><span class="h">${hdots(e.h,ACTC[e.act])}<span>${fh(e.h)} h</span></span>
+      <span class="x"><span>${esc(e.note)}</span><span class="tg"><span class="tag pen" style="--pen:var(--${ACTC[e.act]})"><span class="pdot"></span>${e.act}</span>${e.sub?`<span class="sb2">↳ ${esc(e.sub)}</span>`:""}${statusAt(t,e.off)==="bug"?`<span class="tag pen" style="--pen:var(--bad)">rework</span>`:""}</span></span>
+      <span class="ops"><button class="iconbtn" data-op="ed" title="Edit">✎</button><button class="iconbtn" data-op="rm" title="Delete">✕</button></span></div>`).join("")).join("")+
+    (weeks.length>LOGN?`<button class="btn sm more" id="more">Show all ${weeks.length} weeks</button>`:"");
+  if($("#more"))$("#more").onclick=()=>{LOGN=999;renderLog(t);};
+  host.querySelectorAll(".ent").forEach(r=>{const e=E.find(x=>x.id===r.dataset.id);
+    r.querySelector("[data-op=ed]").onclick=()=>openLog({task:e.task,date:e.d,h:e.h,act:e.act,note:e.note,sub:e.sub,editId:e.id});
+    r.querySelector("[data-op=rm]").onclick=()=>{const i=E.indexOf(e);E.splice(i,1);renderDemand();renderDList();updToday();
+      toast(`Deleted ${fh(e.h)} h from ${wdl(e.d)}`,"var(--bad)",{l:"Undo",fn:()=>{E.splice(i,0,e);renderDemand(e.id);renderDList();updToday();}});};});
+  const f=host.querySelector(".flash");if(f)f.scrollIntoView({block:"nearest",behavior:"smooth"});}
+/* the demand's life: status band on top, a dot per half hour per day, running total vs estimate */
+function lifeDraw(t){const es=E.filter(e=>e.task===t.id),byOff=new Map();es.forEach(e=>{(byOff.get(e.off)||byOff.set(e.off,[]).get(e.off)).push(e);});
+  const offs=[...byOff.keys()].sort((a,b)=>a-b),a=Math.min(t.hist[0][0],offs[0]??0)-2,b=Math.max(t.to,offs[offs.length-1]??0)+3;
+  const total=sumH(es),cmax=Math.max(t.est,total)*1.1;
+  return (c,w,h,tm,dt,s)=>{const L=26,Rr=64,X=o=>L+(w-L-Rr)*(o-a)/(b-a),p=ease(prog(s,1400)),xMax=L+(w-L-Rr)*p;
+    const bandY=24,top=48,y0=h-26,dayW=(w-L-Rr)/(b-a);s.hits=[];
+    t.hist.forEach(([d,st],i)=>{const x1=X(Math.max(d,a)),x2=i<t.hist.length-1?X(t.hist[i+1][0]):st==="closed"?x1+3:X(t.to===0?0:t.to);
+      if(x1>xMax)return;const xe=Math.max(x1+3,Math.min(x2,xMax));
+      if(st==="bug"){c.globalAlpha=.07;c.fillStyle=C.bad;c.fillRect(x1,top-6,xe-x1,y0-top+8);label(c,"REWORK",(x1+xe)/2,top+4,{size:7.5,color:C.bad});}
+      c.globalAlpha=.9;c.strokeStyle=C[STATUS[st].pen];c.lineWidth=4;c.beginPath();c.moveTo(x1,bandY);c.lineTo(xe,bandY);c.stroke();
+      label(c,STATUS[st].l.split(" /")[0].toUpperCase(),x1,bandY-11,{size:7.5,color:C[STATUS[st].pen],align:"left"});});
+    for(let x=L;x<=w-Rr;x+=5)dot(c,x,y0+6,.6,C["ink-4"]);
+    const pitch=Math.min(5.4,(y0-top)/17),r=Math.max(1.1,Math.min(2.2,dayW*.36,pitch*.42));
+    offs.forEach(o=>{const x=X(o);if(x>xMax)return;let y=y0;const hov=s.hv&&s.hv.off===o;
+      byOff.get(o).slice().sort((u,v)=>ACT_ORD.indexOf(u.act)-ACT_ORD.indexOf(v.act)).forEach(e=>{const n=Math.round(e.h*2);for(let j=0;j<n;j++){dot(c,x,y,hov?r+.6:r,C[ACTC[e.act]],hov?1:.9);y-=pitch;}});
+      s.hits.push({x,y:(y+y0)/2,rx:Math.max(3,dayW/2),ry:(y0-y)/2+8,off:o});});
+    const yC=v=>y0-(y0-top)*v/cmax;let cum=0,px=X(a);c.lineWidth=1.3;
+    offs.forEach(o=>{const x=X(o);if(x>xMax)return;const nv=cum+sumH(byOff.get(o));c.globalAlpha=.85;
+      c.strokeStyle=cum>t.est?C.bad:C["ink-2"];c.beginPath();c.moveTo(px,yC(cum));c.lineTo(x,yC(cum));c.stroke();
+      c.strokeStyle=nv>t.est?C.bad:C["ink-2"];c.beginPath();c.moveTo(x,yC(cum));c.lineTo(x,yC(nv));c.stroke();px=x;cum=nv;});
+    if(t.to===0&&p>=1){c.strokeStyle=cum>t.est?C.bad:C["ink-2"];c.beginPath();c.moveTo(px,yC(cum));c.lineTo(X(0),yC(cum));c.stroke();}
+    const ye=yC(t.est);c.globalAlpha=.75;c.strokeStyle=C["ink-3"];c.lineWidth=1;c.setLineDash([4,4]);c.beginPath();c.moveTo(L,ye);c.lineTo(w-Rr,ye);c.stroke();c.setLineDash([]);
+    label(c,`EST ${t.est} h`,w-Rr+8,ye,{size:8,align:"left"});
+    if(p>=1){let yt=yC(total);if(Math.abs(yt-ye)<13)yt=ye+(yt<ye?-13:13);label(c,`${fh(total)} h`,w-Rr+8,yt,{font:MONO,size:11,align:"left",weight:600,color:total>t.est?C.bad:C.ink});}
+    for(let o=Math.ceil(a);o<=b;o++){const d=dd(o);if(d.endsWith("-01")){const x=X(o);label(c,new Date(d+"T00:00:00").toLocaleDateString("en-GB",{month:"short"}).toUpperCase(),x,h-8,{size:7.5});c.globalAlpha=.6;c.fillStyle=C["ink-4"];c.fillRect(x,y0+3,1,7);}}
+    if(a<=0&&b>=0){const x=X(0);if(x<=xMax){c.globalAlpha=.5;c.strokeStyle=C.ink;c.setLineDash([2,3]);c.beginPath();c.moveTo(x,top-10);c.lineTo(x,y0+4);c.stroke();c.setLineDash([]);label(c,"TODAY",x,top-16,{size:7.5,color:C.ink});}}};}
+
+/* =======================================================================
+   SCENE ②: the Effort workspace
+   ======================================================================= */
+const RNG={w:{l:"This week",weeks:1},m:{l:"4 weeks",weeks:4},q:{l:"13 weeks",weeks:13},h:{l:"26 weeks",weeks:26}};
+const GROUPS={demand:"Demand",epic:"Epic",activity:"Activity",theme:"Theme"};
+const rangeStart=()=>mondayOff(0)-(RNG[RG].weeks-1)*7;
+function gKey(e){const t=TM[e.task];if(G==="activity")return e.act;if(!t)return "_non";if(G==="demand")return t.id;if(G==="epic")return t.epic||"_noe";return t.theme;}
+function gMeta(k){if(k==="_non")return {l:"Not demand work",col:"ink-3"};
+  if(G==="demand"){const t=TM[k];return {l:k,sub:t.title,col:t.pen};}
+  if(G==="epic")return k==="_noe"?{l:"No epic",col:"pen-4"}:{l:"◆ "+k,sub:EPICS[k].name,col:EPICS[k].pen};
+  if(G==="activity")return {l:k,col:ACTC[k]};
+  return {l:k,col:THEMEC[k]||"pen-6"};}
+let AG=null;
+function agg(){const a=rangeStart(),Rr=E.filter(e=>e.off>=a&&e.off<=0),tot=new Map();
+  Rr.forEach(e=>{const k=gKey(e);tot.set(k,(tot.get(k)||0)+e.h);});
+  const keys=[...tot.keys()].sort((x,y)=>(x==="_non")-(y==="_non")||tot.get(y)-tot.get(x));
+  const cal0=mondayOff(0)-25*7,day=new Map();
+  E.forEach(e=>{if(e.off<cal0)return;let d=day.get(e.off);if(!d){d={tot:0,by:new Map(),es:[]};day.set(e.off,d);}d.tot+=e.h;const k=gKey(e);d.by.set(k,(d.by.get(k)||0)+e.h);d.es.push(e);});
+  const dayMode=RG==="w",B=[];
+  if(dayMode)for(let i=0;i<7;i++)B.push({a:a+i,b:a+i,l:wdd(dd(a+i)).toUpperCase()});
+  else for(let i=0;i<RNG[RG].weeks;i++)B.push({a:a+i*7,b:a+i*7+6,l:sh(dd(a+i*7))});
+  B.forEach(bk=>{bk.by=new Map();bk.tot=0;Rr.forEach(e=>{if(e.off>=bk.a&&e.off<=bk.b){const k=gKey(e);bk.by.set(k,(bk.by.get(k)||0)+e.h);bk.tot+=e.h;}});});
+  AG={R:Rr,tot,keys,day,B,dayMode,a,cal0};}
+function renderWorkspace(){agg();const A=AG,total=sumH(A.R),wk=RNG[RG].weeks;
+  const pa=A.a-wk*7,prev=sumH(E.filter(e=>e.off>=pa&&e.off<A.a)),delta=prev?Math.round((total-prev)/prev*100):0;
+  const wdays=[];for(let o=A.a;o<=0;o++)if(isWd(o)&&!LEAVE.has(o))wdays.push(o);
+  const logged=new Set(A.R.map(e=>e.off)),unl=wdays.filter(o=>o<0&&!logged.has(o)),worked=wdays.filter(o=>logged.has(o)).length;
+  const dem=sumH(A.R.filter(e=>TM[e.task])),nDem=new Set(A.R.filter(e=>TM[e.task]).map(e=>e.task)).size;
+  $("#main").innerHTML=`<div class="ew" id="ew"><div class="paper"></div><div class="ew-in">
+    <div class="ewh rise"><div><div class="l1">⏱ Effort · ${RNG[RG].l} · ${sh(dd(A.a))} – ${sh(TODAY)}</div><h1>Where your hours went</h1></div>
+      <div class="ctl"><div class="sg" id="rg"><span class="cap">Range</span>${Object.entries(RNG).map(([k,v])=>`<button data-k="${k}" class="${k===RG?"on":""}">${v.l}</button>`).join("")}</div>
+        <div class="sg" id="gp"><span class="cap">Group by</span>${Object.entries(GROUPS).map(([k,v])=>`<button data-k="${k}" class="${k===G?"on":""}">${v}</button>`).join("")}</div></div></div>
+    <div class="ro rise" style="--i:1">
+      <div><span class="k">Logged</span><span class="v">${fh(total)}<small>h</small>${prev?`<small class="${delta>=0?"good":"late"}">${delta>=0?"▲":"▼"} ${Math.abs(delta)}% vs previous</small>`:""}</span></div>
+      <div><span class="k">Per worked day</span><span class="v">${fh(Math.round(total/Math.max(1,worked)*10)/10)}<small>h</small></span></div>
+      <div><span class="k">Days logged</span><span class="v">${worked}<small>/ ${wdays.length} working</small></span></div>
+      <div><span class="k">Demand work</span><span class="v">${pct(dem,total)}<small>% · ${nDem} demands</small></span></div>
+      <div><span class="k">Rework</span><span class="v">${fh(sumH(A.R.filter(e=>TM[e.task]&&statusAt(TM[e.task],e.off)==="bug")))}<small>h</small></span></div>
+      <div><span class="k">Days with no log</span><span class="v ${unl.length?"late":""}">${unl.length}</span></div></div>
+    <div class="unit rise" style="--i:2"><div class="head"><h2>Noticed</h2><span class="meta">worked out from your log</span></div><div id="noticed"></div></div>
+    <div class="lgrow rise" style="--i:3"><span class="lbl">${GROUPS[G]}s · click to focus</span>${A.keys.map(k=>{const m=gMeta(k);return `<button class="lgi ${FOCUS===k?"on":FOCUS?"off":""}" data-k="${k}" style="--pen:var(--${m.col})" title="${esc(m.sub||"")}"><span class="pdot"></span>${esc(m.l)}<b>${fh(A.tot.get(k))}</b></button>`;}).join("")}</div>
+    <div class="unit rise" style="--i:4"><div class="head"><h2>26 weeks in dots</h2><span class="meta">a pie per day · size = hours · slices = where they went · red ring = a working day with no log · shaded = the range</span></div><canvas class="cal" id="cal"></canvas></div>
+    <div class="gw rise" style="--i:5">
+      <div class="unit"><div class="head"><h2>Where the hours went</h2><span class="meta">${A.dayMode?"per day · a dot = ½ h · dashed = 8 h":"per week · a dot = 1 h · dashed = 40 h"} · click a column</span></div><canvas class="wkc" id="wk"></canvas></div>
+      <div class="unit"><div class="head"><h2>Activity mix</h2><span class="meta">${fh(total)} h</span></div><div class="mixw"><canvas id="mix"></canvas><div>${mixRows(A.R)}</div></div></div></div>
+    <div class="unit rise" style="--i:6" id="sheetU"></div>
+    <div class="g3 rise" style="--i:7">
+      <div class="unit"><div class="head"><h2>Estimate vs actual</h2><span class="meta">whole life · demands in range</span></div>${estRows(A)}</div>
+      <div class="unit"><div class="head"><h2>Rework cost</h2><span class="meta">hours logged while a demand was in Bug</span></div>${reworkHTML(A,dem)}</div>
+      <div class="unit"><div class="head"><h2>Your week's rhythm</h2><span class="meta">avg on a logged day · where your focus time is</span></div>${rhythmHTML(A)}</div></div>
+  </div></div>`;
+  $("#noticed").innerHTML=noticedHTML(A,total,dem,unl);
+  $$("#rg button").forEach(b=>b.onclick=()=>{RG=b.dataset.k;renderWorkspace();});
+  $$("#gp button").forEach(b=>b.onclick=()=>{G=b.dataset.k;FOCUS=null;renderWorkspace();});
+  $$(".lgi").forEach(b=>b.onclick=()=>{FOCUS=FOCUS===b.dataset.k?null:b.dataset.k;$$(".lgi").forEach(x=>{x.classList.toggle("on",x.dataset.k===FOCUS);x.classList.toggle("off",!!FOCUS&&x.dataset.k!==FOCUS);});});
+  $$(".lgi").forEach(b=>b.ondblclick=()=>{if(TM[b.dataset.k]){SEL=b.dataset.k;setScene("demand");}});
+  $$(".erow[data-id]").forEach(r=>r.onclick=()=>{SEL=r.dataset.id;setScene("demand");});
+  $$("#noticed [data-act]").forEach(b=>b.onclick=()=>NOTICE_ACTS[+b.dataset.act]());
+  hoverable(scope($("#cal"),calDraw),calTip,hit=>{if(hit.kind==="none")openLog({date:dd(hit.off)});else if(hit.kind!=="fut")openDay(hit.off);});
+  hoverable(scope($("#wk"),wkDraw),wkTip,hit=>{if(AG.dayMode){openDay(hit.b.a);return;}WK=(mondayOff(0)-hit.b.a)/7;renderSheet(true);$("#sheetU").scrollIntoView({behavior:"smooth",block:"center"});});
+  scope($("#mix"),mixDraw);
+  renderSheet();}
+/* calendar: 26 weeks × 7 days of dots */
+function calDraw(c,w,h,tm,dt,s){const A=AG,p=ease(prog(s,1200)),L=30,top=20,cw=(w-L-6)/26,ch=(h-top-4)/7,cell=Math.min(cw,ch);s.hits=[];
+  const ra=A.a;c.globalAlpha=1;c.fillStyle=C["paper-2"];const xr=L+((ra-A.cal0)/7)*cw;c.fillRect(xr,top-4,w-6-xr,h-top);
+  c.globalAlpha=.5;c.strokeStyle=C["rule-strong"];c.beginPath();c.moveTo(xr+.5,top-4);c.lineTo(xr+.5,h);c.stroke();
+  ["MON","","WED","","FRI","",""].forEach((d,i)=>d&&label(c,d,L-8,top+i*ch+ch/2,{size:7,align:"right"}));
+  let lastM=-1;
+  for(let wk=0;wk<26;wk++){const m0=A.cal0+wk*7,mo=new Date(dd(m0)+"T00:00:00").getMonth();if(mo!==lastM){lastM=mo;label(c,new Date(dd(m0)+"T00:00:00").toLocaleDateString("en-GB",{month:"short"}).toUpperCase(),L+wk*cw+2,7,{size:7.5,align:"left"});}
+    if(wk/26>p)continue;
+    for(let r=0;r<7;r++){const off=m0+r,x=L+wk*cw+cw/2,y=top+r*ch+ch/2,we=r>=5;if(off>0){s.hits.push({x,y,rx:cw/2,ry:ch/2,off,kind:"fut"});continue;}
+      const d=A.day.get(off),hov=s.hv&&s.hv.off===off;let kind="day";
+      if(LEAVE.has(off)){c.globalAlpha=.8;c.fillStyle=C["ink-4"];c.fillRect(x-4,y-.6,8,1.2);kind="leave";}
+      else if(d&&d.tot){const rad=Math.max(2.2,Math.sqrt(Math.min(d.tot,10)/9)*cell*.44)*(hov?1.14:1),ix=k=>{const i=A.keys.indexOf(k);return i<0?99:i;};
+        let a0=-Math.PI/2;[...d.by.entries()].sort((u,q)=>ix(u[0])-ix(q[0])).forEach(([k,v])=>{const a1=a0+v/d.tot*TAU;
+          c.globalAlpha=FOCUS&&FOCUS!==k?.1:.92;c.fillStyle=C[gMeta(k).col];c.beginPath();c.moveTo(x,y);c.arc(x,y,rad,a0,a1);c.closePath();c.fill();
+          c.globalAlpha=1;c.strokeStyle=C.paper;c.lineWidth=.9;c.stroke();a0=a1;});}
+      else if(!we){ring(c,x,y,Math.max(2.5,cell*.2),C.bad,.85,1.2);kind="none";}
+      else dot(c,x,y,.9,C["ink-4"]);
+      if(off===0)ring(c,x,y,cell*.46,C.ink,.6);
+      if(hov&&kind!=="day")ring(c,x,y,cell*.4,C["ink-2"],.6);
+      s.hits.push({x,y,rx:cw/2,ry:ch/2,off,kind});}}}
+function calTip(hit){const d=dd(hit.off);if(hit.kind==="fut")return `<b>${wdl(d)}</b><div class="hint">still to come</div>`;
+  if(hit.kind==="leave")return `<b>${wdl(d)}</b> · on leave`;if(hit.kind==="none")return `<b>${wdl(d)}</b> · <span class="late">no log</span><div class="hint">click to fill it in</div>`;
+  const D=AG.day.get(hit.off);if(!D)return `<b>${wdl(d)}</b> · weekend`;
+  return `<b>${wdl(d)}</b> · ${fh(D.tot)} h`+[...D.by.entries()].sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const m=gMeta(k);return `<div class="r" style="--pen:var(--${m.col})"><i></i><span>${esc(m.l)}${m.sub?` <span class="dim">${esc(m.sub)}</span>`:""}</span><span>${fh(v)}</span></div>`;}).join("")+`<div class="hint">click for the day's ledger</div>`;}
+/* stacked dot columns per week (or per day) */
+function wkDraw(c,w,h,tm,dt,s){const A=AG,B=A.B,n=B.length,L=32,top=14,bot=24,y0=h-bot,cw=(w-L-8)/n,u=A.dayMode?.5:1,tgt=A.dayMode?8:40;s.hits=[];
+  const m=cw>=200?6:cw>=90?4:cw>=44?2:1,maxH=Math.max(tgt*1.12,...B.map(b=>b.tot)),rows=Math.ceil(maxH/u/m),pitch=Math.min(14,(y0-top)/rows),hp=Math.min(pitch,cw*.8/m),r=Math.min(pitch,hp)*.4;
+  const yT=y0-(tgt/u/m)*pitch;c.globalAlpha=.7;c.strokeStyle=C["ink-3"];c.setLineDash([4,4]);c.lineWidth=1;c.beginPath();c.moveTo(L,yT);c.lineTo(w-8,yT);c.stroke();c.setLineDash([]);label(c,`${tgt} h`,L-6,yT,{size:7.5,align:"right"});
+  const el=reduced?1e9:performance.now()-s.born,every=Math.ceil(n/10);
+  B.forEach((bk,i)=>{const xc=L+cw*i+cw/2,x0=xc-(m-1)*hp/2,hov=s.hv&&s.hv.b===bk,pb=ease((el-i*28)/800);
+    if(hov){c.globalAlpha=1;c.fillStyle=C["paper-2"];c.fillRect(L+cw*i+1,top-6,cw-2,y0-top+10);}
+    const seq=[];A.keys.forEach(k=>{const v=(bk.by.get(k)||0)/u,full=Math.floor(v+1e-9);for(let j=0;j<full;j++)seq.push({k,half:false});if(v-full>=.5-1e-9)seq.push({k,half:true});});
+    const shown=Math.floor(seq.length*pb);
+    seq.forEach((d,j)=>{if(j>=shown)return;const x=x0+(j%m)*hp,y=y0-pitch/2-Math.floor(j/m)*pitch,col=C[gMeta(d.k).col];dot(c,x,y,d.half?r*.6:r,col,FOCUS&&FOCUS!==d.k?.13:.92);});
+    if(!bk.tot&&!(bk.a>0))dot(c,xc,y0-pitch/2,1,C["ink-4"]);
+    if(i%every===0||A.dayMode)label(c,bk.l,xc,h-9,{size:7.5,color:bk.a<=0&&bk.b>=0?C.ink:C["ink-3"]});
+    if(n<=13&&bk.tot&&pb>=1)label(c,fh(bk.tot),xc,y0-pitch*Math.ceil(seq.length/m)-8,{font:MONO,size:9,weight:500,color:C["ink-2"]});
+    s.hits.push({x:xc,y:(top+y0)/2,rx:cw/2,ry:(y0-top)/2+8,b:bk});});}
+function wkTip(hit){const bk=hit.b,title=AG.dayMode?wdl(dd(bk.a)):`Week of ${sh(dd(bk.a))}`;if(!bk.tot)return `<b>${title}</b><div class="hint">nothing logged</div>`;
+  return `<b>${title}</b> · ${fh(bk.tot)} h`+[...bk.by.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>{const m=gMeta(k);return `<div class="r" style="--pen:var(--${m.col})"><i></i><span>${esc(m.l)}${m.sub?` <span class="dim">${esc(m.sub)}</span>`:""}</span><span>${fh(v)}</span></div>`;}).join("")+`<div class="hint">${AG.dayMode?"click for the day":"click to open this week in the sheet"}</div>`;}
+/* activity mix: one ring of dots */
+function mixTotals(R){return ACT_ORD.map(a=>[a,sumH(R.filter(e=>e.act===a))]).filter(x=>x[1]>0);}
+function mixDraw(c,w,h,tm,dt,s){const M=mixTotals(AG.R),tot=M.reduce((a,b)=>a+b[1],0)||1,N=80,cx=w/2,cy=h/2,R1=Math.min(w,h)/2-8,p=ease(prog(s,1100));let idx=0;
+  M.forEach(([a,v])=>{const cnt=Math.round(v/tot*N);for(let j=0;j<cnt&&idx<N;j++,idx++){const t=idx/N;if(t>p)continue;const an=-Math.PI/2+t*TAU;dot(c,cx+Math.cos(an)*R1,cy+Math.sin(an)*R1,2.4,C[ACTC[a]],.95);dot(c,cx+Math.cos(an)*(R1-7),cy+Math.sin(an)*(R1-7),1.3,C[ACTC[a]],.45);}});
+  label(c,fh(Math.round(tot*10)/10),cx,cy-5,{font:MONO,size:20,weight:500,color:C.ink});label(c,"HOURS",cx,cy+13,{size:7.5});}
+function mixRows(R){const M=mixTotals(R).sort((a,b)=>b[1]-a[1]),tot=M.reduce((a,b)=>a+b[1],0)||1;
+  return M.map(([a,v])=>`<div class="mrow" style="--pen:var(--${ACTC[a]})"><i></i><span>${a}</span><span class="h">${fh(v)} h</span><span class="p">${pct(v,tot)}%</span></div>`).join("");}
+/* the week sheet — what you'd copy into the timesheet */
+function renderSheet(pin){const m=mondayOff(0)-WK*7,ds=[0,1,2,3,4,5,6].map(i=>m+i),es=E.filter(e=>e.off>=m&&e.off<=m+6),tot=sumH(es);
+  const keys=[...new Set(es.map(e=>e.task))].sort((a,b)=>(a[0]==="_")-(b[0]==="_")||a.localeCompare(b));
+  const cell=(k,o)=>sumH(es.filter(e=>e.task===k&&e.off===o)),we=o=>{const g=dow(dd(o));return g===0||g===6;};
+  $("#sheetU").innerHTML=`<div class="head"><h2>Week sheet</h2><span class="meta">${sh(dd(m))} – ${sh(dd(m+6))} · ${fh(tot)} h · click an empty cell to log it, a filled one to see the day</span>
+    <div class="wnav"><button class="btn sm ghost" id="wkP" title="Week before">‹</button><button class="btn sm ${WK?"":"ghost"}" id="wk0">This week</button><button class="btn sm ghost" id="wkN" title="Week after" ${WK===0?"disabled":""}>›</button><button class="btn sm" id="wkCopy">⧉ Copy for timesheet</button></div></div>
+    <table class="sheet ${pin?"pin":""}"><thead><tr><th>Demand / bucket</th>${ds.map(o=>`<th class="c ${we(o)?"we":""} ${o===0?"td":""}">${new Date(dd(o)+"T00:00:00").toLocaleDateString("en-GB",{weekday:"short"})}<small>${sh(dd(o))}</small></th>`).join("")}<th class="tt">Total</th></tr></thead>
+    <tbody>${keys.map(k=>`<tr><td class="rl"><span class="pdot" style="--pen:var(--${penOf(k)})"></span> ${TM[k]?`<b class="mono">${k}</b> <span class="dim">${esc(TM[k].title)}</span>`:esc(NON[k].l)}</td>${ds.map(o=>{const v=cell(k,o);return `<td class="c ${v?"has":"e"} ${we(o)?"we":""} ${o===0?"td":""} ${o>0?"fu":""}" data-o="${o}" data-k="${k}">${v?fh(v):""}</td>`;}).join("")}<td class="tt">${fh(sumH(es.filter(e=>e.task===k)))}</td></tr>`).join("")||`<tr><td class="rl dim" colspan="9">Nothing logged this week.</td></tr>`}</tbody>
+    <tfoot><tr><td class="rl dim">Day total</td>${ds.map(o=>{const v=sumH(es.filter(e=>e.off===o)),lv=LEAVE.has(o),un=!lv&&!we(o)&&o<0&&!v;
+      return `<td class="${we(o)?"we":""} ${o===0?"td":""}">${lv?`<span class="dim">leave</span>`:un?`<span class="late" style="cursor:pointer" data-fill="${o}">no log ＋</span>`:v?`${dayBar(v,0,16,4.2)}${fh(v)}`:""}</td>`;}).join("")}<td class="tt">${fh(tot)}</td></tr></tfoot></table>`;
+  $("#wkP").onclick=()=>{WK++;renderSheet();};$("#wkN").onclick=()=>{if(WK>0){WK--;renderSheet();}};$("#wk0").onclick=()=>{WK=0;renderSheet();};
+  $$("#sheetU td.c").forEach(td=>td.onclick=()=>{const o=+td.dataset.o;if(o>0)return;if(td.classList.contains("has"))openDay(o,td.dataset.k);else openLog({task:td.dataset.k,date:dd(o)});});
+  $$("#sheetU [data-fill]").forEach(el=>el.onclick=()=>openLog({date:dd(+el.dataset.fill)}));
+  $("#wkCopy").onclick=()=>{const rows=[["Demand / bucket",...ds.map(o=>dd(o)),"Total"].join("\t"),...keys.map(k=>[TM[k]?`${k} ${TM[k].title}`:NON[k].l,...ds.map(o=>{const v=cell(k,o);return v?String(v).replace(".",","):"";}),String(sumH(es.filter(e=>e.task===k))).replace(".",",")].join("\t"))];
+    (navigator.clipboard?navigator.clipboard.writeText(rows.join("\n")):Promise.reject()).then(()=>toast(`Copied ${keys.length} rows — paste into your timesheet or Excel`)).catch(()=>toast("Copy is blocked in this preview — in the app it copies a tab-separated table","var(--watch)"));};}
+function estRows(A){const ids=[...new Set(A.R.filter(e=>TM[e.task]).map(e=>e.task))];
+  const rows=ids.map(id=>({t:TM[id],a:totOf(id)})).sort((x,y)=>(y.a/y.t.est)-(x.a/x.t.est)),mx=Math.max(...rows.map(r=>Math.max(r.a,r.t.est)),1),N=34,u=mx/N;
+  return rows.map(r=>{const na=Math.round(r.a/u),ne=Math.round(r.t.est/u);let s=`<svg width="${N*6+4}" height="12">`;
+    for(let i=0;i<Math.max(na,ne);i++){const x=i*6+3;s+=i<na?`<circle cx="${x}" cy="6" r="2.2" style="fill:var(--${i<ne?r.t.pen:"bad"})"/>`:`<circle cx="${x}" cy="6" r="1.1" style="fill:var(--ink-4)"/>`;}
+    s+=`<line x1="${ne*6+.5}" x2="${ne*6+.5}" y1="0" y2="12" style="stroke:var(--ink-2)"/></svg>`;const d=r.a-r.t.est;
+    return `<div class="erow" data-id="${r.t.id}" title="Open the demand"><span class="n"><b class="mono">${r.t.id}</b> <span class="dim">${esc(r.t.title)}</span></span><span class="v ${d>0?"late":""}">${fh(r.a)} / ${r.t.est} h${d>0?` · +${fh(d)}`:""}</span>${s}</div>`;}).join("")||`<div class="dim">No demand work in this range.</div>`;}
+function reworkHTML(A,dem){const rw=A.R.filter(e=>TM[e.task]&&statusAt(TM[e.task],e.off)==="bug"),tot=sumH(rw);
+  if(!tot)return `<div class="big">0<small>h</small></div><div class="dim" style="margin-top:6px">Nothing bounced back in this range.</div>`;
+  const by=[...new Set(rw.map(e=>e.task))].map(id=>[id,sumH(rw.filter(e=>e.task===id))]).sort((a,b)=>b[1]-a[1]),mx=Math.max(...by.map(b=>b[1]));
+  return `<div class="big late">${fh(tot)}<small>h · ${pct(tot,dem)}% of demand work</small></div>`+by.map(([id,h])=>`<div class="erow" data-id="${id}"><span class="n"><b class="mono">${id}</b> <span class="dim">${esc(TM[id].title)}</span></span><span class="v">${fh(h)} h</span>${barDots(h,Math.max(.5,mx/30),30,"bad")}</div>`).join("");}
+function rhythmHTML(A){const nm=["Mon","Tue","Wed","Thu","Fri"];
+  const av=nm.map((_,i)=>{const es=A.R.filter(e=>dow(e.d)===i+1),n=new Set(es.map(e=>e.off)).size||1;return {d:sumH(es.filter(e=>TM[e.task]))/n,o:sumH(es.filter(e=>!TM[e.task]))/n};});
+  const best=Math.max(...av.map(v=>v.d));
+  return `<div class="rh">${av.map((v,i)=>{const nd=Math.round(v.d*2),no=Math.round(v.o*2);let s=`<svg width="10" height="${20*5}">`;
+    for(let j=0;j<20;j++)s+=`<circle cx="5" cy="${20*5-2.5-j*5}" r="${j<nd+no?2.1:.9}" style="fill:var(--${j<nd?"pen-2":j<nd+no?"ink-3":"ink-4"})"/>`;
+    return `<div class="${v.d===best?"mx":""}" title="${fh(Math.round(v.d*10)/10)} h demand work · ${fh(Math.round(v.o*10)/10)} h other">${s}<b>${fh(Math.round(v.d*10)/10)}</b>${nm[i]}</div>`;}).join("")}</div>
+  <div class="legend" style="justify-content:center"><span><span class="pdot" style="--pen:var(--pen-2)"></span>demand work (the number)</span><span><span class="pdot" style="--pen:var(--ink-3)"></span>meetings, admin, support, learning</span></div>`;}
+let NOTICE_ACTS=[];
+function noticedHTML(A,total,dem,unl){NOTICE_ACTS=[];const out=[],act=(l,fn)=>{NOTICE_ACTS.push(fn);return `<button class="btn sm" data-act="${NOTICE_ACTS.length-1}">${l}</button>`;};
+  const k0=A.keys.find(k=>k!=="_non");if(k0){const m=gMeta(k0);out.push([m.col,`<b>${esc(m.l)}</b>${m.sub?` <span class="dim">${esc(m.sub)}</span>`:""} took <b>${pct(A.tot.get(k0),total)}%</b> of your hours — the most of any ${GROUPS[G].toLowerCase()}.`,""]);}
+  const over=[...new Set(A.R.filter(e=>TM[e.task]).map(e=>e.task))].map(id=>TM[id]).filter(t=>totOf(t.id)>t.est).sort((a,b)=>(totOf(b.id)-b.est)-(totOf(a.id)-a.est));
+  over.slice(0,2).forEach(t=>out.push(["bad",`<b>${t.id}</b> is <b>${fh(totOf(t.id)-t.est)} h over</b> its ${t.est} h estimate.`,act("Open",()=>{SEL=t.id;setScene("demand");})]));
+  const rw=A.R.filter(e=>TM[e.task]&&statusAt(TM[e.task],e.off)==="bug");if(rw.length){const top=[...new Set(rw.map(e=>e.task))].sort((a,b)=>sumH(rw.filter(e=>e.task===b))-sumH(rw.filter(e=>e.task===a)))[0];
+    out.push(["bad",`<b>${fh(sumH(rw))} h</b> went to rework (${pct(sumH(rw),dem)}% of demand work) — mostly <b>${top}</b>.`,""]);}
+  const recent=unl.filter(o=>o>=-14);if(recent.length)out.push(["watch",`<b>${recent.length} working day${recent.length>1?"s":""} with no log</b> in the last two weeks: ${recent.map(o=>wdl(dd(o))).join(", ")}.`,act("Fill "+wdd(dd(recent[0])),()=>openLog({date:dd(recent[0])}))]);
+  out.push(["ink-3",`<b>${100-pct(dem,total)}%</b> of your time wasn't demand work — meetings, admin, support and learning.`,""]);
+  return out.map(([pen,h,b])=>`<div class="nt" style="--pen:var(--${pen})"><i></i><span>${h}</span>${b}</div>`).join("");}
+/* the day ledger */
+function openDay(off,hiTask){const es=E.filter(e=>e.off===off),tot=sumH(es),d=dd(off);
+  $("#drw").innerHTML=`<button class="btn sm close" id="drwX">✕ Close</button><div class="lbl">${LEAVE.has(off)?"On leave":"Day ledger"}</div><h2>${wdLong(d)}</h2>
+    <div class="dsum">${dayBar(tot,0)}<span><b class="mono" style="color:var(--ink)">${fh(tot)} h</b> of 8</span></div>
+    ${es.map(e=>`<div class="de ${hiTask===e.task?"hi":""}" style="--pen:var(--${penOf(e.task)})"><i></i><div><b class="mono">${esc(nameOf(e.task))}</b>${TM[e.task]?` <span class="dim">${esc(TM[e.task].title)}</span>`:""}<div>${esc(e.note)}</div><div class="t"><span class="tag pen" style="--pen:var(--${ACTC[e.act]})"><span class="pdot"></span>${e.act}</span>${e.sub?`<span class="dim" style="font-size:10.5px">↳ ${esc(e.sub)}</span>`:""}</div></div><span class="mono">${fh(e.h)} h</span></div>`).join("")||`<div class="dim" style="padding:14px 0">Nothing logged.</div>`}
+    <button class="btn sm pri" id="drwLog" style="margin-top:14px">＋ Log time for this day</button>`;
+  $("#drw").classList.add("on");$("#drwX").onclick=closeDay;$("#drwLog").onclick=()=>openLog({date:d,task:hiTask});}
+function closeDay(){$("#drw").classList.remove("on");}
+
+/* ---------- scenes ---------- */
+function rerender(flashId){if(SCENE==="demand"){renderDList();renderDemand(flashId);}else renderWorkspace();if($("#drw").classList.contains("on"))closeDay();}
+function setScene(s){SCENE=s;closeDay();$$("#scn button").forEach(b=>b.classList.toggle("on",b.dataset.s===s));
+  $("#crumb").innerHTML=s==="demand"?`~ / <b>01 demands</b> / ${SEL}`:`~ / <b>07 effort</b>`;
+  $$(".rb").forEach(b=>b.classList.toggle("on",b.dataset.r===s));const on=$(`.rb[data-r="${s}"]`);$("#ind").style.transform=`translateY(${on.offsetTop+6}px)`;
+  s==="demand"?renderDemandScene():renderWorkspace();}
+$$("#scn button").forEach(b=>b.onclick=()=>setScene(b.dataset.s));
+$$(".rb").forEach(b=>b.onclick=()=>{const r=b.dataset.r;if(r==="demand"||r==="effort")setScene(r);else toast("Not part of this mockup","var(--ink-3)");});
+$("#logBtn").onclick=()=>openLog();
+$("#ov").addEventListener("mousedown",e=>{if(e.target.id==="ov")closeLog();});
+$("#whatBtn").onclick=()=>$("#explain").classList.toggle("on");$("#explainX").onclick=()=>$("#explain").classList.remove("on");
+$("#themeBtn").onclick=()=>{const t=document.documentElement.dataset.theme==="dark"?"light":"dark";document.documentElement.dataset.theme=t;try{localStorage.setItem("ddmock3.theme",t);}catch(e){}readColors();};
+document.addEventListener("keydown",e=>{const tag=(e.target.tagName||"").toLowerCase(),typing=["input","textarea","select"].includes(tag);
+  if(e.key==="Escape"){if($("#ov").classList.contains("on"))closeLog();else if($("#drw").classList.contains("on"))closeDay();else $("#explain").classList.remove("on");return;}
+  if(!typing&&(e.key==="t"||e.key==="T")&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();openLog();}});
+$("#mark").innerHTML=[1,0,1,0,1,0,1,1,0].map(v=>`<i class="${v?"on":""}"></i>`).join("");
+readColors();updTimer();updToday();setScene("demand");
+</script>
+</body>
+</html>
