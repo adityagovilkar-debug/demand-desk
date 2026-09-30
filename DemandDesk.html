@@ -880,7 +880,7 @@
   .bh-sub{font-size:12px;color:var(--ink-3);margin-top:5px}
   .bh-acts{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
   .bh-btns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-  .bro{display:grid;grid-template-columns:repeat(auto-fit,minmax(108px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:14px}
+  .bro{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);margin-top:14px}
   .bro-i{background:var(--paper);padding:8px 10px 9px;min-width:0}
   .bro-i .k{display:block;font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
   .bro-i .v{display:block;font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
@@ -1031,6 +1031,152 @@
   .dests .dhint{font-size:11px}
   :root:is([data-theme="instrument"],[data-theme="bench"]) .dchip{border-radius:2px;background:transparent}
   :root:is([data-theme="instrument"],[data-theme="bench"]) .dests .dl{font-family:var(--label);font-size:9px;letter-spacing:.16em}
+
+  /* ---------------- Bench Demands: three panes, list rows, board, rail, overview, transport map ---------------- */
+  .cxr,#boardHost,.lbmode{display:none}
+  :root[data-theme="bench"] main{position:relative}
+  :root[data-theme="bench"] main.demands3 aside{width:330px;flex-basis:330px}
+  :root[data-theme="bench"] main.demands3 .cxr{display:block;width:292px;flex:0 0 292px;border-left:1px solid var(--rule);overflow:auto;background:var(--paper);position:relative;z-index:1}
+  :root[data-theme="bench"] main.demands3.noctx .cxr{display:none}
+  @media (max-width:1440px){:root[data-theme="bench"] main.demands3 aside{width:300px;flex-basis:300px}:root[data-theme="bench"] main.demands3 .cxr{width:268px;flex-basis:268px}}
+  @media (max-width:1180px){:root[data-theme="bench"] main.demands3 .cxr{display:none}:root[data-theme="bench"] main.demands3 aside{width:300px;flex-basis:300px}}
+  :root[data-theme="bench"] .lbmode{display:flex;border:1px solid var(--rule-strong);border-radius:3px;overflow:hidden;height:28px;flex:none}
+  :root[data-theme="bench"] .lbmode button{width:30px;height:100%;border:0;border-radius:0;display:grid;place-items:center;color:var(--ink-3);padding:0;background:var(--paper)}
+  :root[data-theme="bench"] .lbmode button.on{color:var(--ink);background:var(--paper-2)}
+  :root[data-theme="bench"] .lbmode svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.4}
+  :root[data-theme="bench"] .dvview .dvc{font-family:var(--mono);font-weight:500;font-size:9.5px;margin-left:5px;color:var(--ink-3)}
+  :root[data-theme="bench"] .dvview.on .dvc{color:inherit}
+  /* list rows */
+  :root[data-theme="bench"] .tcard.lr{display:grid;gap:4px;padding:10px 12px 10px 14px;position:relative}
+  :root[data-theme="bench"] .tcard.lr.active{box-shadow:none;background:var(--paper-2);border-left-width:3px}
+  :root[data-theme="bench"] main.demands3 .tcard.lr.active::after{content:"";position:absolute;right:-6px;top:50%;width:10px;height:10px;background:var(--paper);border-left:1px solid var(--rule);border-top:1px solid var(--rule);transform:translateY(-50%) rotate(-45deg);z-index:2}
+  .lr .l1{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;color:var(--pen);letter-spacing:.05em;min-width:0}
+  .lr .l1 .ep{color:var(--accent2)} .lr .l1 .wv{color:var(--ink-3)}
+  .lr .l1 .when{margin-left:auto;color:var(--ink-3);white-space:nowrap}
+  .lr .tt{font-size:12.5px;font-weight:600;line-height:1.35;color:var(--ink)}
+  .lr .l3{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+  .lr .l3 .strip{margin-left:auto;display:flex;align-items:center}
+  .lr.closed{opacity:.5}
+  .late{color:var(--bad)} .soon{color:var(--watch)} .good{color:var(--good)}
+  .btag{display:inline-flex;align-items:center;gap:5px;height:18px;padding:0 6px;border:1px solid var(--rule);border-radius:2px;font-family:var(--mono);font-size:9.5px;color:var(--ink-2);white-space:nowrap;background:transparent}
+  .btag.pen{color:var(--pen);border-color:color-mix(in srgb,var(--pen) 36%,var(--rule))}
+  .btag .t{font-size:8px;color:var(--ink-3);letter-spacing:.06em}
+  .pdot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--pen,var(--ink-3));flex:none;font-style:normal}
+  :root[data-theme="bench"] .eghead{font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;padding:9px 12px 7px}
+  :root[data-theme="bench"] .egroup{border-bottom:0}
+  /* board */
+  :root[data-theme="bench"] main.board aside{flex:1 1 auto;width:auto;border-right:0}
+  :root[data-theme="bench"] main.board #taskList,:root[data-theme="bench"] main.board .stats,:root[data-theme="bench"] main.board .cxr{display:none}
+  :root[data-theme="bench"] main.board #boardHost{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:14px;align-items:start;padding:14px 16px 24px;overflow:auto;flex:1;min-height:0}
+  :root[data-theme="bench"] main.board section.detail{position:absolute;top:0;right:0;bottom:0;width:min(940px,76%);z-index:20;background:var(--paper);border-left:1px solid var(--rule-strong);box-shadow:-20px 0 60px rgba(0,0,0,.14);transform:translateX(103%);transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+  :root[data-theme="bench"] main.board.open section.detail{transform:none}
+  .bcol{background:var(--paper-2);border:1px solid var(--rule);border-radius:3px;min-height:220px;display:flex;flex-direction:column;transition:border-color .2s,background .2s}
+  .bcol.over{border-color:var(--pen);background:color-mix(in srgb,var(--pen) 6%,var(--paper-2))}
+  .bcol .bh{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--rule)}
+  .bcol .bh .n{font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;color:var(--pen)}
+  .bcol .bh .c{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--ink-3)}
+  .bcol .bl{padding:8px;display:grid;gap:8px}
+  :root[data-theme="bench"] .bcol .tcard.lr{background:var(--paper);border:1px solid var(--rule);border-left:2px solid var(--pen);border-radius:3px;cursor:grab;transition:transform .2s,border-color .2s}
+  :root[data-theme="bench"] .bcol .tcard.lr:hover{transform:translateY(-1px);border-color:var(--rule-strong);border-left-color:var(--pen)}
+  .bcol .tcard.drag{opacity:.4}
+  .bcol .tcard.land{animation:bland .5s cubic-bezier(.2,1.4,.4,1)}
+  @keyframes bland{from{transform:scale(.94);opacity:.4}to{transform:none;opacity:1}}
+  .bh-close{display:none}
+  :root[data-theme="bench"] main.board .bh-close{display:inline-flex}
+  @media (max-width:1180px){.cx-t{display:none}}
+  /* context rail */
+  .cx-in{padding:14px 12px 30px;display:grid;gap:12px}
+  .cxs{padding:11px 13px 12px}
+  .cxs .ck-head{margin-bottom:9px}
+  .cxl{font-size:10.5px;color:var(--accent);cursor:pointer;white-space:nowrap}
+  .cxl:hover{text-decoration:underline}
+  .cxl.ep{color:var(--accent2)}
+  .kv{display:grid;grid-template-columns:78px minmax(0,1fr);gap:6px 10px;font-size:11.5px;align-items:baseline}
+  .kv .k{font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .kv .v{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .nx{display:flex;gap:10px;align-items:center}
+  .nx canvas{width:38px;height:38px;flex:none}
+  .nx .t{font-size:12.5px;font-weight:600;line-height:1.4;color:var(--ink)}
+  .nx .w{font-size:10px;color:var(--watch);margin-top:2px}
+  .cxa{display:flex;gap:6px;margin-top:10px}
+  .rf{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1px 8px;padding:6px 0;border-top:1px dotted var(--rule-strong);align-items:center}
+  .ck-head+.rf{border-top:0}
+  .rf .l{font-size:10px;color:var(--ink-3)}
+  .rf .v{grid-column:1;font-family:var(--mono);font-size:11px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rf .c{grid-row:1/3;grid-column:2}
+  .lk{display:grid;grid-template-columns:7px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 0;border-top:1px dotted var(--rule-strong);font-size:11.5px;cursor:pointer}
+  .ck-head+.lk{border-top:0}
+  .lk:hover .t{color:var(--accent)}
+  .lk i{width:7px;height:7px;border-radius:50%;background:var(--pen)}
+  .lk .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+  .lk .d{font-family:var(--mono);font-size:9.5px;color:var(--ink-3)}
+  .thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .thumbs div{aspect-ratio:4/3;border:1px solid var(--rule);border-radius:2px;background:repeating-linear-gradient(135deg,var(--paper-2) 0 6px,var(--paper) 6px 12px);background-size:cover;background-position:center;display:grid;place-items:end start;cursor:zoom-in;overflow:hidden}
+  .thumbs div span{font-family:var(--mono);font-size:8px;color:var(--ink-3);padding:2px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;background:color-mix(in srgb,var(--paper) 80%,transparent)}
+  .thumbs div.has span{display:none}
+  /* secondary tabs, context toggle */
+  :root[data-theme="bench"] .tabs .tab.sec2{color:var(--ink-3);opacity:.85}
+  :root[data-theme="bench"] .tabs .tsep{width:1px;background:var(--rule);margin:8px 6px}
+  :root[data-theme="bench"] .tabs .kbh{margin-left:auto;align-self:center;font-size:9.5px;color:var(--ink-3);font-family:var(--mono)}
+  /* overview */
+  .jr .jcv{width:100%;height:150px;display:block}
+  .ov4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:14px}
+  .ins{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;transition:border-color .25s}
+  .ins:hover{border-color:var(--rule-strong)}
+  .ins canvas{width:56px;height:56px;flex:none}
+  .ins .k{font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .ins .v{font-family:var(--mono);font-size:18px;margin-top:3px;color:var(--ink)}
+  .ins .v small{font-size:10px;color:var(--ink-3);margin-left:3px}
+  .ins .s{font-size:10.5px;color:var(--ink-3);margin-top:2px}
+  .fe{display:grid;grid-template-columns:52px 8px minmax(0,1fr);gap:10px;align-items:baseline;padding:7px 0;border-top:1px dotted var(--rule-strong);font-size:12px;color:var(--ink-2)}
+  .sec-title+.fe{border-top:0}
+  .fe .d{font-family:var(--mono);font-size:10px;color:var(--ink-3)}
+  .fe i{width:7px;height:7px;border-radius:50%;background:var(--pen);align-self:center}
+  .fe b{color:var(--ink);font-weight:600}
+  .compose{display:flex;gap:8px;margin-top:10px;align-items:stretch}
+  .compose textarea{min-height:34px;flex:1}
+  .wk2{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,1fr);gap:14px;align-items:start}
+  @media (max-width:1400px){.ov4{grid-template-columns:repeat(2,minmax(0,1fr))}.wk2{grid-template-columns:1fr}}
+  /* transport map */
+  .mx{width:100%;border-collapse:collapse}
+  .mx th{font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);font-weight:600;padding:6px;text-align:left;border-bottom:1px solid var(--rule);white-space:nowrap}
+  .mx th.sys{text-align:center;font-family:var(--mono);letter-spacing:.04em;font-size:10px;color:var(--ink-2)}
+  .mx th.sys small{display:block;font-family:var(--sans);font-size:7.5px;letter-spacing:.16em;color:var(--ink-3);margin-top:2px}
+  .mx th.land{text-align:center;border-bottom:1px dotted var(--rule-strong)}
+  .mx td{padding:8px 6px;border-bottom:1px dotted var(--rule-strong);font-size:12px;vertical-align:middle}
+  .mx td.c{text-align:center;width:58px;padding:8px 2px 12px}
+  .mx .sepL{border-left:1px solid var(--rule)}
+  .mx tr.mtr{cursor:pointer}
+  .mx tr.mtr:hover td,.mx tr.mtr.sel td{background:var(--paper-2)}
+  .mx tr.toc td{background:color-mix(in srgb,var(--accent2) 5%,transparent)}
+  .mx tr.toc .nm{color:var(--accent2)}
+  .mx tr.mem td:nth-child(2){padding-left:18px;position:relative}
+  .mx tr.mem td:nth-child(2)::before{content:"";position:absolute;left:6px;top:0;bottom:50%;width:7px;border-left:1px solid var(--accent2);border-bottom:1px solid var(--accent2)}
+  .mx .nm{font-family:var(--mono);font-weight:600;margin-right:6px}
+  .mx .ds{color:var(--ink-2);font-size:11.5px;margin-top:2px}
+  .mx .sq{font-family:var(--mono);font-size:10px;color:var(--ink-3);width:24px}
+  .mx td.st{text-align:right;white-space:nowrap;font-family:var(--mono);font-size:10.5px}
+  .cell{display:inline-grid;place-items:center;width:26px;height:26px;position:relative;vertical-align:middle}
+  .cell i{display:block;border-radius:50%}
+  .cell.reach i{width:9px;height:9px;background:var(--pen);animation:bpop .4s cubic-bezier(.2,1.6,.4,1) both;animation-delay:var(--d,0ms)}
+  .cell.origin i{width:9px;height:9px;border-radius:2px;background:var(--pen)}
+  .cell.pend i{width:9px;height:9px;border:1px solid var(--pen)}
+  .cell.pend::after{content:"";position:absolute;inset:6px;border:1px solid var(--pen);border-radius:50%;opacity:.35;animation:bpulse 2s ease-out infinite}
+  .cell.none i{width:3px;height:3px;background:var(--ink-4)}
+  .cell.tgt::before{content:"";position:absolute;inset:2px;border:1px solid var(--pen);border-radius:50%;opacity:.5}
+  .cell .dt{position:absolute;top:24px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:8px;color:var(--ink-3);white-space:nowrap}
+  @keyframes bpop{from{transform:scale(0)}to{transform:scale(1)}}
+  @keyframes bpulse{0%{transform:scale(.7);opacity:.5}100%{transform:scale(1.6);opacity:0}}
+  .mxleg{display:flex;gap:14px;font-size:10.5px;color:var(--ink-3);margin-top:10px;flex-wrap:wrap;align-items:center}
+  .mxleg>span{display:flex;align-items:center;gap:4px}
+  .mxleg .cell{width:18px;height:18px}
+  /* transport cards fold to their top line until you open one (Bench) */
+  .trtgl{display:none}
+  :root[data-theme="bench"] .trtgl{display:inline-flex}
+  :root[data-theme="bench"] .trcard.collapsed>:not(.trtop):not(.dests){display:none}
+  :root[data-theme="bench"] .trcard.collapsed{padding-bottom:8px}
+  :root[data-theme="bench"] .trcard.pulse{animation:bflash 1.2s ease-out}
+
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -1096,6 +1242,7 @@
   <main>
     <aside id="side"></aside>
     <section class="detail" id="detail"></section>
+    <aside class="cxr" id="cxr" aria-label="Demand context"></aside>
   </main>
   <footer class="sb" id="sb"><span><span class="led" style="background:var(--good)"></span>local-only · no network</span><span id="sbFile"></span><span id="sbAuto"></span><span id="sbCount"></span><span class="r" id="sbRight"></span></footer>
 </div>
@@ -1138,7 +1285,7 @@ const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod 
 let state={version:21,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false, lastWriteAt=0, autoSaveDue=0, diskConflict=null, fileSig=null, savePromise=null, backupUnreadable=false;
 let view="today";
-let activeId=null, activeTab="work", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
+let activeId=null, activeTab="overview", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
 let activeJournalId=null, activeDebugId=null, journalTodos=false, activePlayId=null, activeEpicId=null;
 let masterPassword=null, pendingEncrypted=null, revealPw={};
 
@@ -1697,7 +1844,7 @@ function renderApp(){
   else if(view==="epics"){renderEpicSidebar();renderEpicDetail();}
   else if(view==="playbook"){renderPlaybookSidebar();renderPlaybookDetail();}
   else{renderVault();}
-  renderSaveState();syncRail();updateSb();
+  renderSaveState();syncRail();updateSb();syncDemandsLayout();
 }
 
 /* ===================== TODAY DASHBOARD ===================== */
@@ -1941,11 +2088,12 @@ function dvChipList(v){const c=[];
 function dvFilterCount(v){return dvChipList(v).length-2;}
 function renderDemandSidebar(){
   {const v=dvGet();if(v.f.epic&&v.f.epic!=="__none"&&!epicById(v.f.epic)){delete v.f.epic;dvSet(v);}} /* epic deleted since */
-  const v=dvGet(),saved=dvSaved(),n=dvFilterCount(v),cur=saved.find(s=>dvSame(s.view,v));
+  const v=dvGet(),saved=dvSaved(),n=dvFilterCount(v),cur=saved.find(s=>dvSame(s.view,v)),cidxV=benchOn()?clashIndex():null;
   document.getElementById("side").innerHTML=`
     <div class="side-tools">
-      <div class="dvviews">${saved.map(s=>`<button class="dvview ${cur&&cur.id===s.id?"on":""}" data-id="${s.id}" title="Apply this saved view">${esc(s.name)}</button>`).join("")}${cur?"":`<button class="dvview save" id="dvSave" title="Save the current grouping, sort and filters as a one-click view">★ Save view</button>`}</div>
+      <div class="dvviews">${saved.map(s=>`<button class="dvview ${cur&&cur.id===s.id?"on":""}" data-id="${s.id}" title="Apply this saved view">${esc(s.name)}${benchOn()?`<b class="dvc">${state.tasks.filter(dvMatches(s.view,cidxV)).length}</b>`:""}</button>`).join("")}${cur?"":`<button class="dvview save" id="dvSave" title="Save the current grouping, sort and filters as a one-click view">★ Save view</button>`}</div>
       <div class="dvbar"><div class="dvq"><input id="dvQ" placeholder="Filter: ID, title, object, TR…" value="${esc(dvQuery)}" autocomplete="off"><button class="ghost sm ${dvQuery?"":"hide"}" id="dvQx" title="Clear">✕</button></div>
+        <div class="lbmode" title="List, or a board by status"><button id="mList" class="${demandsMode()==="list"?"on":""}" title="List — with the demand beside it"><svg viewBox="0 0 16 16"><path d="M2 4h12M2 8h12M2 12h12"/></svg></button><button id="mBoard" class="${demandsMode()==="board"?"on":""}" title="Board — drag a card to change its status"><svg viewBox="0 0 16 16"><rect x="1.5" y="2.5" width="3.5" height="11"/><rect x="6.25" y="2.5" width="3.5" height="7"/><rect x="11" y="2.5" width="3.5" height="9"/></svg></button></div>
         <button class="sm" id="dvOpen" title="Group, sort and filter the list">⚙ View${n?`<b class="dvn">${n}</b>`:""}</button></div>
       <div class="dvchips" id="dvChips"></div>
       <div class="filters">
@@ -1956,8 +2104,12 @@ function renderDemandSidebar(){
       <button class="primary" id="btnNew" style="width:100%">＋ New Demand / Task</button>
     </div>
     <div class="stats" id="stats"></div>
-    <div class="listwrap" id="taskList"></div>`;
+    <div class="listwrap" id="taskList"></div>
+    <div id="boardHost"></div>`;
   document.getElementById("btnNew").onclick=()=>openTaskModal(null);
+  {const ml=document.getElementById("mList"),mb=document.getElementById("mBoard");
+   if(ml)ml.onclick=()=>{if(demandsMode()!=="list")setDemandsMode("list");};
+   if(mb)mb.onclick=()=>{if(demandsMode()!=="board")setDemandsMode("board");};}
   document.getElementById("btnObjIdx").onclick=openObjectIndex;
   document.getElementById("btnPortfolio").onclick=openPortfolio;
   document.getElementById("btnAging").onclick=openAging;
@@ -2051,7 +2203,7 @@ function viewPref(k,def){try{const v=localStorage.getItem("demanddesk."+k);retur
 function setViewPref(k,v){try{localStorage.setItem("demanddesk."+k,v);}catch(e){}}
 function groupByEpic(){return viewPref("groupEpic","1")==="1";}
 const EPIC_GROUP_RANK={active:0,onhold:1,delivered:2,closed:3};
-function demandCard(t,grouped,cidx){const st=STATUS[t.status],sub=countSubs(t.subtasks),due=earliestOpenDue(t),dc=dueClass(due,t.status);
+function demandCard(t,grouped,cidx){if(benchOn())return demandCardBench(t,grouped,cidx);const st=STATUS[t.status],sub=countSubs(t.subtasks),due=earliestOpenDue(t),dc=dueClass(due,t.status);
     const lc=linkedCount(t.id);
     return `<div class="tcard s-${t.status} ${t.id===activeId?"active":""}" data-id="${t.id}">
       <div class="demand">${esc(t.demandId||"— no demand id —")}</div>
@@ -2072,6 +2224,7 @@ function demandCard(t,grouped,cidx){const st=STATUS[t.status],sub=countSubs(t.su
         ${t.nextAction&&t.nextAction.date&&t.status!=="closed"?`<span class="due ${nextActionDue(t)?"soon":""}" title="Next action${t.nextAction.note?": "+esc(t.nextAction.note):""}">⏰ ${t.nextAction.date.slice(5)}</span>`:""}
         ${due?`<span class="due ${dc}">⚑ ${due}${dc==="over"?" ("+(-daysUntil(due))+"d)":""}</span>`:""}</div></div>`;}
 function renderList(){
+  if(demandsMode()==="board"){renderBoard();return;}
   const el=document.getElementById("taskList");if(!el)return;
   const v=dvGet(),cidx=clashIndex();
   const list=dvSort(state.tasks.filter(dvMatches(v,cidx)),v,cidx);
@@ -2107,11 +2260,12 @@ function renderList(){
       const gid=h.parentElement.dataset.g,c=dvCollapsed(ckey);if(c.has(gid))c.delete(gid);else c.add(gid);
       setViewPref(ckey,JSON.stringify([...c]));renderList();});
   }
-  el.querySelectorAll(".tcard").forEach(c=>c.onclick=()=>{activeId=c.dataset.id;activeTab="work";renderApp();});
+  el.querySelectorAll(".tcard").forEach(c=>c.onclick=()=>{activeId=c.dataset.id;activeTab="overview";renderApp();});
 }
 function renderDetail(){
   const t=activeTask(),host=document.getElementById("detail");
-  if(!t){host.innerHTML=nopick("Select a demand on the left,<br>or create a new one to begin.");return;}
+  if(!benchOn()&&activeTab==="overview")activeTab="work";   /* Overview is a Bench tab; classic opens on Work */
+  if(!t){host.innerHTML=nopick("Select a demand on the left,<br>or create a new one to begin.");if(benchOn())renderCtxRail();return;}
   const st=STATUS[t.status],sub=countSubs(t.subtasks),lc=linkedCount(t.id);
   host.innerHTML=benchOn()?demandHeadBench(t,sub,lc):`
     <div class="detail-head">
@@ -2144,6 +2298,8 @@ function renderDetail(){
   host.querySelector("#btnSpec").onclick=()=>openTechSpec(t);
   host.querySelector("#btnEditTask").onclick=()=>openTaskModal(t);
   host.querySelector("#btnNext").onclick=()=>openNextAction(t);
+  {const ct=host.querySelector("#cxToggle");if(ct)ct.onclick=()=>{setViewPref("ctxRail",ctxRailOn()?"0":"1");syncDemandsLayout();renderDetail();};
+   const dc=host.querySelector("#dhClose");if(dc)dc.onclick=()=>document.querySelector("main").classList.remove("open");}
   {const d=host.querySelector("#na-done");if(d)d.onclick=()=>nextActionDone(t);const ed=host.querySelector("#na-edit");if(ed)ed.onclick=()=>openNextAction(t);}
   {const ds=host.querySelector("#dh-status");if(ds)ds.onchange=ev=>setDemandStatus(t,ev.target.value,ds);
    host.querySelectorAll("#dh-seg button").forEach(b=>b.onclick=()=>setDemandStatus(t,b.dataset.s,b));
@@ -2154,7 +2310,8 @@ function renderDetail(){
   host.querySelector("#btnDelTask").onclick=()=>{if(confirm("Delete this demand and all its subtasks, objects and transports?")){state.tasks=state.tasks.filter(x=>x.id!==t.id);state.meetings.forEach(m=>m.taskIds=m.taskIds.filter(id=>id!==t.id));state.journal.forEach(j=>j.taskIds=(j.taskIds||[]).filter(id=>id!==t.id));state.debug.forEach(s=>{if(s.taskId===t.id)s.taskId="";});state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="demand"&&l.id===t.id)));activeId=null;markDirty();renderApp();}};
   host.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{activeTab=b.dataset.tab;renderDetail();enterPulse("detail");});
   const body=host.querySelector("#detailBody");
-  if(activeTab==="work")renderWork(body,t);
+  if(activeTab==="overview")renderOverview(body,t);
+  else if(activeTab==="work")(benchOn()?renderWorkBench:renderWork)(body,t);
   else if(activeTab==="objects")renderObjects(body,t);
   else if(activeTab==="transports")renderTransports(body,t);
   else if(activeTab==="reference")renderReference(body,t);
@@ -2162,6 +2319,7 @@ function renderDetail(){
   else if(activeTab==="images")renderImagesSection(body,"demand",t.id);
   else renderHistory(body,t);
   placeTabInd(host);
+  if(benchOn())renderCtxRail();
 }
 function renderReference(body,t){
   const list=t.reference||(t.reference=[]);
@@ -2346,7 +2504,9 @@ function openObjPicker(t,tr,cb){
 }
 
 function renderTransports(body,t){
-  body.innerHTML=`<div id="readiness"></div>
+  /* Bench: the transport map opens a transport's card for editing */
+  const pickTr=id=>{trOpen.add(id);drawTrs();const c=body.querySelector(`.trcard[data-trid="${id}"]`);if(c){c.scrollIntoView({block:"center",behavior:motionOn()?"smooth":"auto"});c.classList.remove("pulse");void c.offsetWidth;c.classList.add("pulse");}};
+  body.innerHTML=`<div id="readiness"></div><div id="trMap"></div>
     <div class="sec-title"><h3>Transport requests</h3><div class="ln"></div><button class="sm" id="runSheet" title="The import request for Basis: what's left to import into a system, in order">📋 Run sheet</button><button class="sm" id="expTr" title="Export all transports across all demands to CSV">⬇ CSV</button><button class="sm" id="addTr">＋ Add transport</button></div>
     <p class="faint" style="font-size:12px;margin:-4px 0 10px">Order = release order (use ↑↓). Add a sync target for each system a TR was imported to. If a TR is bundled in a <b>Transport of Copies</b>, its downstream systems are inherited from the ToC. Mark client-dependent config as <b>Customizing</b> to record its client (e.g. H13 / 150); <b>Workbench</b> TRs are client-independent.</p>
     <div id="trList"></div>
@@ -2378,10 +2538,11 @@ function renderTransports(body,t){
 
   function drawTrs(){
     const host=body.querySelector("#trList");host.innerHTML="";const cidx=clashIndex();
-    if(!t.transports.length){host.innerHTML=`<div class="faint" style="font-size:12px;padding:4px 2px">No transports yet.</div>`;return;}
+    if(!t.transports.length){host.innerHTML=`<div class="faint" style="font-size:12px;padding:4px 2px">No transports yet.</div>`;const m=body.querySelector("#trMap");if(m)m.innerHTML="";return;}
     t.transports.forEach((tr,idx)=>{
       const toc=tocFor(t,tr);const reached=reachedSystems(t,tr);const target=goliveTargetFor(t);const cust=isCust(tr);
-      const card=document.createElement("div");card.className="trcard"+(cust?" cust":"");
+      const card=document.createElement("div");card.className="trcard"+(cust?" cust":"");card.dataset.trid=tr.id;
+      if(benchOn()&&tr.number&&!trOpen.has(tr.id))card.classList.add("collapsed");
       const tocOpts=`<option value="">— not bundled —</option>`+(t.tocs||[]).map(c=>`<option value="${c.id}" ${c.id===tr.tocId?"selected":""}>${esc(c.number||"(unnamed ToC)")}</option>`).join("");
       card.innerHTML=`
         <div class="trtop">
@@ -2395,7 +2556,7 @@ function renderTransports(body,t){
           <select class="org" title="Origin system">${systemOptions(tr.system)}</select>
           <select class="cli ${cust?"":"hide"}" title="Origin client (mandant)">${clientOptions(tr.system,tr.client)}</select>
           <label style="display:flex;align-items:center;gap:5px;text-transform:none;font-size:12px;color:var(--muted);margin:0"><input type="checkbox" class="rel" ${tr.released?"checked":""} style="width:auto">Released</label>
-          <button class="ghost sm danger del">🗑</button>
+          <button class="ghost sm trtgl" title="Show or hide this transport's details">▾ details</button><button class="ghost sm danger del">🗑</button>
         </div>
         <canvas class="trroute" title="Where this transport has reached — ringed system = go-live target"></canvas>
         ${destHTML(t,tr)}
@@ -2417,6 +2578,7 @@ function renderTransports(body,t){
         <div style="margin-top:8px"><label>Objects in this TR</label><div class="objlink"></div></div>`;
       const q=s=>card.querySelector(s);
       if(benchOn())DK.scope(q(".trroute"),trRouteDraw(t,tr));
+      q(".trtgl").onclick=()=>{if(trOpen.has(tr.id))trOpen.delete(tr.id);else trOpen.add(tr.id);card.classList.toggle("collapsed",!trOpen.has(tr.id));};
       /* destinations: add a whole route (H43 → H42 → H41) or single systems; a pending one can be ticked reached */
       q(".dadd").onchange=e=>{const v=e.target.value;if(!v)return;tr.dest=tr.dest||[];
         const add=v.startsWith("L:")?routeTiers().map(d=>v.slice(2)+d):[v];
@@ -2458,6 +2620,7 @@ function renderTransports(body,t){
       drawOl();
       host.appendChild(card);
     });
+    if(benchOn())drawTrMap(body.querySelector("#trMap"),t,pickTr);
   }
 
   function drawTocs(){
@@ -3091,7 +3254,7 @@ function openPortfolio(){
         ${items.map(t=>`<div style="font-size:12px;margin:2px 0 0 6px"><a class="pf-go" data-id="${t.id}" style="cursor:pointer">${esc(t.demandId||"—")} · ${esc(t.title)}</a> <span class="pill ${STATUS[t.status].cls}" style="font-size:9px">${STATUS[t.status].label}</span></div>`).join("")}
         ${(objs.size||trs.size)?`<div style="font-size:11px;margin:6px 0 0 6px" class="faint">${objs.size?"Objects: "+[...objs].map(esc).join(", "):""}${objs.size&&trs.size?" · ":""}${trs.size?"TRs: "+[...trs].map(esc).join(", "):""}</div>`:""}
       </div>`;}).join("");
-    listEl.querySelectorAll(".pf-go").forEach(a=>a.onclick=()=>{view="demands";activeId=a.dataset.id;activeTab="work";close();renderApp();});
+    listEl.querySelectorAll(".pf-go").forEach(a=>a.onclick=()=>{view="demands";activeId=a.dataset.id;activeTab="overview";close();renderApp();});
     listEl.querySelectorAll(".pf-filter").forEach(a=>a.onclick=()=>{const n=a.dataset.n;
       const dv=dvGet();dv.f={};dv.status=[];dv.only=[];dvQuery="";
       if(dim==="project")dv.f.project=n;
@@ -3137,7 +3300,7 @@ function openAging(){
   const close=()=>root.innerHTML="";
   root.querySelector("#ag-close").onclick=close;
   root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
-  root.querySelectorAll(".ag-go").forEach(r=>r.onclick=()=>{view="demands";activeId=r.dataset.id;activeTab="work";close();renderApp();});
+  root.querySelectorAll(".ag-go").forEach(r=>r.onclick=()=>{view="demands";activeId=r.dataset.id;activeTab="overview";close();renderApp();});
 }
 
 /* ===================== JOURNAL ===================== */
@@ -3239,7 +3402,7 @@ function drawLinkChips(host,o,redraw,emptyMsg){
     chip.innerHTML=`<span class="go">${esc(label)}</span> <span class="x">✕</span>`;
     chip.querySelector(".go").onclick=go;chip.querySelector(".x").onclick=()=>{remove();touch(o);redraw();};host.appendChild(chip);};
   eps.forEach(e=>add("◆ "+epicLabel(e),()=>{view="epics";activeEpicId=e.id;epicTab="story";renderApp();},()=>{o.epicIds=o.epicIds.filter(x=>x!==e.id);},true));
-  ts.forEach(t=>add(taskLabel(t),()=>{view="demands";activeId=t.id;activeTab="work";renderApp();},()=>{o.taskIds=o.taskIds.filter(x=>x!==t.id);},false));
+  ts.forEach(t=>add(taskLabel(t),()=>{view="demands";activeId=t.id;activeTab="overview";renderApp();},()=>{o.taskIds=o.taskIds.filter(x=>x!==t.id);},false));
 }
 function openLinkPicker(o,title,onClose){
   const root=document.getElementById("modalRoot");o.taskIds=o.taskIds||[];o.epicIds=o.epicIds||[];
@@ -3331,7 +3494,7 @@ function renderDebugBody(body,s){
     <div class="field"><textarea id="d-notes" style="min-height:90px" placeholder="Anything else…">${esc(s.notes)}</textarea></div>`;
   body.querySelector("#d-resume").onchange=e=>{s.resume=e.target.value;touch(s);};
   body.querySelector("#d-notes").onchange=e=>{s.notes=e.target.value;touch(s);};
-  if(t){const g=body.querySelector("#d-goto");if(g)g.onclick=()=>{view="demands";activeId=s.taskId;activeTab="work";renderApp();};}
+  if(t){const g=body.querySelector("#d-goto");if(g)g.onclick=()=>{view="demands";activeId=s.taskId;activeTab="overview";renderApp();};}
   // objects
   const objs=body.querySelector("#d-objs");
   const drawObjs=()=>{objs.innerHTML=s.objects.length?s.objects.map(o=>`<tr data-id="${o.id}"><td><input class="mono o-n" value="${esc(o.name)}" placeholder="ZHR_..."></td><td><input class="o-note" value="${esc(o.note)}"></td><td><button class="ghost sm danger o-x">🗑</button></td></tr>`).join(""):`<tr><td colspan="3" class="faint" style="padding:10px;text-align:center">No objects yet.</td></tr>`;
@@ -4317,7 +4480,7 @@ function runGlobalSearch(q){
   if(!q){box.classList.add("hide");return;}
   const hits=[];
   state.tasks.forEach(t=>{
-    if([t.demandId,t.title,t.description,t.notes,t.type,t.requestor,t.project,t.theme,t.wave,t.system,t.client?"client "+t.client:"",(t.nextAction&&t.nextAction.note)||"",(()=>{const e=epicById(t.epicId);return e?epicLabel(e):"";})(),(t.comments||[]).map(c=>c.text).join(" ")].join(" ").toLowerCase().includes(q))hits.push({k:"Demand",go:()=>{view="demands";activeId=t.id;activeTab="work";},label:`${t.demandId||"—"} · ${t.title}${t.system?" · "+t.system+(t.client?"/"+t.client:""):""}${t.project?" · ▦ "+t.project:""}${t.theme?" · "+t.theme:""}`});
+    if([t.demandId,t.title,t.description,t.notes,t.type,t.requestor,t.project,t.theme,t.wave,t.system,t.client?"client "+t.client:"",(t.nextAction&&t.nextAction.note)||"",(()=>{const e=epicById(t.epicId);return e?epicLabel(e):"";})(),(t.comments||[]).map(c=>c.text).join(" ")].join(" ").toLowerCase().includes(q))hits.push({k:"Demand",go:()=>{view="demands";activeId=t.id;activeTab="overview";},label:`${t.demandId||"—"} · ${t.title}${t.system?" · "+t.system+(t.client?"/"+t.client:""):""}${t.project?" · ▦ "+t.project:""}${t.theme?" · "+t.theme:""}`});
     t.objects.forEach(o=>{if([o.name,o.type,o.desc].join(" ").toLowerCase().includes(q))hits.push({k:"Object",go:()=>{view="demands";activeId=t.id;activeTab="objects";},label:`${o.name||"(obj)"} — ${o.action} · ${t.demandId||t.title}`});});
     t.transports.forEach(tr=>{
       const toc=tocFor(t,tr);
@@ -4814,7 +4977,7 @@ function demandHeadBench(t,sub,lc){
         <h1>${esc(t.title)}</h1>
         <div class="bh-sub">${esc(t.type)}${t.requestor?` · asked by ${esc(t.requestor)}`:""}${t.project?` · ▦ ${esc(t.project)}`:""}${t.theme?` · ${esc(t.theme)}`:""}</div></div>
       <div class="bh-acts">${statusSegHTML(t)}
-        <div class="bh-btns"><button class="sm" id="btnNext" title="When should this demand come back up on Today?">⏰ Next action</button><button class="sm" id="btnSpec" title="Generate post-delivery technical spec">📄 Tech spec</button><button class="sm" id="btnEditTask">✎ Edit</button><button class="sm ghost danger" id="btnDelTask" title="Delete this demand">🗑</button></div></div></div>
+        <div class="bh-btns"><button class="sm" id="btnNext" title="When should this demand come back up on Today?">⏰ Next action</button><button class="sm" id="btnSpec" title="Generate post-delivery technical spec">📄 Tech spec</button><button class="sm" id="btnEditTask">✎ Edit</button><button class="sm ghost danger" id="btnDelTask" title="Delete this demand">🗑</button>${demandsMode()==="list"?`<button class="sm cx-t" id="cxToggle" title="Show or hide the context rail">${ctxRailOn()?"Context ⟩":"⟨ Context"}</button>`:""}<button class="sm bh-close" id="dhClose" title="Back to the board (Esc)">✕ Close</button></div></div></div>
     ${roHTML([
       {k:"Received",v:shortD(t.receivedDate)},
       {k:"Due",v:t.dueDate?shortD(t.dueDate)+(dn!=null&&dn<0?`<small>${-dn} d late</small>`:dn!=null&&dn<=7?`<small>in ${dn} d</small>`:""):"—",cls:dn!=null&&dn<0?"bad":dn!=null&&dn<=3?"warn":""},
@@ -4828,13 +4991,16 @@ function demandHeadBench(t,sub,lc){
     ${cl.length?(()=>{const x=cl[0],o=x.open[0],more=cl.reduce((n,y)=>n+y.open.length,0)-1;
       return `<div class="clashband"><canvas class="orbit"></canvas><span><span class="ck">Object clash</span> <b class="mono">${esc(x.o.name)}</b> is also in flight in <a class="cb-go" data-id="${o.t.id}">${esc(o.t.demandId||o.t.title)}</a> <span class="clw">— ${esc(clashWhere(o))}${more>0?` · +${more} more`:""}. Agree the import order.</span></span><button class="sm cb-obj">Objects ›</button></div>`;})():""}
     <div class="tabs">
-      <button class="tab ${activeTab==="work"?"active":""}" data-tab="work">Work<span class="count">${sub.n}</span></button>
-      <button class="tab ${activeTab==="objects"?"active":""}" data-tab="objects">Objects<span class="count">${t.objects.length}</span>${nClash?`<span class="clashtag" title="Object(s) also in flight in another demand">⚠ ${nClash}</span>`:""}</button>
-      <button class="tab ${activeTab==="transports"?"active":""}" data-tab="transports">Transports<span class="count">${t.transports.length}</span></button>
-      <button class="tab ${activeTab==="reference"?"active":""}" data-tab="reference">Reference<span class="count">${(t.reference||[]).length}</span></button>
-      <button class="tab ${activeTab==="calls"?"active":""}" data-tab="calls">Linked<span class="count">${lc}</span></button>
-      <button class="tab ${activeTab==="images"?"active":""}" data-tab="images">Images<span class="count">${imagesFor("demand",t.id).length}</span></button>
-      <button class="tab ${activeTab==="history"?"active":""}" data-tab="history">History<span class="count">${(t.timeline||[]).length}</span></button>
+      <button class="tab ${activeTab==="overview"?"active":""}" data-tab="overview" title="1">Overview</button>
+      <button class="tab ${activeTab==="work"?"active":""}" data-tab="work" title="2">Work<span class="count">${sub.n}</span></button>
+      <button class="tab ${activeTab==="objects"?"active":""}" data-tab="objects" title="3">Objects<span class="count">${t.objects.length}</span>${nClash?`<span class="clashtag" title="Object(s) also in flight in another demand">⚠ ${nClash}</span>`:""}</button>
+      <button class="tab ${activeTab==="transports"?"active":""}" data-tab="transports" title="4">Transports<span class="count">${t.transports.length}</span></button>
+      <button class="tab ${activeTab==="history"?"active":""}" data-tab="history" title="5">History<span class="count">${(t.timeline||[]).length}</span></button>
+      <span class="tsep"></span>
+      <button class="tab sec2 ${activeTab==="reference"?"active":""}" data-tab="reference">Reference<span class="count">${(t.reference||[]).length}</span></button>
+      <button class="tab sec2 ${activeTab==="calls"?"active":""}" data-tab="calls">Linked<span class="count">${lc}</span></button>
+      <button class="tab sec2 ${activeTab==="images"?"active":""}" data-tab="images">Images<span class="count">${imagesFor("demand",t.id).length}</span></button>
+      <span class="kbh" title="Keyboard: ↑ ↓ move through the list, 1–5 switch tabs">↑↓ · 1–5</span>
       <span class="tind"></span>
     </div></div><div class="detail-body" id="detailBody"></div>`;}
 
@@ -4947,6 +5113,214 @@ function wrapSections(root){if(!root||!benchOn())return;
   const obs=new MutationObserver(()=>{if(queued)return;queued=true;
     queueMicrotask(()=>{obs.disconnect();try{wrapSections(detail);}finally{queued=false;obs.observe(detail,{childList:true,subtree:true});}});});
   obs.observe(detail,{childList:true,subtree:true});}
+
+/* ===================== BENCH DEMANDS: three panes, board, overview, transport map =====================
+   The Demands workspace in Bench: list · the demand · a context rail. A board mode lays
+   the list out by status (drag to change it) with the demand sliding over it. Overview
+   tells the demand's journey; Transports opens on a map of every transport against every
+   system on its route. Classic themes keep the original page. */
+const TIER_S={"3":"DEV","2":"QA","1":"PRD"};
+const penVar=x=>({"3":"var(--pen-2)","2":"var(--pen-4)","1":"var(--pen-3)"})[String(x).slice(-1)]||"var(--pen-5)";
+function demandsMode(){return benchOn()&&viewPref("demandsMode","list")==="board"?"board":"list";}
+function ctxRailOn(){return viewPref("ctxRail","1")==="1";}
+function syncDemandsLayout(){const m=document.querySelector("main");if(!m)return;const b=benchOn()&&view==="demands";
+  m.classList.toggle("demands3",b&&demandsMode()==="list");m.classList.toggle("noctx",b&&!ctxRailOn());
+  m.classList.toggle("board",b&&demandsMode()==="board");if(!(b&&demandsMode()==="board"))m.classList.remove("open");}
+function whenTxt(t){const d=t.dueDate&&!["delivered","closed"].includes(t.status)?daysUntil(t.dueDate):null;
+  if(d==null)return t.status==="delivered"?"delivered":t.status==="closed"?"closed":"no due date";
+  return d<0?`<span class="late">${-d} d late</span>`:d===0?`<span class="soon">due today</span>`:d<=7?`<span class="soon">in ${d} d</span>`:"due "+shortD(t.dueDate);}
+/* one dot per transport: ● complete · ◐ on its way · dashed ○ not released · ○ built, not moved */
+function trStripSVG(t){if(!t.transports.length)return "";let s=`<svg width="${t.transports.length*9}" height="9" aria-hidden="true">`;
+  t.transports.forEach((tr,i)=>{const x=i*9+4.5,moved=[...reachedSystems(t,tr)].some(z=>z!==tr.system);
+    s+=trComplete(t,tr)?`<circle cx="${x}" cy="4.5" r="3.2" style="fill:var(--good)"/>`
+      :!tr.released?`<circle cx="${x}" cy="4.5" r="3" style="fill:none;stroke:var(--watch);stroke-dasharray:1.5 1.2"/>`
+      :moved?`<circle cx="${x}" cy="4.5" r="3" style="fill:none;stroke:var(--watch)"/><path d="M${x} 1.5 A3 3 0 0 1 ${x} 7.5Z" style="fill:var(--watch)"/>`
+      :`<circle cx="${x}" cy="4.5" r="3" style="fill:none;stroke:var(--ink-3)"/>`;});
+  return s+"</svg>";}
+function btag(txt,pen,title){return `<span class="btag${pen?" pen":""}"${pen?` style="--pen:${pen}"`:""}${title?` title="${esc(title)}"`:""}>${txt}</span>`;}
+function demandCardBench(t,grouped,cidx,board){const ep=epicById(t.epicId),nc=openClashCount(t,cidx),na=t.nextAction&&t.nextAction.date&&t.status!=="closed"?t.nextAction:null;
+  return `<div class="tcard lr s-${t.status} ${t.id===activeId&&!board?"active":""} ${t.status==="closed"?"closed":""}" data-id="${t.id}" style="--pen:${STATUS_PEN[t.status]}"${board?' draggable="true"':""}>
+    <div class="l1"><span>${esc(t.demandId||"no demand id")}</span>${ep&&!grouped?`<span class="ep">◆ ${esc(ep.code||ep.name)}</span>`:""}${t.wave?`<span class="wv">· ${esc(t.wave)}</span>`:""}<span class="when">${whenTxt(t)}</span></div>
+    <div class="tt">${esc(t.title)}</div>
+    <div class="l3">${board?"":btag(`<i class="pdot"></i>${STATUS[t.status].label}`,STATUS_PEN[t.status])}${t.system&&!board?btag(`${esc(t.system)}<span class="t">${TIER_S[t.system.slice(-1)]||""}</span>${t.client?"·"+esc(t.client):""}`):""}
+      ${isWaiting(t)?btag(`⏳ ${esc(t.waiting.on)}${waitDays(t)!=null?" "+waitDays(t)+"d":""}`,"var(--watch)"):""}${nc?btag(`⚠ ${nc} clash`,"var(--bad)","Object(s) also in flight in another demand"):""}
+      ${na?btag(`⏰ ${na.date===todayStr()?"today":na.date<todayStr()?"due":shortD(na.date)}`,"var(--watch)",na.note):""}
+      <span class="strip" title="Transports: ● complete · ◐ on its way · ○ built · dashed = not released">${trStripSVG(t)}</span></div></div>`;}
+
+/* ---------- board: the list laid out by status; drag a card to change it ---------- */
+function renderBoard(){const host=document.getElementById("boardHost");if(!host)return;
+  const v=dvGet(),cidx=clashIndex();
+  /* every column stays visible, so a status-based view can't hide the card you just dropped */
+  const bv={...v,status:[],hideClosed:false,hideDelivered:false};
+  const L=dvSort(state.tasks.filter(dvMatches(bv,cidx)).filter(t=>t.status!=="closed"),v,cidx);
+  host.innerHTML=["open","progress","bug","delivered"].map(s=>{const ts=L.filter(t=>t.status===s);
+    return `<div class="bcol" data-s="${s}" style="--pen:${STATUS_PEN[s]}"><div class="bh"><i class="pdot"></i><span class="n">${STATUS[s].label}</span><span class="c">${ts.length}</span></div>
+      <div class="bl">${ts.map(t=>demandCardBench(t,false,cidx,true)).join("")||`<div class="bempty">Drop a demand here</div>`}</div></div>`;}).join("");
+  host.querySelectorAll(".tcard").forEach(c=>{c.onclick=()=>{activeId=c.dataset.id;activeTab="overview";document.querySelector("main").classList.add("open");renderDetail();renderCtxRail();enterPulse("detail");};
+    c.ondragstart=e=>{e.dataTransfer.setData("text/plain",c.dataset.id);e.dataTransfer.effectAllowed="move";c.classList.add("drag");};
+    c.ondragend=()=>c.classList.remove("drag");});
+  host.querySelectorAll(".bcol").forEach(col=>{col.ondragover=e=>{e.preventDefault();col.classList.add("over");};col.ondragleave=()=>col.classList.remove("over");
+    col.ondrop=e=>{e.preventDefault();col.classList.remove("over");const t=state.tasks.find(x=>x.id===e.dataTransfer.getData("text/plain"));if(!t||t.status===col.dataset.s)return;
+      logTimeline(t,"status",t.status,col.dataset.s);t.status=col.dataset.s;touch(t);renderBoard();renderStats();
+      const c=host.querySelector(`.tcard[data-id="${t.id}"]`);if(c&&motionOn())c.classList.add("land");
+      if(activeId===t.id)renderDetail();toast(`${t.demandId||t.title} → ${STATUS[t.status].label} · logged in History`);};});}
+function setDemandsMode(m){setViewPref("demandsMode",m);syncDemandsLayout();renderDemandSidebar();renderDetail();renderCtxRail();}
+
+/* ---------- context rail: what you glance at while working ---------- */
+function renderCtxRail(){const host=document.getElementById("cxr");if(!host)return;
+  if(!(benchOn()&&view==="demands")){host.innerHTML="";return;}
+  const t=activeTask();if(!t){host.innerHTML=`<div class="cx-in"><div class="bempty" style="padding:30px 0">Pick a demand to see its context.</div></div>`;return;}
+  const ep=epicById(t.epicId),na=t.nextAction&&t.nextAction.date?t.nextAction:null,nad=na?daysUntil(na.date):0;
+  const refs=(t.reference||[]),pins=refs.filter(r=>r.pinned),show=(pins.length?pins:refs).slice(0,4);
+  const links=[...meetingsForTask(t.id).map(m=>({k:"meeting",id:m.id,t:m.title,d:m.date,pen:"var(--pen-4)"})),...journalForTask(t.id).map(j=>({k:"journal",id:j.id,t:j.title||"Journal "+j.date,d:j.date,pen:"var(--pen-3)"})),
+    ...debugForTask(t.id).map(s=>({k:"debug",id:s.id,t:s.title,d:isoTs(s.updatedAt),pen:"var(--pen-1)"}))].sort((a,b)=>b.d.localeCompare(a.d));
+  const imgs=imagesFor("demand",t.id),dn=t.dueDate&&!["delivered","closed"].includes(t.status)?daysUntil(t.dueDate):null;
+  host.innerHTML=`<div class="cx-in">
+    <div class="ck-unit cxs" style="--pen:var(--watch)"><div class="ck-head"><h2>Next action</h2><span class="ck-meta">${na?(nad<0?(-nad)+" d ago":nad===0?"today":"in "+nad+" d"):""}</span></div>
+      ${na?`<div class="nx"><canvas class="nxc"></canvas><div><div class="t">${esc(na.note||"(no note)")}</div><div class="w mono">${na.date}</div></div></div><div class="cxa"><button class="sm" id="cxNaDone">✓ Done</button><button class="sm ghost" id="cxNaEdit">✎ Change</button></div>`
+        :`<button class="sm" id="cxNaSet" style="width:100%">⏰ When should this come back up?</button>`}</div>
+    <div class="ck-unit cxs"><div class="ck-head"><h2>Facts</h2><a class="cxl" id="cxEdit">✎ edit</a></div><div class="kv">
+      <span class="k">System</span><span class="v mono">${t.system?esc(t.system)+" · "+(TIER_S[t.system.slice(-1)]||"")+(t.client?" · client "+esc(t.client):""):"—"}</span>
+      ${ep?`<span class="k">Epic</span><span class="v"><a class="cxl ep" id="cxEpic">◆ ${esc(ep.code||ep.name)}${t.wave?" · "+esc(t.wave):""}</a></span>`:""}
+      <span class="k">Requestor</span><span class="v">${esc(t.requestor)||"—"}</span>
+      ${t.project?`<span class="k">Project</span><span class="v">▦ ${esc(t.project)}</span>`:""}${t.theme?`<span class="k">Theme</span><span class="v">${esc(t.theme)}</span>`:""}
+      <span class="k">Type</span><span class="v">${esc(t.type)}</span>
+      <span class="k">Received</span><span class="v mono">${t.receivedDate||"—"}</span>
+      <span class="k">Due</span><span class="v mono ${dn!=null&&dn<0?"late":""}">${t.dueDate||"—"}</span>
+      <span class="k">Go-live</span><span class="v mono">${esc(goliveTargetFor(t))||"—"}${t.transports.some(tr=>trDest(t,tr).length)?" <span class='dim'>+ own routes</span>":""}</span>
+      ${isWaiting(t)?`<span class="k">Waiting on</span><span class="v soon">${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+" d":""}</span>`:""}</div></div>
+    <div class="ck-unit cxs"><div class="ck-head"><h2>Reference</h2><a class="cxl" data-tab="reference">${refs.length?"all "+refs.length+" ›":"＋ add ›"}</a></div>
+      ${show.map(r=>`<div class="rf" data-id="${r.id}"><span class="l">${r.pinned?"📌 ":""}${esc(r.label)||"(no label)"}</span><span class="v">${r.secret?"••••••••":linkify(r.value)}</span><button class="ghost sm c" title="Copy">📋</button></div>`).join("")||`<div class="bempty">URLs, endpoints, test data — pin the ones you need often.</div>`}</div>
+    <div class="ck-unit cxs"><div class="ck-head"><h2>Linked</h2><a class="cxl" data-tab="calls">${links.length?links.length+" · link ›":"＋ link ›"}</a></div>
+      ${links.slice(0,6).map(l=>`<div class="lk" data-k="${l.k}" data-id="${l.id}" style="--pen:${l.pen}"><i></i><span class="t">${esc(l.t)}</span><span class="d">${shortD(l.d)}</span></div>`).join("")||`<div class="bempty">No meetings, journal or debug sessions linked.</div>`}</div>
+    <div class="ck-unit cxs"><div class="ck-head"><h2>Images</h2><a class="cxl" data-tab="images">${imgs.length?"all "+imgs.length+" ›":"Ctrl V to paste"}</a></div>
+      ${imgs.length?`<div class="thumbs">${imgs.slice(0,6).map(im=>`<div data-id="${im.id}" title="${esc(im.label||im.file)}"><span>${esc(im.label||im.file)}</span></div>`).join("")}</div>`:`<div class="bempty">Snip with Win+Shift+S, then Ctrl+V anywhere on this demand.</div>`}</div></div>`;
+  const q=s=>host.querySelector(s);
+  if(q("#cxNaDone"))q("#cxNaDone").onclick=()=>nextActionDone(t);
+  if(q("#cxNaEdit"))q("#cxNaEdit").onclick=()=>openNextAction(t);
+  if(q("#cxNaSet"))q("#cxNaSet").onclick=()=>openNextAction(t);
+  q("#cxEdit").onclick=()=>openTaskModal(t);
+  if(q("#cxEpic"))q("#cxEpic").onclick=()=>{view="epics";activeEpicId=t.epicId;epicTab="overview";renderApp();};
+  host.querySelectorAll(".cxl[data-tab]").forEach(a=>a.onclick=()=>{activeTab=a.dataset.tab;renderDetail();enterPulse("detail");});
+  host.querySelectorAll(".rf .c").forEach(b=>b.onclick=()=>{const r=refs.find(x=>x.id===b.parentElement.dataset.id);navigator.clipboard.writeText(r.value).then(()=>toast("Copied")).catch(()=>toast("Copy failed",true));});
+  host.querySelectorAll(".lk").forEach(el=>el.onclick=()=>{const k=el.dataset.k,id=el.dataset.id;
+    if(k==="meeting"){view="meetings";meetingRollup=false;activeMeetingId=id;}else if(k==="journal"){view="journal";journalTodos=false;activeJournalId=id;}else{view="debug";activeDebugId=id;}renderApp();});
+  host.querySelectorAll(".thumbs [data-id]").forEach(el=>{const im=state.images.find(x=>x.id===el.dataset.id);if(!im)return;
+    el.onclick=()=>openImageLightbox(im);imgUrl(im).then(u=>{if(u){el.style.backgroundImage=`url("${u}")`;el.classList.add("has");}});});
+  const nx=q(".nxc");if(nx)DK.scope(nx,drawTick);}
+
+/* ---------- Overview: the journey, the two notes, four instruments, the latest ---------- */
+function avgLeadDays(){const L=[];state.tasks.forEach(t=>{const f=(t.timeline||[]).filter(e=>e.type==="status"&&e.to==="delivered").map(e=>e.ts).sort((a,b)=>a-b)[0];
+  if(f&&t.receivedDate){const d=Math.floor((f-new Date(t.receivedDate+"T00:00:00").getTime())/864e5);if(d>=0)L.push(d);}});return L.length?Math.round(L.reduce((a,b)=>a+b,0)/L.length):null;}
+function statusHistory(t){const h=(t.timeline||[]).filter(e=>e.type==="status").map(e=>({d:isoTs(e.ts),s:e.to})).sort((a,b)=>a.d.localeCompare(b.d));
+  const start=t.receivedDate||(h[0]&&h[0].d)||isoTs(t.createdAt);
+  if(!h.length||h[0].d>start)h.unshift({d:start,s:h.length?"open":t.status});return h;}
+function renderOverview(body,t){
+  const sd=countSubs(t.subtasks),nComp=t.transports.filter(tr=>trComplete(t,tr)).length,clashN=openClashCount(t),age=t.receivedDate?Math.max(0,-daysUntil(t.receivedDate)):Math.floor((Date.now()-t.createdAt)/864e5);
+  const avg=avgLeadDays(),hs=statusHistory(t),loops=hs.filter(h=>h.s==="bug").length;
+  const overdueSubs=(function c(a){return a.reduce((n,s)=>n+(!s.done&&s.dueDate&&s.dueDate<todayStr()?1:0)+c(s.children),0);})(t.subtasks);
+  const feed=[...(t.timeline||[]).map(e=>e.type==="status"?{ts:e.ts,pen:STATUS_PEN[e.to]||"var(--faint)",h:`<b>${STATUS[e.to]?STATUS[e.to].label:esc(e.to)}</b>${e.from?` <span class="dim">from ${STATUS[e.from]?STATUS[e.from].label:esc(e.from)}</span>`:" <span class='dim'>— created</span>"}`}:{ts:e.ts,pen:"var(--accent2)",h:esc(e.note)}),
+    ...(t.comments||[]).map(c=>({ts:c.ts,pen:"var(--ink-3)",h:linkify(c.text)})),
+    ...t.transports.flatMap(tr=>tr.syncs.filter(s=>s.system&&s.date).map(s=>({ts:new Date(s.date+"T12:00:00").getTime(),pen:"var(--good)",h:`<b class="mono">${esc(tr.number||"(TR)")}</b> reached ${esc(s.system)}`})))]
+    .sort((a,b)=>b.ts-a.ts).slice(0,7);
+  body.innerHTML=`
+    <div class="bsec jr"><div class="sec-title"><h3>Journey</h3><div class="ln"></div><span class="faint mono" style="font-size:10.5px">received ${t.receivedDate||"—"} · ${age} days${loops?` · ${loops} rework loop${loops>1?"s":""}`:""}</span></div><canvas class="jcv"></canvas></div>
+    <div class="grid2">
+      <div class="field"><label>What is to be done</label><textarea id="fDesc" placeholder="Scope, requirement summary, acceptance criteria…">${esc(t.description)}</textarea></div>
+      <div class="field"><label>Where it stands · working notes</label><textarea id="fNotes" placeholder="Running notes, blockers, who asked, decisions…">${esc(t.notes)}</textarea></div></div>
+    <div id="n-links" style="margin:-4px 0 12px">${linkChips((t.description||"")+" "+(t.notes||""))}</div>
+    <div class="ov4">
+      <div class="ck-unit ins" data-tab="work"><canvas data-k="subs" data-f="${sd.n?sd.done/sd.n:0}"></canvas><div><div class="k">Subtasks</div><div class="v">${sd.done}<small>/ ${sd.n}</small></div><div class="s ${overdueSubs?"late":""}">${sd.n?(overdueSubs?overdueSubs+" overdue":"on track"):"none yet"}</div></div></div>
+      <div class="ck-unit ins" data-tab="transports"><canvas data-k="trs" data-f="${t.transports.length?nComp/t.transports.length:0}"></canvas><div><div class="k">Transports</div><div class="v">${nComp}<small>/ ${t.transports.length} complete</small></div><div class="s">${t.transports.filter(x=>!x.released).length} not released</div></div></div>
+      <div class="ck-unit ins" data-tab="objects"><canvas data-k="obj" data-f="${t.objects.length?clashN/t.objects.length:0}"></canvas><div><div class="k">Objects</div><div class="v">${t.objects.length}<small>logged</small></div><div class="s ${clashN?"late":""}">${clashN?clashN+" in a clash":"no clashes"}</div></div></div>
+      <div class="ck-unit ins" data-tab="history"><canvas data-k="age" data-f="${avg?Math.min(1,age/(avg*2)):0}"></canvas><div><div class="k">Age</div><div class="v">${age}<small>d${avg!=null?" · avg lead "+avg:""}</small></div><div class="s ${avg!=null&&age>avg&&!["delivered","closed"].includes(t.status)?"soon":""}">${avg==null?"no delivered demands yet":age>avg?"longer than your usual":"within your usual"}</div></div></div></div>
+    <div class="bsec"><div class="sec-title"><h3>Latest</h3><div class="ln"></div><span class="faint" style="font-size:10.5px">status · notes · comments · transport moves</span></div>
+      ${feed.map(f=>`<div class="fe" style="--pen:${f.pen}"><span class="d">${shortD(isoTs(f.ts))}</span><i></i><span>${f.h}</span></div>`).join("")||`<div class="bempty">Nothing yet.</div>`}
+      <div class="compose"><textarea id="ovCmt" rows="1" placeholder="Add a comment… (Ctrl+Enter)"></textarea><button class="sm primary" id="ovPost">Post</button></div></div>`;
+  const updNL=()=>{body.querySelector("#n-links").innerHTML=linkChips((t.description||"")+" "+(t.notes||""));};
+  body.querySelector("#fDesc").onchange=e=>{t.description=e.target.value;touch(t);updNL();};
+  body.querySelector("#fNotes").onchange=e=>{t.notes=e.target.value;touch(t);updNL();};
+  const post=()=>{const ta=body.querySelector("#ovCmt"),v=ta.value.trim();if(!v)return;(t.comments=t.comments||[]).push({id:uid(),text:v,ts:Date.now()});touch(t);renderOverview(body,t);};
+  body.querySelector("#ovPost").onclick=post;body.querySelector("#ovCmt").onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")post();};
+  body.querySelectorAll(".ins[data-tab]").forEach(u=>u.onclick=()=>{activeTab=u.dataset.tab;renderDetail();enterPulse("detail");});
+  body.querySelectorAll(".ins canvas").forEach(cv=>{const f=+cv.dataset.f,k=cv.dataset.k,st={v:motionOn()?0:f};
+    DK.scope(cv,(c,w,h)=>{const {C}=DK;st.v+=(f-st.v)*.05;const col=k==="obj"?(f>0?C.bad:C["pen-2"]):k==="age"?(f>.5?C.watch:C.good):k==="trs"?C.good:C["pen-2"];
+      if(k==="age")DK.dotArc(c,w/2,h/2+4,w/2-5,st.v,22,col,1.8);else DK.dotRing(c,w/2,h/2,w/2-5,st.v,30,col);});});
+  DK.scope(body.querySelector(".jcv"),journeyDraw(t));}
+/* the demand's life on a date line: status stretches, rework loops, transports landing, due, today */
+function journeyDraw(t){return (c,w,h,tm,dt,s)=>{const {dot,ring,label,C}=DK,mv=motionOn();
+  const hs=statusHistory(t),pen=k=>C[STATUS_CK[k]]||C["ink-3"];
+  const t0=new Date(hs[0].d+"T00:00:00").getTime(),tEnd=Math.max(Date.now(),t.dueDate?new Date(t.dueDate+"T00:00:00").getTime():0)+4*864e5;
+  const X=d=>28+(w-56)*((new Date(d+"T00:00:00").getTime()-t0)/Math.max(1,tEnd-t0)),y=h*.44;
+  const prog=mv?Math.min(1,(performance.now()-s.born)/1400):1,xMax=28+(w-56)*(1-Math.pow(1-prog,3)),today=todayStr(),xNow=X(today);
+  for(let x=28;x<=w-28;x+=6)dot(c,x,y,.8,C["ink-4"]);
+  hs.forEach((e,i)=>{const a=Math.min(X(e.d),xMax),b=Math.min(i<hs.length-1?X(hs[i+1].d):(t.status==="closed"?X(e.d)+2:xNow),xMax);if(b<=a)return;
+    c.globalAlpha=.85;c.strokeStyle=pen(e.s);c.lineWidth=3;c.beginPath();c.moveTo(a,y);c.lineTo(b,y);c.stroke();});
+  hs.forEach((e,i)=>{if(e.s!=="bug")return;const prev=hs.slice(0,i).reverse().find(x=>x.s==="delivered");if(!prev)return;const a=X(prev.d),b=X(e.d);if(b>xMax)return;
+    c.globalAlpha=.6;c.strokeStyle=C.bad;c.lineWidth=1.2;c.setLineDash([3,3]);c.beginPath();c.moveTo(b,y-4);c.quadraticCurveTo((a+b)/2,y-44,a,y-4);c.stroke();c.setLineDash([]);
+    label(c,"rework",(a+b)/2,y-30,{size:8,color:C.bad});});
+  let lastX=-99,flip=0;
+  hs.forEach(e=>{const x=X(e.d);if(x>xMax)return;dot(c,x,y,4.2,C.paper);dot(c,x,y,3.4,pen(e.s));
+    flip=x-lastX<60?1-flip:0;lastX=x;const up=flip===1;
+    label(c,(STATUS[e.s]?STATUS[e.s].label.split(" /")[0]:e.s).toUpperCase(),x,y+(up?-16:18),{size:7.5,color:pen(e.s)});
+    label(c,shortD(e.d),x,y+(up?-26:28),{font:DK.MONO,size:8,weight:400});});
+  t.transports.forEach((tr,k)=>tr.syncs.forEach(sy=>{if(!sy.date)return;const x=X(sy.date);if(x>xMax||x<28)return;const yy=h-16-(k%3)*7;
+    c.globalAlpha=.35;c.strokeStyle=C.good;c.lineWidth=1;c.beginPath();c.moveTo(x,y+6);c.lineTo(x,yy);c.stroke();dot(c,x,yy,2.2,C.good);}));
+  if(t.transports.some(tr=>tr.syncs.some(sy=>sy.date)))label(c,"TRANSPORTS LANDING",28,h-3,{size:7,align:"left"});
+  if(t.dueDate){const xd=X(t.dueDate);if(xd<=xMax){c.globalAlpha=.8;c.strokeStyle=C.bad;c.lineWidth=1;c.beginPath();c.moveTo(xd,y-24);c.lineTo(xd,y+10);c.stroke();label(c,"DUE",xd,y-30,{size:7.5,color:C.bad});}}
+  if(xNow<=xMax){const pl=mv?(Math.sin(tm*.004)+1)/2:0;ring(c,xNow,y,6+pl*5,C.ink,.4*(1-pl));dot(c,xNow,y,2.4,C.ink);label(c,"TODAY",xNow,y+40,{size:7.5,color:C.ink});}};}
+
+/* ---------- Work: subtasks beside comments ---------- */
+function renderWorkBench(body,t){const sd=countSubs(t.subtasks);
+  body.innerHTML=`<div class="wk2">
+    <div><div class="sec-title"><h3>Subtasks</h3><div class="ln"></div><span class="faint mono" style="font-size:10.5px">${sd.done}/${sd.n} done</span><button class="sm" id="addRoot">＋ Add subtask</button></div><div class="tree" id="tree"></div></div>
+    <div><div class="sec-title"><h3>Comments</h3><div class="ln"></div><span class="faint mono" style="font-size:10.5px">${(t.comments||[]).length}</span></div><div id="taskCmts"></div></div></div>`;
+  body.querySelector("#addRoot").onclick=()=>{t.subtasks.push(mkSub());touch(t);renderDetail();};
+  renderTree(body.querySelector("#tree"),t,t.subtasks);
+  renderComments(body.querySelector("#taskCmts"),t,()=>touch(t));}
+
+/* ---------- Transports: every transport against every system on its route ---------- */
+const trOpen=new Set();   /* transport cards expanded for editing (Bench) */
+function trRouteSystems(t,tr){const own=trDest(t,tr),L=landscapeOf(tr.system);return own.length?[tr.system,...own.filter(x=>x!==tr.system)]:(L?routeTiers().map(d=>L+d):[]);}
+function drawTrMap(host,t,onPick){if(!host)return;
+  if(!t.transports.length){host.innerHTML="";return;}
+  const cols=[];const add=x=>{if(x&&!cols.includes(x))cols.push(x);};
+  t.transports.forEach(tr=>{trRouteSystems(t,tr).forEach(add);tr.syncs.forEach(s=>add(s.system));});(t.tocs||[]).forEach(c=>c.syncs.forEach(s=>add(s.system)));
+  cols.sort((a,b)=>landscapeOf(a).localeCompare(landscapeOf(b))||String(b).slice(-1).localeCompare(String(a).slice(-1)));
+  const lands=[];cols.forEach(x=>{const L=landscapeOf(x),g=lands.find(y=>y.L===L);if(g)g.n++;else lands.push({L,n:1});});
+  const first=cols.map((x,i)=>i>0&&landscapeOf(x)!==landscapeOf(cols[i-1]));
+  const cell=(tr,x,ri,ci)=>{const R=new Map();effectiveSyncs(t,tr).forEach(sy=>{if(!R.has(sy.system))R.set(sy.system,{d:sy.date,via:sy.via});});const T=trTargets(t,tr),onRoute=trRouteSystems(t,tr).includes(x),tg=T.includes(x);
+    if(x===tr.system)return `<span class="cell origin" style="--pen:${penVar(x)}" title="Origin ${esc(x)}"><i></i></span>`;
+    if(R.has(x)){const r=R.get(x);return `<span class="cell reach ${tg?"tgt":""}" style="--pen:${penVar(x)};--d:${80+ri*60+ci*35}ms" title="Reached ${esc(x)}${r.d?" "+r.d:""}${r.via?" (via ToC "+esc(r.via)+")":""}"><i></i>${r.d?`<span class="dt">${shortD(r.d)}</span>`:""}</span>`;}
+    if(onRoute||tg)return `<span class="cell pend ${tg?"tgt":""}" style="--pen:${penVar(x)}" title="${tg?"Destination":"On the route"} — not reached yet"><i></i></span>`;
+    return `<span class="cell none"><i></i></span>`;};
+  const row=(tr,mem)=>{const i=t.transports.indexOf(tr),miss=trMissing(t,tr);
+    return `<tr class="mtr ${mem?"mem":""} ${trOpen.has(tr.id)?"sel":""}" data-id="${tr.id}"><td class="sq">${p2(i+1)}</td><td><span class="nm">${esc(tr.number||"(unnumbered)")}</span>${isCust(tr)?btag("cust"+(tr.client?" · "+esc(tr.client):""),"var(--teal)"):""}${!tr.released?btag("not released","var(--watch)"):""}<div class="ds">${esc(tr.desc||"")}</div></td>
+      ${cols.map((x,ci)=>`<td class="c ${first[ci]?"sepL":""}">${cell(tr,x,i,ci)}</td>`).join("")}
+      <td class="st">${trComplete(t,tr)?`<span class="good">✓ complete</span>`:trTargets(t,tr).length?`<span class="soon">→ ${esc(miss.join(" · "))}</span>`:`<span class="dim">no target</span>`}</td></tr>`;};
+  let rows="";const inToc=new Set();
+  (t.tocs||[]).forEach(c=>{const mem=t.transports.filter(x=>x.tocId===c.id);mem.forEach(m=>inToc.add(m.id));
+    rows+=`<tr class="toc"><td class="sq">ToC</td><td><span class="nm">${esc(c.number||"(unnumbered ToC)")}</span>${btag("bundles "+mem.length,"var(--accent2)")}<div class="ds">${esc(c.desc||"")}</div></td>
+      ${cols.map((x,ci)=>{const hit=c.syncs.find(s=>s.system===x);return `<td class="c ${first[ci]?"sepL":""}">${hit?`<span class="cell reach" style="--pen:var(--accent2);--d:${ci*40}ms" title="ToC reached ${esc(x)} ${hit.date||""}"><i></i>${hit.date?`<span class="dt">${shortD(hit.date)}</span>`:""}</span>`:`<span class="cell none"><i></i></span>`}</td>`;}).join("")}<td></td></tr>`;
+    mem.forEach(m=>rows+=row(m,true));});
+  t.transports.forEach(tr=>{if(!inToc.has(tr.id))rows+=row(tr,false);});
+  host.innerHTML=`<div class="bsec trmap"><div class="sec-title"><h3>Transport map</h3><div class="ln"></div><span class="faint" style="font-size:10.5px">click a transport to edit it below</span></div>
+    <div style="overflow-x:auto"><table class="mx"><thead><tr><th></th><th></th>${lands.map((g,gi)=>`<th class="land ${gi?"sepL":""}" colspan="${g.n}">${esc(g.L)} landscape</th>`).join("")}<th></th></tr>
+      <tr><th>#</th><th>Transport</th>${cols.map((x,ci)=>`<th class="sys ${first[ci]?"sepL":""}">${esc(x)}<small>${TIER_S[String(x).slice(-1)]||""}</small></th>`).join("")}<th style="text-align:right">Status</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="mxleg"><span><span class="cell origin" style="--pen:var(--pen-2)"><i></i></span>origin</span><span><span class="cell reach" style="--pen:var(--pen-3)"><i></i></span>reached</span><span><span class="cell pend" style="--pen:var(--pen-4)"><i></i></span>on its way</span><span><span class="cell pend tgt" style="--pen:var(--pen-3)"><i></i></span>destination</span><span style="color:var(--accent2)">▌ a ToC brackets the transports it bundles</span></div></div>`;
+  host.querySelectorAll("tr.mtr").forEach(r=>r.onclick=()=>onPick(r.dataset.id));}
+
+/* ---------- keys: ↑↓ through the list, 1–5 for the main tabs ---------- */
+document.addEventListener("keydown",e=>{
+  if(!benchOn()||view!=="demands"||screenLocked||pendingEncrypted||e.ctrlKey||e.metaKey||e.altKey)return;
+  if(document.querySelector("#modalRoot .modal-bg"))return;
+  const a=document.activeElement;if(a&&(/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)||a.isContentEditable))return;
+  if(e.key==="Escape"&&document.querySelector("main.board.open")){document.querySelector("main").classList.remove("open");return;}
+  if((e.key==="ArrowDown"||e.key==="ArrowUp")&&demandsMode()==="list"){const ids=[...document.querySelectorAll("#taskList .tcard")].map(c=>c.dataset.id);if(!ids.length)return;
+    const i=ids.indexOf(activeId),n=ids[Math.max(0,Math.min(ids.length-1,i<0?0:i+(e.key==="ArrowDown"?1:-1)))];
+    if(n&&n!==activeId){e.preventDefault();activeId=n;document.querySelectorAll("#taskList .tcard").forEach(c=>c.classList.toggle("active",c.dataset.id===n));
+      const c=document.querySelector(`#taskList .tcard[data-id="${n}"]`);if(c)c.scrollIntoView({block:"nearest"});renderDetail();renderCtxRail();enterPulse("detail");}}
+  if(/^[1-5]$/.test(e.key)){const k=["overview","work","objects","transports","history"][+e.key-1];if(activeTask()&&k!==activeTab){activeTab=k;renderDetail();enterPulse("detail");}}});
 
 /* ===================== WIRE UP ===================== */
 document.querySelectorAll(".navbtn,.rb[data-view]").forEach(b=>b.onclick=()=>{view=b.dataset.view;meetingRollup=false;journalTodos=false;renderApp();});

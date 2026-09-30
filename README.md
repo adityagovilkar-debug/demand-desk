@@ -208,6 +208,29 @@ it. Empty sections are hidden; if everything's clear it says so. A first-run
   the app is open — lock your laptop.
 
 ### Demands
+- **The Bench Demands page** (default look; classic themes keep the old layout):
+  - **Three panes** — list · demand · **context rail**. The rail shows the next
+    action, key facts, pinned Reference entries, Linked items and image thumbnails
+    so you don't have to open those tabs. ⇥ in the header hides/shows it (the rail
+    also hides itself on narrow screens).
+  - **List rows** — each demand is a compact row: ID · wave · owner, title, a
+    status tag with what's due, and a **transport strip** (one dot per system each
+    transport has reached). Saved-view chips show how many demands they match.
+  - **List / Board** — the toggle next to ⚙ View switches to a status board
+    (Open · In progress · Bug · Delivered). Drag a card to change its status
+    (logged in History). Click a card to slide the demand over the board; Esc
+    or ✕ closes it. The board ignores status filters so cards don't vanish.
+  - **Overview tab** (new first tab) — a journey line through every status the
+    demand passed, description + notes, four instruments (subtasks, objects,
+    transports, go-live) that click through to their tabs, and a Latest feed
+    with a comment box.
+  - **Work tab** — subtasks and comments side by side.
+  - **Transports tab** — a **transport map** at the top: one row per transport,
+    one column per system, marked origin / reached / pending / not a destination,
+    with Transport-of-Copies brackets. Cards below fold to one line once they have
+    a number; click a row on the map (or ▾ details) to open that card.
+  - Reference · Linked · Images are secondary tabs after the divider.
+  - Keys: **↑ ↓** move through the list, **1–5** switch the main tabs.
 - **Tasks** — Demand ID, type, title, received & due dates, status, description,
   working-notes log, and a **timestamped comments thread**.
 - **Quick status** — the status badge in the demand header is a dropdown: change
