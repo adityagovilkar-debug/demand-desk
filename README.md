@@ -230,7 +230,7 @@ it. Empty sections are hidden; if everything's clear it says so. A first-run
     with Transport-of-Copies brackets. Cards below fold to one line once they have
     a number; click a row on the map (or ▾ details) to open that card.
   - Reference · Linked · Images are secondary tabs after the divider.
-  - Keys: **↑ ↓** move through the list, **1–5** switch the main tabs.
+  - Keys: **↑ ↓** move through the list, **1–6** switch the main tabs, **T** logs time.
 - **Tasks** — Demand ID, type, title, received & due dates, status, description,
   working-notes log, and a **timestamped comments thread**.
 - **Quick status** — the status badge in the demand header is a dropdown: change
@@ -309,6 +309,45 @@ it. Empty sections are hidden; if everything's clear it says so. A first-run
 - **📈 Aging** (sidebar) — open demands ranked by age (days since received, days
   in current status, waiting-on), red >30d / amber >14d, plus delivery lead-time
   stats (received → first delivered: average, median, and rework counts).
+
+### Effort — the hours you put in
+Log what you worked on, and see where your time goes.
+- **Log time from anywhere** — **⏱ Log time** in the title bar or the **T** key.
+  Pick the day (‹ ›, Today, Yesterday), the hours (`2`, `1.5`, `2h30`, `90m`,
+  `1:15`), an activity (Analysis · Build · Testing · Debug / fix · Transport & Basis ·
+  Documentation) and what you did. A bar shows how full that day already is
+  ("3.5 h logged + 2 = 5.5 h of 8"). `Ctrl+Enter` logs.
+- **Not every hour is a demand** — Meetings, Admin & email, Support & small asks and
+  Learning are buckets of their own, so a whole day adds up.
+- **Timer** — **▶ Start timer** on a demand's Effort tab; the title-bar button shows
+  it running. Click it to stop, and the dialog opens with the hours filled in.
+- **Effort tab on every demand** (key **5**) — log time inline; gauges for logged vs
+  **estimate** (set or change it right there), days worked, **rework** (hours
+  logged while the demand was in Bug — automatic) and last worked; a chart of the
+  demand's life (status line on top, a dot per half hour by activity, the running
+  total against the estimate; click a day); the log by week (hover to ✎ edit or ✕
+  delete — with Undo); hours by activity and by subtask. The Overview tab gets an
+  Effort gauge, the header a *Logged* readout, list rows a ⏱ tag.
+- **Effort workspace** (⏱ in the rail) — range (this week · 4 · 13 · 26 weeks) and
+  group by demand · epic · activity · theme; click a legend chip to focus on one.
+  - **Noticed** — plain sentences: who took most of your time, demands over
+    estimate, rework, working days with no log (with a *Fill* button).
+  - **26 weeks in dots** — a pie per day (size = hours, slices = where they went);
+    a red ring is a working day with no log. Click a day for its **day ledger**
+    (edit entries, log more, **mark the day as leave** — leave never counts as
+    "no log").
+  - **Where the hours went** (dot columns per week or day), **activity mix**,
+    **week sheet** (demands × Mon–Sun; click an empty cell to log it;
+    **⧉ Copy for timesheet** gives a tab-separated table to paste into your
+    timesheet or Excel), **estimate vs actual**, **rework cost**, and **your week's
+    rhythm** (demand work vs everything else, per weekday). **⬇ CSV** exports every
+    entry.
+- **Today** shows a ⏱ Time card: logged today of 8 h, this week, and working days
+  in the last two weeks with nothing logged.
+- Search (`Ctrl+K`) finds time entries by what you wrote.
+- Stored in your data file as `efforts` (plus `leaveDays`, and `estimate` on each
+  demand) — data version 22. Deleting a demand deletes the hours logged on it (the
+  confirmation says how many).
 
 ### Debug
 A debugging workbench per investigation, so a weekend gap doesn't lose you:
@@ -614,5 +653,6 @@ drive, not a shared location.
 - `Ctrl+S` — Save
 - `Ctrl+K` — Search
 - `Alt+N` — New demand
+- `T` — Log time (when you're not typing in a field)
 - `Ctrl+Enter` — create / save in the demand dialog
 - `Esc` — close the open dialog or image (a half-filled demand asks first)
