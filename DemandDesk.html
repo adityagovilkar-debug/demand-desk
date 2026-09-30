@@ -1016,6 +1016,21 @@
   :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(13){animation-delay:660ms}
   :root[data-theme="bench"] #app[class*="enter-"] :is(#st-list>*,.btl>*):nth-child(14){animation-delay:705ms}
 
+  /* transport destinations */
+  .dests{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0 8px;font-size:12px}
+  .dests .dl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);margin-right:2px}
+  .dests .dl.ok{color:var(--green)}
+  .dchip{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;border:1px solid var(--line2);background:var(--chip);white-space:nowrap}
+  .dchip.ok{color:var(--green);border-color:var(--green-line)}
+  .dchip.no{color:var(--amber);border-color:var(--amber-line);cursor:pointer}
+  .dchip.no:hover{border-color:var(--amber)}
+  .dchip .d{font-size:9.5px;opacity:.75;font-weight:400}
+  .dchip .x{cursor:pointer;color:var(--faint);margin-left:2px}
+  .dchip .x:hover{color:var(--red)}
+  .dests .dadd{width:auto;font-size:11.5px;padding:3px 6px}
+  .dests .dhint{font-size:11px}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .dchip{border-radius:2px;background:transparent}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .dests .dl{font-family:var(--label);font-size:9px;letter-spacing:.16em}
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -1120,7 +1135,7 @@ function objTypeUsage(type){let n=0;state.tasks.forEach(t=>t.objects.forEach(o=>
 const DEF_LANDSCAPES=["H0","H1","H2","H3","H4","H5","H6"];
 const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod / QA",short:"QA"},{d:"1",label:"Production",short:"PRD"}];
 
-let state={version:20,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
+let state={version:21,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[]};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false, lastWriteAt=0, autoSaveDue=0, diskConflict=null, fileSig=null, savePromise=null, backupUnreadable=false;
 let view="today";
 let activeId=null, activeTab="work", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -1354,7 +1369,7 @@ function updateReconnectUI(){const b=document.getElementById("btnReconnect");if(
 async function forgetHandle(){savedHandle=null;if(useIdb)await idbDel("handle");updateReconnectUI();}
 
 function migrate(d){
-  d.version=20;
+  d.version=21;
   d.settings=d.settings||{};
   d.settings.landscapes=d.settings.landscapes&&d.settings.landscapes.length?d.settings.landscapes:[...DEF_LANDSCAPES];
   d.settings.tiers=d.settings.tiers&&d.settings.tiers.length?d.settings.tiers:DEF_TIERS;
@@ -1380,6 +1395,7 @@ function migrate(d){
       kind:tr.kind==="customizing"?"customizing":"workbench", client:tr.client||"",
       syncs:(tr.syncs||[]).map(s=>({system:s.system||"",date:s.date||""})), tocId:tr.tocId||"", toc:tr.toc||"",
       objectIds:(tr.objectIds||[]).slice(),
+      dest:(tr.dest||[]).map(x=>String(x).trim()).filter(Boolean),
       notes:(tr.notes||"")+(tr.syncedTo?` [legacy synced-to: ${tr.syncedTo}]`:"")
     }));
     /* migrate legacy free-text ToC numbers into first-class ToC records */
@@ -1492,7 +1508,17 @@ function isWaiting(t){return !!(t.waiting&&t.waiting.on)&&t.status!=="closed";}
 function waitDays(t){return (t.waiting&&t.waiting.since)?Math.max(0,-daysUntil(t.waiting.since)):null;}
 function trsForObject(t,objId){return t.transports.filter(tr=>(tr.objectIds||[]).includes(objId));}
 function goliveTargetFor(t){return t.goliveTarget||prodTargetFor(t)||"";}
-function golivePending(t){const tgt=goliveTargetFor(t);if(!tgt||!t.transports.length)return null;const missing=t.transports.filter(tr=>!reachedSystems(t,tr).has(tgt));return missing.length?{target:tgt,missing}:null;}
+/* Where a transport has to end up. Most follow the demand's go-live target (e.g. H01);
+   some are built in one system only to be synced elsewhere — H03 → H43 → H42 → H41 —
+   or to several landscapes at once. Those carry their own destinations (tr.dest), and
+   they're complete when every destination has been reached. */
+function trDest(t,tr){return (tr&&tr.dest&&tr.dest.length)?tr.dest:[];}
+function trTargets(t,tr){const d=trDest(t,tr);if(d.length)return d;const g=goliveTargetFor(t);return g?[g]:[];}
+function trMissing(t,tr){const R=reachedSystems(t,tr);return trTargets(t,tr).filter(x=>!R.has(x));}
+function trComplete(t,tr){return trTargets(t,tr).length>0&&trMissing(t,tr).length===0;}
+function golivePending(t){if(!t.transports.length)return null;
+  const missing=t.transports.filter(tr=>trTargets(t,tr).length&&!trComplete(t,tr));
+  return missing.length?{target:[...new Set(missing.flatMap(tr=>trMissing(t,tr)))].join("/"),missing}:null;}
 
 /* Refuses anything that isn't Demand Desk data — the same folder also holds Snip Desk
    .marks.json sidecars and Team Desk files, and opening one would otherwise load as
@@ -1745,7 +1771,7 @@ function renderToday(){
   card("Next actions due","⏰","warn",tasks.filter(nextActionDue).sort((a,b)=>a.nextAction.date.localeCompare(b.nextAction.date))
     .map(t=>({main:dlabel(t),sub:`${t.nextAction.note?esc(t.nextAction.note.length>38?t.nextAction.note.slice(0,37)+"…":t.nextAction.note)+" · ":""}${t.nextAction.date===todayStr()?"today":t.nextAction.date}`,go:goDemand(t.id)})));
   card("Bugs / Rework","🐞","alert",bugs.map(t=>({main:dlabel(t),sub:reworkCount(t)?`↻ ${reworkCount(t)}`:"",go:goDemand(t.id)})));
-  card("Go-live: TRs not yet at Prod","🚚","warn",golive.map(t=>{const g=golivePending(t);return {main:dlabel(t),sub:`${g.missing.length} TR(s) → ${g.target}`,go:goDemand(t.id,"transports")};}));
+  card("Go-live: transports not at their destination","🚚","warn",golive.map(t=>{const g=golivePending(t);return {main:dlabel(t),sub:`${g.missing.length} TR(s) → ${g.target}`,go:goDemand(t.id,"transports")};}));
   card("Waiting on","⏳","warn",waiting.map(t=>({main:dlabel(t),sub:`${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+"d":""}`,go:goDemand(t.id)})));
   card("Due this week","📅","",dueWeek.map(t=>({main:dlabel(t),sub:`${earliestOpenDue(t)} (${daysUntil(earliestOpenDue(t))}d)`,go:goDemand(t.id)})));
   card("Open action points","☑","",actions.map(({a,m})=>({main:esc(a.text||"(no text)"),sub:`${esc(a.owner||"—")}${m.team?" · "+esc(m.team):""}`,go:()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;renderApp();}})));
@@ -2328,24 +2354,25 @@ function renderTransports(body,t){
     <div id="tocList"></div>`;
   body.querySelector("#expTr").onclick=exportTransportsCSV;
   body.querySelector("#runSheet").onclick=()=>openRunSheet([t],`${t.demandId?t.demandId+" — ":""}${t.title}`,goliveTargetFor(t));
-  body.querySelector("#addTr").onclick=()=>{t.transports.push({id:uid(),number:"",desc:"",system:t.system||state.settings.defaultSystem,released:false,kind:"workbench",client:"",syncs:[],tocId:"",toc:"",objectIds:[],notes:""});touch(t);renderTransports(body,t);renderDetail();};
+  body.querySelector("#addTr").onclick=()=>{t.transports.push({id:uid(),number:"",desc:"",system:t.system||state.settings.defaultSystem,released:false,kind:"workbench",client:"",syncs:[],tocId:"",toc:"",objectIds:[],dest:[],notes:""});touch(t);renderTransports(body,t);renderDetail();};
   body.querySelector("#addToc").onclick=()=>{(t.tocs=t.tocs||[]).push(normToc({system:state.settings.defaultSystem}));touch(t);renderTransports(body,t);};
   drawReadiness();drawTrs();drawTocs();
 
   function drawReadiness(){
     const host=body.querySelector("#readiness");
     if(!t.transports.length){host.innerHTML="";return;}
-    const target=goliveTargetFor(t);
-    const missing=target?t.transports.filter(tr=>!reachedSystems(t,tr).has(target)):[];
-    const ok=target&&missing.length===0;
-    host.innerHTML=`<div class="readybar ${target?(ok?"ok":"warn"):""}">
-      <span>Go-live check — reached</span>
-      <select id="rdy-sys" style="width:auto">${systemOptions(target)}</select>
-      ${target?(ok
-        ?`<b style="color:var(--green)">✓ all ${t.transports.length} transport(s) have reached ${target}</b>`
-        :`<b style="color:var(--amber)">⚠ ${missing.length} of ${t.transports.length} not yet at ${target}:</b> <span class="mono" style="font-size:12px">${missing.map(m=>esc(m.number||"(unnumbered)")+(isCust(m)&&m.client?" · 🗂"+esc(m.client):"")).join(", ")}</span>`)
-        :`<span class="faint">pick a target system to check coverage before go-live</span>`}
-      ${(()=>{const f=target&&freezeFor(target);return f?`<b style="color:var(--teal)">❄ ${target} is FROZEN until ${f.to} — ${esc(f.title)}</b>`:"";})()}</div>`;
+    const target=goliveTargetFor(t),routed=t.transports.filter(tr=>trTargets(t,tr).length),missing=routed.filter(tr=>!trComplete(t,tr));
+    const own=t.transports.filter(tr=>trDest(t,tr).length).length,ok=routed.length&&!missing.length;
+    const frozen=[...new Set(missing.flatMap(m=>trMissing(t,m)))].map(x=>[x,freezeFor(x)]).filter(x=>x[1]);
+    host.innerHTML=`<div class="readybar ${routed.length?(ok?"ok":"warn"):""}">
+      <span>Go-live target</span>
+      <select id="rdy-sys" style="width:auto" title="Where transports go when they have no destinations of their own">${systemOptions(target)}</select>
+      ${own?`<span class="faint" style="font-size:12px">· ${own} transport(s) have their own destinations</span>`:""}
+      ${routed.length?(ok
+        ?`<b style="color:var(--green)">✓ all ${routed.length} transport(s) have reached their destinations</b>`
+        :`<b style="color:var(--amber)">⚠ ${missing.length} of ${routed.length} not complete:</b> <span class="mono" style="font-size:12px">${missing.map(m=>esc(m.number||"(unnumbered)")+" → "+esc(trMissing(t,m).join("/"))+(isCust(m)&&m.client?" · 🗂"+esc(m.client):"")).join(", ")}</span>`)
+        :`<span class="faint">pick a go-live target, or give the transports their own destinations</span>`}
+      ${frozen.map(([x,f])=>`<b style="color:var(--teal)">❄ ${esc(x)} is FROZEN until ${f.to} — ${esc(f.title)}</b>`).join(" ")}</div>`;
     host.querySelector("#rdy-sys").onchange=e=>{t.goliveTarget=e.target.value;touch(t);drawReadiness();drawTrs();};
   }
 
@@ -2371,7 +2398,7 @@ function renderTransports(body,t){
           <button class="ghost sm danger del">🗑</button>
         </div>
         <canvas class="trroute" title="Where this transport has reached — ringed system = go-live target"></canvas>
-        ${target?`<div class="cover ${reached.has(target)?"yes":"no"}">${reached.has(target)?"✓ reached "+target:"✗ not yet at "+target}${cust&&tr.client?" · 🗂 "+esc(tr.client):""}</div>`:""}
+        ${destHTML(t,tr)}
         ${trClashHtml(t,tr,cidx)}
         <div style="display:flex;gap:14px;flex-wrap:wrap">
           <div style="flex:1;min-width:260px">
@@ -2390,6 +2417,14 @@ function renderTransports(body,t){
         <div style="margin-top:8px"><label>Objects in this TR</label><div class="objlink"></div></div>`;
       const q=s=>card.querySelector(s);
       if(benchOn())DK.scope(q(".trroute"),trRouteDraw(t,tr));
+      /* destinations: add a whole route (H43 → H42 → H41) or single systems; a pending one can be ticked reached */
+      q(".dadd").onchange=e=>{const v=e.target.value;if(!v)return;tr.dest=tr.dest||[];
+        const add=v.startsWith("L:")?routeTiers().map(d=>v.slice(2)+d):[v];
+        add.forEach(x=>{if(!tr.dest.includes(x))tr.dest.push(x);});touch(t);drawTrs();drawReadiness();};
+      card.querySelectorAll(".dchip").forEach(ch=>{const x=ch.dataset.s,rm=ch.querySelector(".x");
+        if(rm)rm.onclick=ev=>{ev.stopPropagation();tr.dest=(tr.dest||[]).filter(y=>y!==x);touch(t);drawTrs();drawReadiness();};
+        if(ch.classList.contains("no"))ch.onclick=()=>{tr.syncs.push({system:x,date:todayStr()});touch(t);drawTrs();drawReadiness();toast(`Recorded ${tr.number||"the transport"} reached ${x} today`);};});
+      {const dr=q(".dreset");if(dr)dr.onclick=()=>{tr.dest=[];touch(t);drawTrs();drawReadiness();};}
       q(".num").onchange=e=>{tr.number=e.target.value;touch(t);drawReadiness();};
       q(".dsc").onchange=e=>{tr.desc=e.target.value;touch(t);};
       q(".kind").onchange=e=>{tr.kind=e.target.value;if(tr.kind!=="customizing")tr.client="";touch(t);drawTrs();drawReadiness();};
@@ -2466,16 +2501,26 @@ function renderTransports(body,t){
   }
 }
 
+function routeTiers(){return state.settings.tiers.map(x=>x.d).sort().reverse();}   /* "3","2","1" = Dev → QA → Prod */
+function destHTML(t,tr){const own=trDest(t,tr),T=trTargets(t,tr),R=reachedSystems(t,tr),when={};
+  effectiveSyncs(t,tr).forEach(x=>{if(!when[x.system])when[x.system]=x.date;});
+  const done=T.length&&T.every(x=>R.has(x)),tiers=routeTiers();
+  return `<div class="dests"><span class="dl ${done?"ok":""}">${done?"✓ complete":"Destinations"}</span>
+    ${T.map(x=>{const ok=R.has(x);return `<span class="dchip ${ok?"ok":"no"}" data-s="${esc(x)}" title="${ok?"Reached"+(when[x]?" "+when[x]:""):"Not there yet — click to record it reached today"}">${ok?"✓":"○"} ${esc(x)}${ok&&when[x]?` <span class="d">${when[x]}</span>`:""}${own.length?`<span class="x" title="Remove this destination">✕</span>`:""}</span>`;}).join("")||`<span class="faint">none yet</span>`}
+    ${own.length?`<button class="ghost sm dreset" title="Drop these and follow the demand's go-live target again">↺ use go-live target</button>`:`<span class="faint dhint">(the demand's go-live target)</span>`}
+    <select class="dadd" title="Where this transport has to end up — e.g. built in H03, only ever synced to H43 → H42 → H41"><option value="">＋ destination…</option>
+      <optgroup label="Whole route">${state.settings.landscapes.map(L=>`<option value="L:${esc(L)}">${esc(L)} route — ${tiers.map(d=>esc(L+d)).join(" → ")}</option>`).join("")}</optgroup>
+      <optgroup label="Single system">${state.settings.landscapes.flatMap(L=>tiers.map(d=>L+d)).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("")}</optgroup></select></div>`;}
 function csvCell(v){v=(v==null?"":String(v));return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
 function exportTransportsCSV(){
   const tier=id=>{const m=tierMeta(id);return m?m.short:"";};
-  const head=["Demand ID","Demand Title","Demand Status","Seq","TR Number","TR Description","Kind","Origin System","Origin Tier","Client","Released","Direct syncs","ToC Number","Effective syncs (incl. via ToC)","Notes"];
+  const head=["Demand ID","Demand Title","Demand Status","Seq","TR Number","TR Description","Kind","Origin System","Origin Tier","Client","Released","Direct syncs","ToC Number","Effective syncs (incl. via ToC)","Destinations","Complete","Notes"];
   const rows=[head];
   state.tasks.forEach(t=>t.transports.forEach((tr,idx)=>{
     const direct=tr.syncs.filter(s=>s.system).map(s=>`${s.system} (${tier(s.system)})${s.date?" @"+s.date:""}`).join("; ");
     const toc=tocFor(t,tr);
     const eff=effectiveSyncs(t,tr).map(s=>`${s.system} (${tier(s.system)})${s.date?" @"+s.date:""}${s.via?" [via ToC "+s.via+"]":""}`).join("; ");
-    rows.push([t.demandId,t.title,STATUS[t.status].label,idx+1,tr.number,tr.desc,isCust(tr)?"Customizing":"Workbench",tr.system,tier(tr.system),isCust(tr)?tr.client:"",tr.released?"Yes":"No",direct,toc?toc.number:"",eff,tr.notes]);
+    rows.push([t.demandId,t.title,STATUS[t.status].label,idx+1,tr.number,tr.desc,isCust(tr)?"Customizing":"Workbench",tr.system,tier(tr.system),isCust(tr)?tr.client:"",tr.released?"Yes":"No",direct,toc?toc.number:"",eff,trTargets(t,tr).join(" → "),trComplete(t,tr)?"Yes":"No",tr.notes]);
   }));
   if(rows.length===1){toast("No transports to export",true);return;}
   const csv="﻿"+rows.map(r=>r.map(csvCell).join(",")).join("\r\n");
@@ -2497,7 +2542,7 @@ function buildTechSpecHTML(t){
    <h3>1. Functional Requirement</h3><p>${esc(t.description)||"<i>none captured</i>"}</p>
    <h3>2. Work Breakdown (as delivered)</h3>${t.subtasks.length?specSubsHtml(t.subtasks):"<p><i>no subtasks</i></p>"}
    <h3>3. Objects Changed</h3>${t.objects.length?`<table><tr><th>Object</th><th>Type</th><th>Action</th><th>Description</th><th>In TR(s)</th></tr>${t.objects.map(o=>`<tr><td>${esc(o.name)}</td><td>${esc(o.type)}</td><td>${esc(o.action)}</td><td>${esc(o.desc)}</td><td>${trsForObject(t,o.id).map(x=>esc(x.number||"")).join(", ")||"—"}</td></tr>`).join("")}</table>`:"<p><i>none logged</i></p>"}
-   <h3>4. Transports</h3>${t.transports.length?`<table><tr><th>#</th><th>TR</th><th>Kind</th><th>Origin</th><th>Reached (incl. via ToC)</th><th>ToC</th><th>Released</th></tr>${t.transports.map((tr,i)=>{const toc=tocFor(t,tr);const cl=isCust(tr)&&tr.client?" / "+esc(tr.client):"";return `<tr><td>${i+1}</td><td>${esc(tr.number)}${tr.desc?" – "+esc(tr.desc):""}</td><td>${isCust(tr)?"Customizing":"Workbench"}</td><td>${esc(tr.system)}${cl}</td><td>${effectiveSyncs(t,tr).map(s=>esc(s.system)+cl+(s.date?" ("+s.date+")":"")+(s.via?" via ToC":"")).join(", ")||"—"}</td><td>${toc?esc(toc.number):"—"}</td><td>${tr.released?"Yes":"No"}</td></tr>`;}).join("")}</table>${(t.tocs&&t.tocs.length)?`<p style="margin-top:6px"><b>Transports of Copies:</b> ${t.tocs.map(c=>esc(c.number)+(c.syncs.filter(s=>s.system).length?" → "+c.syncs.filter(s=>s.system).map(s=>esc(s.system)).join(", "):"")).join(" · ")}</p>`:""}`:"<p><i>none logged</i></p>"}
+   <h3>4. Transports</h3>${t.transports.length?`<table><tr><th>#</th><th>TR</th><th>Kind</th><th>Origin</th><th>Reached (incl. via ToC)</th><th>Destinations</th><th>ToC</th><th>Released</th></tr>${t.transports.map((tr,i)=>{const toc=tocFor(t,tr);const cl=isCust(tr)&&tr.client?" / "+esc(tr.client):"";return `<tr><td>${i+1}</td><td>${esc(tr.number)}${tr.desc?" – "+esc(tr.desc):""}</td><td>${isCust(tr)?"Customizing":"Workbench"}</td><td>${esc(tr.system)}${cl}</td><td>${effectiveSyncs(t,tr).map(s=>esc(s.system)+cl+(s.date?" ("+s.date+")":"")+(s.via?" via ToC":"")).join(", ")||"—"}</td><td>${esc(trTargets(t,tr).join(" → "))||"—"}${trComplete(t,tr)?" ✓":""}</td><td>${toc?esc(toc.number):"—"}</td><td>${tr.released?"Yes":"No"}</td></tr>`;}).join("")}</table>${(t.tocs&&t.tocs.length)?`<p style="margin-top:6px"><b>Transports of Copies:</b> ${t.tocs.map(c=>esc(c.number)+(c.syncs.filter(s=>s.system).length?" → "+c.syncs.filter(s=>s.system).map(s=>esc(s.system)).join(", "):"")).join(" · ")}</p>`:""}`:"<p><i>none logged</i></p>"}
    <h3>5. Decisions &amp; Clarifications (from meetings)</h3>${calls.length?calls.map(c=>`<p><b>${c.date} — ${esc(c.title)}</b> ${c.team?"["+esc(c.team)+"] ":""}${c.attendees?"("+esc(c.attendees)+")":""}</p><div class="note">${esc(c.body)}</div>`).join(""):"<p><i>no linked meetings</i></p>"}
    <h3>6. Working Notes &amp; Change History</h3><div class="note">${esc(t.notes)||"<i>none</i>"}</div>${(t.comments&&t.comments.length)?`<p style="margin-top:8px"><b>Comments:</b></p><ul>${t.comments.map(c=>`<li><i>${fmtTs(c.ts)}</i> — ${esc(c.text)}</li>`).join("")}</ul>`:""}
    ${(t.reference&&t.reference.length)?`<h3>7. Reference / Endpoints</h3><table><tr><th>Label</th><th>Value</th></tr>${t.reference.map(r=>`<tr><td>${esc(r.label)}</td><td>${r.secret?"<i>(secret — held in app)</i>":esc(r.value)}</td></tr>`).join("")}</table>`:""}`;
@@ -2516,7 +2561,7 @@ function buildTechSpecMarkdown(t){
   L.push(`### 3. Objects Changed`);
   if(t.objects.length){L.push(`| Object | Type | Action | Description | In TR(s) |`,`|---|---|---|---|---|`);t.objects.forEach(o=>L.push(`| ${o.name} | ${o.type} | ${o.action} | ${(o.desc||"").replace(/\n/g," ")} | ${trsForObject(t,o.id).map(x=>x.number||"").join(", ")||"—"} |`));}else L.push("_(none logged)_");
   L.push(``,`### 4. Transports`);
-  if(t.transports.length){L.push(`| # | TR | Kind | Origin | Reached (incl. via ToC) | ToC | Released |`,`|---|---|---|---|---|---|---|`);t.transports.forEach((tr,i)=>{const toc=tocFor(t,tr);const cl=isCust(tr)&&tr.client?" / "+tr.client:"";const sy=effectiveSyncs(t,tr).map(s=>`${s.system}${cl}${s.date?" ("+s.date+")":""}${s.via?" via ToC":""}`).join(", ");L.push(`| ${i+1} | ${tr.number}${tr.desc?" – "+tr.desc:""} | ${isCust(tr)?"Customizing":"Workbench"} | ${tr.system}${cl} | ${sy||"—"} | ${toc?toc.number:"—"} | ${tr.released?"Yes":"No"} |`);});if(t.tocs&&t.tocs.length){L.push(``,`**Transports of Copies:** `+t.tocs.map(c=>c.number+(c.syncs.filter(s=>s.system).length?" → "+c.syncs.filter(s=>s.system).map(s=>s.system).join(", "):"")).join(" · "));}}else L.push("_(none logged)_");
+  if(t.transports.length){L.push(`| # | TR | Kind | Origin | Reached (incl. via ToC) | Destinations | ToC | Released |`,`|---|---|---|---|---|---|---|---|`);t.transports.forEach((tr,i)=>{const toc=tocFor(t,tr);const cl=isCust(tr)&&tr.client?" / "+tr.client:"";const sy=effectiveSyncs(t,tr).map(s=>`${s.system}${cl}${s.date?" ("+s.date+")":""}${s.via?" via ToC":""}`).join(", ");L.push(`| ${i+1} | ${tr.number}${tr.desc?" – "+tr.desc:""} | ${isCust(tr)?"Customizing":"Workbench"} | ${tr.system}${cl} | ${sy||"—"} | ${trTargets(t,tr).join(" → ")||"—"}${trComplete(t,tr)?" ✓":""} | ${toc?toc.number:"—"} | ${tr.released?"Yes":"No"} |`);});if(t.tocs&&t.tocs.length){L.push(``,`**Transports of Copies:** `+t.tocs.map(c=>c.number+(c.syncs.filter(s=>s.system).length?" → "+c.syncs.filter(s=>s.system).map(s=>s.system).join(", "):"")).join(" · "));}}else L.push("_(none logged)_");
   L.push(``,`### 5. Decisions & Clarifications (from meetings)`);
   if(calls.length)calls.forEach(c=>{L.push(`**${c.date} — ${c.title}** ${c.team?"["+c.team+"] ":""}${c.attendees?"("+c.attendees+")":""}`,``,c.body||"",``);});else L.push("_(no linked meetings)_");
   L.push(``,`### 6. Working Notes & Change History`,t.notes||"_(none)_");
@@ -4004,8 +4049,8 @@ function gotoImage(im){
 const objKey=n=>String(n||"").trim().toUpperCase();
 function objectInFlight(t,o){
   if(!objKey(o.name)||o.action==="Analyzed"||t.status==="closed")return false;
-  const trs=trsForObject(t,o.id),tgt=goliveTargetFor(t);
-  if(trs.length)return tgt?trs.some(tr=>!reachedSystems(t,tr).has(tgt)):t.status!=="delivered";
+  const trs=trsForObject(t,o.id);
+  if(trs.length)return trs.some(tr=>trTargets(t,tr).length?!trComplete(t,tr):t.status!=="delivered");
   if(t.status!=="delivered")return true;
   return !!golivePending(t); /* delivered, object not ticked on a TR: trust the demand's own go-live check */
 }
@@ -4083,7 +4128,9 @@ function runSheetData(tasks,target,showDone){
   if(target){const L=landscapeOf(target);
     tasks.forEach(t=>{const tocSeen=new Set();
       t.transports.forEach(tr=>{
-        if(landscapeOf(tr.system)!==L&&!effectiveSyncs(t,tr).some(s=>landscapeOf(s.system)===L)){other++;return;}
+        /* a transport with its own destinations only belongs on a sheet for one of them */
+        const own=trDest(t,tr);
+        if(own.length?!own.includes(target):(landscapeOf(tr.system)!==L&&!effectiveSyncs(t,tr).some(s=>landscapeOf(s.system)===L))){other++;return;}
         const toc=tocFor(t,tr);
         if(toc){if(tocSeen.has(toc.id))return;tocSeen.add(toc.id);
           const members=t.transports.filter(x=>x.tocId===toc.id),hit=toc.syncs.find(s=>s.system===target);
@@ -4141,7 +4188,7 @@ function openRunSheet(tasks,label,defTarget){
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
         <span style="font-size:13px">Import into</span><select id="rs-sys" style="width:auto">${systemOptions(target)}</select>
         <label style="display:flex;align-items:center;gap:6px;margin:0;text-transform:none;letter-spacing:0;font-size:12px;font-weight:500;color:var(--muted)"><input type="checkbox" id="rs-done" ${showDone?"checked":""} style="width:auto"> show what's already there</label>
-        <span class="faint" style="font-size:12px;margin-left:auto">${target?`${d.todo.length} to import${d.other?` · ${d.other} TR(s) from other landscapes left out`:""}`:""}</span></div>
+        <span class="faint" style="font-size:12px;margin-left:auto">${target?`${d.todo.length} to import${d.other?` · ${d.other} TR(s) not routed here left out`:""}`:""}</span></div>
       <textarea id="rs-notes" rows="2" placeholder="Notes for Basis (optional) — e.g. import after 18:00, ToC first, ping me on Teams when done">${esc(nt)}</textarea>
       <div class="specpaper specdoc" id="rs-prev" style="margin-top:10px">${target?runSheetHTML(d,target,label,nt):"<p><i>Pick the system to import into.</i></p>"}</div>
       <div class="modal-foot">${d.todo.length?`<button id="rs-mark" style="margin-right:auto" title="Once Basis confirms: record the import on every transport / ToC in the list">✓ Mark all imported…</button>`:""}
@@ -4200,7 +4247,7 @@ function handoverDoc(s,ts){
     para("Where it stands",t.notes);
     list("Open subtasks",hoOpenSubs(t.subtasks,0,[]).map(({s:x,d})=>`${"› ".repeat(d)}${x.title||"(untitled)"}${x.dueDate?" (due "+x.dueDate+")":""}`));
     const trs=t.transports.map(tr=>{const r=[...reachedSystems(t,tr)],toc=tocFor(t,tr);
-      return `${tr.number||"(unnumbered)"} — ${isCust(tr)?"customizing"+(tr.client?", client "+tr.client:""):"workbench"}${tr.released?"":", NOT released"}${r.length?", reached "+r.join("/"):", not moved yet"}${toc?", in ToC "+(toc.number||"(unnumbered)"):""}${tr.desc?" · "+tr.desc:""}`;});
+      return `${tr.number||"(unnumbered)"} — ${isCust(tr)?"customizing"+(tr.client?", client "+tr.client:""):"workbench"}${tr.released?"":", NOT released"}${r.length?", reached "+r.join("/"):", not moved yet"}${trDest(t,tr).length?", destinations "+trDest(t,tr).join(" → ")+(trComplete(t,tr)?" (complete)":""):""}${toc?", in ToC "+(toc.number||"(unnumbered)"):""}${tr.desc?" · "+tr.desc:""}`;});
     const g=golivePending(t);if(g)trs.push(`⚠ ${g.missing.length} transport(s) not yet in ${g.target}: ${g.missing.map(x=>x.number||"(TR)").join(", ")}`);
     list("Transports",trs);
     list("⚠ Object clashes",taskClashes(t,cidx).flatMap(({o,open})=>open.map(x=>`${o.name} is also in flight in ${x.t.demandId||x.t.title} (${clashWhere(x)})`)));
@@ -4274,7 +4321,7 @@ function runGlobalSearch(q){
     t.objects.forEach(o=>{if([o.name,o.type,o.desc].join(" ").toLowerCase().includes(q))hits.push({k:"Object",go:()=>{view="demands";activeId=t.id;activeTab="objects";},label:`${o.name||"(obj)"} — ${o.action} · ${t.demandId||t.title}`});});
     t.transports.forEach(tr=>{
       const toc=tocFor(t,tr);
-      const sysStr=effectiveSyncs(t,tr).map(s=>s.system).join(" ")+" "+tr.system+" "+(toc?toc.number:"");
+      const sysStr=effectiveSyncs(t,tr).map(s=>s.system).join(" ")+" "+tr.system+" "+(toc?toc.number:"")+" "+(tr.dest||[]).join(" ");
       if([tr.number,tr.desc,tr.notes,sysStr,tr.client,isCust(tr)?"customizing cust config":"workbench"].join(" ").toLowerCase().includes(q))hits.push({k:"Transport",go:()=>{view="demands";activeId=t.id;activeTab="transports";},label:`${tr.number||"(TR)"} ${tr.desc?"— "+tr.desc:""} · orig ${tr.system}${isCust(tr)&&tr.client?"/"+tr.client:""}${effectiveSyncs(t,tr).length?" → "+[...reachedSystems(t,tr)].join(", "):""}${toc?" · ToC "+toc.number:""} · ${t.demandId||t.title}`});
     });
     (t.tocs||[]).forEach(c=>{if([c.number,c.desc,c.notes,c.syncs.map(s=>s.system).join(" ")].join(" ").toLowerCase().includes(q))hits.push({k:"ToC",go:()=>{view="demands";activeId=t.id;activeTab="transports";},label:`ToC ${c.number||"(unnamed)"}${c.syncs.filter(s=>s.system).length?" → "+c.syncs.filter(s=>s.system).map(s=>s.system).join(", "):""} · ${t.demandId||t.title}`});});
@@ -4489,18 +4536,23 @@ function setDemandStatus(t,v,fromEl){if(v===t.status)return;
 
 /* where a transport has actually reached, drawn as its route Dev → QA → Prod */
 function trRouteDraw(t,tr){return (ctx,w,h,tm,dt,s)=>{const {dot,ring,label,C}=DK;
-  const tiers=state.settings.tiers.map(x=>x.d).sort().reverse(),L=landscapeOf(tr.system);if(!L)return;
-  const R=reachedSystems(t,tr),reach=[tr.system,...R].filter(x=>landscapeOf(x)===L).map(x=>String(x).slice(-1)).filter(d=>tiers.includes(d)).sort()[0]||tiers[0];
-  const idx=tiers.indexOf(reach),tgt=goliveTargetFor(t),pens=[C["pen-2"],C["pen-4"],C["pen-3"]];
-  const xs=tiers.map((_,i)=>12+(w-24)*(i/Math.max(1,tiers.length-1))),y=11,mv=motionOn();
+  /* the route this transport has to travel: its own destinations after the origin
+     (H03 → H43 → H42 → H41), or by default Dev → QA → Prod of its own landscape */
+  const own=trDest(t,tr),L=landscapeOf(tr.system);if(!L)return;
+  const S=own.length?[tr.system,...own.filter(x=>x!==tr.system)]:routeTiers().map(d=>L+d);
+  const R=reachedSystems(t,tr),has=x=>x===tr.system||R.has(x),T=new Set(trTargets(t,tr));
+  const penOf=x=>({"3":C["pen-2"],"2":C["pen-4"],"1":C["pen-3"]})[String(x).slice(-1)]||C["pen-5"];
+  let idx=0;S.forEach((x,i)=>{if(has(x))idx=i;});
+  const n=S.length,xs=S.map((_,i)=>12+(w-24)*(i/Math.max(1,n-1))),y=11,mv=motionOn();
   const grow=mv?Math.min(1,(performance.now()-s.born)/700):1,g=1-Math.pow(1-grow,3);
-  for(let x=xs[0];x<=xs[xs.length-1];x+=5)dot(ctx,x,y,.7,C["ink-4"]);
-  if(idx>0){ctx.globalAlpha=.6;ctx.strokeStyle=pens[Math.min(2,idx)];ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(xs[0],y);ctx.lineTo(xs[0]+(xs[idx]-xs[0])*g,y);ctx.stroke();}
-  tiers.forEach((d,i)=>{const on=i<=idx,pen=pens[Math.min(2,i)],sys=L+d;
+  for(let x=xs[0];x<=xs[n-1];x+=5)dot(ctx,x,y,.7,C["ink-4"]);
+  if(idx>0){ctx.globalAlpha=.6;ctx.strokeStyle=penOf(S[idx]);ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(xs[0],y);ctx.lineTo(xs[0]+(xs[idx]-xs[0])*g,y);ctx.stroke();}
+  S.forEach((x,i)=>{const on=has(x),pen=penOf(x);
     if(on)dot(ctx,xs[i],y,3.1,pen);else ring(ctx,xs[i],y,2.7,C["ink-4"],1);
-    if(sys===tgt)ring(ctx,xs[i],y,6.5,on?pen:C["ink-3"],.55);
-    label(ctx,sys,xs[i],h-1,{font:DK.MONO,size:8,weight:on?600:400,color:on?C["ink-2"]:C["ink-3"],base:"bottom"});});
-  if(tr.released&&idx<tiers.length-1&&mv){const u=((tm*.00055+hashAngle(tr.id))%1),x=xs[idx]+(xs[idx+1]-xs[idx])*u;dot(ctx,x,y,1.8,pens[Math.min(2,idx+1)],.85*Math.sin(u*Math.PI));}
+    if(T.has(x))ring(ctx,xs[i],y,6.5,on?pen:C["ink-3"],.55);
+    label(ctx,x,xs[i],h-1,{font:DK.MONO,size:8,weight:on?600:400,color:on?C["ink-2"]:C["ink-3"],base:"bottom"});});
+  const nx=S.findIndex((x,i)=>i>0&&!has(x));
+  if(tr.released&&nx>0&&mv){const u=((tm*.00055+hashAngle(tr.id))%1),x=xs[nx-1]+(xs[nx]-xs[nx-1])*u;dot(ctx,x,y,1.8,penOf(S[nx]),.85*Math.sin(u*Math.PI));}
   if(!tr.released)ring(ctx,xs[0],y,6+(mv?Math.sin(tm*.005)*1.5:0),C.watch,.65);};}
 /* two demands, one object: two dots circling the same point */
 function drawOrbit(ctx,w,h,t){const {dot,ring,C}=DK,cx=w/2,cy=h/2,tt=motionOn()?t*.0024:0;ring(ctx,cx,cy,5,C.bad,.9);dot(ctx,cx,cy,1.6,C.bad);
@@ -4545,13 +4597,16 @@ function updateSb(){if(!benchOn())return;const f=document.getElementById("sbFile
 /* ---------- Today cockpit ---------- */
 /* every transport of a demand that isn't closed, parked at the furthest tier it reached in its own landscape */
 function pipelineData(){
-  const tiers=state.settings.tiers.map(x=>x.d).sort().reverse(),lanes=new Map();
-  state.tasks.forEach(t=>{if(t.status==="closed")return;const tgt=goliveTargetFor(t);
-    t.transports.forEach(tr=>{if(!tr.system)return;const L=landscapeOf(tr.system),R=reachedSystems(t,tr);
-      const ds=[tr.system,...R].filter(x=>landscapeOf(x)===L).map(x=>String(x).slice(-1)).filter(d=>tiers.includes(d));
-      const reach=ds.length?ds.sort()[0]:tiers[0];
-      if(!lanes.has(L))lanes.set(L,[]);
-      lanes.get(L).push({t,tr,si:tiers.indexOf(reach),rel:!!tr.released,target:tgt,done:!!(tgt&&R.has(tgt))});});});
+  /* each transport sits in the lane of every landscape it's meant to reach (its origin
+     landscape by default), at the furthest tier it has got to there; one that hasn't
+     arrived in a destination landscape yet waits at the lane's entrance */
+  const tiers=routeTiers(),lanes=new Map();
+  state.tasks.forEach(t=>{if(t.status==="closed")return;
+    t.transports.forEach(tr=>{if(!tr.system)return;const R=reachedSystems(t,tr),own=trDest(t,tr),T=trTargets(t,tr),home=landscapeOf(tr.system);
+      const done=!!(T.length&&trComplete(t,tr)),Ls=own.length?[...new Set(own.map(landscapeOf))]:[home];
+      Ls.forEach(L=>{const ds=[...(L===home?[tr.system]:[]),...R].filter(x=>landscapeOf(x)===L).map(x=>String(x).slice(-1)).filter(d=>tiers.includes(d));
+        if(!lanes.has(L))lanes.set(L,[]);
+        lanes.get(L).push({t,tr,si:ds.length?tiers.indexOf(ds.sort()[0]):-1,rel:!!tr.released,target:T.join("/"),done,from:L===home?"":tr.system});});});});
   const out=[...lanes.entries()].map(([L,items])=>({L,items})).sort((a,b)=>b.items.length-a.items.length).slice(0,4).sort((a,b)=>a.L.localeCompare(b.L));
   return{tiers,lanes:out};}
 function cockpitCounts(){const T=state.tasks,today=todayStr();
@@ -4559,8 +4614,8 @@ function cockpitCounts(){const T=state.tasks,today=todayStr();
   return{active:T.filter(t=>["open","progress","bug"].includes(t.status)),
     over:T.filter(t=>{const d=earliestOpenDue(t);return d&&d<today;}),
     waiting:T.filter(isWaiting).sort((a,b)=>(waitDays(b)||0)-(waitDays(a)||0)),
-    clash:clashIndex().size,pipe,short:pipe.lanes.reduce((n,l)=>n+l.items.filter(x=>x.target&&!x.done).length,0),
-    unrel:pipe.lanes.reduce((n,l)=>n+l.items.filter(x=>!x.rel).length,0),total:pipe.lanes.reduce((n,l)=>n+l.items.length,0)};}
+    clash:clashIndex().size,pipe,short:new Set(pipe.lanes.flatMap(l=>l.items.filter(x=>x.target&&!x.done).map(x=>x.tr.id))).size,
+    unrel:new Set(pipe.lanes.flatMap(l=>l.items.filter(x=>!x.rel).map(x=>x.tr.id))).size,total:new Set(pipe.lanes.flatMap(l=>l.items.map(x=>x.tr.id))).size};}
 const CK_TILES=[
   {no:"01",pen:"var(--pen-2)",st:"live",nm:"Active demands",bl:"Open, in progress and rework — the ring splits by status.",view:{group:"epic",sort:"due",status:["open","progress","bug"]}},
   {no:"02",pen:"var(--pen-1)",st:"sweeping",nm:"Overdue & due soon",bl:"Radar — distance from the centre is days late; the inner ring is due within 7 days.",view:{group:"due",sort:"due"}},
@@ -4675,7 +4730,11 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
           if(!it.rel)ring(ctx,px,y,3.4,pen,.95,1.2);
           else{dot(ctx,px,y,3.2,pen);if(!it.done&&si<last)ring(ctx,px,y,4+pulse*5,pen,.35*(1-pulse));}
           label(ctx,String(it.tr.number||"TR").slice(-4),px,y-15-(k%2)*10,{font:DK.MONO,size:8,weight:400,color:C["ink-3"]});});
-        if(parked.length>show.length)label(ctx,"+"+(parked.length-show.length),sx+show.length*5.5+8,y,{font:DK.MONO,size:9,weight:600,color:C["ink-2"],align:"left"});});});
+        if(parked.length>show.length)label(ctx,"+"+(parked.length-show.length),sx+show.length*5.5+8,y,{font:DK.MONO,size:9,weight:600,color:C["ink-2"],align:"left"});});
+      /* synced in from another landscape and not arrived yet: waiting at the lane's entrance */
+      const arr=ln.items.filter(x=>x.si<0);
+      if(arr.length){arr.slice(0,4).forEach((it,k)=>ring(ctx,xs[0]-28-k*9,y,3,it.rel?C["pen-2"]:C.watch,.9,1.1));
+        label(ctx,"from "+[...new Set(arr.map(x=>x.from))].slice(0,2).join("/"),xs[0]-30,y+15,{font:DK.MONO,size:7.5,weight:400,color:C["ink-3"]});}});
   },{data:pipelineData()});
   /* epic rings */
   host.querySelectorAll(".ck-ep").forEach(el=>{const e=epicById(el.dataset.e);if(!e)return;const r=epicRollup(e),f=r.ts.length?r.done/r.ts.length:0,st={v:mv?0:f};
@@ -4745,7 +4804,7 @@ function drawTick(ctx,w,h,t){const {dot,C,TAU}=DK,cx=w/2,cy=h/2,R=Math.min(w,h)/
 /* ---------- Demand page header ---------- */
 function demandHeadBench(t,sub,lc){
   const ep=epicById(t.epicId),open=!["delivered","closed"].includes(t.status),dn=t.dueDate&&open?daysUntil(t.dueDate):null;
-  const tgt=goliveTargetFor(t),at=tgt?t.transports.filter(tr=>reachedSystems(t,tr).has(tgt)).length:0;
+  const tgt=goliveTargetFor(t),ownDest=t.transports.some(tr=>trDest(t,tr).length),at=t.transports.filter(tr=>trComplete(t,tr)).length;
   const age=t.receivedDate?Math.max(0,-daysUntil(t.receivedDate)):Math.floor((Date.now()-t.createdAt)/864e5);
   const na=t.nextAction&&t.nextAction.date&&t.status!=="closed"?t.nextAction:null,nad=na?daysUntil(na.date):0;
   const cl=taskClashes(t).filter(x=>x.open.length),rw=reworkCount(t),nClash=openClashCount(t);
@@ -4761,7 +4820,7 @@ function demandHeadBench(t,sub,lc){
       {k:"Due",v:t.dueDate?shortD(t.dueDate)+(dn!=null&&dn<0?`<small>${-dn} d late</small>`:dn!=null&&dn<=7?`<small>in ${dn} d</small>`:""):"—",cls:dn!=null&&dn<0?"bad":dn!=null&&dn<=3?"warn":""},
       {k:"Age",v:U(age,"days")},
       {k:"System",v:t.system?esc(t.system)+(t.client?`<small>client ${esc(t.client)}</small>`:""):"—"},
-      {k:tgt?"Go-live · "+esc(tgt):"Go-live",v:t.transports.length?U(`${at}/${t.transports.length}`,"TRs there"):"—",cls:t.transports.length?(at<t.transports.length?"warn":"good"):"",title:"Transports that have reached the go-live system"},
+      {k:ownDest?"Destinations":tgt?"Go-live · "+esc(tgt):"Go-live",v:t.transports.length?U(`${at}/${t.transports.length}`,ownDest?"TRs complete":"TRs there"):"—",cls:t.transports.length?(at<t.transports.length?"warn":"good"):"",title:"Transports that have reached the go-live system"},
       {k:"Subtasks",v:sub.n?U(`${sub.done}/${sub.n}`,"done"):"—"},
       {k:"Rework",v:U(rw,rw===1?"cycle":"cycles"),cls:rw?"bad":""},
       isWaiting(t)?{k:"Waiting on",v:esc(t.waiting.on)+(waitDays(t)!=null?`<small>${waitDays(t)} d</small>`:""),cls:"warn"}:null])}

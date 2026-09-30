@@ -339,6 +339,21 @@ above).
     to the production tier of the origin landscape) and it flags any TR that
     hasn't reached it (counting ToC coverage), so you don't miss a TR before
     go-live. The chosen target is remembered **per demand**.
+  - **Destinations per transport** — for a TR that's built in one system but is
+    only ever *synced* elsewhere (e.g. created in H03, meant for H43 → H42 → H41),
+    or that has to reach several landscapes, set its own **destinations** on the
+    TR card: *＋ destination…* adds a whole route (H4 route = H43 → H42 → H41) or
+    single systems, ✕ removes one, and *↺ use go-live target* goes back to the
+    default. Each destination shows ✓ with the date it was reached, or ○ while
+    pending — click a pending one to record it reached today. The transport is
+    **complete** when every destination is reached. A TR without its own
+    destinations follows the demand's go-live target, as before. Everything that
+    checks completion uses this: the go-live check, object clash warnings, Today,
+    the transport pipeline (the TR appears in the lane of each destination
+    landscape, waiting at its entrance until it arrives), the run sheet (a TR only
+    appears on the sheet for one of its destinations), the route line on the card
+    (H03 → H43 → H42 → H41), the CSV (*Destinations*, *Complete* columns), the
+    Tech Spec, the handover pack and search.
 - **Linked** — everything tied to this demand in one tab, clearly differentiated:
   **👥 Meetings**, **📓 Journal entries** (teal), and **🐞 Debug sessions**
   (amber, with their status). Link any of the three right from the tab, or from
