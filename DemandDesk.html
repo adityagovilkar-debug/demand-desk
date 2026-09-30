@@ -4968,7 +4968,8 @@ function drawTick(ctx,w,h,t){const {dot,C,TAU}=DK,cx=w/2,cy=h/2,R=Math.min(w,h)/
 function demandHeadBench(t,sub,lc){
   const ep=epicById(t.epicId),open=!["delivered","closed"].includes(t.status),dn=t.dueDate&&open?daysUntil(t.dueDate):null;
   const tgt=goliveTargetFor(t),ownDest=t.transports.some(tr=>trDest(t,tr).length),at=t.transports.filter(tr=>trComplete(t,tr)).length;
-  const age=t.receivedDate?Math.max(0,-daysUntil(t.receivedDate)):Math.floor((Date.now()-t.createdAt)/864e5);
+  const fin=benchOn()?journeyFinish(t,statusHistory(t)):null;   /* finished demands stop ageing at their last event */
+  const age=Math.max(0,Math.floor(((fin?new Date(fin+"T00:00:00").getTime():Date.now())-(t.receivedDate?new Date(t.receivedDate+"T00:00:00").getTime():t.createdAt))/864e5));
   const na=t.nextAction&&t.nextAction.date&&t.status!=="closed"?t.nextAction:null,nad=na?daysUntil(na.date):0;
   const cl=taskClashes(t).filter(x=>x.open.length),rw=reworkCount(t),nClash=openClashCount(t);
   return `<div class="detail-head bhead" style="--pen:${STATUS_PEN[t.status]}">
@@ -4981,7 +4982,7 @@ function demandHeadBench(t,sub,lc){
     ${roHTML([
       {k:"Received",v:shortD(t.receivedDate)},
       {k:"Due",v:t.dueDate?shortD(t.dueDate)+(dn!=null&&dn<0?`<small>${-dn} d late</small>`:dn!=null&&dn<=7?`<small>in ${dn} d</small>`:""):"—",cls:dn!=null&&dn<0?"bad":dn!=null&&dn<=3?"warn":""},
-      {k:"Age",v:U(age,"days")},
+      {k:fin?"Took":"Age",v:U(age,"days")},
       {k:"System",v:t.system?esc(t.system)+(t.client?`<small>client ${esc(t.client)}</small>`:""):"—"},
       {k:ownDest?"Destinations":tgt?"Go-live · "+esc(tgt):"Go-live",v:t.transports.length?U(`${at}/${t.transports.length}`,ownDest?"TRs complete":"TRs there"):"—",cls:t.transports.length?(at<t.transports.length?"warn":"good"):"",title:"Transports that have reached the go-live system"},
       {k:"Subtasks",v:sub.n?U(`${sub.done}/${sub.n}`,"done"):"—"},
@@ -5216,15 +5217,17 @@ function statusHistory(t){const h=(t.timeline||[]).filter(e=>e.type==="status").
   const start=t.receivedDate||(h[0]&&h[0].d)||isoTs(t.createdAt);
   if(!h.length||h[0].d>start)h.unshift({d:start,s:h.length?"open":t.status});return h;}
 function renderOverview(body,t){
-  const sd=countSubs(t.subtasks),nComp=t.transports.filter(tr=>trComplete(t,tr)).length,clashN=openClashCount(t),age=t.receivedDate?Math.max(0,-daysUntil(t.receivedDate)):Math.floor((Date.now()-t.createdAt)/864e5);
-  const avg=avgLeadDays(),hs=statusHistory(t),loops=hs.filter(h=>h.s==="bug").length;
+  const avg=avgLeadDays(),hs=statusHistory(t),loops=hs.filter(h=>h.s==="bug").length,fin=journeyFinish(t,hs);
+  const sd=countSubs(t.subtasks),nComp=t.transports.filter(tr=>trComplete(t,tr)).length,clashN=openClashCount(t);
+  /* a finished demand's age stops at its finish ("took N days"), a live one keeps counting */
+  const endMs=fin?new Date(fin+"T00:00:00").getTime():Date.now(),age=Math.max(0,Math.floor((endMs-(t.receivedDate?new Date(t.receivedDate+"T00:00:00").getTime():t.createdAt))/864e5));
   const overdueSubs=(function c(a){return a.reduce((n,s)=>n+(!s.done&&s.dueDate&&s.dueDate<todayStr()?1:0)+c(s.children),0);})(t.subtasks);
   const feed=[...(t.timeline||[]).map(e=>e.type==="status"?{ts:e.ts,pen:STATUS_PEN[e.to]||"var(--faint)",h:`<b>${STATUS[e.to]?STATUS[e.to].label:esc(e.to)}</b>${e.from?` <span class="dim">from ${STATUS[e.from]?STATUS[e.from].label:esc(e.from)}</span>`:" <span class='dim'>— created</span>"}`}:{ts:e.ts,pen:"var(--accent2)",h:esc(e.note)}),
     ...(t.comments||[]).map(c=>({ts:c.ts,pen:"var(--ink-3)",h:linkify(c.text)})),
     ...t.transports.flatMap(tr=>tr.syncs.filter(s=>s.system&&s.date).map(s=>({ts:new Date(s.date+"T12:00:00").getTime(),pen:"var(--good)",h:`<b class="mono">${esc(tr.number||"(TR)")}</b> reached ${esc(s.system)}`})))]
     .sort((a,b)=>b.ts-a.ts).slice(0,7);
   body.innerHTML=`
-    <div class="bsec jr"><div class="sec-title"><h3>Journey</h3><div class="ln"></div><span class="faint mono" style="font-size:10.5px">received ${t.receivedDate||"—"} · ${age} days${loops?` · ${loops} rework loop${loops>1?"s":""}`:""}</span></div><canvas class="jcv"></canvas></div>
+    <div class="bsec jr"><div class="sec-title"><h3>Journey</h3><div class="ln"></div><span class="faint mono" style="font-size:10.5px">received ${t.receivedDate||"—"} · ${fin?`took ${age} days · finished ${fin}`:`${age} days`}${loops?` · ${loops} rework loop${loops>1?"s":""}`:""}</span></div><canvas class="jcv"></canvas></div>
     <div class="grid2">
       <div class="field"><label>What is to be done</label><textarea id="fDesc" placeholder="Scope, requirement summary, acceptance criteria…">${esc(t.description)}</textarea></div>
       <div class="field"><label>Where it stands · working notes</label><textarea id="fNotes" placeholder="Running notes, blockers, who asked, decisions…">${esc(t.notes)}</textarea></div></div>
@@ -5233,7 +5236,7 @@ function renderOverview(body,t){
       <div class="ck-unit ins" data-tab="work"><canvas data-k="subs" data-f="${sd.n?sd.done/sd.n:0}"></canvas><div><div class="k">Subtasks</div><div class="v">${sd.done}<small>/ ${sd.n}</small></div><div class="s ${overdueSubs?"late":""}">${sd.n?(overdueSubs?overdueSubs+" overdue":"on track"):"none yet"}</div></div></div>
       <div class="ck-unit ins" data-tab="transports"><canvas data-k="trs" data-f="${t.transports.length?nComp/t.transports.length:0}"></canvas><div><div class="k">Transports</div><div class="v">${nComp}<small>/ ${t.transports.length} complete</small></div><div class="s">${t.transports.filter(x=>!x.released).length} not released</div></div></div>
       <div class="ck-unit ins" data-tab="objects"><canvas data-k="obj" data-f="${t.objects.length?clashN/t.objects.length:0}"></canvas><div><div class="k">Objects</div><div class="v">${t.objects.length}<small>logged</small></div><div class="s ${clashN?"late":""}">${clashN?clashN+" in a clash":"no clashes"}</div></div></div>
-      <div class="ck-unit ins" data-tab="history"><canvas data-k="age" data-f="${avg?Math.min(1,age/(avg*2)):0}"></canvas><div><div class="k">Age</div><div class="v">${age}<small>d${avg!=null?" · avg lead "+avg:""}</small></div><div class="s ${avg!=null&&age>avg&&!["delivered","closed"].includes(t.status)?"soon":""}">${avg==null?"no delivered demands yet":age>avg?"longer than your usual":"within your usual"}</div></div></div></div>
+      <div class="ck-unit ins" data-tab="history"><canvas data-k="age" data-f="${avg?Math.min(1,age/(avg*2)):0}"></canvas><div><div class="k">${fin?"Took":"Age"}</div><div class="v">${age}<small>d${avg!=null?" · avg lead "+avg:""}</small></div><div class="s ${avg!=null&&age>avg&&!["delivered","closed"].includes(t.status)?"soon":""}">${avg==null?"no delivered demands yet":age>avg?"longer than your usual":"within your usual"}</div></div></div></div>
     <div class="bsec"><div class="sec-title"><h3>Latest</h3><div class="ln"></div><span class="faint" style="font-size:10.5px">status · notes · comments · transport moves</span></div>
       ${feed.map(f=>`<div class="fe" style="--pen:${f.pen}"><span class="d">${shortD(isoTs(f.ts))}</span><i></i><span>${f.h}</span></div>`).join("")||`<div class="bempty">Nothing yet.</div>`}
       <div class="compose"><textarea id="ovCmt" rows="1" placeholder="Add a comment… (Ctrl+Enter)"></textarea><button class="sm primary" id="ovPost">Post</button></div></div>`;
@@ -5249,12 +5252,14 @@ function renderOverview(body,t){
   DK.scope(body.querySelector(".jcv"),journeyDraw(t));}
 /* the demand's life on a date line: status stretches, rework loops, transports landing, due, today */
 function journeyDraw(t){return (c,w,h,tm,dt,s)=>{const {dot,ring,label,C}=DK,mv=motionOn();
-  const hs=statusHistory(t),pen=k=>C[STATUS_CK[k]]||C["ink-3"];
-  const t0=new Date(hs[0].d+"T00:00:00").getTime(),tEnd=Math.max(Date.now(),t.dueDate?new Date(t.dueDate+"T00:00:00").getTime():0)+4*864e5;
-  const X=d=>28+(w-56)*((new Date(d+"T00:00:00").getTime()-t0)/Math.max(1,tEnd-t0)),y=h*.44;
-  const prog=mv?Math.min(1,(performance.now()-s.born)/1400):1,xMax=28+(w-56)*(1-Math.pow(1-prog,3)),today=todayStr(),xNow=X(today);
+  const hs=statusHistory(t),pen=k=>C[STATUS_CK[k]]||C["ink-3"],ms=d=>new Date(d+"T00:00:00").getTime();
+  /* a finished demand's line ends at its last event, not at today — otherwise an old closed demand is a speck on the left */
+  const fin=journeyFinish(t,hs),t0=ms(hs[0].d);
+  const tLast=fin?ms(fin):Math.max(Date.now(),t.dueDate?ms(t.dueDate):0),tEnd=tLast+Math.max(864e5,(tLast-t0)*.04);
+  const X=d=>28+(w-56)*((ms(d)-t0)/Math.max(1,tEnd-t0)),y=h*.44;
+  const prog=mv?Math.min(1,(performance.now()-s.born)/1400):1,xMax=28+(w-56)*(1-Math.pow(1-prog,3)),today=todayStr(),xNow=fin?Infinity:X(today);
   for(let x=28;x<=w-28;x+=6)dot(c,x,y,.8,C["ink-4"]);
-  hs.forEach((e,i)=>{const a=Math.min(X(e.d),xMax),b=Math.min(i<hs.length-1?X(hs[i+1].d):(t.status==="closed"?X(e.d)+2:xNow),xMax);if(b<=a)return;
+  hs.forEach((e,i)=>{const a=Math.min(X(e.d),xMax),b=Math.min(i<hs.length-1?X(hs[i+1].d):(t.status==="closed"?X(e.d)+2:fin?Math.max(X(e.d)+2,X(fin)):xNow),xMax);if(b<=a)return;
     c.globalAlpha=.85;c.strokeStyle=pen(e.s);c.lineWidth=3;c.beginPath();c.moveTo(a,y);c.lineTo(b,y);c.stroke();});
   hs.forEach((e,i)=>{if(e.s!=="bug")return;const prev=hs.slice(0,i).reverse().find(x=>x.s==="delivered");if(!prev)return;const a=X(prev.d),b=X(e.d);if(b>xMax)return;
     c.globalAlpha=.6;c.strokeStyle=C.bad;c.lineWidth=1.2;c.setLineDash([3,3]);c.beginPath();c.moveTo(b,y-4);c.quadraticCurveTo((a+b)/2,y-44,a,y-4);c.stroke();c.setLineDash([]);
@@ -5268,7 +5273,12 @@ function journeyDraw(t){return (c,w,h,tm,dt,s)=>{const {dot,ring,label,C}=DK,mv=
     c.globalAlpha=.35;c.strokeStyle=C.good;c.lineWidth=1;c.beginPath();c.moveTo(x,y+6);c.lineTo(x,yy);c.stroke();dot(c,x,yy,2.2,C.good);}));
   if(t.transports.some(tr=>tr.syncs.some(sy=>sy.date)))label(c,"TRANSPORTS LANDING",28,h-3,{size:7,align:"left"});
   if(t.dueDate){const xd=X(t.dueDate);if(xd<=xMax){c.globalAlpha=.8;c.strokeStyle=C.bad;c.lineWidth=1;c.beginPath();c.moveTo(xd,y-24);c.lineTo(xd,y+10);c.stroke();label(c,"DUE",xd,y-30,{size:7.5,color:C.bad});}}
-  if(xNow<=xMax){const pl=mv?(Math.sin(tm*.004)+1)/2:0;ring(c,xNow,y,6+pl*5,C.ink,.4*(1-pl));dot(c,xNow,y,2.4,C.ink);label(c,"TODAY",xNow,y+40,{size:7.5,color:C.ink});}};}
+  if(xNow<=xMax){const pl=mv?(Math.sin(tm*.004)+1)/2:0;ring(c,xNow,y,6+pl*5,C.ink,.4*(1-pl));dot(c,xNow,y,2.4,C.ink);label(c,"TODAY",xNow,y+40,{size:7.5,color:C.ink});}
+  else if(fin&&prog>=1){const n=Math.round((ms(today)-ms(fin))/864e5);if(n>0)label(c,`TODAY +${n}D →`,w-28,y+40,{size:7.5,color:C["ink-4"],align:"right"});}};}
+/* the last dated thing a delivered/closed demand did (status change or transport landing); null while it's still live */
+function journeyFinish(t,hs){if(!["delivered","closed"].includes(t.status))return null;const today=todayStr();
+  let d=hs[hs.length-1].d;const see=x=>{if(x&&x<=today&&x>d)d=x;};
+  t.transports.forEach(tr=>tr.syncs.forEach(s=>see(s.date)));(t.tocs||[]).forEach(c=>c.syncs.forEach(s=>see(s.date)));return d;}
 
 /* ---------- Work: subtasks beside comments ---------- */
 function renderWorkBench(body,t){const sd=countSubs(t.subtasks);
