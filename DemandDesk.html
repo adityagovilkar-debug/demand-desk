@@ -1305,7 +1305,10 @@
   @media (max-width:1500px){.efx .ef-gw{grid-template-columns:1fr}.efx .ef-g3{grid-template-columns:1fr 1fr}}
   @media (max-width:1100px){.efx .ef-g3{grid-template-columns:1fr}}
   /* the day ledger slides in from the right */
-  .efx.ef-drw{position:fixed;top:52px;right:0;bottom:28px;width:min(440px,92vw);background:var(--paper);border-left:1px solid var(--rule-strong);box-shadow:-20px 0 60px rgba(0,0,0,.14);z-index:60;transform:translateX(104%);transition:transform .4s cubic-bezier(.2,.8,.2,1);overflow:auto;padding:18px 20px 30px}
+  /* solid paper over a light veil — under dialogs (z 50), so "Log time for this day" opens on top of it */
+  .efx.ef-scrim{position:fixed;inset:0;z-index:44;background:color-mix(in srgb,var(--paper) 55%,transparent);opacity:0;pointer-events:none;transition:opacity .3s}
+  #efDrw.on+.ef-scrim{opacity:1;pointer-events:auto}
+  .efx.ef-drw{position:fixed;top:52px;right:0;bottom:28px;width:min(440px,92vw);background:var(--paper);border-left:1px solid var(--rule-strong);box-shadow:-24px 0 60px rgba(0,0,0,.16);z-index:45;transform:translateX(104%);transition:transform .4s cubic-bezier(.2,.8,.2,1);overflow:auto;padding:18px 20px 30px}
   .efx.ef-drw.on{transform:none}
   .efx.ef-drw .ef-x{position:absolute;top:12px;right:14px}
   .efx.ef-drw h2{margin:6px 0 8px;font-size:20px;font-weight:600}
@@ -5998,7 +6001,10 @@ function efNoticedHTML(A,total,dem,unl){efNoticeActs=[];const out=[],act=(l,fn)=
   if(total)out.push(["ink-3",`<b>${100-efPct(dem,total)}%</b> of your time wasn't demand work — meetings, admin, support and learning.`,""]);
   return out.map(([pen,h,b])=>`<div class="ef-nt" style="--pen:var(--${pen})"><i></i><span>${h}</span>${b}</div>`).join("")||`<div class="faint" style="font-size:12px">Log a few days and patterns show up here.</div>`;}
 /* the day ledger: everything on one day, edit it, mark it as leave */
-function openEfDay(date,hiKey){let d=document.getElementById("efDrw");if(!d){d=document.createElement("aside");d.id="efDrw";d.className="efx ef-drw";document.body.appendChild(d);}
+function openEfDay(date,hiKey){let d=document.getElementById("efDrw");
+  /* a div, not an <aside>: the Instrument/Bench themes make every aside see-through so the dot grid shows behind the sidebars */
+  if(!d){d=document.createElement("div");d.id="efDrw";d.className="efx ef-drw";d.setAttribute("role","dialog");d.setAttribute("aria-label","Day ledger");document.body.appendChild(d);
+    const sc=document.createElement("div");sc.className="efx ef-scrim";sc.onclick=()=>d.classList.remove("on");d.after(sc);}
   d.dataset.date=date;d.dataset.key=hiKey||"";const es=state.efforts.filter(e=>e.date===date).sort((a,b)=>a.createdAt-b.createdAt),tot=efSum(es),lv=efOff(date);
   d.innerHTML=`<button class="sm ghost ef-x" id="efDrwX">✕ Close</button><span class="ef-lb">${lv?EF_OFF[lv.kind].icon+" "+esc(efOffTxt(lv)):"Day ledger"}</span><h2>${efLong(date)}</h2>
     <div class="ef-dsf" style="padding-bottom:12px;border-bottom:1px solid var(--rule);margin-bottom:4px">${efDayBar(tot,0)}<span><b>${efFh(tot)} h</b> of ${EF_DAY}</span></div>
