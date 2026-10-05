@@ -358,6 +358,31 @@ Log what you worked on, and see where your time goes.
   demand) — data version 23. Deleting a demand deletes the hours logged on it (the
   confirmation says how many).
 
+### Review — your year, for the appraisal
+- **Review** workspace (🏆 in the rail) — pick the period: **FY (Apr–Mar)**, last FY,
+  this calendar year, last year, last 12 months, or custom dates.
+- Readouts: demands delivered, hours logged, rework rate and request → delivery time
+  (each against the period before), on-time share, wins.
+- **My summary** — your own words, saved per period; **✍ Draft one from my data**
+  writes a first-person starting paragraph from what's in the file (delivered work,
+  biggest pieces, epics you led or contributed to, hours, rework, learning, wins).
+- **Month by month** (hours, deliveries, wins), the **Delivered** list (★ a demand to
+  feature it in Highlights), your **Wins**, and **where the time went** (by theme and
+  activity).
+- **The document** — at a glance, highlights, wins by kind, epics and your role,
+  every delivered demand (days to deliver, hours, reworked / after due date), and
+  where the time went. **⧉ Copy** (formatted — paste into Word, Outlook or the
+  appraisal form), **⬇ .md**, **🖨 Print / PDF**.
+- "Delivered" means the demand first moved to Delivered inside the period.
+
+### Wins
+- **🏆 Note a win** — press **W** anywhere, 🏆 in the title bar, on Today, or **🏆 Win**
+  in a demand's header (linked to that demand). Kinds: 🙏 Appreciation · 🚀 Delivery ·
+  🧯 Rescue / fix · 🎓 Helped / taught · 💡 Improvement · ⭐ Other.
+- Wins appear in the Review (edit ✎ / delete ✕ with Undo), the month chart, the
+  draft summary and the document, and in search.
+- Stored as `wins` and `reviewNotes` in your data file — data version 24.
+
 ### Debug
 A debugging workbench per investigation, so a weekend gap doesn't lose you:
 - **▶ Resume here** — a highlighted box at the top for "where I left off / what to
@@ -663,5 +688,6 @@ drive, not a shared location.
 - `Ctrl+K` — Search
 - `Alt+N` — New demand
 - `T` — Log time (when you're not typing in a field)
+- `W` — Note a win
 - `Ctrl+Enter` — create / save in the demand dialog
 - `Esc` — close the open dialog or image (a half-filled demand asks first)
