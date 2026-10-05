@@ -1329,6 +1329,16 @@
   .toast.show.ef-undo{pointer-events:auto}
   .efx.ef-today .ef-un{font-size:12px;color:var(--bad);line-height:1.6}
   .efx.ef-today .ef-un a{color:var(--bad)}
+  .efx .ef-unr{display:flex;gap:12px;align-items:baseline;font-size:12px;padding:3px 0}
+  .efx .ef-unr .mono{min-width:96px;color:var(--ink-2)}
+  .efx .ef-unr a,.efx .ef-tiny a{color:var(--pen-2);text-decoration:none}
+  .efx .ef-unr a:hover,.efx .ef-tiny a:hover{text-decoration:underline}
+  .efx .ef-tiny{font-family:var(--sans);font-size:10px;margin-top:2px;white-space:nowrap}
+  .efx .ef-do{display:grid;grid-template-columns:110px auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:5px 0;border-top:1px dotted var(--rule-strong);font-size:12px}
+  .efx .ef-do .mono{color:var(--ink-2);font-size:11px}
+  .efx .ef-do .lb{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .efx .ef-paste summary{cursor:pointer;font-size:11px;color:var(--ink-2);margin:2px 0 6px}
+  .efx .ef-paste textarea{font-family:var(--mono);font-size:12px}
   #sbEffort{cursor:pointer}
   @media (prefers-reduced-motion:reduce){.efx *{animation:none!important}}
   html.nomotion .efx *{animation:none!important}
@@ -1440,7 +1450,7 @@ function objTypeUsage(type){let n=0;state.tasks.forEach(t=>t.objects.forEach(o=>
 const DEF_LANDSCAPES=["H0","H1","H2","H3","H4","H5","H6"];
 const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod / QA",short:"QA"},{d:"1",label:"Production",short:"PRD"}];
 
-let state={version:22,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],leaveDays:[]};
+let state={version:23,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[]};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false, lastWriteAt=0, autoSaveDue=0, diskConflict=null, fileSig=null, savePromise=null, backupUnreadable=false;
 let view="today";
 let activeId=null, activeTab="overview", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -1674,7 +1684,7 @@ function updateReconnectUI(){const b=document.getElementById("btnReconnect");if(
 async function forgetHandle(){savedHandle=null;if(useIdb)await idbDel("handle");updateReconnectUI();}
 
 function migrate(d){
-  d.version=22;
+  d.version=23;
   d.settings=d.settings||{};
   d.settings.landscapes=d.settings.landscapes&&d.settings.landscapes.length?d.settings.landscapes:[...DEF_LANDSCAPES];
   d.settings.tiers=d.settings.tiers&&d.settings.tiers.length?d.settings.tiers:DEF_TIERS;
@@ -1689,7 +1699,8 @@ function migrate(d){
   d.playbook=(d.playbook||[]).map(normPlay);
   /* hours logged (v22): demand rows keep their taskId even if the demand is later removed from another copy */
   d.efforts=(d.efforts||[]).map(normEffort).filter(e=>e.hours>0);
-  d.leaveDays=[...new Set((d.leaveDays||[]).filter(x=>/^\d{4}-\d\d-\d\d$/.test(x)))].sort();
+  /* days off (v23): holidays and leave with a label; the v22 leaveDays list folds in as plain leave */
+  {const seen=new Set();d.daysOff=[...(d.daysOff||[]),...(d.leaveDays||[])].map(normDayOff).filter(x=>/^\d{4}-\d\d-\d\d$/.test(x.date)&&!seen.has(x.date)&&seen.add(x.date)).sort((a,b)=>a.date.localeCompare(b.date));delete d.leaveDays;}
   d.epics=(d.epics||[]).map(normEpic);
   /* referential integrity: a demand pointing at a deleted epic falls back to none,
      so a stale id can never render as a phantom grouping */
@@ -5505,7 +5516,7 @@ document.addEventListener("keydown",e=>{
 /* ===================== EFFORT — the hours you put into demands =====================
    One list in the data file: state.efforts = [{id,date,hours,taskId,bucket,activity,note,subtaskId}].
    A row is against a demand (taskId) or against a non-demand bucket (meetings, admin,
-   support, learning) so a whole day adds up. state.leaveDays marks days off, which never
+   support, learning) so a whole day adds up. state.daysOff marks holidays and leave, which never
    count as "no log". A demand's estimate is t.estimate (hours, 0 = none). Hours logged
    while the demand's status was Bug count as rework — no extra bookkeeping. */
 const EF_ACTS=[["Analysis","pen-2"],["Build","pen-3"],["Testing","pen-6"],["Debug / fix","pen-1"],["Transport & Basis","pen-4"],["Documentation","pen-5"],["Meetings & admin","ink-3"],["Support","pen-7"],["Learning","pen-8"]];
@@ -5538,7 +5549,59 @@ const efWd=d=>{const g=efDow(d);return g>0&&g<6;};
 const efFmt=(d,o)=>new Date(d+"T00:00:00").toLocaleDateString("en-GB",o);
 const efSh=d=>efFmt(d,{day:"2-digit",month:"short"}),efWdl=d=>efFmt(d,{weekday:"short",day:"2-digit",month:"short"});
 const efWdd=d=>efFmt(d,{weekday:"short"})+" "+new Date(d+"T00:00:00").getDate(),efLong=d=>efFmt(d,{weekday:"long",day:"numeric",month:"long",year:"numeric"});
-const efLeave=d=>(state.leaveDays||[]).includes(d);
+/* ---------- days off: public holidays and leave ----------
+   state.daysOff=[{date,kind:"holiday"|"leave",label}]. A day off is never a "day with no log" and
+   isn't counted as a working day in the averages; logging hours on one is still allowed. */
+const EF_OFF={holiday:{l:"Holiday",icon:"🎉",pen:"pen-5"},leave:{l:"Leave",icon:"🌴",pen:"pen-7"}};
+function normDayOff(x){if(typeof x==="string")x={date:x,kind:"leave"};x=x||{};return{date:String(x.date||""),kind:EF_OFF[x.kind]?x.kind:"leave",label:String(x.label||"").trim()};}
+const efOff=d=>(state.daysOff||[]).find(x=>x.date===d)||null;
+const efLeave=d=>!!efOff(d);
+const efOffTxt=o=>o?EF_OFF[o.kind].l+(o.label?" · "+o.label:""):"";
+function efSetOff(dates,kind,label){const L=state.daysOff||(state.daysOff=[]);
+  dates.forEach(d=>{const o=L.find(x=>x.date===d);if(o){o.kind=kind;o.label=label;}else L.push({date:d,kind,label});});
+  L.sort((a,b)=>a.date.localeCompare(b.date));markDirty();}
+function efClearOff(d){state.daysOff=(state.daysOff||[]).filter(x=>x.date!==d);markDirty();}
+/* "2026-10-20", "20.10.2026", "20/10/2026", "20-10-2026" — day first, as on Indian and German calendars */
+function efParseDate(str){str=String(str||"").trim();let m,y,mo,d;
+  if((m=str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))){y=+m[1];mo=+m[2];d=+m[3];}
+  else if((m=str.match(/^(\d{1,2})[.\/-](\d{1,2})[.\/-](\d{4})/))){y=+m[3];mo=+m[2];d=+m[1];}else return null;
+  const x=new Date(y,mo-1,d);if(x.getFullYear()!==y||x.getMonth()!==mo-1||x.getDate()!==d)return null;return isoD(x);}
+function efRefreshDrawer(){const d=document.getElementById("efDrw");if(d&&d.classList.contains("on"))openEfDay(d.dataset.date,d.dataset.key||"");}
+function openDaysOff(o={}){const root=document.getElementById("modalRoot"),st={kind:o.kind||"holiday"};
+  const rows=list=>list.map(x=>`<div class="ef-do"><span class="mono">${efWdl(x.date)}${x.date.slice(0,4)!==todayStr().slice(0,4)?" "+x.date.slice(0,4):""}</span><span class="ef-tag" style="--pen:var(--${EF_OFF[x.kind].pen})">${EF_OFF[x.kind].icon} ${EF_OFF[x.kind].l}</span><span class="lb">${esc(x.label)}</span><button class="ghost sm danger" data-rm="${x.date}" title="Not a day off">✕</button></div>`).join("");
+  const draw=()=>{const t=todayStr(),L=state.daysOff||[],up=L.filter(x=>x.date>=t),past=L.filter(x=>x.date<t).slice().reverse().slice(0,30);
+    const keep=root.querySelector("#doLabel")?{from:root.querySelector("#doFrom").value,to:root.querySelector("#doTo").value,label:root.querySelector("#doLabel").value}:{from:o.date||t,to:o.to||"",label:o.label||""};
+    root.innerHTML=`<div class="modal-bg"><div class="modal efx ef-modal"><h2>🏖 Holidays &amp; leave</h2>
+      <p class="faint" style="font-size:12px;margin-top:-6px;line-height:1.5">A day off never counts as a day with no log, and isn't counted as a working day in your averages. You can still log hours on one if you did work.</p>
+      <div class="ef-qc">
+        <div class="ef-qrow"><div><span class="ef-lb">From</span><input type="date" id="doFrom" value="${keep.from}"></div><div><span class="ef-lb">To · optional, for a stretch</span><input type="date" id="doTo" value="${keep.to}"></div>
+          <div><span class="ef-lb">Kind</span><div class="ef-row">${Object.entries(EF_OFF).map(([k,v])=>`<button class="ef-chip ${k===st.kind?"on":""}" data-kind="${k}" style="--pen:var(--${v.pen})">${v.icon} ${v.l}</button>`).join("")}</div></div></div>
+        <div><span class="ef-lb">Label · optional</span><input id="doLabel" placeholder="e.g. Dussehra · Annual leave · Sick day" value="${esc(keep.label)}" autocomplete="off"></div>
+        <div class="ef-foot"><span class="ef-dsf" id="doInfo"></span><button class="primary" id="doAdd">Mark as day off</button></div>
+        <details class="ef-paste"><summary>Paste your company's holiday calendar</summary>
+          <textarea id="doPaste" rows="5" placeholder="One per line, date first:&#10;2026-10-20 Diwali&#10;20.10.2026 Diwali&#10;25/12/2026, Christmas"></textarea>
+          <div class="ef-foot" style="margin-top:6px"><span class="faint" style="font-size:11px">Dates are day-first (20/10 = 20 October).</span><button id="doPasteAdd">Add these as holidays</button></div></details>
+        <div><span class="ef-lb">Coming up</span>${rows(up)||`<div class="faint" style="font-size:12px">Nothing planned.</div>`}</div>
+        ${past.length?`<div><span class="ef-lb">Earlier</span>${rows(past)}</div>`:""}
+      </div><div class="modal-foot"><button class="ghost" id="doClose">Close</button></div></div></div>`;
+    const q=x=>root.querySelector(x),bg=q(".modal-bg"),close=()=>{root.innerHTML="";};
+    bg.onclick=e=>{if(e.target===bg)close();};q("#doClose").onclick=close;
+    const span=()=>{const a=efParseDate(q("#doFrom").value),b=efParseDate(q("#doTo").value)||a;if(!a)return[];const lo=a<b?a:b,hi=a<b?b:a,out=[];
+      for(let d=lo;d<=hi&&out.length<400;d=efAdd(d,1))if(efWd(d)||lo===hi)out.push(d);return out;};
+    const info=()=>{const ds=span(),lg=ds.filter(d=>state.efforts.some(e=>e.date===d)).length;
+      q("#doInfo").innerHTML=ds.length?`${ds.length===1?`<b>${efWdl(ds[0])}</b>`:`<b>${ds.length}</b> working days`}${lg?` · <span class="ef-bad">${lg} already ha${lg===1?"s":"ve"} hours logged — they stay</span>`:""}`:"Pick a date";
+      q("#doAdd").disabled=!ds.length;};
+    root.querySelectorAll("[data-kind]").forEach(b=>b.onclick=()=>{st.kind=b.dataset.kind;root.querySelectorAll("[data-kind]").forEach(x=>x.classList.toggle("on",x===b));});
+    q("#doFrom").onchange=info;q("#doTo").onchange=info;info();
+    q("#doAdd").onclick=()=>{const ds=span();if(!ds.length)return;efSetOff(ds,st.kind,q("#doLabel").value.trim());
+      toast(`${EF_OFF[st.kind].icon} ${ds.length===1?efWdl(ds[0]):ds.length+" days"} marked as ${EF_OFF[st.kind].l.toLowerCase()}`);renderApp();efRefreshDrawer();
+      if(o.date){close();return;}q("#doLabel").value="";q("#doTo").value="";draw();};
+    q("#doPasteAdd").onclick=()=>{const lines=q("#doPaste").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);let bad=0,n=0;
+      lines.forEach(line=>{const m=line.match(/^(\S+)\s*[,;\t-]?\s*(.*)$/),d=m&&efParseDate(m[1]);if(!d){bad++;return;}efSetOff([d],"holiday",(m[2]||"").trim());n++;});
+      if(n){renderApp();efRefreshDrawer();}toast(n?`Added ${n} holiday${n===1?"":"s"}${bad?` · ${bad} line${bad===1?"":"s"} not understood`:""}`:"No dates found — put the date first on each line",!n);if(n)draw();};
+    root.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{efClearOff(b.dataset.rm);renderApp();efRefreshDrawer();draw();});
+    setTimeout(()=>{const l=q("#doLabel");if(l)l.focus();},40);};
+  draw();}
 const efPct=(a,b)=>b?Math.round(a/b*100):0;
 function efParseH(s){s=String(s||"").trim().toLowerCase().replace(",",".");if(!s)return 0;let m;
   if((m=s.match(/^(\d+(?:\.\d+)?)\s*h(?:\s*(\d+)\s*m?)?$/)))return +m[1]+(m[2]?+m[2]/60:0);
@@ -5606,7 +5669,7 @@ function efMountComposer(host,o,done){
       <div><span class="ef-lb">Activity</span><div class="ef-row">${efActList(st.key).map(a=>`<button class="ef-chip" data-a="${esc(a)}" style="--pen:var(--${EF_ACTC[a]})"><span class="ef-pd"></span>${esc(a)}</button>`).join("")}</div></div>
       <div><span class="ef-lb">What I did</span><textarea class="ef-note" data-f="note" rows="2" placeholder="${t?"e.g. Built the cost-center range into the data fetch; unit-tested with CC 4711":"e.g. Stand-up, then the governance call"}">${esc(st.note)}</textarea></div>
       ${subs.length?`<div><span class="ef-lb">Against a subtask (optional)</span><select data-f="sub" style="max-width:420px"><option value="">—</option>${subs.map(s=>`<option value="${s.id}" ${s.id===st.sub?"selected":""}>${"   ".repeat(s.d)}${esc(s.title)}</option>`).join("")}</select></div>`:""}
-      <div class="ef-foot"><div class="ef-dsf" data-f="dsf"></div>${o.modal?`<button class="ghost" data-f="cancel">Cancel</button>`:`<button class="sm" data-f="timer" title="Start a timer on this demand — stop it on ⏱ in the title bar and the hours are filled in">▶ Start timer</button>`}<button class="primary" data-f="log">Log</button></div></div>`;
+      <div class="ef-foot"><div class="ef-dsf" data-f="dsf"></div><button class="ghost sm" data-f="off" title="Not working that day? Mark it as a holiday or leave">🏖 Day off…</button>${o.modal?`<button class="ghost" data-f="cancel">Cancel</button>`:`<button class="sm" data-f="timer" title="Start a timer on this demand — stop it on ⏱ in the title bar and the hours are filled in">▶ Start timer</button>`}<button class="primary" data-f="log">Log</button></div></div>`;
     wire();sync();};
   const wire=()=>{
     if(q('[data-f="task"]'))q('[data-f="task"]').onchange=e=>{st.key=e.target.value;st.act=efGuessAct(st.key,st.date);st.sub="";draw();};
@@ -5620,6 +5683,7 @@ function efMountComposer(host,o,done){
     q('[data-f="note"]').oninput=e=>{st.note=e.target.value;};
     if(q('[data-f="sub"]'))q('[data-f="sub"]').onchange=e=>{st.sub=e.target.value;};
     if(q('[data-f="cancel"]'))q('[data-f="cancel"]').onclick=()=>{if(o.onCancel)o.onCancel();};
+    q('[data-f="off"]').onclick=()=>openDaysOff({date:st.date});
     const go=()=>{const h=Math.round(efParseH(st.hs)*4)/4;
       if(!h||isNaN(h)||h>24){const hi=q('[data-f="hours"]');hi.classList.remove("ef-shake");void hi.offsetWidth;hi.classList.add("ef-shake");hi.focus();toast("How many hours? e.g. 2 · 1.5 · 2h30 · 90m",true);return;}
       if(st.date>todayStr()){toast("That day hasn't happened yet",true);return;}
@@ -5637,8 +5701,9 @@ function efMountComposer(host,o,done){
     host.querySelectorAll("[data-day]").forEach(b=>b.classList.toggle("on",efAdd(todayStr(),+b.dataset.day)===st.date));
     host.querySelectorAll("[data-a]").forEach(b=>b.classList.toggle("on",b.dataset.a===st.act));
     const have=efSum(state.efforts.filter(e=>e.date===st.date&&e.id!==o.editId)),add=isNaN(hv)?0:Math.round(hv*4)/4;
-    q('[data-f="dsf"]').innerHTML=`${efDayBar(have,add)}<span><b>${efWdl(st.date)}</b>${efLeave(st.date)?" · on leave":""} · ${efFh(have)} h logged${add?` <span class="ef-good">+ ${efFh(add)}</span> = <b>${efFh(have+add)} h</b>`:""} of ${EF_DAY}</span>`;
-    q('[data-f="log"]').textContent=(o.editId?"Save":"Log")+(add?" "+efFh(add)+" h":"");};
+    q('[data-f="dsf"]').innerHTML=`${efDayBar(have,add)}<span><b>${efWdl(st.date)}</b>${efOff(st.date)?" · "+EF_OFF[efOff(st.date).kind].icon+" "+esc(efOffTxt(efOff(st.date))):""} · ${efFh(have)} h logged${add?` <span class="ef-good">+ ${efFh(add)}</span> = <b>${efFh(have+add)} h</b>`:""} of ${EF_DAY}</span>`;
+    q('[data-f="log"]').textContent=(o.editId?"Save":"Log")+(add?" "+efFh(add)+" h":"");
+    q('[data-f="off"]').style.display=!have&&!efOff(st.date)&&!o.editId?"":"none";};
   draw();}
 let efFlashId=null;
 function openLogTime(o={}){const root=document.getElementById("modalRoot");
@@ -5798,7 +5863,7 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
     <div class="ef-wsh"><div><div class="ef-l1">⏱ Effort · ${EF_RNG[rg].l} · ${efSh(efOffD(A.a))} – ${efSh(todayStr())}</div><h1>Where your hours went</h1></div>
       <div class="ef-ctl"><div class="ef-sg" id="efRg"><span class="cap">Range</span>${Object.entries(EF_RNG).map(([k,v])=>`<button data-k="${k}" class="${k===rg?"on":""}">${v.l}</button>`).join("")}</div>
         <div class="ef-sg" id="efGp"><span class="cap">Group by</span>${Object.entries(EF_GROUPS).map(([k,v])=>`<button data-k="${k}" class="${k===g?"on":""}">${v}</button>`).join("")}</div>
-        <button class="sm" id="efCsv" title="Every entry ever logged, as a spreadsheet">⬇ CSV</button><button class="sm primary" id="efLogB">⏱ Log time</button></div></div>
+        <button class="sm" id="efOffB" title="Public holidays and leave — days that never count as missing a log">🏖 Days off</button><button class="sm" id="efCsv" title="Every entry ever logged, as a spreadsheet">⬇ CSV</button><button class="sm primary" id="efLogB">⏱ Log time</button></div></div>
     ${roHTML([{k:"Logged",v:efFh(total)+`<small>h</small>`+(prev?`<small class="${delta>=0?"ef-good":"ef-bad"}">${delta>=0?"▲":"▼"} ${Math.abs(delta)}% vs previous</small>`:"")},
       {k:"Per worked day",v:U(efFh(Math.round(total/Math.max(1,worked)*10)/10),"h")},
       {k:"Days logged",v:U(worked,"/ "+wdays.length+" working")},
@@ -5820,12 +5885,12 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
   const openDemand=id=>{view="demands";activeId=id;activeTab="effort";renderApp();};
   host.querySelectorAll("#efRg button").forEach(b=>b.onclick=()=>{setViewPref("ef.range",b.dataset.k);efFocus=null;renderEffortWS();});
   host.querySelectorAll("#efGp button").forEach(b=>b.onclick=()=>{setViewPref("ef.group",b.dataset.k);efFocus=null;renderEffortWS();});
-  host.querySelector("#efLogB").onclick=()=>openLogTime();host.querySelector("#efCsv").onclick=efCSV;
+  host.querySelector("#efLogB").onclick=()=>openLogTime();host.querySelector("#efOffB").onclick=()=>openDaysOff();host.querySelector("#efCsv").onclick=efCSV;
   host.querySelectorAll(".ef-lgi").forEach(b=>{b.onclick=()=>{efFocus=efFocus===b.dataset.k?null:b.dataset.k;host.querySelectorAll(".ef-lgi").forEach(x=>{x.classList.toggle("on",x.dataset.k===efFocus);x.classList.toggle("off",!!efFocus&&x.dataset.k!==efFocus);});};
     b.ondblclick=()=>{if(efG()==="demand"&&efTaskOf(b.dataset.k))openDemand(b.dataset.k);};});
   host.querySelectorAll(".ef-erow[data-id]").forEach(r=>r.onclick=()=>openDemand(r.dataset.id));
   host.querySelectorAll("#efNoticed [data-act]").forEach(b=>b.onclick=()=>efNoticeActs[+b.dataset.act]());
-  efHover(DK.scope(host.querySelector("#efCal"),efCalDraw),efCalTip,hit=>{if(hit.kind==="none")openLogTime({date:efOffD(hit.off)});else if(hit.kind!=="fut")openEfDay(efOffD(hit.off));});
+  efHover(DK.scope(host.querySelector("#efCal"),efCalDraw),efCalTip,hit=>{if(hit.kind==="none")openLogTime({date:efOffD(hit.off)});else openEfDay(efOffD(hit.off));});
   efHover(DK.scope(host.querySelector("#efWk"),efWkDraw),efWkTip,hit=>{if(EFA.dayMode){if(hit.b.a<=0)openEfDay(efOffD(hit.b.a));return;}efWk=(efMonOff(0)-hit.b.a)/7;efRenderSheet(true);host.querySelector("#efSheet").scrollIntoView({behavior:motionOn()?"smooth":"auto",block:"center"});});
   DK.scope(host.querySelector("#efMix"),efMixDraw);
   efRenderSheet();}
@@ -5839,9 +5904,10 @@ function efCalDraw(c,w,h,tm,dt,s){const A=EFA,C=efC(s.cv),p=efEase(efProg(s,1200
     if(dm!==lastM){lastM=dm;efLabel(c,efFmt(efOffD(m0),{month:"short"}).toUpperCase(),L+wk*cw+2,7,{size:7.5,align:"left"});}
     if(wk/26>p)continue;
     for(let r=0;r<7;r++){const off=m0+r,x=L+wk*cw+cw/2,y=top+r*ch+ch/2,dstr=efOffD(off),we=r>=5;
-      if(off>0){s.hits.push({x,y,rx:cw/2,ry:ch/2,off,kind:"fut"});continue;}
+      if(off>0){const fo=efOff(dstr);if(fo){c.globalAlpha=.55;c.fillStyle=C[EF_OFF[fo.kind].pen];c.fillRect(x-5,y-.8,10,1.6);}s.hits.push({x,y,rx:cw/2,ry:ch/2,off,kind:"fut"});continue;}
       const d=A.day.get(off),hov=s.hv&&s.hv.off===off;let kind="day";
-      if(efLeave(dstr)){c.globalAlpha=.9;c.fillStyle=C["ink-4"];c.fillRect(x-4,y-.6,8,1.2);kind="leave";}
+      const fo=efOff(dstr);
+      if(fo&&!(d&&d.tot)){c.globalAlpha=.9;c.fillStyle=C[EF_OFF[fo.kind].pen];c.fillRect(x-5,y-.8,10,1.6);kind="leave";}
       else if(d&&d.tot){const rad=Math.max(2.2,Math.sqrt(Math.min(d.tot,10)/9)*cell*.44)*(hov?1.14:1);let a0=-Math.PI/2;
         [...d.by.entries()].sort((u,v)=>ix(u[0])-ix(v[0])).forEach(([k,v])=>{const a1=a0+v/d.tot*DK.TAU;
           c.globalAlpha=efFocus&&efFocus!==k?.1:.92;c.fillStyle=C[efM(k).col]||C["ink-3"];c.beginPath();c.moveTo(x,y);c.arc(x,y,rad,a0,a1);c.closePath();c.fill();
@@ -5852,11 +5918,12 @@ function efCalDraw(c,w,h,tm,dt,s){const A=EFA,C=efC(s.cv),p=efEase(efProg(s,1200
       if(hov&&kind!=="day")efRing(c,x,y,cell*.4,C["ink-2"],.6);
       s.hits.push({x,y,rx:cw/2,ry:ch/2,off,kind});}}}
 function efCalTip(hit){const d=efOffD(hit.off);
-  if(hit.kind==="fut")return `<b>${efWdl(d)}</b><div class="hint">still to come</div>`;
-  if(hit.kind==="leave")return `<b>${efWdl(d)}</b> · on leave<div class="hint">click to see or change</div>`;
-  if(hit.kind==="none")return `<b>${efWdl(d)}</b> · <span class="ef-bad">no log</span><div class="hint">click to fill it in</div>`;
+  const fo=efOff(d),ot=fo?` · ${EF_OFF[fo.kind].icon} ${esc(efOffTxt(fo))}`:"";
+  if(hit.kind==="fut")return `<b>${efWdl(d)}</b>${ot}<div class="hint">${fo?"click to change":"still to come · click to plan a day off"}</div>`;
+  if(hit.kind==="leave")return `<b>${efWdl(d)}</b>${ot}<div class="hint">click to see or change</div>`;
+  if(hit.kind==="none")return `<b>${efWdl(d)}</b> · <span class="ef-bad">no log</span><div class="hint">click to fill it in — or mark it as a holiday or leave</div>`;
   const D=EFA.day.get(hit.off);if(!D)return `<b>${efWdl(d)}</b>${hit.kind==="we"?" · weekend":" · nothing logged"}<div class="hint">click for the day</div>`;
-  return `<b>${efWdl(d)}</b> · ${efFh(D.tot)} h`+[...D.by.entries()].sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const m=efM(k);return `<div class="r" style="--pen:var(--${m.col})"><i></i><span>${esc(m.l)}${m.sub?` <span class="faint">${esc(m.sub)}</span>`:""}</span><span>${efFh(v)}</span></div>`;}).join("")+`<div class="hint">click for the day's ledger</div>`;}
+  return `<b>${efWdl(d)}</b>${ot} · ${efFh(D.tot)} h`+[...D.by.entries()].sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const m=efM(k);return `<div class="r" style="--pen:var(--${m.col})"><i></i><span>${esc(m.l)}${m.sub?` <span class="faint">${esc(m.sub)}</span>`:""}</span><span>${efFh(v)}</span></div>`;}).join("")+`<div class="hint">click for the day's ledger</div>`;}
 /* stacked dot columns per week (or per day) */
 function efWkDraw(c,w,h,tm,dt,s){const A=EFA,C=efC(s.cv),B=A.B,n=B.length,L=32,top=14,bot=24,y0=h-bot,cw=(w-L-8)/n,u=A.dayMode?.5:1,tgt=A.dayMode?EF_DAY:EF_DAY*5;s.hits=[];
   const m=cw>=200?6:cw>=90?4:cw>=44?2:1,maxH=Math.max(tgt*1.12,...B.map(b=>b.tot)),rows=Math.ceil(maxH/u/m),pitch=Math.min(14,(y0-top)/rows),hp=Math.min(pitch,cw*.8/m),r=Math.min(pitch,hp)*.4;
@@ -5888,13 +5955,14 @@ function efRenderSheet(pin){const host=document.getElementById("efSheet");if(!ho
   const cell=(k,o)=>efSum(es.filter(e=>efKey(e)===k&&e.date===efOffD(o))),we=o=>{const g=efDow(efOffD(o));return g===0||g===6;},first=state.efforts.reduce((x,e)=>e.date<x?e.date:x,"9999");
   host.innerHTML=`<div class="ck-head"><h2>Week sheet</h2><span class="ck-meta">${efSh(efOffD(m))} – ${efSh(efOffD(m+6))} · ${efFh(tot)} h · click an empty cell to log it, a filled one to see the day</span>
     <span class="ef-wnav"><button class="sm ghost" id="efWkP" title="Week before">‹</button><button class="sm ${efWk?"":"ghost"}" id="efWk0">This week</button><button class="sm ghost" id="efWkN" title="Week after" ${efWk===0?"disabled":""}>›</button><button class="sm" id="efWkCopy" title="A tab-separated table — paste into your timesheet or Excel">⧉ Copy for timesheet</button></span></div>
-    <div style="overflow-x:auto"><table class="ef-sheet ${pin?"pin":""}"><thead><tr><th>Demand / bucket</th>${ds.map(o=>`<th class="c ${we(o)?"we":""} ${o===0?"td":""}">${efFmt(efOffD(o),{weekday:"short"})}<small>${efSh(efOffD(o))}</small></th>`).join("")}<th class="tt">Total</th></tr></thead>
+    <div style="overflow-x:auto"><table class="ef-sheet ${pin?"pin":""}"><thead><tr><th>Demand / bucket</th>${ds.map(o=>`<th class="c ${we(o)?"we":""} ${o===0?"td":""}" title="${esc(efOffTxt(efOff(efOffD(o))))}">${efFmt(efOffD(o),{weekday:"short"})}${efOff(efOffD(o))?" "+EF_OFF[efOff(efOffD(o)).kind].icon:""}<small>${efSh(efOffD(o))}</small></th>`).join("")}<th class="tt">Total</th></tr></thead>
     <tbody>${keys.map(k=>{const t=efTaskOf(k);return `<tr><td class="rl"><span class="ef-pd" style="--pen:var(--${efPen(k)})"></span> ${t?`<b class="mono">${esc(t.demandId||"")}</b> <span class="faint">${esc(t.title)}</span>`:esc(efName(k))}</td>${ds.map(o=>{const v=cell(k,o);return `<td class="c ${v?"has":"e"} ${we(o)?"we":""} ${o===0?"td":""} ${o>0?"fu":""}" data-o="${o}" data-k="${esc(k)}">${v?efFh(v):""}</td>`;}).join("")}<td class="tt">${efFh(efSum(es.filter(e=>efKey(e)===k)))}</td></tr>`;}).join("")||`<tr><td class="rl faint" colspan="9">Nothing logged this week.</td></tr>`}</tbody>
-    <tfoot><tr><td class="rl faint">Day total</td>${ds.map(o=>{const d=efOffD(o),v=efSum(es.filter(e=>e.date===d)),lv=efLeave(d),un=!lv&&!we(o)&&o<0&&!v&&d>=first;
-      return `<td class="${we(o)?"we":""} ${o===0?"td":""}">${lv?`<span class="faint" style="cursor:pointer" data-day="${d}">leave</span>`:un?`<span class="ef-bad" style="cursor:pointer" data-fill="${d}">no log ＋</span>`:v?`${efDayBar(v,0,16,4.2)}${efFh(v)}`:""}</td>`;}).join("")}<td class="tt">${efFh(tot)}</td></tr></tfoot></table></div>`;
+    <tfoot><tr><td class="rl faint">Day total</td>${ds.map(o=>{const d=efOffD(o),v=efSum(es.filter(e=>e.date===d)),lv=efOff(d),un=!lv&&!we(o)&&o<0&&!v&&d>=first;
+      return `<td class="${we(o)?"we":""} ${o===0?"td":""}">${v?`${efDayBar(v,0,16,4.2)}${efFh(v)}`:lv?`<span class="faint" style="cursor:pointer" data-day="${d}" title="${esc(efOffTxt(lv))}">${EF_OFF[lv.kind].icon} ${EF_OFF[lv.kind].l.toLowerCase()}</span>`:un?`<span class="ef-bad">no log</span><div class="ef-tiny"><a href="#" data-fill="${d}">＋ log</a> · <a href="#" data-off="${d}">day off</a></div>`:""}</td>`;}).join("")}<td class="tt">${efFh(tot)}</td></tr></tfoot></table></div>`;
   host.querySelector("#efWkP").onclick=()=>{efWk++;efRenderSheet();};host.querySelector("#efWkN").onclick=()=>{if(efWk>0){efWk--;efRenderSheet();}};host.querySelector("#efWk0").onclick=()=>{efWk=0;efRenderSheet();};
   host.querySelectorAll("td.c").forEach(td=>td.onclick=()=>{const o=+td.dataset.o;if(o>0)return;if(td.classList.contains("has"))openEfDay(efOffD(o),td.dataset.k);else openLogTime({key:td.dataset.k,date:efOffD(o)});});
-  host.querySelectorAll("[data-fill]").forEach(el=>el.onclick=()=>openLogTime({date:el.dataset.fill}));
+  host.querySelectorAll("[data-fill]").forEach(el=>el.onclick=e=>{e.preventDefault();openLogTime({date:el.dataset.fill});});
+  host.querySelectorAll("[data-off]").forEach(el=>el.onclick=e=>{e.preventDefault();openDaysOff({date:el.dataset.off});});
   host.querySelectorAll("[data-day]").forEach(el=>el.onclick=()=>openEfDay(el.dataset.day));
   host.querySelector("#efWkCopy").onclick=()=>{const rows=[["Demand / bucket",...ds.map(efOffD),"Total"].join("\t"),...keys.map(k=>{const t=efTaskOf(k);return [t?`${t.demandId?t.demandId+" ":""}${t.title}`:efName(k),...ds.map(o=>{const v=cell(k,o);return v?efFh(v):"";}),efFh(efSum(es.filter(e=>efKey(e)===k)))].join("\t");})];
     navigator.clipboard.writeText(rows.join("\n")).then(()=>toast(`Copied ${keys.length} row${keys.length===1?"":"s"} — paste into your timesheet or Excel`)).catch(()=>toast("Copy failed",true));};}
@@ -5926,23 +5994,24 @@ function efNoticedHTML(A,total,dem,unl){efNoticeActs=[];const out=[],act=(l,fn)=
   const rw=A.R.filter(e=>{const t=efTaskOf(e.taskId);return t&&efStatusOn(t,e.date)==="bug";});
   if(rw.length){const ids=[...new Set(rw.map(e=>e.taskId))].sort((a,b)=>efSum(rw.filter(e=>e.taskId===b))-efSum(rw.filter(e=>e.taskId===a)));
     out.push(["bad",`<b>${efFh(efSum(rw))} h</b> went to rework (${efPct(efSum(rw),dem)}% of demand work) — mostly <b>${esc(efName(ids[0]))}</b>.`,""]);}
-  const recent=unl.filter(o=>o>=-14);if(recent.length)out.push(["watch",`<b>${recent.length} working day${recent.length>1?"s":""} with no log</b> in the last two weeks: ${recent.map(o=>efWdl(efOffD(o))).join(", ")}.`,act("Fill "+efWdd(efOffD(recent[0])),()=>openLogTime({date:efOffD(recent[0])}))]);
+  const recent=unl.filter(o=>o>=-14);if(recent.length)out.push(["watch",`<b>${recent.length} working day${recent.length>1?"s":""} with no log</b> in the last two weeks: ${recent.map(o=>efWdl(efOffD(o))).join(", ")}.`,`<span style="display:flex;gap:4px">${act("Fill "+efWdd(efOffD(recent[0])),()=>openLogTime({date:efOffD(recent[0])}))}${act("🏖 Day off",()=>openDaysOff({date:efOffD(recent[0])}))}</span>`]);
   if(total)out.push(["ink-3",`<b>${100-efPct(dem,total)}%</b> of your time wasn't demand work — meetings, admin, support and learning.`,""]);
   return out.map(([pen,h,b])=>`<div class="ef-nt" style="--pen:var(--${pen})"><i></i><span>${h}</span>${b}</div>`).join("")||`<div class="faint" style="font-size:12px">Log a few days and patterns show up here.</div>`;}
 /* the day ledger: everything on one day, edit it, mark it as leave */
 function openEfDay(date,hiKey){let d=document.getElementById("efDrw");if(!d){d=document.createElement("aside");d.id="efDrw";d.className="efx ef-drw";document.body.appendChild(d);}
-  d.dataset.date=date;d.dataset.key=hiKey||"";const es=state.efforts.filter(e=>e.date===date).sort((a,b)=>a.createdAt-b.createdAt),tot=efSum(es),lv=efLeave(date);
-  d.innerHTML=`<button class="sm ghost ef-x" id="efDrwX">✕ Close</button><span class="ef-lb">${lv?"On leave":"Day ledger"}</span><h2>${efLong(date)}</h2>
+  d.dataset.date=date;d.dataset.key=hiKey||"";const es=state.efforts.filter(e=>e.date===date).sort((a,b)=>a.createdAt-b.createdAt),tot=efSum(es),lv=efOff(date);
+  d.innerHTML=`<button class="sm ghost ef-x" id="efDrwX">✕ Close</button><span class="ef-lb">${lv?EF_OFF[lv.kind].icon+" "+esc(efOffTxt(lv)):"Day ledger"}</span><h2>${efLong(date)}</h2>
     <div class="ef-dsf" style="padding-bottom:12px;border-bottom:1px solid var(--rule);margin-bottom:4px">${efDayBar(tot,0)}<span><b>${efFh(tot)} h</b> of ${EF_DAY}</span></div>
     ${es.map(e=>{const k=efKey(e),t=efTaskOf(e.taskId),sb=efSubTitle(t,e.subtaskId);return `<div class="ef-de ${hiKey&&hiKey===k?"hi":""}" data-id="${e.id}" style="--pen:var(--${efPen(k)})"><i></i><div style="min-width:0"><b class="mono">${esc(efName(k))}</b>${t&&t.demandId?` <span class="faint">${esc(t.title)}</span>`:""}<div>${e.note?linkify(e.note):`<span class="faint">(no details)</span>`}</div>
       <div class="t"><span class="ef-tag" style="--pen:var(--${EF_ACTC[e.activity]})"><span class="ef-pd"></span>${esc(e.activity)}</span>${sb?`<span class="faint" style="font-size:10.5px">↳ ${esc(sb)}</span>`:""}</div></div>
-      <div style="text-align:right"><span class="mono">${efFh(e.hours)} h</span><div class="ops"><button class="ghost sm" data-op="ed" title="Edit">✎</button><button class="ghost sm danger" data-op="rm" title="Delete">✕</button></div></div></div>`;}).join("")||`<div class="faint" style="padding:14px 0;font-size:12px">Nothing logged${lv?" — you were on leave":""}.</div>`}
-    <div style="display:flex;gap:6px;margin-top:14px;flex-wrap:wrap"><button class="sm primary" id="efDrwLog">＋ Log time for this day</button><button class="sm" id="efDrwLeave">${lv?"Not on leave":"Mark as leave"}</button></div>
-    <p class="faint" style="font-size:11px;margin-top:10px;line-height:1.5">A leave day never counts as a day with no log.</p>`;
+      <div style="text-align:right"><span class="mono">${efFh(e.hours)} h</span><div class="ops"><button class="ghost sm" data-op="ed" title="Edit">✎</button><button class="ghost sm danger" data-op="rm" title="Delete">✕</button></div></div></div>`;}).join("")||`<div class="faint" style="padding:14px 0;font-size:12px">Nothing logged${lv?" — a day off":""}.</div>`}
+    <div style="display:flex;gap:6px;margin-top:14px;flex-wrap:wrap">${date<=todayStr()?`<button class="sm primary" id="efDrwLog">＋ Log time for this day</button>`:""}${lv?`<button class="sm" id="efDrwOffEd">✎ Change</button><button class="sm" id="efDrwLeave">Not a day off</button>`:`<button class="sm" id="efDrwOffEd">🏖 Mark as holiday or leave…</button>`}</div>
+    <p class="faint" style="font-size:11px;margin-top:10px;line-height:1.5">A holiday or leave day never counts as a day with no log.</p>`;
   void d.offsetWidth;d.classList.add("on");
   d.querySelector("#efDrwX").onclick=()=>d.classList.remove("on");
-  d.querySelector("#efDrwLog").onclick=()=>openLogTime({date,key:hiKey||undefined});
-  d.querySelector("#efDrwLeave").onclick=()=>{const L=state.leaveDays||(state.leaveDays=[]);if(efLeave(date))state.leaveDays=L.filter(x=>x!==date);else L.push(date);markDirty();renderApp();openEfDay(date,hiKey);};
+  if(d.querySelector("#efDrwLog"))d.querySelector("#efDrwLog").onclick=()=>openLogTime({date,key:hiKey||undefined});
+  d.querySelector("#efDrwOffEd").onclick=()=>openDaysOff({date,kind:lv?lv.kind:undefined,label:lv?lv.label:""});
+  if(d.querySelector("#efDrwLeave"))d.querySelector("#efDrwLeave").onclick=()=>{efClearOff(date);renderApp();openEfDay(date,hiKey);toast("No longer a day off");};
   d.querySelectorAll(".ef-de").forEach(r=>{const e=state.efforts.find(x=>x.id===r.dataset.id);if(!e)return;r.querySelector('[data-op="ed"]').onclick=()=>efEdit(e);r.querySelector('[data-op="rm"]').onclick=()=>efDelete(e);});}
 function efCSV(){if(!state.efforts.length){toast("Nothing logged yet",true);return;}
   const rows=[["Date","Weekday","Demand ID","Demand title","Bucket","Activity","Hours","Subtask","What I did"]];
@@ -5956,12 +6025,14 @@ function efTodayHTML(){const t=todayStr(),th=efSum(state.efforts.filter(e=>e.dat
   return `<div class="dashcard efx ef-today"><h3>⏱ Time</h3>
     <div class="ef-dsf" style="margin:2px 0 8px">${efDayBar(th,0)}<span><b>${efFh(th)} h</b> logged today of ${EF_DAY} · <b>${efFh(wk)} h</b> this week</span></div>
     ${tm?`<div style="font-size:12px;margin-bottom:6px"><span class="ef-rec"></span> timer running on <b>${esc(efName(tm.key))}</b></div>`:""}
-    ${un.length?`<div class="ef-un">⚠ ${un.length} working day${un.length>1?"s":""} with no log: ${un.map(d=>`<a href="#" data-fill="${d}">${efWdl(d)}</a>`).join(", ")}</div>`:""}
-    <div style="display:flex;gap:6px;margin-top:8px"><button class="sm primary" id="efTLog">⏱ Log time</button><button class="sm" id="efTOpen">Effort ›</button></div></div>`;}
+    ${un.length?`<div class="ef-un">⚠ ${un.length} working day${un.length>1?"s":""} with no log</div>${un.slice(0,5).map(d=>`<div class="ef-unr"><span class="mono">${efWdl(d)}</span><a href="#" data-fill="${d}">＋ Log</a><a href="#" data-off="${d}">🏖 Holiday / leave</a></div>`).join("")}${un.length>5?`<div class="faint" style="font-size:11px;margin-top:2px">…and ${un.length-5} earlier — a stretch away? Use 🏖 Days off with a To date.</div>`:""}`:""}
+    <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><button class="sm primary" id="efTLog">⏱ Log time</button><button class="sm" id="efTOff">🏖 Days off</button><button class="sm" id="efTOpen">Effort ›</button></div></div>`;}
 function efWireToday(host){const q=s=>host.querySelector(s);
   if(q("#efTLog"))q("#efTLog").onclick=()=>openLogTime();if(q("#efTOpen"))q("#efTOpen").onclick=()=>{view="effort";renderApp();};
   if(q("#ckLog"))q("#ckLog").onclick=()=>openLogTime();
-  host.querySelectorAll(".ef-today [data-fill]").forEach(a=>a.onclick=e=>{e.preventDefault();openLogTime({date:a.dataset.fill});});}
+  host.querySelectorAll(".ef-today [data-fill]").forEach(a=>a.onclick=e=>{e.preventDefault();openLogTime({date:a.dataset.fill});});
+  host.querySelectorAll(".ef-today [data-off]").forEach(a=>a.onclick=e=>{e.preventDefault();openDaysOff({date:a.dataset.off});});
+  if(q("#efTOff"))q("#efTOff").onclick=()=>openDaysOff();}
 {const b=document.getElementById("btnLog");if(b)b.onclick=()=>{if(efTimer())efTimerStop();else openLogTime();};
  const s=document.getElementById("sbEffort");if(s)s.onclick=()=>{view="effort";renderApp();};}
 

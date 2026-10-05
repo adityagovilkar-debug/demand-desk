@@ -333,20 +333,29 @@ Log what you worked on, and see where your time goes.
   - **Noticed** — plain sentences: who took most of your time, demands over
     estimate, rework, working days with no log (with a *Fill* button).
   - **26 weeks in dots** — a pie per day (size = hours, slices = where they went);
-    a red ring is a working day with no log. Click a day for its **day ledger**
-    (edit entries, log more, **mark the day as leave** — leave never counts as
-    "no log").
+    a red ring is a working day with no log; a coloured dash is a holiday or
+    leave. Click a day for its **day ledger** (edit entries, log more, mark it as
+    a holiday or leave).
   - **Where the hours went** (dot columns per week or day), **activity mix**,
     **week sheet** (demands × Mon–Sun; click an empty cell to log it;
     **⧉ Copy for timesheet** gives a tab-separated table to paste into your
     timesheet or Excel), **estimate vs actual**, **rework cost**, and **your week's
     rhythm** (demand work vs everything else, per weekday). **⬇ CSV** exports every
     entry.
+- **Holidays & leave** — **🏖 Days off** (Effort workspace, Today) marks a day, or a
+  stretch (From–To, weekends skipped), as 🎉 Holiday or 🌴 Leave with an optional
+  label. Paste your company's holiday calendar (one per line, date first:
+  `2026-10-20 Diwali`, `20.10.2026 Diwali`, `20/10/2026, Diwali` — day-first). A day
+  off never counts as "no log" and isn't a working day in the averages; you can
+  still log hours on one. Wherever the app says a day has no log — the Today card,
+  Noticed, the week sheet, the calendar, the log dialog (**🏖 Day off…**) — you can
+  mark it as a day off instead.
 - **Today** shows a ⏱ Time card: logged today of 8 h, this week, and working days
-  in the last two weeks with nothing logged.
+  in the last two weeks with nothing logged (each with **＋ Log** and
+  **🏖 Holiday / leave**).
 - Search (`Ctrl+K`) finds time entries by what you wrote.
-- Stored in your data file as `efforts` (plus `leaveDays`, and `estimate` on each
-  demand) — data version 22. Deleting a demand deletes the hours logged on it (the
+- Stored in your data file as `efforts` (plus `daysOff`, and `estimate` on each
+  demand) — data version 23. Deleting a demand deletes the hours logged on it (the
   confirmation says how many).
 
 ### Debug
