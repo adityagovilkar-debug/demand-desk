@@ -1366,6 +1366,16 @@
   .efx .rv-win .ops{opacity:0;display:flex;gap:2px;transition:opacity .15s}
   .efx .rv-win:hover .ops{opacity:1}
   .efx .specpaper.specdoc{max-height:none}
+  /* ===================== ROUNDS + EPIC EFFORT ===================== */
+  .efx .cb-opts{display:grid;gap:8px}
+  .efx button.cb-opt{display:grid;gap:3px;text-align:left;padding:10px 12px;border:1px solid var(--rule);border-radius:3px;background:var(--paper);height:auto;white-space:normal;color:var(--ink)}
+  .efx button.cb-opt b{font-size:13px;font-weight:600}
+  .efx button.cb-opt span{font-size:11.5px;color:var(--ink-3);line-height:1.45;font-weight:400}
+  .efx button.cb-opt:hover{border-color:var(--ink-3);background:var(--paper)}
+  .efx button.cb-opt.on{border-color:var(--pen);box-shadow:inset 3px 0 0 var(--pen);background:var(--paper-2)}
+  canvas.ep-months{width:100%;height:170px;display:block}
+  .efx .ep-go{cursor:pointer}.efx .ep-go:hover .n b{text-decoration:underline}
+  .actitem .e-chg,.actitem .e-def{font-size:11px;margin-left:8px;color:var(--accent2)}
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -1477,7 +1487,7 @@ function objTypeUsage(type){let n=0;state.tasks.forEach(t=>t.objects.forEach(o=>
 const DEF_LANDSCAPES=["H0","H1","H2","H3","H4","H5","H6"];
 const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod / QA",short:"QA"},{d:"1",label:"Production",short:"PRD"}];
 
-let state={version:24,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
+let state={version:25,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false, lastWriteAt=0, autoSaveDue=0, diskConflict=null, fileSig=null, savePromise=null, backupUnreadable=false;
 let view="today";
 let activeId=null, activeTab="overview", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -1711,7 +1721,7 @@ function updateReconnectUI(){const b=document.getElementById("btnReconnect");if(
 async function forgetHandle(){savedHandle=null;if(useIdb)await idbDel("handle");updateReconnectUI();}
 
 function migrate(d){
-  d.version=24;
+  d.version=25;
   d.settings=d.settings||{};
   d.settings.landscapes=d.settings.landscapes&&d.settings.landscapes.length?d.settings.landscapes:[...DEF_LANDSCAPES];
   d.settings.tiers=d.settings.tiers&&d.settings.tiers.length?d.settings.tiers:DEF_TIERS;
@@ -1756,7 +1766,7 @@ function migrate(d){
     waiting:{on:(t.waiting&&t.waiting.on)||"",since:(t.waiting&&t.waiting.since)||""},goliveTarget:t.goliveTarget||"",
     nextAction:{date:(t.nextAction&&t.nextAction.date)||"",note:(t.nextAction&&t.nextAction.note)||""},
     receivedDate:t.receivedDate||"",dueDate:t.dueDate||"",estimate:(+t.estimate>0?Math.round(+t.estimate*4)/4:0),star:!!t.star,description:t.description||"",notes:t.notes||"",
-    timeline:(t.timeline||[]).map(e=>({id:e.id||uid(),ts:e.ts||Date.now(),type:e.type||"note",from:e.from||"",to:e.to||"",note:e.note||""})),
+    timeline:(t.timeline||[]).map(e=>({id:e.id||uid(),ts:e.ts||Date.now(),type:e.type||"note",from:e.from||"",to:e.to||"",note:e.note||"",cause:e.cause==="change"?"change":"",est:+e.est>0?+e.est:0})),
     subtasks:(t.subtasks||[]).map(normSub),
     objects:(t.objects||[]).map(o=>({id:o.id||uid(),name:o.name||"",type:o.type||"",action:o.action||"Modified",desc:o.desc||"",ackClash:(o.ackClash||[]).slice()})),
     transports, tocs,
@@ -2008,7 +2018,7 @@ function epicStory(e){
     if(t.receivedDate)ev.push({date:t.receivedDate,src:"demand",icon:"📥",text:`${dl(t)} received — ${t.title}`,tid:t.id,ord:1});
     (t.timeline||[]).forEach(x=>{
       if(x.type==="status"&&x.from){const to=STATUS[x.to]?STATUS[x.to].label:x.to;
-        ev.push({date:isoTs(x.ts),src:"demand",icon:x.to==="bug"?"↻":"↪",text:`${dl(t)} → ${to}${x.to==="bug"?" (rework)":""}`,tid:t.id,ord:2});}
+        ev.push({date:isoTs(x.ts),src:"demand",icon:isChange(x)?"🔄":x.to==="bug"?"↻":"↪",text:isChange(x)?`${dl(t)} — requirement changed${x.note?": "+x.note:""} → ${to}`:`${dl(t)} → ${to}${x.to==="bug"?" (rework)":""}`,tid:t.id,ord:2});}
       else if(x.type==="note"&&x.note)ev.push({date:isoTs(x.ts),src:"demand",icon:"🗒",text:`${dl(t)}: ${x.note}`,tid:t.id,ord:2});});
     t.transports.forEach(tr=>tr.syncs.forEach(s=>{if(s.date&&s.system)ev.push({date:s.date,src:"transport",icon:"🚚",text:`${tr.number||"(TR)"} reached ${s.system}${isCust(tr)&&tr.client?"/"+tr.client:""} · ${dl(t)}`,tid:t.id,ord:3});}));
     (t.tocs||[]).forEach(c=>c.syncs.forEach(s=>{if(s.date&&s.system)ev.push({date:s.date,src:"transport",icon:"📦",text:`ToC ${c.number||"(unnamed)"} reached ${s.system} · ${dl(t)}`,tid:t.id,ord:3});}));
@@ -2569,6 +2579,7 @@ function renderHistory(body,t){
   body.innerHTML=`<div class="sec-title"><h3>Delivery &amp; rework timeline</h3><div class="ln"></div><button class="sm" id="addEvt">＋ Add note</button></div>
     <div style="display:flex;gap:14px;margin-bottom:14px;font-size:12px;color:var(--muted)">
       <span>Rework cycles: <b style="color:${reworkCount(t)?"var(--red)":"var(--txt)"}">${reworkCount(t)}</b></span>
+      <span>Requirement changes: <b style="color:${changeEvents(t).length?"var(--accent2)":"var(--txt)"}">${changeEvents(t).length}</b></span>
       <span>Delivered: <b>${dd.length?dd.join(", "):"—"}</b></span></div>
     <div id="tlList"></div>`;
   body.querySelector("#addEvt").onclick=()=>{const n=prompt("Timeline note (e.g. 'QA raised bug on PA0008'):");if(n){logTimeline(t,"note","","",n);touch(t);renderHistory(body,t);}};
@@ -2577,14 +2588,19 @@ function renderHistory(body,t){
   const bench=benchOn();let lastM="",idx=0;host.classList.toggle("btl",bench);
   host.innerHTML=tl.map(e=>{
     let mo="";if(bench){const m=new Date(e.ts).toLocaleDateString("en-GB",{month:"long",year:"numeric"});if(m!==lastM){lastM=m;mo=`<div class="btl-mo">${m}</div>`;}}
-    const pen=e.type==="status"?(STATUS_PEN[e.to]||"var(--faint)"):"var(--accent2)";
+    const pen=e.type==="status"&&!isChange(e)?(STATUS_PEN[e.to]||"var(--faint)"):"var(--accent2)";
     let label;
-    if(e.type==="status"){const to=STATUS[e.to]?STATUS[e.to].label:e.to;const fr=e.from?(STATUS[e.from]?STATUS[e.from].label:e.from):"created";
-      const danger=e.to==="bug";label=`<span class="pill ${STATUS[e.to]?STATUS[e.to].cls:""}">${to}</span> <span class="faint">from ${fr}</span>${danger?' <span style="color:var(--red)">↻ rework</span>':""}`;}
+    if(isChange(e)){const to=STATUS[e.to]?STATUS[e.to].label:e.to,r=1+changeEvents(t).filter(x=>x.ts<=e.ts).length;
+      label=`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">🔄 Requirement changed</span> <span class="faint">→ ${to} · round ${r}${e.est?" · +"+efFh(e.est)+" h estimate":""}</span>${e.note?" — "+esc(e.note):""}<a href="#" class="e-def" title="Count this as a defect in my work after all">it was a defect?</a>`;}
+    else if(e.type==="status"){const to=STATUS[e.to]?STATUS[e.to].label:e.to;const fr=e.from?(STATUS[e.from]?STATUS[e.from].label:e.from):"created";
+      const danger=e.to==="bug";label=`<span class="pill ${STATUS[e.to]?STATUS[e.to].cls:""}">${to}</span> <span class="faint">from ${fr}</span>${danger?' <span style="color:var(--red)">↻ rework</span><a href="#" class="e-chg" title="It was not a defect — the requirement changed. Stops counting it as rework.">not a defect? → requirement changed</a>':""}`;}
     else label=esc(e.note);
     return mo+`<div class="actitem" data-id="${e.id}" style="--pen:${pen}"><span class="du mono" style="flex:0 0 150px;font-size:11px;color:var(--muted)">${fmtTs(e.ts)}</span><span class="at" style="cursor:default">${label}</span><span class="nact"><button class="ghost sm danger e-del">🗑</button></span></div>`;
   }).join("");
-  host.querySelectorAll(".actitem").forEach(row=>row.querySelector(".e-del").onclick=()=>{t.timeline=t.timeline.filter(x=>x.id!==row.dataset.id);touch(t);renderHistory(body,t);renderDetail();});
+  host.querySelectorAll(".actitem").forEach(row=>{row.querySelector(".e-del").onclick=()=>{t.timeline=t.timeline.filter(x=>x.id!==row.dataset.id);touch(t);renderHistory(body,t);renderDetail();};
+    const ev=(t.timeline||[]).find(x=>x.id===row.dataset.id),ch=row.querySelector(".e-chg"),df=row.querySelector(".e-def");
+    if(ch)ch.onclick=x=>{x.preventDefault();bugToChange(t,ev);renderApp();toast("🔄 Now a requirement change — no longer counted as rework");};
+    if(df)df.onclick=x=>{x.preventDefault();changeToBug(t,ev);renderApp();toast("Counted as a defect — rework");};});
 }
 function nopick(msg){return `<div class="nopick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 9v11"/></svg><div>${msg}</div></div>`;}
 
@@ -3796,6 +3812,7 @@ function renderEpicDetail(){
         <button class="tab ${epicTab==="story"?"active":""}" data-tab="story">Story<span class="count">${storyN}</span></button>
         <button class="tab ${epicTab==="deps"?"active":""}" data-tab="deps">Waiting on others<span class="count">${openDeps}${fu.length?" · 📞"+fu.length:""}</span></button>
         <button class="tab ${epicTab==="subtasks"?"active":""}" data-tab="subtasks">Subtasks<span class="count">${sub.n}</span></button>
+        <button class="tab ${epicTab==="effort"?"active":""}" data-tab="effort">Effort<span class="count">${efFh(Math.round(efSum(epicEfforts(e))))} h</span></button>
         <span class="tind"></span>
       </div></div>
     <div class="detail-body" id="epBody"></div>`;
@@ -3811,18 +3828,19 @@ function renderEpicDetail(){
   on("#ep-add","onclick",()=>openAssignDemandsToEpic(e));
   on("#ep-del","onclick",()=>{
     const n=tasksForEpic(e.id).length;
-    if(!confirm("Delete this epic?"+(n?"\n\n"+n+" demand(s) will simply become un-grouped — no demand is deleted.":"")+"\n\nThe epic's own story, dependencies and subtasks are deleted with it."))return;
-    state.tasks.forEach(t=>{if(t.epicId===e.id)t.epicId="";});
+    if(!confirm("Delete this epic?"+(n?"\n\n"+n+" demand(s) will simply become un-grouped — no demand is deleted.":"")+"\n\nThe epic's own story, dependencies and subtasks are deleted with it."+(state.efforts.some(x=>x.epicId===e.id)?"\n\nSo are the "+efFh(efSum(state.efforts.filter(x=>x.epicId===e.id)))+" h logged on the epic itself.":"")))return;
+    state.tasks.forEach(t=>{if(t.epicId===e.id)t.epicId="";});state.efforts=state.efforts.filter(x=>x.epicId!==e.id);
     state.meetings.concat(state.journal).forEach(x=>{if(x.epicIds)x.epicIds=x.epicIds.filter(id=>id!==e.id);});
     state.epics=state.epics.filter(x=>x.id!==e.id);activeEpicId=null;markDirty();renderApp();});
   host.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{epicTab=b.dataset.tab;renderEpicDetail();enterPulse("detail");});
   const body=host.querySelector("#epBody");
   if(benchOn()){wireEpicHeadBench(host,e);const tb=epicBenchTab();
-    if(tb==="deps")renderEpicDeps(body,e);else if(tb==="subtasks")renderEpicSubtasks(body,e);
+    if(tb==="deps")renderEpicDeps(body,e);else if(tb==="effort")renderEpicEffort(body,e);else if(tb==="subtasks")renderEpicSubtasks(body,e);
     else if(tb==="details")renderEpicOverview(body,e,r,pk,fu);else renderEpicOverviewBench(body,e,r);}
   else if(epicTab==="story")renderEpicStory(body,e);
   else if(epicTab==="deps")renderEpicDeps(body,e);
   else if(epicTab==="subtasks")renderEpicSubtasks(body,e);
+  else if(epicTab==="effort")renderEpicEffort(body,e);
   else renderEpicOverview(body,e,r,pk,fu);
   placeTabInd(host);
 }
@@ -4710,7 +4728,7 @@ function runGlobalSearch(q){
   state.journal.forEach(j=>{if([j.date,j.title,j.body].join(" ").toLowerCase().includes(q))hits.push({k:"Journal",go:()=>{view="journal";journalTodos=false;activeJournalId=j.id;},label:`${j.date}${j.title?" · "+j.title:""}`});});
   state.todos.forEach(x=>{if(((x.text||"")+" "+(x.resolution||"")).toLowerCase().includes(q))hits.push({k:"To-do",go:()=>{view="journal";journalTodos=true;},label:`${x.done?"✓ ":""}${x.text}${x.resolution?" ↳ "+x.resolution:""}${x.due?" · due "+x.due:""}`});});
   state.wins.forEach(w=>{if(w.text.toLowerCase().includes(q))hits.push({k:"Win",go:()=>{view="review";},label:`${WIN_KINDS[w.kind].icon} ${w.date} · ${w.text}`});});
-  state.efforts.forEach(e=>{if(((e.note||"")+" "+e.activity).toLowerCase().includes(q)){const k=efKey(e);hits.push({k:"Effort",go:()=>{if(e.taskId&&efTaskOf(e.taskId)){view="demands";activeId=e.taskId;activeTab="effort";}else view="effort";setTimeout(()=>openEfDay(e.date,k),0);},label:`${e.date} · ${efFh(e.hours)} h · ${efName(k)} — ${e.note||e.activity}`});}});
+  state.efforts.forEach(e=>{if(((e.note||"")+" "+e.activity).toLowerCase().includes(q)){const k=efKey(e);hits.push({k:"Effort",go:()=>{if(e.taskId&&efTaskOf(e.taskId)){view="demands";activeId=e.taskId;activeTab="effort";}else if(e.epicId&&epicById(e.epicId)){view="epics";activeEpicId=e.epicId;epicTab="effort";}else view="effort";setTimeout(()=>openEfDay(e.date,k),0);},label:`${e.date} · ${efFh(e.hours)} h · ${efName(k)} — ${e.note||e.activity}`});}});
   state.epics.forEach(e=>{
     if([e.name,e.code,e.description,e.owner,e.notes,e.myScope].join(" ").toLowerCase().includes(q))
       hits.push({k:"Epic",go:()=>{view="epics";activeEpicId=e.id;epicTab="overview";},label:`◆ ${epicLabel(e)} · ${tasksForEpic(e.id).length} demand(s)`});
@@ -4903,6 +4921,7 @@ function placeTabInd(root){if(!benchOn())return;const tabs=root&&root.querySelec
 /* status as a segmented control (Bench) */
 function statusSegHTML(t){return `<div class="seg" id="dh-seg" title="Status — every change is logged in History">${Object.entries(STATUS).map(([k,v])=>`<button data-s="${k}" class="${k===t.status?"on":""}" style="--pen:${STATUS_PEN[k]}"><i></i>${esc(v.label.split(" /")[0])}</button>`).join("")}</div>`;}
 function setDemandStatus(t,v,fromEl){if(v===t.status)return;
+  if(needsComeback(t,v)){openComeback(t,v,()=>renderApp(),()=>renderApp());return;}
   const card=document.querySelector(`#taskList .tcard[data-id="${t.id}"]`);
   logTimeline(t,"status",t.status,v);t.status=v;touch(t);
   flyDot(fromEl,card,STATUS_PEN[v]);
@@ -5200,6 +5219,7 @@ function demandHeadBench(t,sub,lc){
       {k:ownDest?"Destinations":tgt?"Go-live · "+esc(tgt):"Go-live",v:t.transports.length?U(`${at}/${t.transports.length}`,ownDest?"TRs complete":"TRs there"):"—",cls:t.transports.length?(at<t.transports.length?"warn":"good"):"",title:"Transports that have reached the go-live system"},
       {k:"Subtasks",v:sub.n?U(`${sub.done}/${sub.n}`,"done"):"—"},
       {k:"Rework",v:U(rw,rw===1?"cycle":"cycles"),cls:rw?"bad":""},
+      roundCount(t)>1?{k:"Rounds",v:U(roundCount(t),(roundCount(t)-1)+" requirement change"+(roundCount(t)>2?"s":"")),title:"The requirement changed after delivery — never counted as rework"}:null,
       (()=>{const h=efSum(efFor(t.id)),e=+t.estimate||0;return h||e?{k:"Logged",v:U(efFh(h),e?"/ "+efFh(e)+" h":"h"),cls:e&&h>e?"bad":"",title:"Hours logged against this demand — Effort tab"}:null;})(),
       isWaiting(t)?{k:"Waiting on",v:esc(t.waiting.on)+(waitDays(t)!=null?`<small>${waitDays(t)} d</small>`:""),cls:"warn"}:null])}
     ${na?`<div class="bband ${nad<=0?"watch":""}"><canvas class="natick"></canvas><span class="k">Next action · ${nad<0?(-nad)+" d ago":nad===0?"today":"in "+nad+" d"}</span><span class="tx"><b>${esc(na.note||"(no note)")}</b> <span class="mono faint">${na.date}</span></span><button class="sm" id="na-done" title="Did it — note it in History and clear">✓ Done</button><button class="sm ghost" id="na-edit" title="Change date or text">✎</button></div>`:""}
@@ -5247,6 +5267,7 @@ function epicHeadBench(e,r,pk,fu,storyN,openDeps,sub){
       <button class="tab ${tab==="details"?"active":""}" data-tab="details">Scope &amp; go-live<span class="count">${r.ts.length}</span></button>
       <button class="tab ${tab==="deps"?"active":""}" data-tab="deps">Waiting on others<span class="count">${openDeps}${fu.length?" · 📞"+fu.length:""}</span></button>
       <button class="tab ${tab==="subtasks"?"active":""}" data-tab="subtasks">Subtasks<span class="count">${sub.n}</span></button>
+      <button class="tab ${tab==="effort"?"active":""}" data-tab="effort">Effort<span class="count">${efFh(Math.round(efSum(epicEfforts(e))))} h</span></button>
       <span class="tind"></span>
     </div></div><div class="detail-body" id="epBody"></div>`;}
 function epicOrderedDemands(e){const ts=tasksForEpic(e.id);return waveOrder(ts).flatMap(w=>ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"9999").localeCompare(b.receivedDate||"9999")));}
@@ -5377,6 +5398,7 @@ function renderBoard(){const host=document.getElementById("boardHost");if(!host)
     c.ondragend=()=>c.classList.remove("drag");});
   host.querySelectorAll(".bcol").forEach(col=>{col.ondragover=e=>{e.preventDefault();col.classList.add("over");};col.ondragleave=()=>col.classList.remove("over");
     col.ondrop=e=>{e.preventDefault();col.classList.remove("over");const t=state.tasks.find(x=>x.id===e.dataTransfer.getData("text/plain"));if(!t||t.status===col.dataset.s)return;
+      if(needsComeback(t,col.dataset.s)){openComeback(t,col.dataset.s,()=>{renderBoard();renderStats();if(activeId===t.id)renderDetail();},()=>renderBoard());return;}
       logTimeline(t,"status",t.status,col.dataset.s);t.status=col.dataset.s;touch(t);renderBoard();renderStats();
       const c=host.querySelector(`.tcard[data-id="${t.id}"]`);if(c&&motionOn())c.classList.add("land");
       if(activeId===t.id)renderDetail();toast(`${t.demandId||t.title} → ${STATUS[t.status].label} · logged in History`);};});}
@@ -5437,7 +5459,7 @@ function renderOverview(body,t){
   /* a finished demand's age stops at its finish ("took N days"), a live one keeps counting */
   const endMs=fin?new Date(fin+"T00:00:00").getTime():Date.now(),age=Math.max(0,Math.floor((endMs-(t.receivedDate?new Date(t.receivedDate+"T00:00:00").getTime():t.createdAt))/864e5));
   const overdueSubs=(function c(a){return a.reduce((n,s)=>n+(!s.done&&s.dueDate&&s.dueDate<todayStr()?1:0)+c(s.children),0);})(t.subtasks);
-  const feed=[...(t.timeline||[]).map(e=>e.type==="status"?{ts:e.ts,pen:STATUS_PEN[e.to]||"var(--faint)",h:`<b>${STATUS[e.to]?STATUS[e.to].label:esc(e.to)}</b>${e.from?` <span class="dim">from ${STATUS[e.from]?STATUS[e.from].label:esc(e.from)}</span>`:" <span class='dim'>— created</span>"}`}:{ts:e.ts,pen:"var(--accent2)",h:esc(e.note)}),
+  const feed=[...(t.timeline||[]).map(e=>isChange(e)?{ts:e.ts,pen:"var(--accent2)",h:`<b>🔄 Requirement changed</b> <span class="dim">→ ${STATUS[e.to]?STATUS[e.to].label:esc(e.to)}${e.note?" · "+esc(e.note):""}</span>`}:e.type==="status"?{ts:e.ts,pen:STATUS_PEN[e.to]||"var(--faint)",h:`<b>${STATUS[e.to]?STATUS[e.to].label:esc(e.to)}</b>${e.from?` <span class="dim">from ${STATUS[e.from]?STATUS[e.from].label:esc(e.from)}</span>`:" <span class='dim'>— created</span>"}`}:{ts:e.ts,pen:"var(--accent2)",h:esc(e.note)}),
     ...(t.comments||[]).map(c=>({ts:c.ts,pen:"var(--ink-3)",h:linkify(c.text)})),
     ...t.transports.flatMap(tr=>tr.syncs.filter(s=>s.system&&s.date).map(s=>({ts:new Date(s.date+"T12:00:00").getTime(),pen:"var(--good)",h:`<b class="mono">${esc(tr.number||"(TR)")}</b> reached ${esc(s.system)}`})))]
     .sort((a,b)=>b.ts-a.ts).slice(0,7);
@@ -5480,6 +5502,8 @@ function journeyDraw(t){return (c,w,h,tm,dt,s)=>{const {dot,ring,label,C}=DK,mv=
   hs.forEach((e,i)=>{if(e.s!=="bug")return;const prev=hs.slice(0,i).reverse().find(x=>x.s==="delivered");if(!prev)return;const a=X(prev.d),b=X(e.d);if(b>xMax)return;
     c.globalAlpha=.6;c.strokeStyle=C.bad;c.lineWidth=1.2;c.setLineDash([3,3]);c.beginPath();c.moveTo(b,y-4);c.quadraticCurveTo((a+b)/2,y-44,a,y-4);c.stroke();c.setLineDash([]);
     label(c,"rework",(a+b)/2,y-30,{size:8,color:C.bad});});
+  changeEvents(t).forEach((ev,i)=>{const x=X(isoTs(ev.ts));if(x>xMax)return;c.globalAlpha=.75;c.strokeStyle=C["pen-5"];c.lineWidth=1.2;c.setLineDash([2,3]);c.beginPath();c.moveTo(x,y-40);c.lineTo(x,y+8);c.stroke();c.setLineDash([]);
+    label(c,"REQUIREMENT CHANGED · ROUND "+(i+2),x+4,y-44,{size:7.5,color:C["pen-5"],align:"left"});});
   let lastX=-99,flip=0;
   hs.forEach(e=>{const x=X(e.d);if(x>xMax)return;dot(c,x,y,4.2,C.paper);dot(c,x,y,3.4,pen(e.s));
     flip=x-lastX<60?1-flip:0;lastX=x;const up=flip===1;
@@ -5558,15 +5582,18 @@ const EF_ACTS=[["Analysis","pen-2"],["Build","pen-3"],["Testing","pen-6"],["Debu
 const EF_ACTC=Object.fromEntries(EF_ACTS),EF_ORD=EF_ACTS.map(a=>a[0]),EF_DEMAND_ACTS=EF_ORD.slice(0,6);
 const EF_BUCKETS={mtg:{l:"Meetings",act:"Meetings & admin"},adm:{l:"Admin & email",act:"Meetings & admin"},sup:{l:"Support & small asks",act:"Support"},lrn:{l:"Learning",act:"Learning"}};
 const EF_PAL=["pen-2","pen-3","pen-4","pen-5","pen-6","pen-7","pen-8"],EF_DAY=8;
-function normEffort(x){const task=!x.bucket&&x.taskId?String(x.taskId):"",bucket=task?"":(EF_BUCKETS[x.bucket]?x.bucket:"sup");
-  return{id:x.id||uid(),date:/^\d{4}-\d\d-\d\d$/.test(x.date||"")?x.date:todayStr(),hours:Math.max(0,Math.round((+x.hours||0)*4)/4),taskId:task,bucket,
-    activity:EF_ACTC[x.activity]?x.activity:(bucket?EF_BUCKETS[bucket].act:"Build"),note:String(x.note||""),subtaskId:task?(x.subtaskId||""):"",createdAt:x.createdAt||Date.now()};}
-const efKey=e=>e.taskId||"b:"+e.bucket;
-const efTaskOf=k=>k&&!String(k).startsWith("b:")?state.tasks.find(t=>t.id===k)||null:null;
-function efName(k){if(String(k).startsWith("b:"))return (EF_BUCKETS[k.slice(2)]||{l:"Other"}).l;const t=efTaskOf(k);return t?(t.demandId||t.title):"(deleted demand)";}
+function normEffort(x){const task=!x.bucket&&!x.epicId&&x.taskId?String(x.taskId):"",epic=!task&&!x.bucket&&x.epicId?String(x.epicId):"",bucket=task||epic?"":(EF_BUCKETS[x.bucket]?x.bucket:"sup");
+  return{id:x.id||uid(),date:/^\d{4}-\d\d-\d\d$/.test(x.date||"")?x.date:todayStr(),hours:Math.max(0,Math.round((+x.hours||0)*4)/4),taskId:task,epicId:epic,bucket,
+    activity:EF_ACTC[x.activity]?x.activity:(bucket?EF_BUCKETS[bucket].act:epic?"Meetings & admin":"Build"),note:String(x.note||""),subtaskId:task?(x.subtaskId||""):"",createdAt:x.createdAt||Date.now()};}
+const efKey=e=>e.taskId||(e.epicId?"e:"+e.epicId:"b:"+e.bucket);
+const efTaskOf=k=>k&&!String(k).startsWith("b:")&&!String(k).startsWith("e:")?state.tasks.find(t=>t.id===k)||null:null;
+function efName(k){if(String(k).startsWith("b:"))return (EF_BUCKETS[k.slice(2)]||{l:"Other"}).l;
+  if(String(k).startsWith("e:")){const ep=epicById(k.slice(2));return ep?"◆ "+(ep.code||ep.name)+" (epic)":"(deleted epic)";}
+  const t=efTaskOf(k);return t?(t.demandId||t.title):"(deleted demand)";}
+const efKeyValid=k=>!!k&&(String(k).startsWith("b:")?!!EF_BUCKETS[k.slice(2)]:String(k).startsWith("e:")?!!epicById(k.slice(2)):!!efTaskOf(k));
 const efHash=s=>{let h=7;for(const c of String(s))h=(h*31+c.charCodeAt(0))|0;return h>>>0;};
 /* colours go round the palette in the order demands arrived, so demands open at the same time never share one */
-function efPen(k){if(String(k).startsWith("b:"))return "ink-3";const c=efPen;
+function efPen(k){if(String(k).startsWith("b:"))return "ink-3";if(String(k).startsWith("e:"))return efEpicPen(k.slice(2));const c=efPen;
   if(c.arr!==state.tasks||c.n!==state.tasks.length){c.arr=state.tasks;c.n=state.tasks.length;c.m=new Map();
     state.tasks.slice().sort((x,y)=>(x.receivedDate||isoTs(x.createdAt)).localeCompare(y.receivedDate||isoTs(y.createdAt))).forEach((t,i)=>c.m.set(t.id,EF_PAL[i%EF_PAL.length]));}
   return c.m.get(k)||EF_PAL[efHash(k)%EF_PAL.length];}
@@ -5684,13 +5711,14 @@ function efToastUndo(msg,fn){toast(msg);const t=document.getElementById("toast")
   b.onclick=()=>{t.className="toast";fn();};t.appendChild(b);t.classList.add("ef-undo");clearTimeout(toast._t);toast._t=setTimeout(()=>t.className="toast",5200);}
 
 /* ---------- the composer: inline on a demand's Effort tab and in the ⏱ dialog ---------- */
-function efGuessAct(key,date){if(String(key).startsWith("b:"))return (EF_BUCKETS[key.slice(2)]||EF_BUCKETS.sup).act;const t=efTaskOf(key);if(t&&efStatusOn(t,date)==="bug")return "Debug / fix";
+function efGuessAct(key,date){if(String(key).startsWith("b:"))return (EF_BUCKETS[key.slice(2)]||EF_BUCKETS.sup).act;
+  if(String(key).startsWith("e:")){const l=state.efforts.filter(e=>e.epicId===key.slice(2)).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt)[0];return l?l.activity:"Meetings & admin";}const t=efTaskOf(key);if(t&&efStatusOn(t,date)==="bug")return "Debug / fix";
   const l=state.efforts.filter(e=>e.taskId===key).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt)[0];return l?l.activity:"Analysis";}
-const efActList=k=>String(k).startsWith("b:")?EF_ORD.slice(6):EF_DEMAND_ACTS;
+const efActList=k=>String(k).startsWith("b:")?EF_ORD.slice(6):String(k).startsWith("e:")?["Meetings & admin",...EF_DEMAND_ACTS]:EF_DEMAND_ACTS;
 function efTaskOptions(sel){const o=t=>`<option value="${t.id}" ${t.id===sel?"selected":""}>${esc(t.demandId?t.demandId+" — "+t.title:t.title)}</option>`;
   const live=state.tasks.filter(t=>t.status!=="closed"),old=state.tasks.filter(t=>t.status==="closed");
-  return `${live.length?`<optgroup label="Demands">${live.map(o).join("")}</optgroup>`:""}<optgroup label="Not a demand">${Object.entries(EF_BUCKETS).map(([k,v])=>`<option value="b:${k}" ${"b:"+k===sel?"selected":""}>${v.l}</option>`).join("")}</optgroup>${old.length?`<optgroup label="Closed demands">${old.map(o).join("")}</optgroup>`:""}`;}
-function efLastKey(){const k=viewPref("ef.last","");if(k&&(k.startsWith("b:")?EF_BUCKETS[k.slice(2)]:efTaskOf(k)))return k;const t=state.tasks.find(x=>["open","progress","bug"].includes(x.status));return t?t.id:"b:mtg";}
+  return `${live.length?`<optgroup label="Demands">${live.map(o).join("")}</optgroup>`:""}${(()=>{const eps=state.epics.filter(e=>e.status!=="closed"||"e:"+e.id===sel);return eps.length?`<optgroup label="Epics — epic-level work (calls, planning)">${eps.map(e=>`<option value="e:${e.id}" ${"e:"+e.id===sel?"selected":""}>◆ ${esc(e.code?e.code+" — "+e.name:e.name)}</option>`).join("")}</optgroup>`:"";})()}<optgroup label="Not a demand">${Object.entries(EF_BUCKETS).map(([k,v])=>`<option value="b:${k}" ${"b:"+k===sel?"selected":""}>${v.l}</option>`).join("")}</optgroup>${old.length?`<optgroup label="Closed demands">${old.map(o).join("")}</optgroup>`:""}`;}
+function efLastKey(){const k=viewPref("ef.last","");if(efKeyValid(k))return k;const t=state.tasks.find(x=>["open","progress","bug"].includes(x.status));return t?t.id:"b:mtg";}
 function efMountComposer(host,o,done){
   const st={key:o.key,date:o.date||todayStr(),hs:o.hours!=null?String(o.hours):"",act:o.act||efGuessAct(o.key,o.date||todayStr()),note:o.note||"",sub:o.sub||""};
   const q=s=>host.querySelector(s);
@@ -5702,7 +5730,7 @@ function efMountComposer(host,o,done){
         <div><span class="ef-lb">Hours</span><div class="ef-row">${[.5,1,1.5,2,3,4].map(v=>`<button class="ef-chip mono" data-h="${v}">${v}</button>`).join("")}<input class="ef-hin mono" data-f="hours" placeholder="2h30" value="${esc(st.hs)}" autocomplete="off"></div></div>
       </div>
       <div><span class="ef-lb">Activity</span><div class="ef-row">${efActList(st.key).map(a=>`<button class="ef-chip" data-a="${esc(a)}" style="--pen:var(--${EF_ACTC[a]})"><span class="ef-pd"></span>${esc(a)}</button>`).join("")}</div></div>
-      <div><span class="ef-lb">What I did</span><textarea class="ef-note" data-f="note" rows="2" placeholder="${t?"e.g. Built the cost-center range into the data fetch; unit-tested with CC 4711":"e.g. Stand-up, then the governance call"}">${esc(st.note)}</textarea></div>
+      <div><span class="ef-lb">What I did</span><textarea class="ef-note" data-f="note" rows="2" placeholder="${t?"e.g. Built the cost-center range into the data fetch; unit-tested with CC 4711":String(st.key).startsWith("e:")?"e.g. Alignment call with the integration team about wave 2":"e.g. Stand-up, then the governance call"}">${esc(st.note)}</textarea></div>
       ${subs.length?`<div><span class="ef-lb">Against a subtask (optional)</span><select data-f="sub" style="max-width:420px"><option value="">—</option>${subs.map(s=>`<option value="${s.id}" ${s.id===st.sub?"selected":""}>${"   ".repeat(s.d)}${esc(s.title)}</option>`).join("")}</select></div>`:""}
       <div class="ef-foot"><div class="ef-dsf" data-f="dsf"></div><button class="ghost sm" data-f="off" title="Not working that day? Mark it as a holiday or leave">🏖 Day off…</button>${o.modal?`<button class="ghost" data-f="cancel">Cancel</button>`:`<button class="sm" data-f="timer" title="Start a timer on this demand — stop it on ⏱ in the title bar and the hours are filled in">▶ Start timer</button>`}<button class="primary" data-f="log">Log</button></div></div>`;
     wire();sync();};
@@ -5722,8 +5750,9 @@ function efMountComposer(host,o,done){
     const go=()=>{const h=Math.round(efParseH(st.hs)*4)/4;
       if(!h||isNaN(h)||h>24){const hi=q('[data-f="hours"]');hi.classList.remove("ef-shake");void hi.offsetWidth;hi.classList.add("ef-shake");hi.focus();toast("How many hours? e.g. 2 · 1.5 · 2h30 · 90m",true);return;}
       if(st.date>todayStr()){toast("That day hasn't happened yet",true);return;}
-      const isB=st.key.startsWith("b:"),prev=o.editId?state.efforts.find(x=>x.id===o.editId):null;
-      const e=normEffort({id:o.editId||uid(),date:st.date,hours:h,taskId:isB?"":st.key,bucket:isB?st.key.slice(2):"",activity:st.act,note:st.note.trim(),subtaskId:isB?"":st.sub,createdAt:prev?prev.createdAt:Date.now()});
+      const isB=st.key.startsWith("b:"),isE=st.key.startsWith("e:"),prev=o.editId?state.efforts.find(x=>x.id===o.editId):null;
+      const e=normEffort({id:o.editId||uid(),date:st.date,hours:h,taskId:isB||isE?"":st.key,epicId:isE?st.key.slice(2):"",bucket:isB?st.key.slice(2):"",activity:st.act,note:st.note.trim(),subtaskId:isB||isE?"":st.sub,createdAt:prev?prev.createdAt:Date.now()});
+      if(isE){const ep=epicById(e.epicId);if(ep)ep.updatedAt=Date.now();}
       if(prev)state.efforts[state.efforts.indexOf(prev)]=e;else state.efforts.push(e);
       const t=efTaskOf(e.taskId);if(t)t.updatedAt=Date.now();
       markDirty();done(e);};
@@ -5742,7 +5771,7 @@ function efMountComposer(host,o,done){
   draw();}
 let efFlashId=null;
 function openLogTime(o={}){const root=document.getElementById("modalRoot");
-  let key=o.key;if(!key||!(String(key).startsWith("b:")?EF_BUCKETS[key.slice(2)]:efTaskOf(key)))key=view==="demands"&&activeTask()?activeId:efLastKey();
+  let key=o.key;if(!efKeyValid(key))key=view==="demands"&&activeTask()?activeId:view==="epics"&&activeEpic()?"e:"+activeEpicId:efLastKey();
   root.innerHTML=`<div class="modal-bg"><div class="modal efx ef-modal"><h2>${o.editId?"✎ Edit time entry":"⏱ Log time"}</h2><div id="efMq"></div></div></div>`;
   const bg=root.querySelector(".modal-bg"),close=()=>{root.innerHTML="";};
   bg.onclick=e=>{if(e.target===bg)close();};
@@ -5761,7 +5790,7 @@ const EF_TIMER_KEY="demanddesk.timer";
 function efTimer(){try{const v=JSON.parse(localStorage.getItem(EF_TIMER_KEY)||"null");return v&&v.key&&v.start?v:null;}catch(e){return null;}}
 function efTimerStart(key){try{localStorage.setItem(EF_TIMER_KEY,JSON.stringify({key,start:Date.now()}));}catch(e){}efTimerUI();toast(`Timer running on ${efName(key)} — click ⏱ in the title bar to stop and log it`);}
 function efTimerStop(){const tm=efTimer();if(!tm)return;try{localStorage.removeItem(EF_TIMER_KEY);}catch(e){}efTimerUI();
-  const h=Math.max(.25,Math.round((Date.now()-tm.start)/36e5*4)/4),ok=String(tm.key).startsWith("b:")?!!EF_BUCKETS[tm.key.slice(2)]:!!efTaskOf(tm.key);
+  const h=Math.max(.25,Math.round((Date.now()-tm.start)/36e5*4)/4),ok=efKeyValid(tm.key);
   if(h>12)toast(`The timer ran for ${efFh(h)} h — put in the hours you actually worked`,true);
   openLogTime({key:ok?tm.key:undefined,hours:h>12?"":h,date:isoTs(tm.start)});}
 function efTimerUI(){const tm=efTimer(),b=document.getElementById("btnLog"),sb=document.getElementById("sbEffort");
@@ -5794,6 +5823,7 @@ function renderEffortTab(body,t){
     <div class="ef-gw">
       <div class="ck-unit"><div class="ck-head"><h2>Log</h2><span class="ck-meta">${es.length} entr${es.length===1?"y":"ies"} · by week · hover to edit</span></div><div id="efLog"></div></div>
       <div class="ef-stack">
+        ${roundCount(t)>1?efRoundRows(t,es):""}
         <div class="ck-unit"><div class="ck-head"><h2>By activity</h2><span class="ck-meta">${efFh(tot)} h</span></div>${efActRows(es)}</div>
         ${subs.length?`<div class="ck-unit"><div class="ck-head"><h2>By subtask</h2><span class="ck-meta">optional link on each entry</span></div>${efSubRows(es,t,subs)}</div>`:""}
       </div></div></div>`;
@@ -5822,7 +5852,7 @@ function efRenderLog(host,t,es){const sorted=es.slice().sort((a,b)=>b.date.local
   const weeks=[...W.entries()],show=efLogAll?weeks:weeks.slice(0,5),h=statusHistory(t),thisMon=efMon(todayStr());
   host.innerHTML=show.map(([m,list])=>`<div class="ef-wkh"><span>Week of ${efSh(m)}${m===thisMon?" · this week":""}</span><b>${efFh(efSum(list))} h</b></div>`+
     list.map(e=>{const sb=efSubTitle(t,e.subtaskId);return `<div class="ef-ent ${e.id===efFlashId?"flash":""}" data-id="${e.id}"><span class="d">${efWdd(e.date)}</span><span class="h">${efHDots(e.hours,EF_ACTC[e.activity])}<span>${efFh(e.hours)} h</span></span>
-      <span class="x"><span>${e.note?linkify(e.note):`<span class="faint">(no details)</span>`}</span><span class="tg"><span class="ef-tag" style="--pen:var(--${EF_ACTC[e.activity]})"><span class="ef-pd"></span>${esc(e.activity)}</span>${sb?`<span class="sb2">↳ ${esc(sb)}</span>`:""}${efStatusOn(t,e.date,h)==="bug"?`<span class="ef-tag" style="--pen:var(--bad)">rework</span>`:""}</span></span>
+      <span class="x"><span>${e.note?linkify(e.note):`<span class="faint">(no details)</span>`}</span><span class="tg"><span class="ef-tag" style="--pen:var(--${EF_ACTC[e.activity]})"><span class="ef-pd"></span>${esc(e.activity)}</span>${sb?`<span class="sb2">↳ ${esc(sb)}</span>`:""}${efStatusOn(t,e.date,h)==="bug"?`<span class="ef-tag" style="--pen:var(--bad)">rework</span>`:""}${roundCount(t)>1?`<span class="ef-tag" style="--pen:var(--pen-5)">round ${roundOn(t,e.date)}</span>`:""}</span></span>
       <span class="ops"><button class="ghost sm" data-op="ed" title="Edit">✎</button><button class="ghost sm danger" data-op="rm" title="Delete">✕</button></span></div>`;}).join("")).join("")+
     (weeks.length>5?`<button class="sm" id="efMore" style="margin-top:10px">${efLogAll?"Show the last 5 weeks":"Show all "+weeks.length+" weeks"}</button>`:"");
   const mo=host.querySelector("#efMore");if(mo)mo.onclick=()=>{efLogAll=!efLogAll;efRenderLog(host,t,es);};
@@ -5841,6 +5871,7 @@ function efLifeDraw(t,es){const hist=statusHistory(t),H=hist.map(x=>[daysUntil(x
       if(st==="bug"){c.globalAlpha=.07;c.fillStyle=C.bad;c.fillRect(x1,top-6,xe-x1,y0-top+8);efLabel(c,"REWORK",(x1+xe)/2,top+4,{size:7.5,color:C.bad});}
       c.globalAlpha=.9;c.strokeStyle=pen;c.lineWidth=4;c.beginPath();c.moveTo(x1,bandY);c.lineTo(xe,bandY);c.stroke();
       if(i===0||x1-X(H[i-1][0])>34)efLabel(c,(STATUS[st]?STATUS[st].label.split(" /")[0]:st).toUpperCase(),x1,bandY-11,{size:7.5,color:pen,align:"left"});});
+    changeEvents(t).forEach((ev,i)=>{const x=X(daysUntil(isoTs(ev.ts)));if(x>xMax)return;c.globalAlpha=.75;c.strokeStyle=C["pen-5"];c.lineWidth=1.2;c.setLineDash([2,3]);c.beginPath();c.moveTo(x,bandY+4);c.lineTo(x,y0+2);c.stroke();c.setLineDash([]);efLabel(c,"ROUND "+(i+2),x+4,top+4,{size:7.5,color:C["pen-5"],align:"left"});});
     for(let x=L;x<=w-Rr;x+=5)efDot(c,x,y0+6,.6,C["ink-4"]);
     const pitch=Math.min(5.4,(y0-top)/17),r=Math.max(1.1,Math.min(2.2,dayW*.36,pitch*.42));
     offs.forEach(o=>{const x=X(o);if(x>xMax)return;let y=y0;const hov=s.hv&&s.hv.o===o;
@@ -5858,29 +5889,34 @@ function efLifeDraw(t,es){const hist=statusHistory(t),H=hist.map(x=>[daysUntil(x
     if(a<=0&&b>=0){const x=X(0);if(x<=xMax){c.globalAlpha=.5;c.strokeStyle=C.ink;c.lineWidth=1;c.setLineDash([2,3]);c.beginPath();c.moveTo(x,top-10);c.lineTo(x,y0+4);c.stroke();c.setLineDash([]);efLabel(c,"TODAY",x,top-16,{size:7.5,color:C.ink});}}};}
 
 /* =================== the Effort workspace =================== */
-const EF_RNG={w:{l:"This week",weeks:1},m:{l:"4 weeks",weeks:4},q:{l:"13 weeks",weeks:13},h:{l:"26 weeks",weeks:26}};
+const EF_RNG={w:{l:"This week",weeks:1},m:{l:"4 weeks",weeks:4},q:{l:"13 weeks",weeks:13},h:{l:"26 weeks",weeks:26},mo:{l:"Month"},cu:{l:"Custom"}};
 const EF_GROUPS={demand:"Demand",epic:"Epic",activity:"Activity",theme:"Theme"};
 let efFocus=null,efWk=0,EFA=null;
 const efRg=()=>EF_RNG[viewPref("ef.range","q")]?viewPref("ef.range","q"):"q",efG=()=>EF_GROUPS[viewPref("ef.group","demand")]?viewPref("ef.group","demand"):"demand";
 const efOffD=o=>efAdd(todayStr(),o),efMonOff=o=>o-((efDow(efOffD(o))+6)%7);
-function efGKey(e){const g=efG();if(g==="activity")return e.activity;if(!e.taskId)return "_non";const t=efTaskOf(e.taskId);
+function efGKey(e){const g=efG();if(g==="activity")return e.activity;
+  if(e.epicId)return g==="demand"?"e:"+e.epicId:g==="epic"?(epicById(e.epicId)?e.epicId:"_noe"):"_ep";
+  if(!e.taskId)return "_non";const t=efTaskOf(e.taskId);
   if(g==="demand")return e.taskId;if(g==="epic")return t&&t.epicId&&epicById(t.epicId)?t.epicId:"_noe";return t&&t.theme?t.theme:"_nt";}
-function efGMeta(k){const g=efG();if(k==="_non")return {l:"Not demand work",col:"ink-3"};
+function efGMeta(k){const g=efG();if(k==="_non")return {l:"Not demand work",col:"ink-3"};if(k==="_ep")return {l:"◆ Epic-level work",col:"pen-5"};
+  if(String(k).startsWith("e:")){const ep=epicById(k.slice(2));return {l:"◆ "+(ep?(ep.code||ep.name):"(deleted epic)"),sub:"epic-level work"+(ep&&ep.code?" · "+ep.name:""),col:efPen(k)};}
   if(g==="demand"){const t=efTaskOf(k);return t?{l:t.demandId||t.title,sub:t.demandId?t.title:"",col:efPen(k)}:{l:"(deleted demand)",col:"ink-4"};}
   if(g==="epic"){if(k==="_noe")return {l:"No epic",col:"pen-4"};const e=epicById(k);return {l:"◆ "+(e?(e.code||e.name):"epic"),sub:e&&e.code?e.name:"",col:efEpicPen(k)};}
   if(g==="activity")return {l:k,col:EF_ACTC[k]||"ink-3"};
   return k==="_nt"?{l:"No theme",col:"ink-2"}:{l:k,col:efThemePen(k)};}
-function efAgg(){const rg=efRg(),a=efMonOff(0)-(EF_RNG[rg].weeks-1)*7,E=state.efforts.map(e=>({...e,off:daysUntil(e.date)})),R=E.filter(e=>e.off>=a&&e.off<=0),tot=new Map();
+function efAgg(){const RG=efRange(),rg=RG.rg,a=RG.a,b=RG.b,E=state.efforts.map(e=>({...e,off:daysUntil(e.date)})),R=E.filter(e=>e.off>=a&&e.off<=b&&e.off<=0),tot=new Map();
   R.forEach(e=>{const k=efGKey(e);tot.set(k,(tot.get(k)||0)+e.hours);});
   const keys=[...tot.keys()].sort((x,y)=>(x==="_non")-(y==="_non")||tot.get(y)-tot.get(x));
   const cal0=efMonOff(0)-25*7,day=new Map();
   E.forEach(e=>{if(e.off<cal0||e.off>0)return;let d=day.get(e.off);if(!d){d={tot:0,by:new Map()};day.set(e.off,d);}d.tot+=e.hours;const k=efGKey(e);d.by.set(k,(d.by.get(k)||0)+e.hours);});
-  const dayMode=rg==="w",B=[];
-  if(dayMode)for(let i=0;i<7;i++)B.push({a:a+i,b:a+i,l:efWdd(efOffD(a+i)).toUpperCase()});
-  else for(let i=0;i<EF_RNG[rg].weeks;i++)B.push({a:a+i*7,b:a+i*7+6,l:efSh(efOffD(a+i*7))});
+  /* a short range is shown per day, up to ~30 weeks per week, anything longer per month */
+  const span=b-a+1,mode=span<=10?"day":span<=210?"week":"month",dayMode=mode==="day",B=[];
+  if(mode==="day")for(let o=a;o<=b;o++)B.push({a:o,b:o,l:efWdd(efOffD(o)).toUpperCase()});
+  else if(mode==="week")for(let o=efMonOff(a);o<=b;o+=7)B.push({a:o,b:o+6,l:efSh(efOffD(o))});
+  else{let m=efOffD(a).slice(0,7);const end=efOffD(b).slice(0,7);while(m<=end&&B.length<60){B.push({a:daysUntil(m+"-01"),b:daysUntil(efMonthEnd(m)),l:efFmt(m+"-01",{month:"short"}).toUpperCase(),m});m=efMonthShift(m,1);}}
   B.forEach(bk=>{bk.by=new Map();bk.tot=0;R.forEach(e=>{if(e.off>=bk.a&&e.off<=bk.b){const k=efGKey(e);bk.by.set(k,(bk.by.get(k)||0)+e.hours);bk.tot+=e.hours;}});});
   const first=E.length?Math.min(...E.map(e=>e.off)):1;
-  EFA={E,R,tot,keys,day,B,dayMode,a,cal0,first,rg,meta:new Map()};return EFA;}
+  EFA={E,R,tot,keys,day,B,dayMode,mode,a,b,RG,cal0,first,rg,meta:new Map()};return EFA;}
 function renderEffortWS(){const host=document.getElementById("detail");efHideTip();
   if(!state.efforts.length){host.innerHTML=`<div class="efx ef-ws"><div class="ef-wsh"><div><div class="ef-l1">⏱ Effort</div><h1>Where your hours go</h1></div></div>
     <div class="ck-unit ef-empty"><div class="ck-head"><h2>Nothing logged yet</h2></div>
@@ -5888,15 +5924,17 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
       <p>Log from anywhere with <b>⏱ Log time</b> in the title bar or the <b>T</b> key, or from the <b>Effort</b> tab on a demand. Meetings, admin, support and learning have their own buckets, so a whole day adds up.</p>
       <button class="primary" id="efFirst">⏱ Log your first hours</button></div></div>`;
     host.querySelector("#efFirst").onclick=()=>openLogTime();return;}
-  const A=efAgg(),rg=A.rg,g=efG(),total=efSum(A.R),wk=EF_RNG[rg].weeks;
-  const pa=A.a-wk*7,prev=efSum(A.E.filter(e=>e.off>=pa&&e.off<A.a)),delta=prev?Math.round((total-prev)/prev*100):0;
-  const wdays=[];for(let o=A.a;o<=0;o++){const d=efOffD(o);if(efWd(d)&&!efLeave(d))wdays.push(o);}
+  const A=efAgg(),rg=A.rg,g=efG(),total=efSum(A.R),len=A.b-A.a+1;
+  const pa=A.a-len,prev=efSum(A.E.filter(e=>e.off>=pa&&e.off<A.a)),delta=prev?Math.round((total-prev)/prev*100):0;
+  const wdays=[];for(let o=A.a;o<=Math.min(A.b,0);o++){const d=efOffD(o);if(efWd(d)&&!efLeave(d))wdays.push(o);}
   const logged=new Set(A.R.map(e=>e.off)),unl=wdays.filter(o=>o<0&&o>=A.first&&!logged.has(o)),worked=wdays.filter(o=>logged.has(o)).length;
-  const dem=efSum(A.R.filter(e=>e.taskId)),nDem=new Set(A.R.filter(e=>e.taskId).map(e=>e.taskId)).size;
+  const dem=efSum(A.R.filter(e=>e.taskId||e.epicId)),nDem=new Set(A.R.filter(e=>e.taskId).map(e=>e.taskId)).size;
   const rwH=efSum(A.R.filter(e=>{const t=efTaskOf(e.taskId);return t&&efStatusOn(t,e.date)==="bug";}));
   host.innerHTML=`<div class="efx ef-ws">
-    <div class="ef-wsh"><div><div class="ef-l1">⏱ Effort · ${EF_RNG[rg].l} · ${efSh(efOffD(A.a))} – ${efSh(todayStr())}</div><h1>Where your hours went</h1></div>
+    <div class="ef-wsh"><div><div class="ef-l1">⏱ Effort · ${esc(A.RG.l)} · ${efSh(A.RG.from)} – ${efSh(A.RG.to)}</div><h1>Where your hours went</h1></div>
       <div class="ef-ctl"><div class="ef-sg" id="efRg"><span class="cap">Range</span>${Object.entries(EF_RNG).map(([k,v])=>`<button data-k="${k}" class="${k===rg?"on":""}">${v.l}</button>`).join("")}</div>
+        ${rg==="mo"?`<span class="ef-row"><button class="sm ghost" id="efMoP" title="Month before">‹</button><b class="mono" style="min-width:124px;text-align:center;font-weight:500">${esc(A.RG.l)}</b><button class="sm ghost" id="efMoN" title="Month after">›</button></span>`:""}
+        ${rg==="cu"?`<span class="ef-row"><input type="date" id="efCuF" value="${A.RG.from}" style="width:150px"><span class="faint">–</span><input type="date" id="efCuT" value="${A.RG.to}" style="width:150px"></span>`:""}
         <div class="ef-sg" id="efGp"><span class="cap">Group by</span>${Object.entries(EF_GROUPS).map(([k,v])=>`<button data-k="${k}" class="${k===g?"on":""}">${v}</button>`).join("")}</div>
         <button class="sm" id="efOffB" title="Public holidays and leave — days that never count as missing a log">🏖 Days off</button><button class="sm" id="efCsv" title="Every entry ever logged, as a spreadsheet">⬇ CSV</button><button class="sm primary" id="efLogB">⏱ Log time</button></div></div>
     ${roHTML([{k:"Logged",v:efFh(total)+`<small>h</small>`+(prev?`<small class="${delta>=0?"ef-good":"ef-bad"}">${delta>=0?"▲":"▼"} ${Math.abs(delta)}% vs previous</small>`:"")},
@@ -5909,7 +5947,7 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
     <div class="ef-lgrow"><span class="ef-lb" style="margin:0">${EF_GROUPS[g]}s · click to focus${g==="demand"?" · double-click to open":""}</span>${A.keys.map(k=>{const m=efGMeta(k);return `<button class="ef-lgi ${efFocus===k?"on":efFocus?"off":""}" data-k="${esc(k)}" style="--pen:var(--${m.col})" title="${esc(m.sub||"")}"><span class="ef-pd"></span>${esc(m.l)}<b>${efFh(A.tot.get(k))}</b></button>`;}).join("")}</div>
     <div class="ck-unit"><div class="ck-head"><h2>26 weeks in dots</h2><span class="ck-meta">a pie per day · size = hours · slices = where they went · red ring = a working day with no log · shaded = the range · click a day</span></div><canvas class="ef-cal" id="efCal"></canvas></div>
     <div class="ef-gw">
-      <div class="ck-unit"><div class="ck-head"><h2>Where the hours went</h2><span class="ck-meta">${A.dayMode?"per day · a dot = ½ h · dashed = 8 h":"per week · a dot = 1 h · dashed = 40 h"} · click a column</span></div><canvas class="ef-wkc" id="efWk"></canvas></div>
+      <div class="ck-unit"><div class="ck-head"><h2>Where the hours went</h2><span class="ck-meta">${A.mode==="day"?"per day · a dot = ½ h · dashed = 8 h":A.mode==="week"?"per week · a dot = 1 h · dashed = 40 h":"per month · a dot = 4 h · dashed = 168 h"} · click a column</span></div><canvas class="ef-wkc" id="efWk"></canvas></div>
       <div class="ck-unit"><div class="ck-head"><h2>Activity mix</h2><span class="ck-meta">${efFh(total)} h</span></div><div class="ef-mixw"><canvas id="efMix"></canvas><div>${efMixRows(A.R)}</div></div></div></div>
     <div class="ck-unit" id="efSheet"></div>
     <div class="ef-g3">
@@ -5918,7 +5956,9 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
       <div class="ck-unit"><div class="ck-head"><h2>Your week's rhythm</h2><span class="ck-meta">avg on a logged day</span></div>${efRhythmHTML(A)}</div></div></div>`;
   host.querySelector("#efNoticed").innerHTML=efNoticedHTML(A,total,dem,unl);
   const openDemand=id=>{view="demands";activeId=id;activeTab="effort";renderApp();};
-  host.querySelectorAll("#efRg button").forEach(b=>b.onclick=()=>{setViewPref("ef.range",b.dataset.k);efFocus=null;renderEffortWS();});
+  host.querySelectorAll("#efRg button").forEach(b=>b.onclick=()=>{if(b.dataset.k==="cu"&&!viewPref("ef.from","")){setViewPref("ef.from",A.RG.from);setViewPref("ef.to",A.RG.to);}setViewPref("ef.range",b.dataset.k);efFocus=null;renderEffortWS();});
+  {const mp=host.querySelector("#efMoP");if(mp){const cur=()=>viewPref("ef.month",todayStr().slice(0,7));mp.onclick=()=>{setViewPref("ef.month",efMonthShift(cur(),-1));renderEffortWS();};host.querySelector("#efMoN").onclick=()=>{setViewPref("ef.month",efMonthShift(cur(),1));renderEffortWS();};}
+   const cf=host.querySelector("#efCuF");if(cf){const ch=()=>{const f=cf.value,t=host.querySelector("#efCuT").value;if(f&&t&&f<=t){setViewPref("ef.from",f);setViewPref("ef.to",t);renderEffortWS();}};cf.onchange=ch;host.querySelector("#efCuT").onchange=ch;}}
   host.querySelectorAll("#efGp button").forEach(b=>b.onclick=()=>{setViewPref("ef.group",b.dataset.k);efFocus=null;renderEffortWS();});
   host.querySelector("#efLogB").onclick=()=>openLogTime();host.querySelector("#efOffB").onclick=()=>openDaysOff();host.querySelector("#efCsv").onclick=efCSV;
   host.querySelectorAll(".ef-lgi").forEach(b=>{b.onclick=()=>{efFocus=efFocus===b.dataset.k?null:b.dataset.k;host.querySelectorAll(".ef-lgi").forEach(x=>{x.classList.toggle("on",x.dataset.k===efFocus);x.classList.toggle("off",!!efFocus&&x.dataset.k!==efFocus);});};
@@ -5926,13 +5966,15 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
   host.querySelectorAll(".ef-erow[data-id]").forEach(r=>r.onclick=()=>openDemand(r.dataset.id));
   host.querySelectorAll("#efNoticed [data-act]").forEach(b=>b.onclick=()=>efNoticeActs[+b.dataset.act]());
   efHover(DK.scope(host.querySelector("#efCal"),efCalDraw),efCalTip,hit=>{if(hit.kind==="none")openLogTime({date:efOffD(hit.off)});else openEfDay(efOffD(hit.off));});
-  efHover(DK.scope(host.querySelector("#efWk"),efWkDraw),efWkTip,hit=>{if(EFA.dayMode){if(hit.b.a<=0)openEfDay(efOffD(hit.b.a));return;}efWk=(efMonOff(0)-hit.b.a)/7;efRenderSheet(true);host.querySelector("#efSheet").scrollIntoView({behavior:motionOn()?"smooth":"auto",block:"center"});});
+  efHover(DK.scope(host.querySelector("#efWk"),efWkDraw),efWkTip,hit=>{if(EFA.mode==="month"){setViewPref("ef.range","mo");setViewPref("ef.month",hit.b.m);renderEffortWS();return;}if(EFA.dayMode){if(hit.b.a<=0)openEfDay(efOffD(hit.b.a));return;}efWk=Math.max(0,(efMonOff(0)-efMonOff(hit.b.a))/7);efRenderSheet(true);host.querySelector("#efSheet").scrollIntoView({behavior:motionOn()?"smooth":"auto",block:"center"});});
   DK.scope(host.querySelector("#efMix"),efMixDraw);
   efRenderSheet();}
 /* calendar: 26 weeks × 7 days, a pie per day */
 function efCalDraw(c,w,h,tm,dt,s){const A=EFA,C=efC(s.cv),p=efEase(efProg(s,1200)),L=30,top=20,cw=(w-L-6)/26,ch=(h-top-4)/7,cell=Math.min(cw,ch);s.hits=[];
-  const xr=L+((A.a-A.cal0)/7)*cw;c.globalAlpha=1;c.fillStyle=C["paper-2"];c.fillRect(xr,top-4,w-6-xr,h-top);
-  c.globalAlpha=.6;c.strokeStyle=C["rule-strong"];c.lineWidth=1;c.beginPath();c.moveTo(xr+.5,top-4);c.lineTo(xr+.5,h);c.stroke();
+  /* shade the weeks the range covers */
+  {const col=o=>L+Math.floor((o-A.cal0)/7)*cw,lo=Math.max(A.a,A.cal0),hi=Math.min(A.b,A.cal0+26*7-1);
+   if(hi>=lo){const xr=col(lo),xe=col(hi)+cw;c.globalAlpha=1;c.fillStyle=C["paper-2"];c.fillRect(xr,top-4,Math.min(w-6,xe)-xr,h-top);
+     c.globalAlpha=.6;c.strokeStyle=C["rule-strong"];c.lineWidth=1;c.beginPath();c.moveTo(xr+.5,top-4);c.lineTo(xr+.5,h);c.stroke();}}
   ["MON","","WED","","FRI","",""].forEach((d,i)=>d&&efLabel(c,d,L-8,top+i*ch+ch/2,{size:7,align:"right"}));
   const ix=k=>{const i=A.keys.indexOf(k);return i<0?99:i;};let lastM=-1;
   for(let wk=0;wk<26;wk++){const m0=A.cal0+wk*7,dm=new Date(efOffD(m0)+"T00:00:00").getMonth();
@@ -5960,7 +6002,7 @@ function efCalTip(hit){const d=efOffD(hit.off);
   const D=EFA.day.get(hit.off);if(!D)return `<b>${efWdl(d)}</b>${hit.kind==="we"?" · weekend":" · nothing logged"}<div class="hint">click for the day</div>`;
   return `<b>${efWdl(d)}</b>${ot} · ${efFh(D.tot)} h`+[...D.by.entries()].sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const m=efM(k);return `<div class="r" style="--pen:var(--${m.col})"><i></i><span>${esc(m.l)}${m.sub?` <span class="faint">${esc(m.sub)}</span>`:""}</span><span>${efFh(v)}</span></div>`;}).join("")+`<div class="hint">click for the day's ledger</div>`;}
 /* stacked dot columns per week (or per day) */
-function efWkDraw(c,w,h,tm,dt,s){const A=EFA,C=efC(s.cv),B=A.B,n=B.length,L=32,top=14,bot=24,y0=h-bot,cw=(w-L-8)/n,u=A.dayMode?.5:1,tgt=A.dayMode?EF_DAY:EF_DAY*5;s.hits=[];
+function efWkDraw(c,w,h,tm,dt,s){const A=EFA,C=efC(s.cv),B=A.B,n=B.length,L=32,top=14,bot=24,y0=h-bot,cw=(w-L-8)/n,u=A.mode==="day"?.5:A.mode==="week"?1:4,tgt=A.mode==="day"?EF_DAY:A.mode==="week"?EF_DAY*5:EF_DAY*21;s.hits=[];
   const m=cw>=200?6:cw>=90?4:cw>=44?2:1,maxH=Math.max(tgt*1.12,...B.map(b=>b.tot)),rows=Math.ceil(maxH/u/m),pitch=Math.min(14,(y0-top)/rows),hp=Math.min(pitch,cw*.8/m),r=Math.min(pitch,hp)*.4;
   const yT=y0-(tgt/u/m)*pitch;c.globalAlpha=.7;c.strokeStyle=C["ink-3"];c.setLineDash([4,4]);c.lineWidth=1;c.beginPath();c.moveTo(L,yT);c.lineTo(w-8,yT);c.stroke();c.setLineDash([]);efLabel(c,`${tgt} h`,L-6,yT,{size:7.5,align:"right"});
   const el=motionOn()?performance.now()-s.born:1e9,every=Math.ceil(n/10);
@@ -5973,8 +6015,8 @@ function efWkDraw(c,w,h,tm,dt,s){const A=EFA,C=efC(s.cv),B=A.B,n=B.length,L=32,t
     if(i%every===0||A.dayMode)efLabel(c,bk.l,xc,h-9,{size:7.5,color:bk.a<=0&&bk.b>=0?C.ink:C["ink-3"]});
     if(n<=13&&bk.tot&&pb>=1)efLabel(c,efFh(bk.tot),xc,y0-pitch*Math.ceil(seq.length/m)-8,{mono:true,size:9,weight:500,color:C["ink-2"]});
     s.hits.push({x:xc,y:(top+y0)/2,rx:cw/2,ry:(y0-top)/2+8,b:bk});});}
-function efWkTip(hit){const bk=hit.b,title=EFA.dayMode?efWdl(efOffD(bk.a)):`Week of ${efSh(efOffD(bk.a))}`;if(!bk.tot)return `<b>${title}</b><div class="hint">nothing logged</div>`;
-  return `<b>${title}</b> · ${efFh(bk.tot)} h`+[...bk.by.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>{const m=efM(k);return `<div class="r" style="--pen:var(--${m.col})"><i></i><span>${esc(m.l)}${m.sub?` <span class="faint">${esc(m.sub)}</span>`:""}</span><span>${efFh(v)}</span></div>`;}).join("")+`<div class="hint">${EFA.dayMode?"click for the day":"click to open this week in the sheet"}</div>`;}
+function efWkTip(hit){const bk=hit.b,title=EFA.mode==="day"?efWdl(efOffD(bk.a)):EFA.mode==="month"?efFmt(bk.m+"-01",{month:"long",year:"numeric"}):`Week of ${efSh(efOffD(bk.a))}`;if(!bk.tot)return `<b>${title}</b><div class="hint">nothing logged</div>`;
+  return `<b>${title}</b> · ${efFh(bk.tot)} h`+[...bk.by.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>{const m=efM(k);return `<div class="r" style="--pen:var(--${m.col})"><i></i><span>${esc(m.l)}${m.sub?` <span class="faint">${esc(m.sub)}</span>`:""}</span><span>${efFh(v)}</span></div>`;}).join("")+`<div class="hint">${EFA.mode==="day"?"click for the day":EFA.mode==="month"?"click to see this month":"click to open this week in the sheet"}</div>`;}
 /* activity mix: one ring of dots */
 const efMixTotals=R=>EF_ORD.map(a=>[a,efSum(R.filter(e=>e.activity===a))]).filter(x=>x[1]>0);
 function efMixDraw(c,w,h,tm,dt,s){const C=efC(s.cv),M=efMixTotals(EFA.R),tot=M.reduce((a,b)=>a+b[1],0)||1,N=80,cx=w/2,cy=h/2,R1=Math.min(w,h)/2-8,p=efEase(efProg(s,1100));let idx=0;
@@ -6015,7 +6057,7 @@ function efReworkHTML(A,dem){const rw=A.R.filter(e=>{const t=efTaskOf(e.taskId);
   const by=[...new Set(rw.map(e=>e.taskId))].map(id=>[id,efSum(rw.filter(e=>e.taskId===id))]).sort((a,b)=>b[1]-a[1]),mx=Math.max(...by.map(b=>b[1]));
   return `<div class="ef-big ef-bad">${efFh(tot)}<small>h · ${efPct(tot,dem)}% of demand work</small></div>`+by.map(([id,h])=>{const t=efTaskOf(id);return `<div class="ef-erow" data-id="${id}"><span class="n"><b class="mono">${esc(t.demandId||"")}</b> <span class="faint">${esc(t.title)}</span></span><span class="v">${efFh(h)} h</span>${efBarDots(h,Math.max(.5,mx/30),30,"bad")}</div>`;}).join("");}
 function efRhythmHTML(A){const nm=["Mon","Tue","Wed","Thu","Fri"];
-  const av=nm.map((_,i)=>{const es=A.R.filter(e=>efDow(e.date)===i+1),n=new Set(es.map(e=>e.date)).size||1;return {d:efSum(es.filter(e=>e.taskId))/n,o:efSum(es.filter(e=>!e.taskId))/n};});
+  const av=nm.map((_,i)=>{const es=A.R.filter(e=>efDow(e.date)===i+1),n=new Set(es.map(e=>e.date)).size||1;return {d:efSum(es.filter(e=>e.taskId||e.epicId))/n,o:efSum(es.filter(e=>!e.taskId&&!e.epicId))/n};});
   const best=Math.max(...av.map(v=>v.d));
   return `<div class="ef-rh">${av.map((v,i)=>{const nd=Math.round(v.d*2),no=Math.round(v.o*2);let s=`<svg width="10" height="100" aria-hidden="true">`;
     for(let j=0;j<20;j++)s+=`<circle cx="5" cy="${97.5-j*5}" r="${j<nd+no?2.1:.9}" style="fill:var(--${j<nd?"pen-2":j<nd+no?"ink-3":"ink-4"})"/>`;
@@ -6052,9 +6094,10 @@ function openEfDay(date,hiKey){let d=document.getElementById("efDrw");
   if(d.querySelector("#efDrwLeave"))d.querySelector("#efDrwLeave").onclick=()=>{efClearOff(date);renderApp();openEfDay(date,hiKey);toast("No longer a day off");};
   d.querySelectorAll(".ef-de").forEach(r=>{const e=state.efforts.find(x=>x.id===r.dataset.id);if(!e)return;r.querySelector('[data-op="ed"]').onclick=()=>efEdit(e);r.querySelector('[data-op="rm"]').onclick=()=>efDelete(e);});}
 function efCSV(){if(!state.efforts.length){toast("Nothing logged yet",true);return;}
-  const rows=[["Date","Weekday","Demand ID","Demand title","Bucket","Activity","Hours","Subtask","What I did"]];
+  const rows=[["Date","Weekday","Epic","Demand ID","Demand title","Bucket","Activity","Hours","Subtask","What I did"]];
   state.efforts.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.createdAt-b.createdAt).forEach(e=>{const t=efTaskOf(e.taskId);
-    rows.push([e.date,efFmt(e.date,{weekday:"short"}),t?t.demandId:"",t?t.title:(e.taskId?"(deleted demand)":""),e.taskId?"":EF_BUCKETS[e.bucket].l,e.activity,e.hours,efSubTitle(t,e.subtaskId),e.note]);});
+    const ep=e.epicId?epicById(e.epicId):t&&t.epicId?epicById(t.epicId):null;
+    rows.push([e.date,efFmt(e.date,{weekday:"short"}),ep?(ep.code||ep.name):(e.epicId?"(deleted epic)":""),t?t.demandId:"",t?t.title:(e.taskId?"(deleted demand)":e.epicId?"(epic-level work)":""),e.taskId||e.epicId?"":EF_BUCKETS[e.bucket].l,e.activity,e.hours,efSubTitle(t,e.subtaskId),e.note]);});
   const csv="﻿"+rows.map(r=>r.map(csvCell).join(",")).join("\r\n");
   const b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="effort-"+todayStr()+".csv";a.click();URL.revokeObjectURL(a.href);
   toast("Exported "+(rows.length-1)+" time entries (CSV)");}
@@ -6095,18 +6138,20 @@ function rvPeriod(){const P=rvPeriods(),k=viewPref("rv.period","fy");
   return P[k]?{k,...P[k]}:{k:"fy",...P.fy};}
 const rvFirstDelivered=t=>{const d=deliveredDates(t);return d.length?d.slice().sort()[0]:"";};
 function rvStats(from,to){const end=to>todayStr()?todayStr():to,inP=d=>d&&d>=from&&d<=to;
-  const del=state.tasks.map(t=>({t,d:rvFirstDelivered(t)})).filter(x=>inP(x.d)).sort((a,b)=>a.d.localeCompare(b.d));
-  const ef=state.efforts.filter(e=>inP(e.date)),hours=efSum(ef),dem=efSum(ef.filter(e=>e.taskId));
+  /* a delivery = the first move to Delivered in each round, so a demand re-delivered after a changed requirement counts again */
+  const del=state.tasks.flatMap(t=>roundDeliveries(t).filter(x=>inP(x.d)).map(x=>({t,d:x.d,r:x.r,from:x.from}))).sort((a,b)=>a.d.localeCompare(b.d));
+  const ef=state.efforts.filter(e=>inP(e.date)),hours=efSum(ef),dem=efSum(ef.filter(e=>e.taskId||e.epicId));
   const hoursOf=id=>efSum(ef.filter(e=>e.taskId===id));
-  const rw=del.filter(x=>reworkCount(x.t)>0).length,withDue=del.filter(x=>x.t.dueDate),onTime=withDue.filter(x=>x.d<=x.t.dueDate).length;
-  const leads=del.filter(x=>x.t.receivedDate&&x.t.receivedDate<=x.d).map(x=>Math.round((new Date(x.d+"T00:00:00")-new Date(x.t.receivedDate+"T00:00:00"))/864e5));
+  const dts=[...new Set(del.map(x=>x.t))],rw=dts.filter(t=>reworkCount(t)>0).length,withDue=del.filter(x=>x.t.dueDate&&x.r===roundCount(x.t)),onTime=withDue.filter(x=>x.d<=x.t.dueDate).length;
+  const leads=del.filter(x=>x.from&&x.from<=x.d).map(x=>Math.round((new Date(x.d+"T00:00:00")-new Date(x.from+"T00:00:00"))/864e5));
   const worked=new Set([...del.map(x=>x.t.id),...ef.filter(e=>e.taskId&&rvTask(e.taskId)).map(e=>e.taskId)]);
-  const epics=[...new Set([...worked].map(id=>(rvTask(id)||{}).epicId).filter(Boolean))].map(epicById).filter(Boolean);
+  const epics=[...new Set([...[...worked].map(id=>(rvTask(id)||{}).epicId),...ef.map(e=>e.epicId)].filter(Boolean))].map(epicById).filter(Boolean);
   const learn=ef.filter(e=>e.bucket==="lrn"||e.activity==="Learning");
-  return {from,to,end,del,ef,hours,dem,hoursOf,rw,rwPct:del.length?Math.round(rw/del.length*100):null,onTime,withDue:withDue.length,onTimePct:withDue.length?Math.round(onTime/withDue.length*100):null,
+  return {from,to,end,del,ef,hours,dem,hoursOf,rw,rwPct:dts.length?Math.round(rw/dts.length*100):null,onTime,withDue:withDue.length,onTimePct:withDue.length?Math.round(onTime/withDue.length*100):null,
     avgLead:leads.length?Math.round(leads.reduce((a,b)=>a+b,0)/leads.length):null,wins:state.wins.filter(w=>inP(w.date)).sort((a,b)=>a.date.localeCompare(b.date)),worked,epics,
     reqs:[...new Set(del.map(x=>x.t.requestor).filter(Boolean))],themes:[...new Set(del.map(x=>x.t.theme).filter(Boolean))],
     objects:[...new Set(del.flatMap(x=>x.t.objects.map(o=>o.name)).filter(Boolean))],meetings:state.meetings.filter(m=>inP(m.date)),learn,
+    changes:state.tasks.flatMap(t=>changeEvents(t).filter(e=>inP(isoTs(e.ts))).map(e=>({t,e}))),chH:efSum(ef.filter(e=>{const t=rvTask(e.taskId);return t&&roundOn(t,e.date)>1;})),
     topics:[...new Set(learn.map(e=>e.note.trim()).filter(Boolean))].slice(0,4)};}
 function rvPrev(from,to){const n=Math.round((new Date(to+"T00:00:00")-new Date(from+"T00:00:00"))/864e5),pto=efAdd(from,-1);return rvStats(efAdd(pto,-n),pto);}
 /* what to put first: demands you starred, then where your hours went, then the most objects */
@@ -6118,6 +6163,7 @@ function rvDraft(P,S,R){const o=[],n=S.del.length;
   const lead=S.epics.filter(e=>e.role==="lead").map(e=>e.code||e.name),con=S.epics.filter(e=>e.role!=="lead").map(e=>e.code||e.name);
   if(lead.length)o.push(`I led ${rvList(lead)}${con.length?` and contributed to ${rvList(con)}`:""}.`);else if(con.length)o.push(`I contributed to ${rvList(con)}.`);
   if(S.hours)o.push(`I logged ${efFh(Math.round(S.hours))} hours, ${efPct(S.dem,S.hours)}% of it on demand work.`);
+  if(S.changes.length)o.push(`When requirements changed after delivery (${S.changes.length} time${S.changes.length===1?"":"s"}), I took the work back up${S.chH?` — ${efFh(Math.round(S.chH*10)/10)} hours on the changed requirements`:""}.`);
   if(S.rwPct!=null)o.push(`${S.rwPct}% of deliveries needed rework${R.rwPct!=null?` (${R.rwPct}% the period before)`:""}${S.onTimePct!=null?`, and ${S.onTimePct}% landed on or before their due date`:""}.`);
   if(S.learn.length)o.push(`I spent ${efFh(Math.round(efSum(S.learn)))} hours learning${S.topics.length?` — ${rvList(S.topics)}`:""}.`);
   if(S.wins.length)o.push(`Along the way: ${S.wins.slice(0,3).map(w=>w.text.replace(/[.\s]+$/,"")).join("; ")}.`);
@@ -6134,7 +6180,8 @@ function rvDoc(P,S,R,note){const H=[],M=[],md=x=>String(x??"").replace(/\|/g,"\\
   const g=[];const add=(h,m)=>g.push({h,m:m||h.replace(/<[^>]+>/g,"")});
   add(`<b>${S.del.length}</b> demand${S.del.length===1?"":"s"} delivered${S.epics.length?` across ${S.epics.length} epic${S.epics.length===1?"":"s"}`:""}${S.themes.length?` · ${esc(S.themes.join(", "))}`:""}`);
   if(S.hours)add(`<b>${efFh(Math.round(S.hours))} h</b> logged — ${efPct(S.dem,S.hours)}% on demand work`);
-  if(S.rwPct!=null)add(`<b>${S.rwPct}%</b> of deliveries needed rework${cmp(S.rwPct,R.rwPct,"%","low")}`);
+  if(S.rwPct!=null)add(`<b>${S.rwPct}%</b> of delivered demands needed rework${cmp(S.rwPct,R.rwPct,"%","low")}`);
+  if(S.changes.length)add(`<b>${S.changes.length}</b> requirement change${S.changes.length===1?"":"s"} absorbed after delivery${S.chH?` — ${efFh(Math.round(S.chH*10)/10)} h of work on changed requirements, not counted as rework`:""}`);
   if(S.onTimePct!=null)add(`<b>${S.onTimePct}%</b> delivered on or before the due date (${S.onTime} of ${S.withDue})`);
   if(S.avgLead!=null)add(`<b>${S.avgLead} days</b> on average from request to delivery${cmp(S.avgLead,R.avgLead," days","low")}`);
   if(S.reqs.length)add(`Work for <b>${S.reqs.length}</b> requestor${S.reqs.length===1?"":"s"}: ${esc(S.reqs.join(", "))}`);
@@ -6152,13 +6199,13 @@ function rvDoc(P,S,R,note){const H=[],M=[],md=x=>String(x??"").replace(/\|/g,"\\
       H.push(`<p><b>${v.icon} ${v.l}</b></p><ul>${ws.map(w=>{const t=rvTask(w.taskId);return `<li>${rvLong(w.date)} — ${esc(w.text)}${t?` <span class="meta">(${esc(t.demandId||t.title)})</span>`:""}</li>`;}).join("")}</ul>`);
       M.push(`**${v.icon} ${v.l}**`,``,...ws.map(w=>{const t=rvTask(w.taskId);return `- ${rvLong(w.date)} — ${w.text}${t?` (${t.demandId||t.title})`:""}`;}),``);});}
   table("Epics",["Epic","My role","My part","Delivered in period","Hours"],S.epics.map(e=>{const ts=tasksForEpic(e.id);
-    return [epicLabel(e),e.role==="lead"?"Lead":"Contributor",e.myScope||"—",String(S.del.filter(x=>x.t.epicId===e.id).length)+" of "+ts.length,efFh(Math.round(ts.reduce((a,t)=>a+S.hoursOf(t.id),0)))||"0"];}));
-  table("Delivered",["Demand","Title","Type","Theme","Requestor","Delivered","Days","Hours","Notes"],S.del.map(({t,d})=>{
-    const lead=t.receivedDate&&t.receivedDate<=d?String(Math.round((new Date(d+"T00:00:00")-new Date(t.receivedDate+"T00:00:00"))/864e5)):"—",h=efSum(efFor(t.id));
-    return [t.demandId||"—",t.title,t.type,t.theme||"—",t.requestor||"—",d,lead,h?efFh(Math.round(h*10)/10):"—",[reworkCount(t)?"reworked":"",t.dueDate&&d>t.dueDate?"after due date":""].filter(Boolean).join(", ")||"—"];}));
+    return [epicLabel(e),e.role==="lead"?"Lead":"Contributor",e.myScope||"—",String(S.del.filter(x=>x.t.epicId===e.id).length)+" of "+ts.length,efFh(Math.round(ts.reduce((a,t)=>a+S.hoursOf(t.id),0)+efSum(S.ef.filter(x=>x.epicId===e.id))))||"0"];}));
+  table("Delivered",["Demand","Title","Type","Theme","Requestor","Delivered","Days","Hours","Notes"],S.del.map(({t,d,r,from})=>{
+    const lead=from&&from<=d?String(Math.round((new Date(d+"T00:00:00")-new Date(from+"T00:00:00"))/864e5)):"—",h=efSum(efFor(t.id));
+    return [t.demandId||"—",t.title+(r>1?` (round ${r})`:""),t.type,t.theme||"—",t.requestor||"—",d,lead,h?efFh(Math.round(h*10)/10):"—",[r>1?"after a requirement change":"",reworkCount(t)?"reworked":"",t.dueDate&&d>t.dueDate&&r===roundCount(t)?"after due date":""].filter(Boolean).join(", ")||"—"];}));
   if(S.hours){const by=(f)=>{const m=new Map();S.ef.forEach(e=>{const k=f(e);if(k)m.set(k,(m.get(k)||0)+e.hours);});return [...m.entries()].sort((a,b)=>b[1]-a[1]);};
     const fmt=a=>a.map(([k,h])=>({h:`${esc(k)} — ${efFh(Math.round(h))} h (${efPct(h,S.hours)}%)`,m:`${k} — ${efFh(Math.round(h))} h (${efPct(h,S.hours)}%)`}));
-    list("Where the time went — by theme",fmt(by(e=>{const t=rvTask(e.taskId);return e.taskId?(t&&t.theme)||"No theme":"Not demand work";})));
+    list("Where the time went — by theme",fmt(by(e=>{const t=rvTask(e.taskId);return e.taskId?(t&&t.theme)||"No theme":e.epicId?"◆ Epic-level work":"Not demand work";})));
     list("Where the time went — by activity",fmt(by(e=>e.activity)));}
   if(!S.del.length&&!S.hours&&!S.wins.length){H.push(`<p><i>Nothing delivered, logged or noted in this period yet.</i></p>`);M.push(`_Nothing delivered, logged or noted in this period yet._`);}
   return {html:H.join(""),md:M.join("\n")};}
@@ -6186,7 +6233,7 @@ function renderReview(){const host=document.getElementById("detail");efHideTip()
       <div class="ef-stack">
         <div class="ck-unit"><div class="ck-head"><h2>Month by month</h2><span class="ck-meta">● delivered · ▮ hours logged · ◆ wins</span></div><canvas class="rv-months" id="rvMonths"></canvas></div>
         <div class="ck-unit"><div class="ck-head"><h2>Delivered</h2><span class="ck-meta">${S.del.length} · ★ to feature a demand in Highlights</span></div>
-          ${S.del.length?S.del.map(({t,d})=>{const h=efSum(efFor(t.id));return `<div class="rv-row ${hl.has(t.id)?"hl":""}" data-id="${t.id}"><button class="rv-star ${t.star?"on":""}" data-star="${t.id}" title="${t.star?"Featured — click to stop featuring":"Feature this in Highlights"}">★</button><span class="mono">${esc(t.demandId||"—")}</span><a href="#" class="t" data-go="${t.id}">${esc(t.title)}</a><span class="mono faint">${efSh(d)}</span><span class="mono">${h?efFh(Math.round(h))+" h":""}</span><span class="fl">${reworkCount(t)?`<span class="ef-tag" style="--pen:var(--bad)">↻</span>`:""}${t.dueDate&&d>t.dueDate?`<span class="ef-tag" style="--pen:var(--watch)">late</span>`:""}</span></div>`;}).join(""):`<div class="faint" style="font-size:12px">Nothing delivered in this period yet.</div>`}</div>
+          ${S.del.length?S.del.map(({t,d,r})=>{const h=efSum(efFor(t.id));return `<div class="rv-row ${hl.has(t.id)?"hl":""}" data-id="${t.id}"><button class="rv-star ${t.star?"on":""}" data-star="${t.id}" title="${t.star?"Featured — click to stop featuring":"Feature this in Highlights"}">★</button><span class="mono">${esc(t.demandId||"—")}</span><a href="#" class="t" data-go="${t.id}">${esc(t.title)}</a><span class="mono faint">${efSh(d)}</span><span class="mono">${h?efFh(Math.round(h))+" h":""}</span><span class="fl">${r>1?`<span class="ef-tag" style="--pen:var(--pen-5)">round ${r}</span>`:""}${reworkCount(t)?`<span class="ef-tag" style="--pen:var(--bad)">↻</span>`:""}${t.dueDate&&d>t.dueDate?`<span class="ef-tag" style="--pen:var(--watch)">late</span>`:""}</span></div>`;}).join(""):`<div class="faint" style="font-size:12px">Nothing delivered in this period yet.</div>`}</div>
       </div>
       <div class="ef-stack">
         <div class="ck-unit"><div class="ck-head"><h2>Wins</h2><span class="ck-meta">${S.wins.length} · press W anywhere</span></div>
@@ -6216,9 +6263,9 @@ function renderReview(){const host=document.getElementById("detail");efHideTip()
   efHover(DK.scope(q("#rvMonths"),rvMonthsDraw),rvMonthsTip);}
 function rvTimeRows(S){if(!S.hours)return `<div class="faint" style="font-size:12px;line-height:1.55">Log hours (⏱ or T) and this shows where your time went — by theme and by activity.</div>`;
   const by=f=>{const m=new Map();S.ef.forEach(e=>{const k=f(e);m.set(k,(m.get(k)||0)+e.hours);});return [...m.entries()].sort((a,b)=>b[1]-a[1]);};
-  const th=by(e=>{const t=rvTask(e.taskId);return e.taskId?(t&&t.theme)||"No theme":"Not demand work";}),ac=by(e=>e.activity),mx=Math.max(...th.map(x=>x[1]),...ac.map(x=>x[1]),1);
+  const th=by(e=>{const t=rvTask(e.taskId);return e.taskId?(t&&t.theme)||"No theme":e.epicId?"◆ Epic-level work":"Not demand work";}),ac=by(e=>e.activity),mx=Math.max(...th.map(x=>x[1]),...ac.map(x=>x[1]),1);
   const row=(k,h,pen)=>`<div class="ef-brow"><span class="n"><span class="ef-pd" style="--pen:var(--${pen})"></span>${esc(k)}</span><span class="v">${efFh(Math.round(h))} h · ${efPct(h,S.hours)}%</span>${efBarDots(h,mx/30,30,pen)}</div>`;
-  return `<div class="ef-lb" style="margin-top:2px">By theme</div>${th.map(([k,h])=>row(k,h,k==="Not demand work"?"ink-3":efThemePen(k))).join("")}<div class="ef-lb" style="margin-top:12px">By activity</div>${ac.map(([k,h])=>row(k,h,EF_ACTC[k]||"ink-3")).join("")}`;}
+  return `<div class="ef-lb" style="margin-top:2px">By theme</div>${th.map(([k,h])=>row(k,h,k==="Not demand work"?"ink-3":k==="◆ Epic-level work"?"pen-5":efThemePen(k))).join("")}<div class="ef-lb" style="margin-top:12px">By activity</div>${ac.map(([k,h])=>row(k,h,EF_ACTC[k]||"ink-3")).join("")}`;}
 /* month by month: hours as a dot column, delivered demands as big dots beside it, wins as diamonds on top */
 function rvMonths(S){const out=[];let d=S.from.slice(0,7)+"-01";while(d<=S.to&&out.length<36){const m=d.slice(0,7),nx=efAdd(efAdd(d,32).slice(0,7)+"-01",0);
   out.push({m,d,fut:d>todayStr(),hours:efSum(S.ef.filter(e=>e.date.slice(0,7)===m)),del:S.del.filter(x=>x.d.slice(0,7)===m),wins:S.wins.filter(w=>w.date.slice(0,7)===m)});d=nx;}return out;}
@@ -6265,6 +6312,138 @@ document.addEventListener("keydown",e=>{
   const a=document.activeElement;if(a&&(/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)||a.isContentEditable))return;
   e.preventDefault();openWin(view==="demands"&&activeTask()?{taskId:activeId}:{});});
 {const b=document.getElementById("btnWinTop");if(b)b.onclick=()=>openWin(view==="demands"&&activeTask()?{taskId:activeId}:{});}
+
+/* ===================== ROUNDS — when the requirement itself changes =====================
+   A status move with cause "change" starts a new round. It is never rework: rework is a move to
+   Bug, a defect in delivered work. Deliveries, hours and estimates split by round, so going back
+   to the drawing board neither looks like a mistake nor hides the extra work. */
+const isChange=e=>!!(e&&e.type==="status"&&e.cause==="change");
+function changeEvents(t){return (t.timeline||[]).filter(isChange).sort((a,b)=>a.ts-b.ts);}
+function roundCount(t){return 1+changeEvents(t).length;}
+function roundOn(t,date){let r=1;changeEvents(t).forEach(e=>{if(isoTs(e.ts)<=date)r++;});return r;}
+function roundStarts(t){return [t.receivedDate||isoTs(t.createdAt),...changeEvents(t).map(e=>isoTs(e.ts))];}
+/* every delivery that counts: the first move to Delivered inside each round */
+function roundDeliveries(t){const st=roundStarts(t),out=[];
+  (t.timeline||[]).filter(e=>e.type==="status"&&e.to==="delivered").sort((a,b)=>a.ts-b.ts).forEach(e=>{const d=isoTs(e.ts),r=roundOn(t,d);if(!out.some(x=>x.r===r))out.push({r,d,from:st[r-1]||st[0]});});
+  return out;}
+function roundEstimates(t){const ch=changeEvents(t),add=ch.reduce((a,e)=>a+(+e.est||0),0),total=+t.estimate||0;return [Math.max(0,total-add),...ch.map(e=>+e.est||0)];}
+const needsComeback=(t,v)=>["delivered","closed"].includes(t.status)&&["open","progress","bug"].includes(v);
+/* a delivered (or closed) demand moving backwards: ask why, once */
+function openComeback(t,v,done,cancel){const root=document.getElementById("modalRoot"),n=roundCount(t)+1,st={why:v==="bug"?"defect":"change",to:v==="open"?"open":"progress"};
+  root.innerHTML=`<div class="modal-bg"><div class="modal efx ef-modal"><h2>↩ ${esc(t.demandId||t.title)} is coming back — why?</h2>
+    <p class="faint" style="font-size:12px;margin-top:-6px;line-height:1.5">It was ${STATUS[t.status].label.toLowerCase()}. The reason decides how the work from here on is counted — a changed requirement is not a mistake.</p>
+    <div class="cb-opts">
+      <button class="cb-opt" data-why="defect" style="--pen:var(--bad)"><b>🐞 A defect in my work</b><span>Goes to Bug / rework, and counts as rework.</span></button>
+      <button class="cb-opt" data-why="change" style="--pen:var(--pen-5)"><b>🔄 The requirement changed</b><span>Starts round ${n}. Never counts as rework — round ${n-1} stays delivered, and its hours stay with it.</span></button>
+      <button class="cb-opt" data-why="reopen" style="--pen:var(--ink-3)"><b>↩ Just reopening</b><span>No label — say it was closed by mistake.</span></button></div>
+    <div class="ef-qc" id="cbMore" style="margin-top:12px">
+      <div class="ef-qrow"><div><span class="ef-lb">Back to</span><div class="ef-row"><button class="ef-chip" data-to="progress">In progress</button><button class="ef-chip" data-to="open">Open — waiting for the new spec</button></div></div>
+        <div id="cbEstW"><span class="ef-lb">Add to the estimate · optional</span><div class="ef-row"><input id="cbEst" class="mono" placeholder="hours" style="width:90px" autocomplete="off"><span class="faint" style="font-size:11px">h for round ${n}</span></div></div></div>
+      <div id="cbNoteW"><span class="ef-lb">What changed? · optional</span><textarea id="cbNote" rows="2" placeholder="e.g. Business now wants the split by profit center instead of cost center"></textarea></div></div>
+    <div class="modal-foot"><button class="ghost" id="cbCancel">Cancel</button><button class="primary" id="cbOk"></button></div></div></div>`;
+  const q=s=>root.querySelector(s),bg=q(".modal-bg"),close=()=>{root.innerHTML="";};
+  const no=()=>{close();if(cancel)cancel();};bg.onclick=e=>{if(e.target===bg)no();};q("#cbCancel").onclick=no;
+  const sync=()=>{root.querySelectorAll("[data-why]").forEach(b=>b.classList.toggle("on",b.dataset.why===st.why));root.querySelectorAll("[data-to]").forEach(b=>b.classList.toggle("on",b.dataset.to===st.to));
+    q("#cbMore").style.display=st.why==="defect"?"none":"";q("#cbEstW").style.display=q("#cbNoteW").style.display=st.why==="change"?"":"none";
+    q("#cbOk").textContent=st.why==="defect"?"Move to Bug / rework":st.why==="change"?`Start round ${n}`:`Move to ${STATUS[st.to].label}`;};
+  root.querySelectorAll("[data-why]").forEach(b=>b.onclick=()=>{st.why=b.dataset.why;sync();});
+  root.querySelectorAll("[data-to]").forEach(b=>b.onclick=()=>{st.to=b.dataset.to;sync();});
+  q("#cbOk").onclick=()=>{const was=t.status;
+    if(st.why==="defect"){logTimeline(t,"status",was,"bug");t.status="bug";}
+    else if(st.why==="change"){const est=Math.round((parseFloat(String(q("#cbEst").value).replace(",","."))||0)*4)/4;
+      logTimeline(t,"status",was,st.to,q("#cbNote").value.trim());const ev=t.timeline[t.timeline.length-1];ev.cause="change";
+      if(est>0){ev.est=est;t.estimate=(+t.estimate||0)+est;}t.status=st.to;}
+    else{logTimeline(t,"status",was,st.to);t.status=st.to;}
+    touch(t);close();if(done)done();
+    toast(st.why==="defect"?"Status → Bug / rework · logged in History":st.why==="change"?`🔄 Requirement changed — round ${n} started`:"Status → "+STATUS[t.status].label);};
+  sync();}
+/* fixing the past: a move to Bug that was really a changed requirement, and back */
+function bugToChange(t,ev){ev.to="progress";ev.cause="change";const later=(t.timeline||[]).filter(x=>x.type==="status"&&x.ts>ev.ts).sort((a,b)=>a.ts-b.ts)[0];
+  if(later&&later.from==="bug")later.from="progress";if(!later&&t.status==="bug")t.status="progress";touch(t);}
+function changeToBug(t,ev){ev.to="bug";ev.cause="";const later=(t.timeline||[]).filter(x=>x.type==="status"&&x.ts>ev.ts).sort((a,b)=>a.ts-b.ts)[0];
+  if(later&&["progress","open"].includes(later.from))later.from="bug";if(!later&&["progress","open"].includes(t.status))t.status="bug";touch(t);}
+
+/* ===================== EFFORT ON AN EPIC =====================
+   An epic's hours = its demands' hours + hours logged against the epic itself (calls, planning,
+   chasing other teams). Any period: the whole epic, a calendar month, or custom dates. */
+let epPer={mode:"all",month:"",from:"",to:""};
+const epicEfforts=e=>{const ids=new Set(tasksForEpic(e.id).map(t=>t.id));return state.efforts.filter(x=>x.epicId===e.id||ids.has(x.taskId));};
+const efMonthEnd=m=>efAdd(efAdd(m+"-01",32).slice(0,7)+"-01",-1);
+const efMonthShift=(m,n)=>{const d=new Date(+m.slice(0,4),+m.slice(5,7)-1+n,1);return d.getFullYear()+"-"+p2(d.getMonth()+1);};
+function epPeriod(all){const t=todayStr();
+  if(epPer.mode==="month"){const m=epPer.month||t.slice(0,7);return {from:m+"-01",to:efMonthEnd(m),l:efFmt(m+"-01",{month:"long",year:"numeric"})};}
+  if(epPer.mode==="custom"&&epPer.from&&epPer.to&&epPer.from<=epPer.to)return {from:epPer.from,to:epPer.to,l:`${rvLong(epPer.from)} – ${rvLong(epPer.to)}`};
+  const f=all.length?all.reduce((m,x)=>x.date<m?x.date:m,"9999"):t;return {from:f,to:t,l:"Whole epic"};}
+function renderEpicEffort(body,e){const all=epicEfforts(e).sort((a,b)=>a.date.localeCompare(b.date)||a.createdAt-b.createdAt);
+  if(epPer.mode==="custom"&&!epPer.from){epPer.from=efAdd(todayStr(),-30);epPer.to=todayStr();}
+  const P=epPeriod(all),es=all.filter(x=>x.date>=P.from&&x.date<=P.to),tot=efSum(es),ts=epicOrderedDemands(e),lvl=es.filter(x=>x.epicId),onDem=es.filter(x=>x.taskId);
+  const estSum=ts.reduce((a,t)=>a+(+t.estimate||0),0),life=efSum(all),lifeDem=efSum(all.filter(x=>x.taskId));
+  const rwH=efSum(onDem.filter(x=>{const t=rvTask(x.taskId);return t&&efStatusOn(t,x.date)==="bug";})),chH=efSum(onDem.filter(x=>{const t=rvTask(x.taskId);return t&&roundOn(t,x.date)>1;}));
+  const byDem=ts.map(t=>({t,h:efSum(onDem.filter(x=>x.taskId===t.id))})).filter(x=>x.h>0).sort((a,b)=>b.h-a.h),idle=ts.length-byDem.length;
+  const mx=Math.max(1,...byDem.map(x=>x.h),efSum(lvl));
+  const waves=(()=>{const m=new Map();onDem.forEach(x=>{const t=rvTask(x.taskId),w=(t&&t.wave)||"(no wave)";m.set(w,(m.get(w)||0)+x.hours);});if(lvl.length)m.set("◆ Epic-level work",efSum(lvl));return [...m.entries()].sort((a,b)=>b[1]-a[1]);})();
+  const mode=epPer.mode;
+  body.innerHTML=`<div class="efx ef-tab">
+    <div class="ef-wsh"><div class="ef-ctl"><div class="ef-sg" id="epP"><span class="cap">Period</span>${[["all","Whole epic"],["month","Month"],["custom","Custom"]].map(([k,l])=>`<button data-m="${k}" class="${k===mode?"on":""}">${l}</button>`).join("")}</div>
+        ${mode==="month"?`<span class="ef-row"><button class="sm ghost" id="epPrev" title="Month before">‹</button><b class="mono" style="min-width:132px;text-align:center;font-weight:500">${esc(P.l)}</b><button class="sm ghost" id="epNext" title="Month after">›</button></span>`:""}
+        ${mode==="custom"?`<span class="ef-row"><input type="date" id="epFrom" value="${P.from}" style="width:150px"><span class="faint">–</span><input type="date" id="epTo" value="${P.to}" style="width:150px"></span>`:""}</div>
+      <div class="ef-ctl"><button class="sm" id="epCopy" title="Hours by demand — formatted, for a status mail">⧉ Copy as table</button></div></div>
+    ${roHTML([{k:mode==="all"?"Hours · whole epic":"Hours · "+esc(P.l),v:U(efFh(Math.round(tot*10)/10),"h")},
+      {k:"On demands",v:U(efFh(Math.round(efSum(onDem)*10)/10),"h · "+byDem.length+" demand"+(byDem.length===1?"":"s"))},
+      {k:"Epic-level",v:U(efFh(Math.round(efSum(lvl)*10)/10),"h · calls, planning")},
+      {k:"Estimate vs actual",v:estSum?U(efFh(Math.round(lifeDem)),"/ "+efFh(estSum)+" h"):"—",cls:estSum&&lifeDem>estSum?"bad":"",title:"Whole life: hours on the epic's demands against their estimates added up"},
+      {k:"Rework",v:U(efFh(rwH),"h"),cls:rwH?"bad":"",title:"Hours logged while a demand was in Bug"},
+      {k:"Changed requirements",v:U(efFh(chH),"h"),title:"Hours in round 2 or later — not rework"}])}
+    <div class="ck-unit"><div class="ck-head"><h2>Log time on the epic itself</h2><span class="ck-meta">calls, planning, chasing other teams — work that belongs to no single demand</span></div><div id="epQc"></div></div>
+    <div class="ck-unit"><div class="ck-head"><h2>Month by month</h2><span class="ck-meta">the epic's whole life · coloured by demand · ◆ epic-level · click a month</span></div><canvas class="ep-months" id="epMonths"></canvas></div>
+    <div class="ef-gw">
+      <div class="ef-stack">
+        <div class="ck-unit"><div class="ck-head"><h2>By demand</h2><span class="ck-meta">${esc(P.l)}${idle?` · ${idle} demand${idle===1?"":"s"} with no hours`:""}</span></div>
+          ${byDem.map(({t,h})=>`<div class="ef-brow ep-go" data-id="${t.id}" title="Open the demand's Effort tab"><span class="n"><span class="ef-pd" style="--pen:var(--${efPen(t.id)})"></span><b class="mono">${esc(t.demandId||"")}</b> <span class="faint">${esc(t.title)}</span>${t.wave?` <span class="ef-tag">${esc(t.wave)}</span>`:""}</span><span class="v">${efFh(Math.round(h*10)/10)} h · ${efPct(h,tot)}%</span>${efBarDots(h,mx/30,30,efPen(t.id))}</div>`).join("")}
+          ${lvl.length?`<div class="ef-brow"><span class="n"><span class="ef-pd" style="--pen:var(--pen-5)"></span><b>◆ Epic-level work</b> <span class="faint">calls, planning, chasing</span></span><span class="v">${efFh(Math.round(efSum(lvl)*10)/10)} h · ${efPct(efSum(lvl),tot)}%</span>${efBarDots(efSum(lvl),mx/30,30,"pen-5")}</div>`:""}
+          ${!tot?`<div class="faint" style="font-size:12px">No hours in this period.</div>`:""}</div>
+        ${waves.length>1?`<div class="ck-unit"><div class="ck-head"><h2>By wave</h2><span class="ck-meta">${esc(P.l)}</span></div>${waves.map(([w,h])=>`<div class="ef-brow"><span class="n">${esc(w)}</span><span class="v">${efFh(Math.round(h*10)/10)} h · ${efPct(h,tot)}%</span>${efBarDots(h,Math.max(...waves.map(x=>x[1]))/30,30,w.startsWith("◆")?"pen-5":"pen-2")}</div>`).join("")}</div>`:""}
+      </div>
+      <div class="ef-stack">
+        <div class="ck-unit"><div class="ck-head"><h2>By activity</h2><span class="ck-meta">${efFh(Math.round(tot*10)/10)} h</span></div>${efActRows(es)}</div>
+        <div class="ck-unit"><div class="ck-head"><h2>Epic-level entries</h2><span class="ck-meta">${lvl.length} · ${esc(P.l)}</span></div>
+          ${lvl.slice().reverse().map(x=>`<div class="ef-de" data-id="${x.id}" style="--pen:var(--${EF_ACTC[x.activity]})"><i></i><div style="min-width:0"><span class="mono faint" style="font-size:10.5px">${efWdl(x.date)}</span><div>${x.note?linkify(x.note):`<span class="faint">(no details)</span>`}</div><div class="t"><span class="ef-tag" style="--pen:var(--${EF_ACTC[x.activity]})"><span class="ef-pd"></span>${esc(x.activity)}</span></div></div><div style="text-align:right"><span class="mono">${efFh(x.hours)} h</span><div class="ops"><button class="ghost sm" data-op="ed" title="Edit">✎</button><button class="ghost sm danger" data-op="rm" title="Delete">✕</button></div></div></div>`).join("")
+            ||`<div class="faint" style="font-size:12px;line-height:1.55">Nothing logged on the epic itself in this period. A call about the epic, wave planning, chasing another team — log it in the box above.</div>`}</div>
+      </div></div></div>`;
+  const q=s=>body.querySelector(s),rr=()=>renderEpicEffort(body,e);
+  body.querySelectorAll("#epP [data-m]").forEach(b=>b.onclick=()=>{epPer.mode=b.dataset.m;if(epPer.mode==="month"&&!epPer.month)epPer.month=todayStr().slice(0,7);rr();});
+  if(q("#epPrev")){q("#epPrev").onclick=()=>{epPer.month=efMonthShift(epPer.month||todayStr().slice(0,7),-1);rr();};q("#epNext").onclick=()=>{epPer.month=efMonthShift(epPer.month||todayStr().slice(0,7),1);rr();};}
+  if(q("#epFrom")){const ch=()=>{const f=q("#epFrom").value,t=q("#epTo").value;if(f&&t&&f<=t){epPer.from=f;epPer.to=t;rr();}};q("#epFrom").onchange=ch;q("#epTo").onchange=ch;}
+  efMountComposer(q("#epQc"),{key:"e:"+e.id},x=>efAfterLog(x,false));
+  body.querySelectorAll(".ep-go").forEach(r=>r.onclick=()=>{view="demands";activeId=r.dataset.id;activeTab="effort";renderApp();});
+  body.querySelectorAll(".ef-de[data-id]").forEach(r=>{const x=state.efforts.find(y=>y.id===r.dataset.id);if(!x)return;r.querySelector('[data-op="ed"]').onclick=()=>efEdit(x);r.querySelector('[data-op="rm"]').onclick=()=>efDelete(x);});
+  q("#epCopy").onclick=()=>{const head=["Demand","Title","Wave","Hours · "+P.l,"Hours · whole life","Estimate"];
+    const rows=ts.map(t=>[t.demandId||"—",t.title,t.wave||"—",efFh(Math.round(efSum(onDem.filter(x=>x.taskId===t.id))*10)/10),efFh(Math.round(efSum(efFor(t.id))*10)/10),+t.estimate?efFh(+t.estimate):"—"]);
+    rows.push(["◆","Epic-level work (calls, planning)","—",efFh(Math.round(efSum(lvl)*10)/10),efFh(Math.round(efSum(all.filter(x=>x.epicId))*10)/10),"—"],["","Total","",efFh(Math.round(tot*10)/10),efFh(Math.round(life*10)/10),estSum?efFh(estSum):"—"]);
+    const html=`<p><b>◆ ${esc(epicLabel(e))} — hours, ${esc(P.l)}</b></p><table border="1" cellpadding="4" style="border-collapse:collapse"><tr>${head.map(h=>`<th>${esc(h)}</th>`).join("")}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</table>`;
+    const text=[`◆ ${epicLabel(e)} — hours, ${P.l}`,head.join("\t"),...rows.map(r=>r.join("\t"))].join("\n");
+    copyRich(html,text).then(()=>toast("Copied — paste into a mail or Excel")).catch(()=>toast("Copy failed",true));};
+  const months=(()=>{const out=[];if(!all.length)return out;let m=all[0].date.slice(0,7);const end=todayStr().slice(0,7);while(m<=end&&out.length<60){const xs=all.filter(x=>x.date.slice(0,7)===m),by=new Map();xs.forEach(x=>{const k=x.epicId?"◆":x.taskId;by.set(k,(by.get(k)||0)+x.hours);});out.push({m,tot:efSum(xs),by});m=efMonthShift(m,1);}return out;})();
+  efHover(DK.scope(q("#epMonths"),(c,w,h,tm,dt,s)=>{const C=efC(s.cv),n=Math.max(1,months.length),L=10,cw=(w-L*2)/n,y0=h-20,top=10,p=efEase(efProg(s,1000));s.hits=[];
+    const maxH=Math.max(8,...months.map(x=>x.tot)),unit=maxH>160?8:maxH>80?4:maxH>40?2:1,pitch=Math.min(7,(y0-top)/Math.ceil(maxH/unit)),r=Math.min(2.6,pitch*.42,cw*.3);
+    for(let x=L;x<=w-L;x+=5)efDot(c,x,y0+4,.6,C["ink-4"]);
+    months.forEach((mo,i)=>{const xc=L+cw*i+cw/2,sel=epPer.mode==="month"&&epPer.month===mo.m,hov=s.hv&&s.hv.i===i;
+      if(sel||hov){c.globalAlpha=1;c.fillStyle=C["paper-2"];c.fillRect(L+cw*i+1,2,cw-2,h-6);if(sel){c.globalAlpha=.8;c.fillStyle=C.ink;c.fillRect(L+cw*i+1,h-3,cw-2,2);}}
+      let y=y0-pitch/2,j=0;const show=Math.ceil(mo.tot/unit*efEase(p*1.5-i/n*.5));
+      [...mo.by.entries()].sort((a,b)=>(a[0]==="◆")-(b[0]==="◆")||b[1]-a[1]).forEach(([k,v])=>{const col=k==="◆"?C["pen-5"]:C[efPen(k)];for(let z=0;z<Math.round(v/unit);z++){if(j++>=show)return;efDot(c,xc,y,r,col,.9);y-=pitch;}});
+      if(n<=24||i%2===0)efLabel(c,efFmt(mo.m+"-01",{month:"short"}).toUpperCase(),xc,h-9,{size:7.5,color:sel?C.ink:C["ink-3"]});
+      s.hits.push({x:xc,y:h/2,rx:cw/2,ry:h/2,i,mo});});}),
+    hit=>{const mo=hit.mo;return `<b>${efFmt(mo.m+"-01",{month:"long",year:"numeric"})}</b> · ${efFh(Math.round(mo.tot*10)/10)} h`+[...mo.by.entries()].sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const t=k==="◆"?null:rvTask(k);return `<div class="r" style="--pen:var(--${k==="◆"?"pen-5":efPen(k)})"><i></i><span>${k==="◆"?"◆ Epic-level work":esc(t?(t.demandId||t.title):"(deleted demand)")}</span><span>${efFh(Math.round(v*10)/10)}</span></div>`;}).join("")+`<div class="hint">click to see this month</div>`;},
+    hit=>{epPer={...epPer,mode:"month",month:hit.mo.m};rr();});}
+/* a demand's hours split by round (Effort tab) */
+function efRoundRows(t,es){const n=roundCount(t),st=roundStarts(t),ests=roundEstimates(t),rows=[];
+  for(let r=1;r<=n;r++)rows.push({r,h:efSum(es.filter(e=>roundOn(t,e.date)===r)),from:st[r-1],est:ests[r-1]});const mx=Math.max(1,...rows.map(x=>x.h));
+  return `<div class="ck-unit"><div class="ck-head"><h2>By round</h2><span class="ck-meta">a new round starts when the requirement changed</span></div>${rows.map(x=>`<div class="ef-brow"><span class="n"><span class="ef-pd" style="--pen:var(--${x.r>1?"pen-5":"pen-2"})"></span><b>Round ${x.r}</b> <span class="faint">from ${efSh(x.from)}</span></span><span class="v">${efFh(Math.round(x.h*10)/10)} h${x.est?" / "+efFh(x.est)+" h est":""}</span>${efBarDots(x.h,mx/30,30,x.r>1?"pen-5":"pen-2")}</div>`).join("")}</div>`;}
+/* the Effort page's range as day offsets: rolling weeks, a calendar month, or custom dates */
+function efRange(){const rg=efRg(),t=todayStr();
+  if(rg==="mo"){let m=viewPref("ef.month",t.slice(0,7));if(!/^\d{4}-\d\d$/.test(m))m=t.slice(0,7);const from=m+"-01",to=efMonthEnd(m);return {rg,a:daysUntil(from),b:daysUntil(to),l:efFmt(from,{month:"long",year:"numeric"}),from,to};}
+  if(rg==="cu"){const f=viewPref("ef.from",""),to=viewPref("ef.to","");if(f&&to&&f<=to)return {rg,a:daysUntil(f),b:daysUntil(to),l:"Custom",from:f,to};const a=efMonOff(0)-12*7;return {rg,a,b:0,l:"Custom",from:efOffD(a),to:t};}
+  const a=efMonOff(0)-(EF_RNG[rg].weeks-1)*7;return {rg,a,b:0,l:EF_RNG[rg].l,from:efOffD(a),to:t};}
 
 /* ===================== WIRE UP ===================== */
 document.querySelectorAll(".navbtn,.rb[data-view]").forEach(b=>b.onclick=()=>{view=b.dataset.view;meetingRollup=false;journalTodos=false;renderApp();});

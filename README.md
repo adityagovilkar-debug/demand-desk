@@ -310,6 +310,24 @@ it. Empty sections are hidden; if everything's clear it says so. A first-run
   in current status, waiting-on), red >30d / amber >14d, plus delivery lead-time
   stats (received → first delivered: average, median, and rework counts).
 
+### When the requirement changes (rounds)
+- Moving a **Delivered** or **Closed** demand backwards (status buttons, the board, the
+  status dropdown) asks **why**:
+  - 🐞 **A defect in my work** → Bug / rework, counted as rework (as before).
+  - 🔄 **The requirement changed** → back to In progress (or Open, waiting for the new
+    spec) and **round 2** starts. Optionally add hours to the estimate for the new
+    round and note what changed. Never counted as rework.
+  - ↩ **Just reopening** — no label.
+- Rounds show everywhere: a *Rounds* readout in the header, a violet "requirement
+  changed" marker on the journey and the effort chart, hours **by round** (with each
+  round's estimate) on the Effort tab, a round tag on log entries, the epic story.
+- **Fix the past:** in History, a move to Bug has **"not a defect? → requirement
+  changed"**; a requirement change has **"it was a defect?"** to switch back. Rework
+  counts, rework hours and the Review correct themselves.
+- In the Review, each round's first delivery counts as a delivery, request → delivery
+  is measured from the round's start, and requirement changes appear as their own
+  line ("absorbed after delivery — N h, not counted as rework").
+
 ### Effort — the hours you put in
 Log what you worked on, and see where your time goes.
 - **Log time from anywhere** — **⏱ Log time** in the title bar or the **T** key.
@@ -319,6 +337,13 @@ Log what you worked on, and see where your time goes.
   ("3.5 h logged + 2 = 5.5 h of 8"). `Ctrl+Enter` logs.
 - **Not every hour is a demand** — Meetings, Admin & email, Support & small asks and
   Learning are buckets of their own, so a whole day adds up.
+- **Log against an epic** — in the Log time dialog, *Against → Epics* (or the box on
+  the epic's Effort tab): calls about the epic, wave planning, chasing other teams —
+  work that belongs to no single demand.
+- **Epic Effort tab** — the epic's hours (its demands + epic-level work) for the whole
+  epic, a calendar month (‹ Sep 2026 ›) or custom dates; month-by-month chart (click a
+  month), by demand, by wave, by activity, epic-level entries, estimate vs actual,
+  rework vs changed-requirement hours; **⧉ Copy as table** for a status mail.
 - **Timer** — **▶ Start timer** on a demand's Effort tab; the title-bar button shows
   it running. Click it to stop, and the dialog opens with the hours filled in.
 - **Effort tab on every demand** (key **5**) — log time inline; gauges for logged vs
@@ -328,7 +353,8 @@ Log what you worked on, and see where your time goes.
   total against the estimate; click a day); the log by week (hover to ✎ edit or ✕
   delete — with Undo); hours by activity and by subtask. The Overview tab gets an
   Effort gauge, the header a *Logged* readout, list rows a ⏱ tag.
-- **Effort workspace** (⏱ in the rail) — range (this week · 4 · 13 · 26 weeks) and
+- **Effort workspace** (⏱ in the rail) — range (this week · 4 · 13 · 26 weeks · a
+  calendar **Month** ‹ › · **Custom** dates; long ranges show per month) and
   group by demand · epic · activity · theme; click a legend chip to focus on one.
   - **Noticed** — plain sentences: who took most of your time, demands over
     estimate, rework, working days with no log (with a *Fill* button).
@@ -355,7 +381,8 @@ Log what you worked on, and see where your time goes.
   **🏖 Holiday / leave**).
 - Search (`Ctrl+K`) finds time entries by what you wrote.
 - Stored in your data file as `efforts` (plus `daysOff`, and `estimate` on each
-  demand) — data version 23. Deleting a demand deletes the hours logged on it (the
+  demand) — data version 25 (`epicId` on entries logged against an epic; `cause`/`est`
+  on status changes for requirement changes). Deleting a demand deletes the hours logged on it (the
   confirmation says how many).
 
 ### Review — your year, for the appraisal
