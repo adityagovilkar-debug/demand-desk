@@ -694,10 +694,28 @@ file:
   the ⋯ menu (encrypted if encryption is on). Restoring marks the app "unsaved"
   so you remember to write it to your file.
 
-### Global search (`Ctrl+K`)
-One box across demands, objects, transports, **system codes**, subtasks,
-meetings, action points, personal to-dos, journal, vault — and **comments** on
-demands and subtasks too.
+### Search (`Ctrl+K`) — your data file and your old notes
+- One box across demands, objects, transports, **system codes**, subtasks,
+  comments, meetings, action points, to-dos, journal, effort notes, wins, epics,
+  the playbook, debug sessions, the vault — and your **old .txt notes**.
+- **Every word must appear** (any order); put words in `"quotes"` to match a phrase.
+- The title-bar box shows the best few, each with the **sentence it matched in**.
+  **Enter** (or *All results*) opens the **Search page**: filter by **kind** and
+  **year**, order by best match / newest / oldest, matches highlighted.
+
+### Old notes (.txt)
+- On the Search page (or ⋯ Settings → *Old notes*): **Connect a folder…** and pick
+  the folder that holds your notes. Every `.txt` in it and **all its sub-folders**
+  is read — UTF-8, Notepad's "Unicode" and old ANSI files alike. Files over 4 MB are
+  skipped.
+- **Read-only.** Nothing in the folder is changed, moved or renamed, and the notes
+  never go into your data file. A copy of the text is kept in this browser so search
+  works immediately next time; **↻ Rescan** re-reads only new or changed files.
+  After a browser restart, **🔌 Reconnect** (the browser asks again) — until then
+  search uses the copy from the last read. **Forget** clears that copy.
+- Click a note to read it, with the matches highlighted and ↑ ↓ to step between them.
+- **In your old notes** (Bench context rail, on every demand): notes that mention
+  the demand ID, its objects or its transport numbers — "have I seen this before?".
 
 ### Clickable links
 Any `https://…` URL becomes clickable: in comments and debug findings it renders

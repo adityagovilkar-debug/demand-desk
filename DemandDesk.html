@@ -1376,6 +1376,34 @@
   canvas.ep-months{width:100%;height:170px;display:block}
   .efx .ep-go{cursor:pointer}.efx .ep-go:hover .n b{text-decoration:underline}
   .actitem .e-chg,.actitem .e-def{font-size:11px;margin-left:8px;color:var(--accent2)}
+  /* ===================== SEARCH + OLD NOTES ===================== */
+  .gsr .gss{font-size:11px;color:var(--faint);margin-top:2px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gsr .gsd{font-size:10px;color:var(--faint);font-family:var(--mono);margin-left:4px}
+  .gsr.gsall{border-top:1px solid var(--line);margin-top:4px;padding-top:8px;color:var(--accent);font-size:11.5px}
+  .gsr.gsall kbd{font-size:9.5px;margin-left:4px}
+  .gsr mark,.efx mark{background:color-mix(in srgb,var(--watch,var(--amber)) 30%,transparent);color:inherit;padding:0 1px;border-radius:2px}
+  .efx .sr-box{display:flex;gap:12px;align-items:center}
+  .efx .sr-box input{font-size:16px;height:42px;padding:0 14px;flex:1}
+  .efx .sr-notes{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);padding:10px 14px}
+  .efx .sr-notes .ic{font-size:16px}
+  .efx .sr-notes>span:nth-child(2){flex:1;min-width:240px;line-height:1.5}
+  .efx .sr-filters{display:grid;gap:8px}
+  .efx .sr-f{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .efx .sr-f .ef-lb{margin:0;min-width:46px}
+  .efx .sr-f .ef-chip b{font-weight:500;color:var(--ink-3);font-size:10px}
+  .efx .sr-list{display:grid}
+  .efx .sr-hit{padding:10px 12px;border-top:1px dotted var(--rule-strong);cursor:pointer;border-left:2px solid transparent;transition:background .15s}
+  .efx .sr-hit:hover{background:var(--paper-2);border-left-color:var(--pen)}
+  .efx .sr-h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:13px}
+  .efx .sr-h .faint{font-size:11.5px}
+  .efx .sr-d{margin-left:auto;font-size:10.5px;color:var(--ink-3)}
+  .efx .sr-s{font-size:12px;color:var(--ink-2);margin-top:4px;line-height:1.55;word-break:break-word}
+  .efx .sr-empty{font-size:12.5px;line-height:1.6;max-width:720px}
+  .efx.nt-modal{width:min(980px,94vw);max-height:88vh;display:flex;flex-direction:column}
+  .efx .nt-h{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding-bottom:10px;border-bottom:1px solid var(--rule);margin-bottom:10px}
+  .efx .nt-h h2{margin:2px 0 4px;word-break:break-word}
+  .efx .nt-body{flex:1;overflow:auto;margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--mono);font-size:12.5px;line-height:1.6;color:var(--ink);background:var(--paper-2);padding:12px 14px;border-radius:3px;min-height:200px}
+  .efx .nt-body mark.cur{outline:2px solid var(--watch,var(--amber));background:color-mix(in srgb,var(--watch,var(--amber)) 50%,transparent)}
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -2046,7 +2074,7 @@ function renderApp(){
   noteContent();
   document.querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
   document.querySelector("main").classList.toggle("wide",view==="today"&&benchOn()&&contentCount()>0);
-  document.querySelector("main").classList.toggle("effortv",view==="effort"||view==="review");
+  document.querySelector("main").classList.toggle("effortv",view==="effort"||view==="review"||view==="search");
   {const k=[view,activeId,activeEpicId,activeMeetingId,activeJournalId,activeDebugId,activePlayId,meetingRollup,journalTodos,document.documentElement.getAttribute("data-theme")].join("|");
    if(k!==renderApp._key){renderApp._key=k;enterPulse("all");const dr=document.getElementById("efDrw");if(dr)dr.classList.remove("on");}}
   if(view==="today"){renderToday();}
@@ -2058,6 +2086,7 @@ function renderApp(){
   else if(view==="playbook"){renderPlaybookSidebar();renderPlaybookDetail();}
   else if(view==="effort"){renderEffortWS();}
   else if(view==="review"){renderReview();}
+  else if(view==="search"){renderSearchPage();}
   else{renderVault();}
   renderSaveState();syncRail();updateSb();syncDemandsLayout();efTimerUI();
 }
@@ -4704,50 +4733,7 @@ function openHandover(){
 }
 
 /* ===================== GLOBAL SEARCH ===================== */
-function runGlobalSearch(q){
-  const box=document.getElementById("gsearchResults");q=q.trim().toLowerCase();
-  if(!q){box.classList.add("hide");return;}
-  const hits=[];
-  state.tasks.forEach(t=>{
-    if([t.demandId,t.title,t.description,t.notes,t.type,t.requestor,t.project,t.theme,t.wave,t.system,t.client?"client "+t.client:"",(t.nextAction&&t.nextAction.note)||"",(()=>{const e=epicById(t.epicId);return e?epicLabel(e):"";})(),(t.comments||[]).map(c=>c.text).join(" ")].join(" ").toLowerCase().includes(q))hits.push({k:"Demand",go:()=>{view="demands";activeId=t.id;activeTab="overview";},label:`${t.demandId||"—"} · ${t.title}${t.system?" · "+t.system+(t.client?"/"+t.client:""):""}${t.project?" · ▦ "+t.project:""}${t.theme?" · "+t.theme:""}`});
-    t.objects.forEach(o=>{if([o.name,o.type,o.desc].join(" ").toLowerCase().includes(q))hits.push({k:"Object",go:()=>{view="demands";activeId=t.id;activeTab="objects";},label:`${o.name||"(obj)"} — ${o.action} · ${t.demandId||t.title}`});});
-    t.transports.forEach(tr=>{
-      const toc=tocFor(t,tr);
-      const sysStr=effectiveSyncs(t,tr).map(s=>s.system).join(" ")+" "+tr.system+" "+(toc?toc.number:"")+" "+(tr.dest||[]).join(" ");
-      if([tr.number,tr.desc,tr.notes,sysStr,tr.client,isCust(tr)?"customizing cust config":"workbench"].join(" ").toLowerCase().includes(q))hits.push({k:"Transport",go:()=>{view="demands";activeId=t.id;activeTab="transports";},label:`${tr.number||"(TR)"} ${tr.desc?"— "+tr.desc:""} · orig ${tr.system}${isCust(tr)&&tr.client?"/"+tr.client:""}${effectiveSyncs(t,tr).length?" → "+[...reachedSystems(t,tr)].join(", "):""}${toc?" · ToC "+toc.number:""} · ${t.demandId||t.title}`});
-    });
-    (t.tocs||[]).forEach(c=>{if([c.number,c.desc,c.notes,c.syncs.map(s=>s.system).join(" ")].join(" ").toLowerCase().includes(q))hits.push({k:"ToC",go:()=>{view="demands";activeId=t.id;activeTab="transports";},label:`ToC ${c.number||"(unnamed)"}${c.syncs.filter(s=>s.system).length?" → "+c.syncs.filter(s=>s.system).map(s=>s.system).join(", "):""} · ${t.demandId||t.title}`});});
-    (function w(a){a.forEach(s=>{if(((s.title||"")+" "+(s.comments||[]).map(c=>c.text).join(" ")).toLowerCase().includes(q))hits.push({k:"Subtask",go:()=>{view="demands";activeId=t.id;activeTab="work";},label:`${s.title} · ${t.demandId||t.title}`});w(s.children);});})(t.subtasks);
-    (t.reference||[]).forEach(r=>{const blob=(r.label+" "+(r.secret?"":r.value)).toLowerCase();if(blob.includes(q))hits.push({k:"Reference",go:()=>{view="demands";activeId=t.id;activeTab="reference";},label:`${r.label||"(ref)"}${r.secret?" 🔒":(r.value?" — "+r.value:"")} · ${t.demandId||t.title}`});});
-  });
-  state.meetings.forEach(m=>{
-    if([m.title,m.team,m.attendees,m.body,m.date].join(" ").toLowerCase().includes(q))hits.push({k:"Meeting",go:()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;},label:`${m.date}${m.team?" · "+m.team:""} · ${m.title}`});
-    m.actions.forEach(a=>{if([a.text,a.owner,a.resolution].join(" ").toLowerCase().includes(q))hits.push({k:"Action",go:()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;},label:`${a.text} ${a.owner?"("+a.owner+")":""}${a.resolution?" ↳ "+a.resolution:""} · ${m.title}`});});
-  });
-  state.credentials.forEach(c=>{if([c.system,c.client,c.label,c.username,c.url,c.notes].join(" ").toLowerCase().includes(q))hits.push({k:"Vault",go:()=>{view="vault";},label:`${c.system||""}${c.client?"/"+c.client:""} ${c.label||""} · ${c.username||""}`.trim()});});
-  state.journal.forEach(j=>{if([j.date,j.title,j.body].join(" ").toLowerCase().includes(q))hits.push({k:"Journal",go:()=>{view="journal";journalTodos=false;activeJournalId=j.id;},label:`${j.date}${j.title?" · "+j.title:""}`});});
-  state.todos.forEach(x=>{if(((x.text||"")+" "+(x.resolution||"")).toLowerCase().includes(q))hits.push({k:"To-do",go:()=>{view="journal";journalTodos=true;},label:`${x.done?"✓ ":""}${x.text}${x.resolution?" ↳ "+x.resolution:""}${x.due?" · due "+x.due:""}`});});
-  state.wins.forEach(w=>{if(w.text.toLowerCase().includes(q))hits.push({k:"Win",go:()=>{view="review";},label:`${WIN_KINDS[w.kind].icon} ${w.date} · ${w.text}`});});
-  state.efforts.forEach(e=>{if(((e.note||"")+" "+e.activity).toLowerCase().includes(q)){const k=efKey(e);hits.push({k:"Effort",go:()=>{if(e.taskId&&efTaskOf(e.taskId)){view="demands";activeId=e.taskId;activeTab="effort";}else if(e.epicId&&epicById(e.epicId)){view="epics";activeEpicId=e.epicId;epicTab="effort";}else view="effort";setTimeout(()=>openEfDay(e.date,k),0);},label:`${e.date} · ${efFh(e.hours)} h · ${efName(k)} — ${e.note||e.activity}`});}});
-  state.epics.forEach(e=>{
-    if([e.name,e.code,e.description,e.owner,e.notes,e.myScope].join(" ").toLowerCase().includes(q))
-      hits.push({k:"Epic",go:()=>{view="epics";activeEpicId=e.id;epicTab="overview";},label:`◆ ${epicLabel(e)} · ${tasksForEpic(e.id).length} demand(s)`});
-    e.log.forEach(x=>{if((x.text||"").toLowerCase().includes(q))hits.push({k:"Epic story",go:()=>{view="epics";activeEpicId=e.id;epicTab="story";},label:`${x.date} ${EPIC_LOG[x.kind].icon} ${x.text} · ◆ ${e.code||e.name}`});});
-    e.deps.forEach(x=>{if([x.team,x.what,x.note].join(" ").toLowerCase().includes(q))hits.push({k:"Waiting on",go:()=>{view="epics";activeEpicId=e.id;epicTab="deps";},label:`${x.done?"✓ ":"⏸ "}${x.team} — ${x.what} · ◆ ${e.code||e.name}`});});
-    (function w(a){a.forEach(s=>{if((s.title||"").toLowerCase().includes(q))hits.push({k:"Subtask",go:()=>{view="epics";activeEpicId=e.id;epicTab="subtasks";},label:`${s.title} · ◆ ${e.code||e.name}`});w(s.children);});})(e.subtasks);});
-  state.playbook.forEach(p=>{
-    const blob=[p.title,p.category,p.body,p.steps.map(s=>s.text).join(" "),p.people.map(x=>x.name+" "+x.role+" "+x.contact).join(" "),(p.systems||[]).join(" ")].join(" ").toLowerCase();
-    if(blob.includes(q))hits.push({k:"Playbook",go:()=>{view="playbook";activePlayId=p.id;},label:`${PLAY_KINDS[p.kind].icon} ${p.title}${p.category?" · "+p.category:""}`});});
-  state.images.forEach(im=>{if((im.label+" "+im.file).toLowerCase().includes(q))hits.push({k:"Image",go:()=>gotoImage(im),label:`📷 ${im.label||im.file}${im.expiry?" · exp "+im.expiry:""}`});});
-  state.debug.forEach(s=>{
-    const blob=[s.title,s.demandId,s.resume,s.notes,s.objects.map(o=>o.name+" "+o.note).join(" "),s.breakpoints.map(b=>b.object+" "+b.condition+" "+b.note).join(" "),s.findings.map(f=>f.text).join(" "),s.watches.map(w=>w.name+" "+w.value+" "+w.where).join(" ")].join(" ").toLowerCase();
-    if(blob.includes(q))hits.push({k:"Debug",go:()=>{view="debug";activeDebugId=s.id;},label:`${s.title}${s.demandId?" · "+s.demandId:""}`});});
-  if(!hits.length){box.innerHTML=`<div class="gsr faint">No matches</div>`;box.classList.remove("hide");return;}
-  box.innerHTML=hits.slice(0,50).map((h,i)=>`<div class="gsr" data-i="${i}"><span class="k">${h.k}</span>${esc(h.label)}</div>`).join("");
-  box.classList.remove("hide");
-  box.querySelectorAll(".gsr[data-i]").forEach(el=>el.onclick=()=>{hits[+el.dataset.i].go();box.classList.add("hide");document.getElementById("globalSearch").value="";renderApp();});
-}
-
+/* search lives with the old-notes module below (searchAll / runGlobalSearch / the Search page) */
 /* ===================== MENU ===================== */
 function openMenu(){
   const root=document.getElementById("modalRoot");
@@ -4782,6 +4768,9 @@ function openMenu(){
       <input type="checkbox" id="mn-autosave" ${state.settings.autosave?"checked":""} style="width:auto">
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin:8px 0;padding:9px 11px;border:1px solid var(--line2);border-radius:8px;flex-wrap:wrap">
+      <span style="flex:1;font-size:13px">📁 Old notes (.txt): <b>${NOTES.length?NOTES.length+" notes"+(notesDir?"":" · reconnect to pick up changes"):"not connected"}</b></span>
+      <button class="sm" id="mn-notes">${NOTES.length?"Manage…":"Connect…"}</button></div>
+    <div style="display:flex;align-items:center;gap:8px;margin:8px 0;padding:9px 11px;border:1px solid var(--line2);border-radius:8px;flex-wrap:wrap">
       <span style="flex:1;font-size:13px">📷 Images folder: <b>${imagesDir?"connected":(imgDirSaved?"remembered (click to re-allow)":"not set")}</b></span>
       <button class="sm" id="mn-imgdir">${imagesDir?"Change…":"🖼 Connect…"}</button>
       ${imgDirSaved?`<button class="sm" id="mn-imgforget">Forget</button>`:""}
@@ -4813,6 +4802,7 @@ function openMenu(){
   root.querySelector("#m-defsys").onchange=e=>{state.settings.defaultSystem=e.target.value||"H03";markDirty();};
   root.querySelector("#mn-enc").onclick=()=>{close();openEncryptionDialog();};
   root.querySelector("#mn-autosave").onchange=e=>{state.settings.autosave=e.target.checked;markDirty();};
+  root.querySelector("#mn-notes").onclick=()=>{close();openSearch("");};
   root.querySelector("#mn-imgdir").onclick=async()=>{imagesDir=null;imgDirSaved=null;if(await ensureImgDir(true)){close();openMenu();}};
   const mif=root.querySelector("#mn-imgforget");if(mif)mif.onclick=async()=>{await forgetImgDir();toast("Images folder forgotten (files untouched)");close();openMenu();};
   root.querySelector("#mn-imgexp").onchange=e=>{const n=Math.max(0,parseInt(e.target.value||"0",10)||0);state.settings.imageExpiryDays=n;markDirty();};
@@ -5432,8 +5422,8 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
     <div class="ck-unit cxs"><div class="ck-head"><h2>Linked</h2><a class="cxl" data-tab="calls">${links.length?links.length+" · link ›":"＋ link ›"}</a></div>
       ${links.slice(0,6).map(l=>`<div class="lk" data-k="${l.k}" data-id="${l.id}" style="--pen:${l.pen}"><i></i><span class="t">${esc(l.t)}</span><span class="d">${shortD(l.d)}</span></div>`).join("")||`<div class="bempty">No meetings, journal or debug sessions linked.</div>`}</div>
     <div class="ck-unit cxs"><div class="ck-head"><h2>Images</h2><a class="cxl" data-tab="images">${imgs.length?"all "+imgs.length+" ›":"Ctrl V to paste"}</a></div>
-      ${imgs.length?`<div class="thumbs">${imgs.slice(0,6).map(im=>`<div data-id="${im.id}" title="${esc(im.label||im.file)}"><span>${esc(im.label||im.file)}</span></div>`).join("")}</div>`:`<div class="bempty">Snip with Win+Shift+S, then Ctrl+V anywhere on this demand.</div>`}</div></div>`;
-  const q=s=>host.querySelector(s);
+      ${imgs.length?`<div class="thumbs">${imgs.slice(0,6).map(im=>`<div data-id="${im.id}" title="${esc(im.label||im.file)}"><span>${esc(im.label||im.file)}</span></div>`).join("")}</div>`:`<div class="bempty">Snip with Win+Shift+S, then Ctrl+V anywhere on this demand.</div>`}</div>${notesRailHTML(t)}</div>`;
+  const q=s=>host.querySelector(s);wireNotesRail(host,t);
   if(q("#cxNaDone"))q("#cxNaDone").onclick=()=>nextActionDone(t);
   if(q("#cxNaEdit"))q("#cxNaEdit").onclick=()=>openNextAction(t);
   if(q("#cxNaSet"))q("#cxNaSet").onclick=()=>openNextAction(t);
@@ -5441,7 +5431,7 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
   if(q("#cxEpic"))q("#cxEpic").onclick=()=>{view="epics";activeEpicId=t.epicId;epicTab="overview";renderApp();};
   host.querySelectorAll(".cxl[data-tab]").forEach(a=>a.onclick=()=>{activeTab=a.dataset.tab;renderDetail();enterPulse("detail");});
   host.querySelectorAll(".rf .c").forEach(b=>b.onclick=()=>{const r=refs.find(x=>x.id===b.parentElement.dataset.id);navigator.clipboard.writeText(r.value).then(()=>toast("Copied")).catch(()=>toast("Copy failed",true));});
-  host.querySelectorAll(".lk").forEach(el=>el.onclick=()=>{const k=el.dataset.k,id=el.dataset.id;
+  host.querySelectorAll(".lk:not(.cx-note)").forEach(el=>el.onclick=()=>{const k=el.dataset.k,id=el.dataset.id;
     if(k==="meeting"){view="meetings";meetingRollup=false;activeMeetingId=id;}else if(k==="journal"){view="journal";journalTodos=false;activeJournalId=id;}else{view="debug";activeDebugId=id;}renderApp();});
   host.querySelectorAll(".thumbs [data-id]").forEach(el=>{const im=state.images.find(x=>x.id===el.dataset.id);if(!im)return;
     el.onclick=()=>openImageLightbox(im);imgUrl(im).then(u=>{if(u){el.style.backgroundImage=`url("${u}")`;el.classList.add("has");}});});
@@ -6445,6 +6435,177 @@ function efRange(){const rg=efRg(),t=todayStr();
   if(rg==="cu"){const f=viewPref("ef.from",""),to=viewPref("ef.to","");if(f&&to&&f<=to)return {rg,a:daysUntil(f),b:daysUntil(to),l:"Custom",from:f,to};const a=efMonOff(0)-12*7;return {rg,a,b:0,l:"Custom",from:efOffD(a),to:t};}
   const a=efMonOff(0)-(EF_RNG[rg].weeks-1)*7;return {rg,a,b:0,l:EF_RNG[rg].l,from:efOffD(a),to:t};}
 
+/* ===================== OLD NOTES — your .txt files, read-only =====================
+   Point the app at one folder; every .txt in it and its sub-folders becomes searchable.
+   Nothing is written, moved or renamed there. The text is cached in this browser (IndexedDB),
+   so search works straight away next time, and a rescan only re-reads files that changed.
+   It never goes into the data file. */
+let notesDir=null,notesDirSaved=null,NOTES=[],NOTES_META=null,notesBusy=null;
+const notePrep=n=>({...n,low:String(n.text||"").toLowerCase()});
+/* Notepad saves as UTF-8, UTF-16 ("Unicode") or the old ANSI code page — read all three */
+function notesDecode(buf){const b=new Uint8Array(buf);
+  if(b[0]===0xFF&&b[1]===0xFE)return new TextDecoder("utf-16le").decode(b.subarray(2));
+  if(b[0]===0xFE&&b[1]===0xFF)return new TextDecoder("utf-16be").decode(b.subarray(2));
+  if(b[0]===0xEF&&b[1]===0xBB&&b[2]===0xBF)return new TextDecoder("utf-8").decode(b.subarray(3));
+  try{return new TextDecoder("utf-8",{fatal:true}).decode(b);}catch(e){return new TextDecoder("windows-1252").decode(b);}}
+async function notesRestore(){if(!useIdb)return;
+  try{const c=await idbGet("notescache");if(Array.isArray(c))NOTES=c.map(notePrep);NOTES_META=(await idbGet("notesmeta"))||null;
+    const h=await idbGet("notesdir");if(h){notesDirSaved=h;let p="prompt";try{p=await h.queryPermission({mode:"read"});}catch(e){}if(p==="granted"){notesDir=h;notesScan(false);}}
+    if(view==="search")renderSearchPage();}catch(e){}}
+async function notesConnect(){if(!window.showDirectoryPicker){toast("This browser can't open folders",true);return;}
+  try{const h=await showDirectoryPicker({mode:"read",id:"ddnotes"});notesDir=notesDirSaved=h;if(useIdb)idbSet("notesdir",h).catch(()=>{});NOTES=[];await notesScan(true);}
+  catch(e){if(e.name!=="AbortError")toast("Couldn't open the folder: "+e.message,true);}}
+async function notesReconnect(){if(!notesDirSaved)return notesConnect();
+  try{const p=await notesDirSaved.requestPermission({mode:"read"});if(p==="granted"){notesDir=notesDirSaved;await notesScan(true);}else toast("Permission not given — still searching the copy from the last read",true);}
+  catch(e){toast("Couldn't reconnect: "+e.message,true);}}
+async function notesForget(){if(!confirm("Forget the notes folder?\n\nYour .txt files are not touched — this only clears the copy this app keeps for searching."))return;
+  notesDir=notesDirSaved=null;NOTES=[];NOTES_META=null;if(useIdb){await idbDel("notesdir");await idbDel("notescache");await idbDel("notesmeta");}renderApp();toast("Notes folder forgotten");}
+function notesProgress(n){const el=document.getElementById("ntStatusTxt");if(el&&n!=null)el.textContent=`Reading… ${n} file${n===1?"":"s"} so far`;}
+function notesScan(loud){if(!notesDir)return Promise.resolve();if(notesBusy)return notesBusy;
+  notesBusy=(async()=>{const old=new Map(NOTES.map(n=>[n.path,n])),out=[];let read=0,skipped=0,seen=0;
+    if(view==="search")renderSearchPage();
+    const walk=async(dir,prefix,depth)=>{if(depth>16)return;
+      for await(const [name,h] of dir.entries()){
+        if(h.kind==="directory"){await walk(h,prefix+name+"/",depth+1);continue;}
+        if(!/\.txt$/i.test(name))continue;seen++;
+        try{const f=await h.getFile(),path=prefix+name,o=old.get(path);
+          if(f.size>4*1024*1024){skipped++;continue;}
+          if(o&&o.size===f.size&&o.mtime===f.lastModified)out.push(o);
+          else{out.push(notePrep({path,name,folder:prefix.replace(/\/$/,""),date:isoD(new Date(f.lastModified)),mtime:f.lastModified,size:f.size,text:notesDecode(await f.arrayBuffer())}));read++;}
+        }catch(e){skipped++;}
+        if(seen%40===0){notesProgress(seen);await new Promise(r=>setTimeout(r,0));}}};
+    try{await walk(notesDir,"",0);NOTES=out.sort((a,b)=>b.date.localeCompare(a.date));NOTES_META={root:notesDir.name,n:NOTES.length,skipped,at:Date.now()};
+      if(useIdb){await idbSet("notescache",NOTES.map(({low,...n})=>n)).catch(()=>{});await idbSet("notesmeta",NOTES_META).catch(()=>{});}
+      if(loud)toast(`📁 ${NOTES.length} note${NOTES.length===1?"":"s"} ready to search${read&&read<NOTES.length?` · ${read} new or changed`:""}${skipped?` · ${skipped} skipped`:""}`);}
+    catch(e){toast("Couldn't read the folder: "+e.message,true);}
+    finally{notesBusy=null;if(view==="search")renderSearchPage();else if(view==="demands"&&benchOn())renderCtxRail();}})();
+  return notesBusy;}
+const fmtSize=n=>n<1024?n+" B":n<1048576?Math.round(n/1024)+" KB":(n/1048576).toFixed(1)+" MB";
+function notesStatusHTML(){const m=NOTES_META,root=(notesDirSaved&&notesDirSaved.name)||(m&&m.root)||"";
+  if(notesBusy)return `<div class="ck-unit sr-notes"><span class="ic">📁</span><span id="ntStatusTxt">Reading your notes…</span></div>`;
+  if(!notesDirSaved&&!NOTES.length)return `<div class="ck-unit sr-notes"><span class="ic">📁</span><span><b>Search your old .txt notes too.</b> Point this at the folder that holds them — every .txt in it and its sub-folders is read. Read-only: nothing there is changed, moved or renamed.</span><button class="sm primary" id="ntConnect">Connect a folder…</button></div>`;
+  const when=m&&m.at?new Date(m.at).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):"";
+  return `<div class="ck-unit sr-notes"><span class="ic">📁</span><span><b>${esc(root||"Notes folder")}</b> · ${NOTES.length} note${NOTES.length===1?"":"s"}${m&&m.skipped?` · ${m.skipped} skipped (over 4 MB or unreadable)`:""}${when?` · read ${when}`:""}${notesDir?"":` · <span class="soon">searching the copy from the last read</span>`}</span>
+    ${notesDir?`<button class="sm" id="ntRescan" title="Pick up new and changed files">↻ Rescan</button>`:`<button class="sm primary" id="ntReconnect" title="The browser asks again after a restart">🔌 Reconnect</button>`}<button class="sm ghost" id="ntChange">Change folder</button><button class="sm ghost danger" id="ntForget">Forget</button></div>`;}
+function wireNotesStatus(host){const q=s=>host.querySelector(s);
+  if(q("#ntConnect"))q("#ntConnect").onclick=notesConnect;if(q("#ntReconnect"))q("#ntReconnect").onclick=notesReconnect;
+  if(q("#ntRescan"))q("#ntRescan").onclick=()=>notesScan(true);if(q("#ntChange"))q("#ntChange").onclick=notesConnect;if(q("#ntForget"))q("#ntForget").onclick=notesForget;}
+
+/* ===================== SEARCH — everything in the data file + your old notes =====================
+   All words must match (any order); "quoted words" match as a phrase. Each hit keeps the text it
+   matched in and a date, so results can show where the words are and be filtered by year. */
+function searchTerms(q){const out=[];String(q||"").replace(/"([^"]+)"|(\S+)/g,(_,a,b)=>{const x=(a||b||"").trim().toLowerCase();if(x)out.push(x);return "";});return out;}
+function searchAll(q){const terms=searchTerms(q);if(!terms.length)return [];const hits=[];
+  const add=(k,label,parts,date,go,sub)=>{const text=parts.filter(Boolean).join(" · "),low=text.toLowerCase();if(!terms.every(t=>low.includes(t)))return;hits.push({k,label,sub:sub||"",text,low,date:date||"",go});};
+  const td=t=>t.receivedDate||isoTs(t.createdAt);
+  state.tasks.forEach(t=>{const ep=epicById(t.epicId),go=tab=>()=>{view="demands";activeId=t.id;activeTab=tab;},dl=t.demandId||t.title;
+    add("Demand",`${t.demandId||"—"} · ${t.title}`,[t.demandId,t.title,t.description,t.notes,t.type,t.requestor,t.project,t.theme,t.wave,t.system,t.client?"client "+t.client:"",t.nextAction&&t.nextAction.note,ep?epicLabel(ep):"",(t.comments||[]).map(c=>c.text).join(" · ")],td(t),go("overview"),[STATUS[t.status].label,t.system,t.theme].filter(Boolean).join(" · "));
+    t.objects.forEach(o=>add("Object",`${o.name||"(object)"} — ${o.action}`,[o.name,o.type,o.desc],td(t),go("objects"),dl));
+    t.transports.forEach(tr=>{const toc=tocFor(t,tr),syn=effectiveSyncs(t,tr);
+      add("Transport",`${tr.number||"(TR)"}${tr.desc?" — "+tr.desc:""}`,[tr.number,tr.desc,tr.notes,"origin "+tr.system,syn.map(s=>s.system).join(" "),toc?"ToC "+toc.number:"",(tr.dest||[]).join(" "),tr.client,isCust(tr)?"customizing cust config":"workbench"],syn.map(s=>s.date).filter(Boolean).sort().pop()||td(t),go("transports"),dl);});
+    (t.tocs||[]).forEach(c=>add("ToC",`ToC ${c.number||"(unnamed)"}`,[c.number,c.desc,c.notes,c.syncs.map(s=>s.system).join(" ")],c.syncs.map(s=>s.date).filter(Boolean).sort().pop()||td(t),go("transports"),dl));
+    (function w(a){a.forEach(s=>{add("Subtask",s.title||"(subtask)",[s.title,(s.comments||[]).map(c=>c.text).join(" · ")],s.dueDate||s.receivedDate||td(t),go("work"),dl);w(s.children||[]);});})(t.subtasks);
+    (t.reference||[]).forEach(r=>add("Reference",`${r.label||"(reference)"}${r.secret?" 🔒":""}`,[r.label,r.secret?"":r.value],td(t),go("reference"),dl));});
+  state.meetings.forEach(m=>{const go=()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;};
+    add("Meeting",m.title,[m.title,m.team,m.attendees,m.body],m.date,go,m.team);
+    m.actions.forEach(a=>add("Action",`${a.done?"✓ ":""}${a.text||"(action)"}${a.owner?" ("+a.owner+")":""}`,[a.text,a.owner,a.resolution&&"↳ "+a.resolution],a.due||m.date,go,m.title));});
+  state.credentials.forEach(c=>add("Vault",`${c.system||""}${c.client?"/"+c.client:""} ${c.label||""}`.trim()||"(credential)",[c.system,c.client,c.label,c.username,c.url,c.notes],"",()=>{view="vault";}));
+  state.journal.forEach(j=>add("Journal",j.title||"Journal · "+j.date,[j.title,j.body],j.date,()=>{view="journal";journalTodos=false;activeJournalId=j.id;}));
+  state.todos.forEach(x=>add("To-do",`${x.done?"✓ ":""}${x.text||"(to-do)"}`,[x.text,x.resolution&&"↳ "+x.resolution],x.due||isoTs(x.createdAt),()=>{view="journal";journalTodos=true;}));
+  state.wins.forEach(w=>add("Win",`${WIN_KINDS[w.kind].icon} ${w.text}`,[w.text],w.date,()=>{view="review";}));
+  state.efforts.forEach(e=>{const k=efKey(e);add("Effort",`${efFh(e.hours)} h · ${efName(k)}`,[e.note,e.activity],e.date,()=>{
+    if(e.taskId&&efTaskOf(e.taskId)){view="demands";activeId=e.taskId;activeTab="effort";}else if(e.epicId&&epicById(e.epicId)){view="epics";activeEpicId=e.epicId;epicTab="effort";}else view="effort";setTimeout(()=>openEfDay(e.date,k),0);},e.activity);});
+  state.epics.forEach(e=>{const go=tab=>()=>{view="epics";activeEpicId=e.id;epicTab=tab;},el="◆ "+(e.code||e.name);
+    add("Epic",`◆ ${epicLabel(e)}`,[e.name,e.code,e.description,e.owner,e.notes,e.myScope],e.targetDate||"",go("overview"));
+    e.log.forEach(x=>add("Epic story",`${EPIC_LOG[x.kind].icon} ${(x.text||"").slice(0,90)}`,[x.text],x.date,go("story"),el));
+    e.deps.forEach(x=>add("Waiting on",`${x.done?"✓ ":"⏸ "}${x.team||"(team)"}${x.what?" — "+x.what:""}`,[x.team,x.what,x.note],x.since,go("deps"),el));
+    (function w(a){a.forEach(s=>{add("Subtask",s.title||"(subtask)",[s.title],s.dueDate||"",go("subtasks"),el);w(s.children||[]);});})(e.subtasks);});
+  state.playbook.forEach(p=>add("Playbook",`${PLAY_KINDS[p.kind].icon} ${p.title}`,[p.title,p.category,p.body,(p.steps||[]).map(s=>s.text).join(" · "),(p.people||[]).map(x=>x.name+" "+x.role+" "+x.contact).join(" · "),(p.systems||[]).join(" ")],p.due||p.from||"",()=>{view="playbook";activePlayId=p.id;},p.category));
+  state.images.forEach(im=>add("Image",`📷 ${im.label||im.file}`,[im.label,im.file],isoTs(im.addedAt),()=>gotoImage(im)));
+  state.debug.forEach(s=>add("Debug",s.title,[s.title,s.demandId,s.resume,s.notes,s.objects.map(o=>o.name+" "+o.note).join(" · "),s.breakpoints.map(b=>b.object+" "+b.condition+" "+b.note).join(" · "),s.findings.map(f=>f.text).join(" · "),s.watches.map(w=>w.name+" "+w.value+" "+w.where).join(" · ")],isoTs(s.updatedAt),()=>{view="debug";activeDebugId=s.id;},s.demandId));
+  NOTES.forEach(n=>{if(terms.every(t=>n.low.includes(t)))hits.push({k:"Note",label:n.name,sub:n.folder||"(top folder)",text:n.text,low:n.low,date:n.date,note:n});});
+  /* best match: words in the title count most, then how often they appear */
+  hits.forEach(h=>{const lab=h.label.toLowerCase();let s=0;terms.forEach(t=>{if(lab.includes(t))s+=6;let i=0,c=0;while(c<6&&(i=h.low.indexOf(t,i))>=0){c++;i+=t.length;}s+=c;});h.score=s;});
+  return hits;}
+const searchSort=m=>m==="new"?(a,b)=>(b.date||"").localeCompare(a.date||""):m==="old"?(a,b)=>(a.date||"9999").localeCompare(b.date||"9999"):(a,b)=>b.score-a.score||(b.date||"").localeCompare(a.date||"");
+const srReEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+/* mark the words in already-escaped html, never inside an &entity; */
+function srMark(html,terms){if(!terms.length)return html;const re=new RegExp("(&[a-z#0-9]+;)|("+terms.map(t=>srReEsc(esc(t))).join("|")+")","gi");
+  return html.replace(re,(m,ent,hit)=>ent?ent:`<mark>${hit}</mark>`);}
+function searchSnippets(text,terms,width=80,max=2){const t=String(text||""),low=t.toLowerCase(),pos=[];
+  terms.forEach(x=>{const i=low.indexOf(x);if(i>=0)pos.push(i);});pos.sort((a,b)=>a-b);
+  const wins=[];pos.forEach(p=>{const a=Math.max(0,p-width),b=Math.min(t.length,p+width),l=wins[wins.length-1];if(l&&a<=l[1])l[1]=Math.max(l[1],b);else if(wins.length<max)wins.push([a,b]);});
+  if(!wins.length)wins.push([0,Math.min(t.length,width*2)]);
+  return wins.map(([a,b])=>(a>0?"…":"")+srMark(esc(t.slice(a,b).replace(/\s+/g," ")),terms)+(b<t.length?"…":"")).join(` <span class="faint">·</span> `);}
+const SR_PEN={Demand:"pen-2",Object:"pen-4",Transport:"pen-3",ToC:"pen-5",Subtask:"ink-2",Reference:"ink-2",Meeting:"pen-4",Action:"pen-4",Vault:"ink-3",Journal:"pen-3","To-do":"pen-3",Win:"pen-4",Effort:"pen-2",Epic:"pen-5","Epic story":"pen-5","Waiting on":"pen-4",Playbook:"pen-6",Image:"ink-3",Debug:"pen-1",Note:"pen-7"};
+function openHit(h,terms){const box=document.getElementById("gsearchResults");if(box)box.classList.add("hide");
+  if(h.k==="Note"){openNote(h.note,terms);return;}h.go();const gs=document.getElementById("globalSearch");if(gs)gs.value="";renderApp();}
+/* the title-bar box: the best few, then everything on the Search page */
+function runGlobalSearch(q){const box=document.getElementById("gsearchResults");if(!String(q||"").trim()){box.classList.add("hide");return;}
+  const terms=searchTerms(q),hits=searchAll(q).sort(searchSort("best"));
+  box.innerHTML=(hits.length?hits.slice(0,8).map((h,i)=>`<div class="gsr" data-i="${i}"><span class="k">${esc(h.k)}</span>${esc(h.label)}${h.date?` <span class="gsd">${shortD(h.date)}</span>`:""}<div class="gss">${searchSnippets(h.text,terms,60,1)}</div></div>`).join("")
+      :`<div class="gsr faint">No matches${NOTES.length?"":" — your old .txt notes aren't connected yet"}</div>`)
+    +`<div class="gsr gsall" data-all="1">⌕ ${hits.length>8?`All ${hits.length} results`:"Open Search"} — filter by kind and year${NOTES.length?"":", connect your old notes"} <kbd>Enter</kbd></div>`;
+  box.classList.remove("hide");
+  box.querySelectorAll(".gsr[data-i]").forEach(el=>el.onclick=()=>openHit(hits[+el.dataset.i],terms));
+  box.querySelector("[data-all]").onclick=()=>openSearch(q);}
+/* ---------- the Search page ---------- */
+let SRCH={q:"",kind:"",year:"",sort:"best",limit:100};
+function openSearch(q){SRCH={...SRCH,q:q!=null?String(q):SRCH.q,kind:"",year:"",limit:100};view="search";
+  const box=document.getElementById("gsearchResults");if(box)box.classList.add("hide");const gs=document.getElementById("globalSearch");if(gs){gs.value="";gs.blur();}renderApp();}
+function renderSearchPage(){const host=document.getElementById("detail");if(!host)return;
+  const terms=searchTerms(SRCH.q),all=terms.length?searchAll(SRCH.q):[],yr=h=>h.date?h.date.slice(0,4):"—";
+  const kinds=[...all.reduce((m,h)=>m.set(h.k,(m.get(h.k)||0)+1),new Map()).entries()].sort((a,b)=>b[1]-a[1]);
+  const years=[...all.reduce((m,h)=>m.set(yr(h),(m.get(yr(h))||0)+1),new Map()).entries()].sort((a,b)=>b[0].localeCompare(a[0]));
+  const list=all.filter(h=>(!SRCH.kind||h.k===SRCH.kind)&&(!SRCH.year||yr(h)===SRCH.year)).sort(searchSort(SRCH.sort));
+  const chip=(attr,val,label,n,on)=>`<button class="ef-chip ${on?"on":""}" data-${attr}="${esc(val)}">${esc(label)}${n!=null?` <b class="mono">${n}</b>`:""}</button>`;
+  host.innerHTML=`<div class="efx ef-ws sr">
+    <div class="ef-wsh"><div><div class="ef-l1">⌕ Search · your data file${NOTES.length?` + ${NOTES.length} old note${NOTES.length===1?"":"s"}`:""}</div><h1>Search</h1></div></div>
+    <div class="sr-box"><input id="srQ" value="${esc(SRCH.q)}" placeholder='Words to find — every word must appear · "exact phrase" in quotes' autocomplete="off" spellcheck="false"><span class="faint mono">${terms.length?`${list.length}${list.length!==all.length?" of "+all.length:""} result${all.length===1?"":"s"}`:""}</span></div>
+    ${notesStatusHTML()}
+    ${all.length?`<div class="sr-filters">
+      <div class="sr-f"><span class="ef-lb">Kind</span><div class="ef-row">${chip("kind","","All",all.length,!SRCH.kind)}${kinds.map(([k,n])=>chip("kind",k,k,n,SRCH.kind===k)).join("")}</div></div>
+      <div class="sr-f"><span class="ef-lb">Year</span><div class="ef-row">${chip("year","","All",null,!SRCH.year)}${years.map(([y,n])=>chip("year",y,y==="—"?"No date":y,n,SRCH.year===y)).join("")}</div></div>
+      <div class="sr-f"><span class="ef-lb">Order</span><div class="ef-row">${[["best","Best match"],["new","Newest"],["old","Oldest"]].map(([k,l])=>chip("sort",k,l,null,SRCH.sort===k)).join("")}</div></div></div>`:""}
+    <div class="sr-list">${list.slice(0,SRCH.limit).map((h,i)=>`<div class="sr-hit" data-i="${i}" style="--pen:var(--${SR_PEN[h.k]||"ink-3"})">
+        <div class="sr-h"><span class="ef-tag">${esc(h.k)}</span><b>${srMark(esc(h.label),terms)}</b>${h.sub?`<span class="faint">${esc(h.sub)}</span>`:""}<span class="sr-d mono">${h.date?efFmt(h.date,{day:"2-digit",month:"short",year:"numeric"}):""}</span></div>
+        <div class="sr-s">${searchSnippets(h.text,terms)}</div></div>`).join("")}</div>
+    ${list.length>SRCH.limit?`<button class="sm" id="srMore">Show ${Math.min(100,list.length-SRCH.limit)} more · ${list.length-SRCH.limit} left</button>`:""}
+    ${!terms.length?`<div class="faint sr-empty">Type above. Every word must appear somewhere in the entry (any order); put words in "quotes" to match them as a phrase. Results come from demands, objects, transports, subtasks, comments, meetings, journal, to-dos, effort notes, wins, epics, the playbook, debug sessions${NOTES.length?" and your old notes":""}.</div>`:""}
+    ${terms.length&&!all.length?`<div class="faint sr-empty">Nothing matches every word. Try fewer words${NOTES.length?"":", or connect your old notes"}.</div>`:""}
+  </div>`;
+  const q=s=>host.querySelector(s),inp=q("#srQ");wireNotesStatus(host);
+  inp.oninput=()=>{clearTimeout(inp._t);inp._t=setTimeout(()=>{SRCH.q=inp.value;SRCH.kind="";SRCH.year="";SRCH.limit=100;const pos=inp.selectionStart;renderSearchPage();const ni=document.getElementById("srQ");if(ni){ni.focus();ni.setSelectionRange(pos,pos);}},250);};
+  host.querySelectorAll("[data-kind]").forEach(b=>b.onclick=()=>{SRCH.kind=b.dataset.kind;SRCH.limit=100;renderSearchPage();});
+  host.querySelectorAll("[data-year]").forEach(b=>b.onclick=()=>{SRCH.year=b.dataset.year;SRCH.limit=100;renderSearchPage();});
+  host.querySelectorAll("[data-sort]").forEach(b=>b.onclick=()=>{SRCH.sort=b.dataset.sort;renderSearchPage();});
+  host.querySelectorAll(".sr-hit").forEach(el=>el.onclick=()=>openHit(list[+el.dataset.i],terms));
+  if(q("#srMore"))q("#srMore").onclick=()=>{SRCH.limit+=100;renderSearchPage();};
+  if(!terms.length&&document.activeElement!==inp)setTimeout(()=>inp.focus(),30);}
+/* ---------- reading one old note ---------- */
+function openNote(n,terms){terms=terms||[];const root=document.getElementById("modalRoot");
+  root.innerHTML=`<div class="modal-bg"><div class="modal efx nt-modal"><div class="nt-h"><div style="min-width:0"><span class="ef-lb">Old note · ${esc(n.folder||"(top folder)")}</span><h2>${esc(n.name)}</h2>
+      <div class="faint mono" style="font-size:11px">${efLong(n.date)} · ${fmtSize(n.size)}${terms.length?` · <span id="ntCount"></span>`:""}</div></div>
+      <div class="ef-row">${terms.length?`<button class="sm" id="ntPrev" title="Previous match">↑</button><button class="sm" id="ntNext" title="Next match">↓ Next</button>`:""}<button class="sm" id="ntCopy">⧉ Copy text</button><button class="ghost" id="ntClose">Close</button></div></div>
+    <pre class="nt-body" id="ntBody">${srMark(esc(n.text),terms)}</pre></div></div>`;
+  const q=s=>root.querySelector(s),bg=q(".modal-bg"),close=()=>{root.innerHTML="";};
+  bg.onclick=e=>{if(e.target===bg)close();};q("#ntClose").onclick=close;
+  q("#ntCopy").onclick=()=>navigator.clipboard.writeText(n.text).then(()=>toast("Copied")).catch(()=>toast("Copy failed",true));
+  const marks=[...root.querySelectorAll("#ntBody mark")];let i=-1;
+  const go=d=>{if(!marks.length)return;if(i>=0)marks[i].classList.remove("cur");i=(i+d+marks.length)%marks.length;marks[i].classList.add("cur");marks[i].scrollIntoView({block:"center"});const c=q("#ntCount");if(c)c.textContent=`match ${i+1} of ${marks.length}`;};
+  if(q("#ntNext")){q("#ntNext").onclick=()=>go(1);q("#ntPrev").onclick=()=>go(-1);}
+  if(marks.length)setTimeout(()=>go(1),30);else{const c=q("#ntCount");if(c)c.textContent="no matches in the text";}}
+/* ---------- "have I seen this before?" — old notes that mention this demand ---------- */
+function notesFor(t){const toks=[...new Set([t.demandId,...t.objects.map(o=>o.name),...t.transports.map(tr=>tr.number)].map(x=>String(x||"").trim()).filter(x=>x.length>=4))],lows=toks.map(x=>x.toLowerCase());
+  return {toks,hits:toks.length?NOTES.map(n=>({n,m:toks.filter((x,i)=>n.low.includes(lows[i]))})).filter(x=>x.m.length).sort((a,b)=>b.m.length-a.m.length||b.n.date.localeCompare(a.n.date)):[]};}
+function notesRailHTML(t){if(!NOTES.length)return "";const {toks,hits}=notesFor(t);if(!toks.length)return "";
+  return `<div class="ck-unit cxs"><div class="ck-head"><h2>In your old notes</h2>${hits.length?`<a class="cxl" id="cxNotesAll">${hits.length} ›</a>`:""}</div>
+    ${hits.slice(0,5).map((x,i)=>`<div class="lk cx-note" data-i="${i}" style="--pen:var(--pen-7)" title="${esc(x.n.path)}"><i></i><span class="t">${esc(x.n.name)} <span class="faint">${esc(x.m.slice(0,2).join(", "))}</span></span><span class="d">${shortD(x.n.date)}</span></div>`).join("")
+      ||`<div class="bempty">Nothing in your old notes mentions ${esc(toks[0])}${toks.length>1?" or its objects":""}.</div>`}</div>`;}
+function wireNotesRail(host,t){if(!NOTES.length)return;const {hits}=notesFor(t);
+  host.querySelectorAll(".cx-note").forEach(el=>el.onclick=()=>{const x=hits[+el.dataset.i];if(x)openNote(x.n,x.m.map(m=>m.toLowerCase()));});
+  const all=host.querySelector("#cxNotesAll");if(all)all.onclick=()=>{openSearch(t.demandId||(t.objects[0]&&t.objects[0].name)||"");SRCH.kind="Note";renderSearchPage();};}
+
 /* ===================== WIRE UP ===================== */
 document.querySelectorAll(".navbtn,.rb[data-view]").forEach(b=>b.onclick=()=>{view=b.dataset.view;meetingRollup=false;journalTodos=false;renderApp();});
 document.getElementById("railMenu").onclick=()=>openMenu();
@@ -6459,6 +6620,7 @@ applyTheme(currentTheme());
 const gs=document.getElementById("globalSearch");
 gs.oninput=e=>{clearTimeout(gs._t);gs._t=setTimeout(()=>runGlobalSearch(e.target.value),150);};
 gs.onblur=()=>setTimeout(()=>document.getElementById("gsearchResults").classList.add("hide"),200);
+gs.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();openSearch(gs.value);}});
 gs.onfocus=()=>{if(gs.value)runGlobalSearch(gs.value);};
 document.addEventListener("keydown",e=>{
   if(screenLocked||pendingEncrypted)return;
@@ -6627,6 +6789,7 @@ async function boot(){
   }
   await restoreHandle();
   await restoreImgDir();
+  notesRestore();
 }
 boot();
 </script>
