@@ -29,12 +29,12 @@ them. Nothing here is decided; pick, drop or reorder freely. Last updated 12 Oct
 
 ## 3. Looking back
 
-7. **A readable copy every year** — export everything as plain text / Markdown files in
+5. **A readable copy every year** — export everything as plain text / Markdown files in
    folders by year, readable in Notepad even if this app is ever gone.
 
 ## 4. Small gaps
 
-9. **Excel notes** — you chose .txt only for now. When wanted: paste rows copied from
+6. **Excel notes** — you chose .txt only for now. When wanted: paste rows copied from
    Excel into the notes (no file reading needed, so no library).
 
 ## 5. Suggested earlier — you passed on these (kept for reference)
