@@ -1404,6 +1404,32 @@
   .efx .nt-h h2{margin:2px 0 4px;word-break:break-word}
   .efx .nt-body{flex:1;overflow:auto;margin:0;white-space:pre-wrap;word-break:break-word;font-family:var(--mono);font-size:12.5px;line-height:1.6;color:var(--ink);background:var(--paper-2);padding:12px 14px;border-radius:3px;min-height:200px}
   .efx .nt-body mark.cur{outline:2px solid var(--watch,var(--amber));background:color-mix(in srgb,var(--watch,var(--amber)) 50%,transparent)}
+  /* ===================== LESSONS + MONTH ===================== */
+  .jr .jcv.ef{height:190px}
+  .ls-row{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:10px;align-items:start;padding:8px 0;border-top:1px dotted var(--line2);font-size:12.5px;line-height:1.5}
+  .ls-row:first-of-type{border-top:0}
+  .ls-row .d{font-size:10.5px;color:var(--faint);padding-top:2px}
+  .ls-row .m{font-size:11px;margin-top:3px}
+  .ls-row .m a{color:var(--accent2);text-decoration:none}.ls-row .m a:hover{text-decoration:underline}
+  .ls-row .ops{opacity:0;display:flex;gap:2px;transition:opacity .15s}.ls-row:hover .ops{opacity:1}
+  .efx label.ls-pb{display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.5;text-transform:none;letter-spacing:0;font-weight:400;color:var(--ink-2);margin:0;cursor:pointer}
+  .efx label.ls-pb input{width:auto;margin-top:3px}
+  .efx .mo-strip{display:grid;gap:4px;padding:12px 15px}
+  .efx .mo-yr{display:grid;grid-template-columns:44px repeat(12,minmax(0,1fr));gap:2px;align-items:center}
+  .efx .mo-yr>span{font-size:11px;color:var(--ink-2)}
+  .efx button.mo-m{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;height:36px;padding:2px 0;border:1px solid transparent;border-radius:3px;background:transparent;font-size:9px;color:var(--ink-3)}
+  .efx button.mo-m i{display:block;border-radius:50%;background:var(--pen-6)}
+  .efx button.mo-m:hover{border-color:var(--rule-strong);background:var(--paper-2)}
+  .efx button.mo-m.on{border-color:var(--ink);background:var(--paper-2);color:var(--ink)}
+  .efx button.mo-m:disabled{opacity:.3}
+  .efx .mo-days{display:grid;gap:2px}
+  .efx .mo-day{display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;padding:10px 0;border-top:1px dotted var(--rule-strong)}
+  .efx .mo-dh{display:flex;flex-direction:column;font-size:13px}.efx .mo-dh .faint{font-size:10.5px;font-family:var(--mono)}
+  .efx .mo-evs{display:grid;gap:3px}
+  .efx .mo-ev{display:grid;grid-template-columns:8px minmax(0,1fr);gap:9px;align-items:baseline;font-size:12.5px;line-height:1.5;color:var(--ink-2);padding:3px 6px;border-radius:3px;cursor:pointer;word-break:break-word}
+  .efx .mo-ev:hover{background:var(--paper-2)}
+  .efx .mo-ev i{width:7px;height:7px;border-radius:50%;background:var(--pen);transform:translateY(-1px)}
+  .efx .mo-ev b{color:var(--ink);font-weight:600}
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -1431,6 +1457,7 @@
       <button class="navbtn" data-view="meetings">Meetings</button>
       <button class="navbtn" data-view="effort">Effort</button>
       <button class="navbtn" data-view="review">Review</button>
+      <button class="navbtn" data-view="month">Month</button>
       <button class="navbtn" data-view="playbook">Playbook</button>
       <button class="navbtn" data-view="vault">🔒 Vault</button>
     </div>
@@ -1464,6 +1491,7 @@
     <button class="rb" data-view="meetings" style="--pen:var(--pen-4)"><svg viewBox="0 0 18 18"><circle cx="6.5" cy="7" r="2.3"/><circle cx="12.5" cy="7.5" r="1.8"/><path d="M2.5 15c.6-2.4 2.2-3.6 4-3.6s3.4 1.2 4 3.6M11 11.8c1.6-.3 3.4.6 4.4 3.2"/></svg><span class="pd"></span><span class="cnt" id="rcMeetings"></span><span class="tip">Meetings · open actions</span></button>
     <button class="rb" data-view="effort" style="--pen:var(--pen-2)"><svg viewBox="0 0 18 18"><circle cx="9" cy="10" r="5.8"/><path d="M9 7v3.2l2.2 1.4M7.3 2.5h3.4M9 2.5v1.7"/></svg><span class="pd"></span><span class="tip">Effort · hours logged</span></button>
     <button class="rb" data-view="review" style="--pen:var(--pen-4)"><svg viewBox="0 0 18 18"><path d="M5.5 2.5h7v4.2a3.5 3.5 0 0 1-7 0z"/><path d="M5.5 4H3v1.2A2.6 2.6 0 0 0 5.7 7.8M12.5 4H15v1.2a2.6 2.6 0 0 1-2.7 2.6M9 10.2v2.8M6.5 15.5h5M7.5 13h3"/></svg><span class="pd"></span><span class="tip">Review · year &amp; wins</span></button>
+    <button class="rb" data-view="month" style="--pen:var(--pen-6)"><svg viewBox="0 0 18 18"><rect x="2.5" y="3.5" width="13" height="12" rx="1"/><path d="M2.5 7h13M6 2v3M12 2v3M5.5 10h1M8.5 10h1M11.5 10h1M5.5 12.5h1M8.5 12.5h1"/></svg><span class="pd"></span><span class="tip">Browse by month</span></button>
     <button class="rb" data-view="playbook" style="--pen:var(--pen-6)"><svg viewBox="0 0 18 18"><path d="M3 3.5h5v11H3zM10 3.5h5v11h-5z"/><path d="M5.5 6.5v5"/></svg><span class="pd"></span><span class="tip">Playbook</span></button>
     <div class="sep"></div>
     <div class="grow"></div>
@@ -1515,7 +1543,7 @@ function objTypeUsage(type){let n=0;state.tasks.forEach(t=>t.objects.forEach(o=>
 const DEF_LANDSCAPES=["H0","H1","H2","H3","H4","H5","H6"];
 const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod / QA",short:"QA"},{d:"1",label:"Production",short:"PRD"}];
 
-let state={version:25,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
+let state={version:26,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false, lastWriteAt=0, autoSaveDue=0, diskConflict=null, fileSig=null, savePromise=null, backupUnreadable=false;
 let view="today";
 let activeId=null, activeTab="overview", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -1749,7 +1777,7 @@ function updateReconnectUI(){const b=document.getElementById("btnReconnect");if(
 async function forgetHandle(){savedHandle=null;if(useIdb)await idbDel("handle");updateReconnectUI();}
 
 function migrate(d){
-  d.version=25;
+  d.version=26;
   d.settings=d.settings||{};
   d.settings.landscapes=d.settings.landscapes&&d.settings.landscapes.length?d.settings.landscapes:[...DEF_LANDSCAPES];
   d.settings.tiers=d.settings.tiers&&d.settings.tiers.length?d.settings.tiers:DEF_TIERS;
@@ -1793,7 +1821,8 @@ function migrate(d){
     system:t.system||"",client:t.client||"",project:t.project||"",theme:t.theme||"",
     waiting:{on:(t.waiting&&t.waiting.on)||"",since:(t.waiting&&t.waiting.since)||""},goliveTarget:t.goliveTarget||"",
     nextAction:{date:(t.nextAction&&t.nextAction.date)||"",note:(t.nextAction&&t.nextAction.note)||""},
-    receivedDate:t.receivedDate||"",dueDate:t.dueDate||"",estimate:(+t.estimate>0?Math.round(+t.estimate*4)/4:0),star:!!t.star,description:t.description||"",notes:t.notes||"",
+    receivedDate:t.receivedDate||"",dueDate:t.dueDate||"",estimate:(+t.estimate>0?Math.round(+t.estimate*4)/4:0),star:!!t.star,
+    lessons:(t.lessons||[]).map(l=>({id:l.id||uid(),date:/^\d{4}-\d\d-\d\d$/.test(l.date||"")?l.date:todayStr(),text:String(l.text||""),playId:l.playId||""})).filter(l=>l.text.trim()),description:t.description||"",notes:t.notes||"",
     timeline:(t.timeline||[]).map(e=>({id:e.id||uid(),ts:e.ts||Date.now(),type:e.type||"note",from:e.from||"",to:e.to||"",note:e.note||"",cause:e.cause==="change"?"change":"",est:+e.est>0?+e.est:0})),
     subtasks:(t.subtasks||[]).map(normSub),
     objects:(t.objects||[]).map(o=>({id:o.id||uid(),name:o.name||"",type:o.type||"",action:o.action||"Modified",desc:o.desc||"",ackClash:(o.ackClash||[]).slice()})),
@@ -1854,13 +1883,15 @@ const PLAY_KINDS={
   faq:{label:"FAQ",icon:"❓"},
   recurring:{label:"Recurring task",icon:"🔁"},
   freeze:{label:"Freeze period",icon:"❄"},
-  contacts:{label:"Contacts / Responsibilities",icon:"👥"}
+  contacts:{label:"Contacts / Responsibilities",icon:"👥"},
+  lesson:{label:"Lesson learned",icon:"💡"}
 };
 function normPlay(p){return{id:p.id||uid(),kind:PLAY_KINDS[p.kind]?p.kind:"process",title:p.title||"(untitled)",category:p.category||"",body:p.body||"",pinned:!!p.pinned,
   steps:(p.steps||[]).map(s=>({id:s.id||uid(),text:s.text||""})),
   due:p.due||"",recur:["annual","quarterly","monthly","once"].includes(p.recur)?p.recur:"annual",lastDone:p.lastDone||null,
   from:p.from||"",to:p.to||"",systems:(p.systems||[]).slice(),
   people:(p.people||[]).map(x=>({id:x.id||uid(),name:x.name||"",role:x.role||"",contact:x.contact||""})),
+  fromTaskId:p.fromTaskId||"",fromLessonId:p.fromLessonId||"",fromDate:p.fromDate||"",
   createdAt:p.createdAt||Date.now(),updatedAt:p.updatedAt||Date.now()};}
 function activeFreezes(date){date=date||todayStr();return state.playbook.filter(p=>p.kind==="freeze"&&p.from&&p.to&&p.from<=date&&date<=p.to);}
 function freezeFor(sysId,date){return activeFreezes(date).find(f=>(f.systems||[]).includes(sysId))||null;}
@@ -2074,7 +2105,7 @@ function renderApp(){
   noteContent();
   document.querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
   document.querySelector("main").classList.toggle("wide",view==="today"&&benchOn()&&contentCount()>0);
-  document.querySelector("main").classList.toggle("effortv",view==="effort"||view==="review"||view==="search");
+  document.querySelector("main").classList.toggle("effortv",["effort","review","search","month"].includes(view));
   {const k=[view,activeId,activeEpicId,activeMeetingId,activeJournalId,activeDebugId,activePlayId,meetingRollup,journalTodos,document.documentElement.getAttribute("data-theme")].join("|");
    if(k!==renderApp._key){renderApp._key=k;enterPulse("all");const dr=document.getElementById("efDrw");if(dr)dr.classList.remove("on");}}
   if(view==="today"){renderToday();}
@@ -2087,6 +2118,7 @@ function renderApp(){
   else if(view==="effort"){renderEffortWS();}
   else if(view==="review"){renderReview();}
   else if(view==="search"){renderSearchPage();}
+  else if(view==="month"){renderMonth();}
   else{renderVault();}
   renderSaveState();syncRail();updateSb();syncDemandsLayout();efTimerUI();
 }
@@ -2645,7 +2677,8 @@ function renderWork(body,t){
     <div class="sec-title"><h3>Subtasks (branching)</h3><div class="ln"></div><button class="sm" id="addRoot">＋ Add subtask</button></div>
     <div class="tree" id="tree"></div>
     <div class="sec-title" style="margin-top:24px"><h3>Comments on this demand</h3><div class="ln"></div></div>
-    <div id="taskCmts"></div>`;
+    <div id="taskCmts"></div>
+    <div id="lsHost" style="margin-top:24px"></div>`;
   const updNL=()=>{body.querySelector("#n-links").innerHTML=linkChips((t.description||"")+" "+(t.notes||""));};
   body.querySelector("#fDesc").onchange=e=>{t.description=e.target.value;touch(t);updNL();};
   body.querySelector("#fNotes").onchange=e=>{t.notes=e.target.value;touch(t);updNL();};
@@ -2653,6 +2686,7 @@ function renderWork(body,t){
   renderTree(body.querySelector("#tree"),t,t.subtasks);
   renderComments(body.querySelector("#taskCmts"),t,()=>touch(t));
   if(pinned.length)drawPinned(body.querySelector("#pinBox"),t,pinned);
+  renderLessons(body.querySelector("#lsHost"),t);
 }
 function drawPinned(host,t,pinned){
   host.innerHTML=`<div class="pin-title">📌 Key reference</div>`+pinned.map(r=>{const rv=revealPw[r.id];
@@ -4211,7 +4245,7 @@ function renderPlaybookDetail(){
   host.querySelector("#pb-body").onchange=e=>{p.body=e.target.value;touch(p);const l=host.querySelector("#pb-links");if(l)l.innerHTML=linkChips(p.body);};
   host.querySelector("#pb-pin").onclick=()=>{p.pinned=!p.pinned;touch(p);renderApp();};
   host.querySelector("#pb-print").onclick=()=>printPlay(p);
-  host.querySelector("#pb-del").onclick=()=>{if(confirm("Delete this playbook entry?")){state.playbook=state.playbook.filter(x=>x.id!==p.id);state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="playbook"&&l.id===p.id)));activePlayId=null;markDirty();renderApp();}};
+  host.querySelector("#pb-del").onclick=()=>{if(confirm("Delete this playbook entry?")){state.playbook=state.playbook.filter(x=>x.id!==p.id);state.tasks.forEach(t=>(t.lessons||[]).forEach(l=>{if(l.playId===p.id)l.playId="";}));state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="playbook"&&l.id===p.id)));activePlayId=null;markDirty();renderApp();}};
   renderPlayKind(host.querySelector("#pb-kind-sec"),p);
   renderImagesSection(host.querySelector("#pb-imgs"),"playbook",p.id);
 }
@@ -4287,6 +4321,9 @@ function renderPlayKind(body,p){
       tr.querySelector(".pp-x").onclick=()=>{p.people=p.people.filter(y=>y.id!==x.id);touch(p);renderPlayKind(body,p);};});
     return;
   }
+  if(p.kind==="lesson"){const t=p.fromTaskId?state.tasks.find(x=>x.id===p.fromTaskId):null;
+    body.innerHTML=t?`<div class="faint" style="font-size:12px">💡 Learned on <a href="#" id="pb-from">${esc(t.demandId||"")} ${esc(t.title)}</a>${p.fromDate?" · "+p.fromDate:""}</div>`:"";
+    const a=body.querySelector("#pb-from");if(a)a.onclick=e=>{e.preventDefault();view="demands";activeId=t.id;activeTab="overview";renderApp();};return;}
   body.innerHTML=""; /* faq — the body IS the answer */
 }
 function printPlay(p){
@@ -4917,7 +4954,8 @@ function setDemandStatus(t,v,fromEl){if(v===t.status)return;
   flyDot(fromEl,card,STATUS_PEN[v]);
   const after=()=>{renderApp();const c=document.querySelector(`#taskList .tcard[data-id="${t.id}"]`);if(c&&benchOn()&&motionOn())c.classList.add("flash");};
   if(benchOn()&&motionOn()&&card)setTimeout(after,600);else after();
-  toast("Status → "+STATUS[v].label+" · logged in History");}
+  toast("Status → "+STATUS[v].label+" · logged in History");
+  if(v==="closed")setTimeout(()=>{if(!document.querySelector("#modalRoot .modal-bg"))openLesson(t,{closing:true});},benchOn()&&motionOn()&&card?750:80);}
 
 /* where a transport has actually reached, drawn as its route Dev → QA → Prod */
 function trRouteDraw(t,tr){return (ctx,w,h,tm,dt,s)=>{const {dot,ring,label,C}=DK;
@@ -5454,7 +5492,7 @@ function renderOverview(body,t){
     ...t.transports.flatMap(tr=>tr.syncs.filter(s=>s.system&&s.date).map(s=>({ts:new Date(s.date+"T12:00:00").getTime(),pen:"var(--good)",h:`<b class="mono">${esc(tr.number||"(TR)")}</b> reached ${esc(s.system)}`})))]
     .sort((a,b)=>b.ts-a.ts).slice(0,7);
   body.innerHTML=`
-    <div class="bsec jr"><div class="sec-title"><h3>Journey</h3><div class="ln"></div><span class="faint mono" style="font-size:10.5px">received ${t.receivedDate||"—"} · ${fin?`took ${age} days · finished ${fin}`:`${age} days`}${loops?` · ${loops} rework loop${loops>1?"s":""}`:""}</span></div><canvas class="jcv"></canvas></div>
+    <div class="bsec jr"><div class="sec-title"><h3>Journey</h3><div class="ln"></div><span class="faint mono" style="font-size:10.5px">received ${t.receivedDate||"—"} · ${fin?`took ${age} days · finished ${fin}`:`${age} days`}${loops?` · ${loops} rework loop${loops>1?"s":""}`:""}</span></div><canvas class="jcv${efFor(t.id).length?" ef":""}"></canvas></div>
     <div class="grid2">
       <div class="field"><label>What is to be done</label><textarea id="fDesc" placeholder="Scope, requirement summary, acceptance criteria…">${esc(t.description)}</textarea></div>
       <div class="field"><label>Where it stands · working notes</label><textarea id="fNotes" placeholder="Running notes, blockers, who asked, decisions…">${esc(t.notes)}</textarea></div></div>
@@ -5467,7 +5505,8 @@ function renderOverview(body,t){
       ${(()=>{const h=efSum(efFor(t.id)),e=+t.estimate||0;return `<div class="ck-unit ins" data-tab="effort"><canvas data-k="eff" data-f="${e?Math.min(1,h/e):0}" data-over="${e&&h>e?1:0}"></canvas><div><div class="k">Effort</div><div class="v">${efFh(h)}<small>${e?"/ "+efFh(e)+" h":"h logged"}</small></div><div class="s ${e&&h>e?"late":""}">${e?(h>e?efFh(h-e)+" h over estimate":efFh(e-h)+" h left"):h?"no estimate yet":"nothing logged yet"}</div></div></div>`;})()}</div>
     <div class="bsec"><div class="sec-title"><h3>Latest</h3><div class="ln"></div><span class="faint" style="font-size:10.5px">status · notes · comments · transport moves</span></div>
       ${feed.map(f=>`<div class="fe" style="--pen:${f.pen}"><span class="d">${shortD(isoTs(f.ts))}</span><i></i><span>${f.h}</span></div>`).join("")||`<div class="bempty">Nothing yet.</div>`}
-      <div class="compose"><textarea id="ovCmt" rows="1" placeholder="Add a comment… (Ctrl+Enter)"></textarea><button class="sm primary" id="ovPost">Post</button></div></div>`;
+      <div class="compose"><textarea id="ovCmt" rows="1" placeholder="Add a comment… (Ctrl+Enter)"></textarea><button class="sm primary" id="ovPost">Post</button></div></div>
+    <div class="bsec" id="lsHost"></div>`;
   const updNL=()=>{body.querySelector("#n-links").innerHTML=linkChips((t.description||"")+" "+(t.notes||""));};
   body.querySelector("#fDesc").onchange=e=>{t.description=e.target.value;touch(t);updNL();};
   body.querySelector("#fNotes").onchange=e=>{t.notes=e.target.value;touch(t);updNL();};
@@ -5477,6 +5516,7 @@ function renderOverview(body,t){
   body.querySelectorAll(".ins canvas").forEach(cv=>{const f=+cv.dataset.f,k=cv.dataset.k,st={v:motionOn()?0:f};
     DK.scope(cv,(c,w,h)=>{const {C}=DK;st.v+=(f-st.v)*.05;const col=k==="obj"?(f>0?C.bad:C["pen-2"]):k==="age"?(f>.5?C.watch:C.good):k==="eff"?(+cv.dataset.over?C.bad:C.good):k==="trs"?C.good:C["pen-2"];
       if(k==="age"||k==="eff")DK.dotArc(c,w/2,h/2+4,w/2-5,st.v,22,col,1.8);else DK.dotRing(c,w/2,h/2,w/2-5,st.v,30,col);});});
+  renderLessons(body.querySelector("#lsHost"),t);
   DK.scope(body.querySelector(".jcv"),journeyDraw(t));}
 /* the demand's life on a date line: status stretches, rework loops, transports landing, due, today */
 function journeyDraw(t){return (c,w,h,tm,dt,s)=>{const {dot,ring,label,C}=DK,mv=motionOn();
@@ -5484,7 +5524,7 @@ function journeyDraw(t){return (c,w,h,tm,dt,s)=>{const {dot,ring,label,C}=DK,mv=
   /* a finished demand's line ends at its last event, not at today — otherwise an old closed demand is a speck on the left */
   const fin=journeyFinish(t,hs),t0=ms(hs[0].d);
   const tLast=fin?ms(fin):Math.max(Date.now(),t.dueDate?ms(t.dueDate):0),tEnd=tLast+Math.max(864e5,(tLast-t0)*.04);
-  const X=d=>28+(w-56)*((ms(d)-t0)/Math.max(1,tEnd-t0)),y=h*.44;
+  const X=d=>28+(w-56)*((ms(d)-t0)/Math.max(1,tEnd-t0)),y=h*(h>=180?.40:.44);
   const prog=mv?Math.min(1,(performance.now()-s.born)/1400):1,xMax=28+(w-56)*(1-Math.pow(1-prog,3)),today=todayStr(),xNow=fin?Infinity:X(today);
   for(let x=28;x<=w-28;x+=6)dot(c,x,y,.8,C["ink-4"]);
   hs.forEach((e,i)=>{const a=Math.min(X(e.d),xMax),b=Math.min(i<hs.length-1?X(hs[i+1].d):(t.status==="closed"?X(e.d)+2:fin?Math.max(X(e.d)+2,X(fin)):xNow),xMax);if(b<=a)return;
@@ -5502,6 +5542,7 @@ function journeyDraw(t){return (c,w,h,tm,dt,s)=>{const {dot,ring,label,C}=DK,mv=
   t.transports.forEach((tr,k)=>tr.syncs.forEach(sy=>{if(!sy.date)return;const x=X(sy.date);if(x>xMax||x<28)return;const yy=h-16-(k%3)*7;
     c.globalAlpha=.35;c.strokeStyle=C.good;c.lineWidth=1;c.beginPath();c.moveTo(x,y+6);c.lineTo(x,yy);c.stroke();dot(c,x,yy,2.2,C.good);}));
   if(t.transports.some(tr=>tr.syncs.some(sy=>sy.date)))label(c,"TRANSPORTS LANDING",28,h-3,{size:7,align:"left"});
+  journeyEffort(c,w,h,t,X,xMax,label);
   if(t.dueDate){const xd=X(t.dueDate);if(xd<=xMax){c.globalAlpha=.8;c.strokeStyle=C.bad;c.lineWidth=1;c.beginPath();c.moveTo(xd,y-24);c.lineTo(xd,y+10);c.stroke();label(c,"DUE",xd,y-30,{size:7.5,color:C.bad});}}
   if(xNow<=xMax){const pl=mv?(Math.sin(tm*.004)+1)/2:0;ring(c,xNow,y,6+pl*5,C.ink,.4*(1-pl));dot(c,xNow,y,2.4,C.ink);label(c,"TODAY",xNow,y+40,{size:7.5,color:C.ink});}
   else if(fin&&prog>=1){const n=Math.round((ms(today)-ms(fin))/864e5);if(n>0)label(c,`TODAY +${n}D →`,w-28,y+40,{size:7.5,color:C["ink-4"],align:"right"});}};}
@@ -6141,6 +6182,7 @@ function rvStats(from,to){const end=to>todayStr()?todayStr():to,inP=d=>d&&d>=fro
     avgLead:leads.length?Math.round(leads.reduce((a,b)=>a+b,0)/leads.length):null,wins:state.wins.filter(w=>inP(w.date)).sort((a,b)=>a.date.localeCompare(b.date)),worked,epics,
     reqs:[...new Set(del.map(x=>x.t.requestor).filter(Boolean))],themes:[...new Set(del.map(x=>x.t.theme).filter(Boolean))],
     objects:[...new Set(del.flatMap(x=>x.t.objects.map(o=>o.name)).filter(Boolean))],meetings:state.meetings.filter(m=>inP(m.date)),learn,
+    lessons:state.tasks.flatMap(t=>(t.lessons||[]).filter(l=>inP(l.date)).map(l=>({t,l}))),
     changes:state.tasks.flatMap(t=>changeEvents(t).filter(e=>inP(isoTs(e.ts))).map(e=>({t,e}))),chH:efSum(ef.filter(e=>{const t=rvTask(e.taskId);return t&&roundOn(t,e.date)>1;})),
     topics:[...new Set(learn.map(e=>e.note.trim()).filter(Boolean))].slice(0,4)};}
 function rvPrev(from,to){const n=Math.round((new Date(to+"T00:00:00")-new Date(from+"T00:00:00"))/864e5),pto=efAdd(from,-1);return rvStats(efAdd(pto,-n),pto);}
@@ -6179,6 +6221,7 @@ function rvDoc(P,S,R,note){const H=[],M=[],md=x=>String(x??"").replace(/\|/g,"\\
   if(S.learn.length)add(`<b>${efFh(Math.round(efSum(S.learn)))} h</b> learning${S.topics.length?` — ${esc(rvList(S.topics))}`:""}`);
   if(S.meetings.length)add(`<b>${S.meetings.length}</b> meeting${S.meetings.length===1?"":"s"} noted`);
   if(S.wins.length)add(`<b>${S.wins.length}</b> win${S.wins.length===1?"":"s"} noted`);
+  if(S.lessons.length)add(`<b>${S.lessons.length}</b> lesson${S.lessons.length===1?"":"s"} written down`);
   list("At a glance",g);
   list("Highlights",rvHighlights(S).map(t=>{const ep=epicById(t.epicId),d=rvFirstDelivered(t),h=S.hoursOf(t.id);
     const meta=[ep?"◆ "+(ep.code||ep.name):"",t.theme,d&&d>=S.from&&d<=S.to?"delivered "+rvLong(d):STATUS[t.status].label.toLowerCase(),h?efFh(Math.round(h))+" h":"",t.objects.length?t.objects.length+" object"+(t.objects.length===1?"":"s"):"",reworkCount(t)?"reworked":""].filter(Boolean).join(" · ");
@@ -6188,6 +6231,7 @@ function rvDoc(P,S,R,note){const H=[],M=[],md=x=>String(x??"").replace(/\|/g,"\\
     Object.entries(WIN_KINDS).forEach(([k,v])=>{const ws=S.wins.filter(w=>w.kind===k);if(!ws.length)return;
       H.push(`<p><b>${v.icon} ${v.l}</b></p><ul>${ws.map(w=>{const t=rvTask(w.taskId);return `<li>${rvLong(w.date)} — ${esc(w.text)}${t?` <span class="meta">(${esc(t.demandId||t.title)})</span>`:""}</li>`;}).join("")}</ul>`);
       M.push(`**${v.icon} ${v.l}**`,``,...ws.map(w=>{const t=rvTask(w.taskId);return `- ${rvLong(w.date)} — ${w.text}${t?` (${t.demandId||t.title})`:""}`;}),``);});}
+  list("Lessons learned",S.lessons.map(({t,l})=>({h:`${esc(l.text).replace(/\n/g,"<br>")} <span class="meta">(${esc(t.demandId||t.title)} · ${rvLong(l.date)})</span>`,m:`${l.text.replace(/\n/g," ")} (${t.demandId||t.title} · ${rvLong(l.date)})`})));
   table("Epics",["Epic","My role","My part","Delivered in period","Hours"],S.epics.map(e=>{const ts=tasksForEpic(e.id);
     return [epicLabel(e),e.role==="lead"?"Lead":"Contributor",e.myScope||"—",String(S.del.filter(x=>x.t.epicId===e.id).length)+" of "+ts.length,efFh(Math.round(ts.reduce((a,t)=>a+S.hoursOf(t.id),0)+efSum(S.ef.filter(x=>x.epicId===e.id))))||"0"];}));
   table("Delivered",["Demand","Title","Type","Theme","Requestor","Delivered","Days","Hours","Notes"],S.del.map(({t,d,r,from})=>{
@@ -6505,7 +6549,8 @@ function searchAll(q){const terms=searchTerms(q);if(!terms.length)return [];cons
       add("Transport",`${tr.number||"(TR)"}${tr.desc?" — "+tr.desc:""}`,[tr.number,tr.desc,tr.notes,"origin "+tr.system,syn.map(s=>s.system).join(" "),toc?"ToC "+toc.number:"",(tr.dest||[]).join(" "),tr.client,isCust(tr)?"customizing cust config":"workbench"],syn.map(s=>s.date).filter(Boolean).sort().pop()||td(t),go("transports"),dl);});
     (t.tocs||[]).forEach(c=>add("ToC",`ToC ${c.number||"(unnamed)"}`,[c.number,c.desc,c.notes,c.syncs.map(s=>s.system).join(" ")],c.syncs.map(s=>s.date).filter(Boolean).sort().pop()||td(t),go("transports"),dl));
     (function w(a){a.forEach(s=>{add("Subtask",s.title||"(subtask)",[s.title,(s.comments||[]).map(c=>c.text).join(" · ")],s.dueDate||s.receivedDate||td(t),go("work"),dl);w(s.children||[]);});})(t.subtasks);
-    (t.reference||[]).forEach(r=>add("Reference",`${r.label||"(reference)"}${r.secret?" 🔒":""}`,[r.label,r.secret?"":r.value],td(t),go("reference"),dl));});
+    (t.reference||[]).forEach(r=>add("Reference",`${r.label||"(reference)"}${r.secret?" 🔒":""}`,[r.label,r.secret?"":r.value],td(t),go("reference"),dl));
+    (t.lessons||[]).forEach(l=>add("Lesson",`💡 ${l.text.split("\n")[0].slice(0,90)}`,[l.text],l.date,go("overview"),dl));});
   state.meetings.forEach(m=>{const go=()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;};
     add("Meeting",m.title,[m.title,m.team,m.attendees,m.body],m.date,go,m.team);
     m.actions.forEach(a=>add("Action",`${a.done?"✓ ":""}${a.text||"(action)"}${a.owner?" ("+a.owner+")":""}`,[a.text,a.owner,a.resolution&&"↳ "+a.resolution],a.due||m.date,go,m.title));});
@@ -6537,7 +6582,7 @@ function searchSnippets(text,terms,width=80,max=2){const t=String(text||""),low=
   const wins=[];pos.forEach(p=>{const a=Math.max(0,p-width),b=Math.min(t.length,p+width),l=wins[wins.length-1];if(l&&a<=l[1])l[1]=Math.max(l[1],b);else if(wins.length<max)wins.push([a,b]);});
   if(!wins.length)wins.push([0,Math.min(t.length,width*2)]);
   return wins.map(([a,b])=>(a>0?"…":"")+srMark(esc(t.slice(a,b).replace(/\s+/g," ")),terms)+(b<t.length?"…":"")).join(` <span class="faint">·</span> `);}
-const SR_PEN={Demand:"pen-2",Object:"pen-4",Transport:"pen-3",ToC:"pen-5",Subtask:"ink-2",Reference:"ink-2",Meeting:"pen-4",Action:"pen-4",Vault:"ink-3",Journal:"pen-3","To-do":"pen-3",Win:"pen-4",Effort:"pen-2",Epic:"pen-5","Epic story":"pen-5","Waiting on":"pen-4",Playbook:"pen-6",Image:"ink-3",Debug:"pen-1",Note:"pen-7"};
+const SR_PEN={Demand:"pen-2",Object:"pen-4",Transport:"pen-3",ToC:"pen-5",Subtask:"ink-2",Reference:"ink-2",Meeting:"pen-4",Action:"pen-4",Vault:"ink-3",Journal:"pen-3","To-do":"pen-3",Win:"pen-4",Effort:"pen-2",Epic:"pen-5","Epic story":"pen-5","Waiting on":"pen-4",Playbook:"pen-6",Image:"ink-3",Debug:"pen-1",Note:"pen-7",Lesson:"pen-4"};
 function openHit(h,terms){const box=document.getElementById("gsearchResults");if(box)box.classList.add("hide");
   if(h.k==="Note"){openNote(h.note,terms);return;}h.go();const gs=document.getElementById("globalSearch");if(gs)gs.value="";renderApp();}
 /* the title-bar box: the best few, then everything on the Search page */
@@ -6605,6 +6650,110 @@ function notesRailHTML(t){if(!NOTES.length)return "";const {toks,hits}=notesFor(
 function wireNotesRail(host,t){if(!NOTES.length)return;const {hits}=notesFor(t);
   host.querySelectorAll(".cx-note").forEach(el=>el.onclick=()=>{const x=hits[+el.dataset.i];if(x)openNote(x.n,x.m.map(m=>m.toLowerCase()));});
   const all=host.querySelector("#cxNotesAll");if(all)all.onclick=()=>{openSearch(t.demandId||(t.objects[0]&&t.objects[0].name)||"");SRCH.kind="Note";renderSearchPage();};}
+
+/* ===================== LESSONS — what you'd tell yourself next time =====================
+   A lesson lives on its demand (t.lessons=[{id,date,text,playId}]) — it's part of that demand's
+   story and it's searchable. The ones that are general rules can also go to the Playbook as a
+   "Lesson learned" entry, linked both ways; that copy is edited separately. */
+function promoteLesson(t,l){const first=l.text.split(/\n/)[0].trim(),title=first.length>80?first.slice(0,77)+"…":first;
+  const p=normPlay({kind:"lesson",title:title||"Lesson learned",body:l.text,category:"Lessons learned",fromTaskId:t.id,fromLessonId:l.id,fromDate:l.date});
+  state.playbook.unshift(p);l.playId=p.id;return p;}
+function openLesson(t,o={}){const root=document.getElementById("modalRoot"),L=t.lessons||(t.lessons=[]),l=o.id?L.find(x=>x.id===o.id):null,inPb=l&&l.playId?state.playbook.find(p=>p.id===l.playId):null;
+  root.innerHTML=`<div class="modal-bg"><div class="modal efx ef-modal"><h2>${o.closing?"💡 Closed — anything worth remembering?":l?"✎ Edit lesson":"💡 A lesson from this demand"}</h2>
+    <p class="faint" style="font-size:12px;margin-top:-6px;line-height:1.5">${o.closing?`<b>${esc(t.demandId||t.title)}</b> is closed. If there's one thing you'd tell yourself before the next demand like it, note it — it stays with this demand and shows up in search.`:`What would you tell yourself before the next demand like <b>${esc(t.demandId||t.title)}</b>?`}</p>
+    <div class="ef-qc"><textarea id="lsText" rows="4" placeholder="e.g. Ask FI for the final cost-center list before building the selection screen — it changed twice">${esc(l?l.text:"")}</textarea>
+      ${inPb?`<div class="faint" style="font-size:12px">💡 Also in the Playbook — <a href="#" id="lsPb">open it ›</a> <span class="faint">(that copy is edited separately)</span></div>`
+        :`<label class="ls-pb"><input type="checkbox" id="lsToPb"><span><b>Also add to the Playbook</b> as a “Lesson learned” — for rules you'd follow on <i>any</i> demand, not just this one.</span></label>`}
+      <div class="ef-foot"><span class="ef-dsf faint">Ctrl+Enter saves</span>${l?`<button class="ghost danger" id="lsDel">Delete</button>`:""}<button class="ghost" id="lsCancel">${o.closing?"Skip":"Cancel"}</button><button class="primary" id="lsSave">Save</button></div></div></div></div>`;
+  const q=s=>root.querySelector(s),bg=q(".modal-bg"),close=()=>{root.innerHTML="";};
+  bg.onclick=e=>{if(e.target===bg)close();};q("#lsCancel").onclick=close;
+  if(q("#lsPb"))q("#lsPb").onclick=e=>{e.preventDefault();close();view="playbook";activePlayId=inPb.id;renderApp();};
+  const save=()=>{const text=q("#lsText").value.trim();
+    if(!text){if(o.closing){close();return;}const ta=q("#lsText");ta.classList.remove("ef-shake");void ta.offsetWidth;ta.classList.add("ef-shake");ta.focus();toast("What's the lesson?",true);return;}
+    let x=l;if(x)x.text=text;else{x={id:uid(),date:todayStr(),text,playId:""};L.push(x);}
+    const toPb=q("#lsToPb")&&q("#lsToPb").checked;if(toPb)promoteLesson(t,x);
+    touch(t);close();renderApp();toast(toPb?"💡 Lesson saved — and added to the Playbook":"💡 Lesson saved");};
+  q("#lsSave").onclick=save;q("#lsText").onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();save();}};
+  if(q("#lsDel"))q("#lsDel").onclick=()=>{const i=L.indexOf(l);L.splice(i,1);touch(t);close();renderApp();efToastUndo("Lesson deleted",()=>{L.splice(Math.min(i,L.length),0,l);touch(t);renderApp();});};
+  setTimeout(()=>{const ta=q("#lsText");if(ta)ta.focus();},40);}
+function renderLessons(host,t){if(!host)return;const ls=(t.lessons||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  host.innerHTML=`<div class="sec-title"><h3>Lessons</h3><div class="ln"></div><span class="faint" style="font-size:10.5px">what you'd tell yourself next time</span><button class="sm" id="lsAdd">＋ Add a lesson</button></div>
+    ${ls.map(l=>{const p=l.playId?state.playbook.find(x=>x.id===l.playId):null;
+      return `<div class="ls-row" data-id="${l.id}"><span class="d mono">${shortD(l.date)}</span><div class="x"><div>${linkify(l.text).replace(/\n/g,"<br>")}</div><div class="m">${p?`<a href="#" class="ls-open" data-pb="${p.id}">💡 In the Playbook ›</a>`:`<a href="#" class="ls-promote" title="For rules you'd follow on any demand">→ Add to the Playbook</a>`}</div></div><span class="ops"><button class="ghost sm" data-op="ed" title="Edit">✎</button><button class="ghost sm danger" data-op="rm" title="Delete">✕</button></span></div>`;}).join("")
+      ||`<div class="faint" style="font-size:12px;padding:2px 0 4px">No lessons yet — you're asked when you close the demand, or add one any time.</div>`}`;
+  host.querySelector("#lsAdd").onclick=()=>openLesson(t);
+  host.querySelectorAll(".ls-row").forEach(r=>{const l=(t.lessons||[]).find(x=>x.id===r.dataset.id);if(!l)return;
+    r.querySelector('[data-op="ed"]').onclick=()=>openLesson(t,{id:l.id});
+    r.querySelector('[data-op="rm"]').onclick=()=>{const L=t.lessons,i=L.indexOf(l);L.splice(i,1);touch(t);renderApp();efToastUndo("Lesson deleted",()=>{L.splice(Math.min(i,L.length),0,l);touch(t);renderApp();});};
+    const pr=r.querySelector(".ls-promote");if(pr)pr.onclick=e=>{e.preventDefault();promoteLesson(t,l);touch(t);renderApp();toast("💡 Added to the Playbook as a lesson learned");};
+    const op=r.querySelector(".ls-open");if(op)op.onclick=e=>{e.preventDefault();view="playbook";activePlayId=op.dataset.pb;renderApp();};});}
+
+/* ===================== BROWSE BY MONTH =====================
+   Everything that happened in one month, day by day — for when you remember *when* something
+   happened, not what it was called. Built from what's already in the file (and your old notes,
+   dated by when the file was last saved). */
+let MON={ym:"",kinds:new Set()};
+const MON_KINDS={demand:{l:"Demands",pen:"pen-2"},transport:{l:"Transports",pen:"pen-3"},meeting:{l:"Meetings",pen:"pen-4"},journal:{l:"Journal",pen:"pen-3"},effort:{l:"Hours",pen:"pen-2"},
+  win:{l:"Wins & lessons",pen:"pen-4"},epic:{l:"Epics",pen:"pen-5"},debug:{l:"Debug",pen:"pen-1"},note:{l:"Old notes",pen:"pen-7"},off:{l:"Days off",pen:"ink-3"}};
+function monthEvents(){const ev=[],push=(d,k,h,go,x)=>{if(d&&/^\d{4}-\d\d-\d\d/.test(d))ev.push({d:d.slice(0,10),k,h,go,...(x||{})});};
+  state.tasks.forEach(t=>{const dl=esc(t.demandId||t.title),go=tab=>()=>{view="demands";activeId=t.id;activeTab=tab;renderApp();};
+    push(t.receivedDate,"demand",`📥 <b>${dl}</b> received — ${esc(t.title)}`,go("overview"),{o:0});
+    (t.timeline||[]).forEach(e=>{const d=isoTs(e.ts);
+      if(e.type==="status"&&e.from){const to=STATUS[e.to]?STATUS[e.to].label:e.to;
+        push(d,"demand",isChange(e)?`🔄 <b>${dl}</b> — requirement changed → ${to}${e.note?": "+esc(e.note):""}`:`${e.to==="delivered"?"🚀":e.to==="bug"?"↻":e.to==="closed"?"✓":"↪"} <b>${dl}</b> → ${to}`,go("history"),{o:1,del:e.to==="delivered"});}
+      else if(e.type==="note"&&e.note)push(d,"demand",`🗒 <b>${dl}</b>: ${esc(e.note)}`,go("history"),{o:1});});
+    (t.comments||[]).forEach(c=>push(isoTs(c.ts),"demand",`💬 <b>${dl}</b>: ${esc(c.text.length>160?c.text.slice(0,157)+"…":c.text)}`,go("overview"),{o:2}));
+    (t.lessons||[]).forEach(l=>push(l.date,"win",`💡 Lesson · <b>${dl}</b>: ${esc(l.text.length>180?l.text.slice(0,177)+"…":l.text)}`,go("overview"),{o:6}));
+    t.transports.forEach(tr=>tr.syncs.forEach(s=>push(s.date,"transport",`🚚 <b class="mono">${esc(tr.number||"(TR)")}</b> reached ${esc(s.system)} · ${dl}`,go("transports"),{o:3})));
+    (t.tocs||[]).forEach(c=>c.syncs.forEach(s=>push(s.date,"transport",`📦 ToC <b class="mono">${esc(c.number||"")}</b> reached ${esc(s.system)} · ${dl}`,go("transports"),{o:3})));});
+  state.meetings.forEach(m=>push(m.date,"meeting",`👥 <b>${esc(m.title)}</b>${m.team?" · "+esc(m.team):""}${m.actions.length?` · ${m.actions.length} action point${m.actions.length===1?"":"s"}`:""}`,()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;renderApp();},{o:4}));
+  state.journal.forEach(j=>push(j.date,"journal",`📓 <b>${esc(j.title||"Journal")}</b>${j.body?" — "+esc(j.body.replace(/\s+/g," ").slice(0,160)):""}`,()=>{view="journal";journalTodos=false;activeJournalId=j.id;renderApp();},{o:5}));
+  const byDay=new Map();state.efforts.forEach(e=>{(byDay.get(e.date)||byDay.set(e.date,[]).get(e.date)).push(e);});
+  byDay.forEach((es,d)=>{const m=new Map();es.forEach(e=>{const k=efKey(e);m.set(k,(m.get(k)||0)+e.hours);});
+    push(d,"effort",`⏱ <b>${efFh(efSum(es))} h</b> — ${[...m.entries()].sort((a,b)=>b[1]-a[1]).map(([k,h])=>esc(efName(k))+" "+efFh(h)).join(" · ")}`,()=>openEfDay(d),{o:7,h2:efSum(es)});});
+  state.wins.forEach(w=>push(w.date,"win",`${WIN_KINDS[w.kind].icon} Win: ${esc(w.text)}`,()=>{view="review";renderApp();},{o:6}));
+  state.epics.forEach(e=>{const el=esc(e.code||e.name),go=tab=>()=>{view="epics";activeEpicId=e.id;epicTab=tab;renderApp();};
+    e.log.forEach(x=>push(x.date,"epic",`${EPIC_LOG[x.kind].icon} ◆ ${el}: ${esc(x.text)}`,go("story"),{o:8}));
+    e.deps.forEach(x=>{push(x.since,"epic",`⏸ ◆ ${el}: started waiting on ${esc(x.team||"another team")}${x.what?" — "+esc(x.what):""}`,go("deps"),{o:8});
+      if(x.done&&x.doneDate)push(x.doneDate,"epic",`▶ ◆ ${el}: ${esc(x.team||"the other team")} delivered${x.what?" — "+esc(x.what):""}`,go("deps"),{o:8});});});
+  state.debug.forEach(s=>s.findings.forEach(f=>push(isoTs(f.ts),"debug",`${FIND_KINDS[f.kind]?FIND_KINDS[f.kind].icon:"•"} <b>${esc(s.title)}</b>: ${esc(f.text.length>160?f.text.slice(0,157)+"…":f.text)}`,()=>{view="debug";activeDebugId=s.id;renderApp();},{o:9})));
+  (state.daysOff||[]).forEach(x=>push(x.date,"off",`${EF_OFF[x.kind].icon} ${EF_OFF[x.kind].l}${x.label?" — "+esc(x.label):""}`,()=>openEfDay(x.date),{o:-1}));
+  NOTES.forEach(n=>push(n.date,"note",`📄 <b>${esc(n.name)}</b> <span class="faint">${esc(n.folder||"")}</span> — ${esc(n.text.replace(/\s+/g," ").slice(0,140))}`,()=>openNote(n,[]),{o:10}));
+  return ev;}
+const monLabel=ym=>efFmt(ym+"-01",{month:"long",year:"numeric"});
+function renderMonth(){const host=document.getElementById("detail"),t=todayStr(),all=monthEvents();if(!MON.ym)MON.ym=t.slice(0,7);
+  const ym=MON.ym,inM=all.filter(e=>e.d.slice(0,7)===ym),shown=inM.filter(e=>!MON.kinds.size||MON.kinds.has(e.k));
+  const cnt=new Map();all.forEach(e=>{if(e.d<=t&&e.k!=="off"){const m=e.d.slice(0,7);cnt.set(m,(cnt.get(m)||0)+1);}});
+  const y1=+t.slice(0,4),y0=Math.min(y1,...[...cnt.keys()].map(m=>+m.slice(0,4))),mx=Math.max(1,...cnt.values());
+  const strip=[];for(let y=y1;y>=y0;y--)strip.push(`<div class="mo-yr"><span class="mono">${y}</span>${Array.from({length:12},(_,i)=>{const m=y+"-"+p2(i+1),n=cnt.get(m)||0,fut=m>t.slice(0,7);
+    return `<button class="mo-m ${m===ym?"on":""}" data-ym="${m}" ${fut?"disabled":""} title="${monLabel(m)}${n?" · "+n+" thing"+(n===1?"":"s"):""}"><i style="width:${n?Math.round(4+Math.sqrt(n/mx)*12):3}px;height:${n?Math.round(4+Math.sqrt(n/mx)*12):3}px;opacity:${n?1:.35}"></i><span>${efFmt(m+"-01",{month:"short"})}</span></button>`;}).join("")}</div>`);
+  const kc=new Map();inM.forEach(e=>kc.set(e.k,(kc.get(e.k)||0)+1));
+  const rec=inM.filter(e=>e.o===0).length,del=inM.filter(e=>e.del).length,hrs=inM.filter(e=>e.k==="effort").reduce((a,e)=>a+e.h2,0);
+  const days=[...new Set(shown.map(e=>e.d))].sort();
+  host.innerHTML=`<div class="efx ef-ws mo">
+    <div class="ef-wsh"><div><div class="ef-l1">▦ Browse by month</div><h1>${monLabel(ym)}</h1></div>
+      <div class="ef-ctl"><span class="ef-row"><button class="sm ghost" id="moP" title="Month before">‹</button><button class="sm ${ym===t.slice(0,7)?"ghost":""}" id="mo0">This month</button><button class="sm ghost" id="moN" title="Month after" ${ym>=t.slice(0,7)?"disabled":""}>›</button></span></div></div>
+    <div class="ck-unit mo-strip">${strip.join("")}<div class="faint" style="font-size:10.5px;margin-top:4px">Bigger dot = more happened that month. Click a month.</div></div>
+    ${roHTML([{k:"Received",v:U(rec,"demand"+(rec===1?"":"s"))},{k:"Delivered",v:U(del,"time"+(del===1?"":"s"))},{k:"Hours logged",v:hrs?U(efFh(Math.round(hrs*10)/10),"h"):"—"},
+      {k:"Meetings",v:String(kc.get("meeting")||0)},{k:"Journal",v:String(kc.get("journal")||0)},{k:"Wins & lessons",v:String(kc.get("win")||0)},{k:"Old notes",v:String(kc.get("note")||0),title:"Notes whose file was last saved this month"}])}
+    ${inM.length?`<div class="sr-f"><span class="ef-lb">Show</span><div class="ef-row"><button class="ef-chip ${!MON.kinds.size?"on":""}" data-k="">Everything <b class="mono">${inM.length}</b></button>${Object.entries(MON_KINDS).filter(([k])=>kc.get(k)).map(([k,v])=>`<button class="ef-chip ${MON.kinds.has(k)?"on":""}" data-k="${k}" style="--pen:var(--${v.pen})"><span class="ef-pd"></span>${v.l} <b class="mono">${kc.get(k)}</b></button>`).join("")}</div></div>`:""}
+    <div class="mo-days">${days.map(d=>{const evs=shown.filter(e=>e.d===d).sort((a,b)=>a.o-b.o);
+      return `<div class="mo-day"><div class="mo-dh"><b>${efFmt(d,{weekday:"short",day:"numeric"})}</b><span class="faint">${efFmt(d,{month:"short",year:"numeric"})}</span></div><div class="mo-evs">${evs.map(e=>`<div class="mo-ev" data-i="${shown.indexOf(e)}" style="--pen:var(--${MON_KINDS[e.k].pen})"><i></i><span>${e.h}</span></div>`).join("")}</div></div>`;}).join("")
+      ||`<div class="faint sr-empty">${inM.length?"Nothing of the chosen kinds this month.":`Nothing recorded in ${monLabel(ym)}.${NOTES.length?"":" Connect your old .txt notes on the Search page and their months fill in here too."}`}</div>`}</div>
+  </div>`;
+  const q=s=>host.querySelector(s);
+  q("#moP").onclick=()=>{MON.ym=efMonthShift(ym,-1);renderMonth();};q("#moN").onclick=()=>{if(ym<t.slice(0,7)){MON.ym=efMonthShift(ym,1);renderMonth();}};q("#mo0").onclick=()=>{MON.ym=t.slice(0,7);renderMonth();};
+  host.querySelectorAll(".mo-m[data-ym]").forEach(b=>b.onclick=()=>{MON.ym=b.dataset.ym;renderMonth();});
+  host.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(!k)MON.kinds.clear();else if(MON.kinds.has(k))MON.kinds.delete(k);else MON.kinds.add(k);renderMonth();});
+  host.querySelectorAll(".mo-ev").forEach(el=>el.onclick=()=>{const e=shown[+el.dataset.i];if(e&&e.go)e.go();});}
+
+/* ===================== the Overview journey: the days you worked, under the line ===================== */
+function journeyEffort(c,w,h,t,X,xMax,label){const es=efFor(t.id);if(!es.length||h<180)return;const EC=efC(c.canvas),base=h-46,by=new Map();
+  es.forEach(e=>{(by.get(e.date)||by.set(e.date,[]).get(e.date)).push(e);});
+  for(let x=28;x<=w-28;x+=6)DK.dot(c,x,base+3,.5,EC["ink-4"]);
+  by.forEach((list,d)=>{const x=X(d);if(x<28||x>Math.min(xMax,w-28))return;let yy=base,n=0;
+    list.slice().sort((a,b)=>EF_ORD.indexOf(a.activity)-EF_ORD.indexOf(b.activity)).forEach(e=>{const k=Math.max(1,Math.round(e.hours));for(let j=0;j<k&&n<9;j++,n++){DK.dot(c,x,yy,1.35,EC[EF_ACTC[e.activity]]||EC["pen-2"],.9);yy-=3;}});});
+  label(c,`DAYS WORKED · ${efFh(Math.round(efSum(es)*10)/10)} H`,28,base+11,{size:7,align:"left"});}
 
 /* ===================== WIRE UP ===================== */
 document.querySelectorAll(".navbtn,.rb[data-view]").forEach(b=>b.onclick=()=>{view=b.dataset.view;meetingRollup=false;journalTodos=false;renderApp();});

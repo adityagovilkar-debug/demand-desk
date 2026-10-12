@@ -344,6 +344,8 @@ Log what you worked on, and see where your time goes.
   epic, a calendar month (‹ Sep 2026 ›) or custom dates; month-by-month chart (click a
   month), by demand, by wave, by activity, epic-level entries, estimate vs actual,
   rework vs changed-requirement hours; **⧉ Copy as table** for a status mail.
+- **Days worked on the Overview journey** — under the demand's journey line, a dot per hour
+  on each day you logged time (coloured by activity).
 - **Timer** — **▶ Start timer** on a demand's Effort tab; the title-bar button shows
   it running. Click it to stop, and the dialog opens with the hours filled in.
 - **Effort tab on every demand** (key **5**) — log time inline; gauges for logged vs
@@ -381,8 +383,8 @@ Log what you worked on, and see where your time goes.
   **🏖 Holiday / leave**).
 - Search (`Ctrl+K`) finds time entries by what you wrote.
 - Stored in your data file as `efforts` (plus `daysOff`, and `estimate` on each
-  demand) — data version 25 (`epicId` on entries logged against an epic; `cause`/`est`
-  on status changes for requirement changes). Deleting a demand deletes the hours logged on it (the
+  demand) — data version 26 (`epicId` on entries logged against an epic; `cause`/`est`
+  on status changes for requirement changes; `lessons` on demands). Deleting a demand deletes the hours logged on it (the
   confirmation says how many).
 
 ### Review — your year, for the appraisal
@@ -702,6 +704,24 @@ file:
 - The title-bar box shows the best few, each with the **sentence it matched in**.
   **Enter** (or *All results*) opens the **Search page**: filter by **kind** and
   **year**, order by best match / newest / oldest, matches highlighted.
+
+### Lessons
+- **Closing a demand asks**: "💡 anything worth remembering?" — what you'd tell yourself
+  before the next demand like it. **Skip** if there's nothing; add one any time from
+  **Lessons** on the demand's Overview (Work tab in the classic themes).
+- A lesson stays with its demand and is searchable. Tick **Also add to the Playbook** (or
+  **→ Add to the Playbook** later) for rules you'd follow on *any* demand: it becomes a
+  **💡 Lesson learned** Playbook entry (category *Lessons learned*) that links back to the
+  demand; that copy is edited separately.
+- Lessons appear in the year in review ("Lessons learned") and in Browse by month.
+
+### Browse by month (▦ in the rail, or **Month**)
+- Everything from one month, day by day: demands received, status changes (incl.
+  requirement changes), comments, transports landing, meetings, journal, hours per day,
+  wins and lessons, epic story and dependencies, debug findings, days off — and your old
+  notes (dated by when the file was last saved).
+- A strip of every year × month (bigger dot = more happened) to jump straight to, say,
+  March 2023; ‹ › to step; filter by kind; click anything to open it (hours open the day).
 
 ### Old notes (.txt)
 - On the Search page (or ⋯ Settings → *Old notes*): **Connect a folder…** and pick

@@ -1,7 +1,7 @@
 # Demand Desk — ideas not built yet
 
 A running list of suggestions that haven't gone into the app, in the order I'd build
-them. Nothing here is decided; pick, drop or reorder freely. Last updated 11 Oct 2026.
+them. Nothing here is decided; pick, drop or reorder freely. Last updated 12 Oct 2026 (built since: lessons, browse by month, effort dots on the journey).
 
 ## 1. Safety — worth doing before more features
 
@@ -24,22 +24,16 @@ them. Nothing here is decided; pick, drop or reorder freely. Last updated 11 Oct
    - also appears while you **write a journal entry**;
    - matches on **rare words from the title and description**, not only exact IDs and
      object names (finds "cost-center filter" from 2023) — needs tuning to avoid noise.
+   - when lessons exist, surface **lessons from similar demands** here.
    *(Today's "In your old notes" panel is the narrow first slice of this.)*
-5. **A lesson when you close a demand** — an optional prompt: "what would you tell
-   yourself next time?". Lessons are searchable and show up in #4 on similar demands.
 
 ## 3. Looking back
 
-6. **Browse by month** — pick any month (say March 2023) and see everything from it on
-   one timeline: demands received and delivered, journal, meetings, hours, wins, old
-   notes. For when you remember *when* something happened, not what it was called.
 7. **A readable copy every year** — export everything as plain text / Markdown files in
    folders by year, readable in Notepad even if this app is ever gone.
 
 ## 4. Small gaps
 
-8. **Effort dots on the Overview journey** — the mockup showed dots under the days you
-   worked; the Overview has the Effort gauge but the journey line doesn't show the days.
 9. **Excel notes** — you chose .txt only for now. When wanted: paste rows copied from
    Excel into the notes (no file reading needed, so no library).
 
