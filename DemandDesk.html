@@ -1140,11 +1140,16 @@
   /* transport map */
   .mx{width:100%;border-collapse:collapse}
   .mx th{font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);font-weight:600;padding:6px;text-align:left;border-bottom:1px solid var(--rule);white-space:nowrap}
-  .mx th.sys{text-align:center;font-family:var(--mono);letter-spacing:.04em;font-size:10px;color:var(--ink-2)}
-  .mx th.sys small{display:block;font-family:var(--sans);font-size:7.5px;letter-spacing:.16em;color:var(--ink-3);margin-top:2px}
+  /* not .sys — that's the system-pill class (inline-flex), which pulls a th out of its column */
+  .mx th.mxs{text-align:center;font-family:var(--mono);letter-spacing:.04em;font-size:10px;color:var(--ink-2)}
+  .mx th.mxs small{display:block;font-family:var(--sans);font-size:7.5px;letter-spacing:.16em;color:var(--ink-3);margin-top:2px}
   .mx th.land{text-align:center;border-bottom:1px dotted var(--rule-strong)}
   .mx td{padding:8px 6px;border-bottom:1px dotted var(--rule-strong);font-size:12px;vertical-align:middle}
   .mx td.c{text-align:center;width:58px;padding:8px 2px 12px}
+  .mx tbody td:nth-child(2){min-width:210px}
+  .mx.dense td.c{width:40px;padding:8px 0 12px}
+  .mx.dense .cell{width:22px;height:22px}
+  .mx.dense th.mxs{padding:6px 2px}
   .mx .sepL{border-left:1px solid var(--rule)}
   .mx tr.mtr{cursor:pointer}
   .mx tr.mtr:hover td,.mx tr.mtr.sel td{background:var(--paper-2)}
@@ -5578,7 +5583,7 @@ function drawTrMap(host,t,onPick){if(!host)return;
   const row=(tr,mem)=>{const i=t.transports.indexOf(tr),miss=trMissing(t,tr);
     return `<tr class="mtr ${mem?"mem":""} ${trOpen.has(tr.id)?"sel":""}" data-id="${tr.id}"><td class="sq">${p2(i+1)}</td><td><span class="nm">${esc(tr.number||"(unnumbered)")}</span>${isCust(tr)?btag("cust"+(tr.client?" · "+esc(tr.client):""),"var(--teal)"):""}${!tr.released?btag("not released","var(--watch)"):""}<div class="ds">${esc(tr.desc||"")}</div></td>
       ${cols.map((x,ci)=>`<td class="c ${first[ci]?"sepL":""}">${cell(tr,x,i,ci)}</td>`).join("")}
-      <td class="st">${trComplete(t,tr)?`<span class="good">✓ complete</span>`:trTargets(t,tr).length?`<span class="soon">→ ${esc(miss.join(" · "))}</span>`:`<span class="dim">no target</span>`}</td></tr>`;};
+      <td class="st">${trComplete(t,tr)?`<span class="good">✓ complete</span>`:trTargets(t,tr).length?(miss.length>3?`<span class="soon" title="Still to reach: ${esc(miss.join(", "))}">→ ${miss.length} systems to go</span>`:`<span class="soon">→ ${esc(miss.join(" · "))}</span>`):`<span class="dim">no target</span>`}</td></tr>`;};
   let rows="";const inToc=new Set();
   (t.tocs||[]).forEach(c=>{const mem=t.transports.filter(x=>x.tocId===c.id);mem.forEach(m=>inToc.add(m.id));
     rows+=`<tr class="toc"><td class="sq">ToC</td><td><span class="nm">${esc(c.number||"(unnumbered ToC)")}</span>${btag("bundles "+mem.length,"var(--accent2)")}<div class="ds">${esc(c.desc||"")}</div></td>
@@ -5586,8 +5591,8 @@ function drawTrMap(host,t,onPick){if(!host)return;
     mem.forEach(m=>rows+=row(m,true));});
   t.transports.forEach(tr=>{if(!inToc.has(tr.id))rows+=row(tr,false);});
   host.innerHTML=`<div class="bsec trmap"><div class="sec-title"><h3>Transport map</h3><div class="ln"></div><span class="faint" style="font-size:10.5px">click a transport to edit it below</span></div>
-    <div style="overflow-x:auto"><table class="mx"><thead><tr><th></th><th></th>${lands.map((g,gi)=>`<th class="land ${gi?"sepL":""}" colspan="${g.n}">${esc(g.L)} landscape</th>`).join("")}<th></th></tr>
-      <tr><th>#</th><th>Transport</th>${cols.map((x,ci)=>`<th class="sys ${first[ci]?"sepL":""}">${esc(x)}<small>${TIER_S[String(x).slice(-1)]||""}</small></th>`).join("")}<th style="text-align:right">Status</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div style="overflow-x:auto"><table class="mx ${cols.length>7?"dense":""}" style="min-width:${Math.round(24+210+cols.length*(cols.length>7?40:58)+130)}px"><thead><tr><th></th><th></th>${lands.map((g,gi)=>`<th class="land ${gi?"sepL":""}" colspan="${g.n}">${esc(g.L)} landscape</th>`).join("")}<th></th></tr>
+      <tr><th>#</th><th>Transport</th>${cols.map((x,ci)=>`<th class="mxs ${first[ci]?"sepL":""}">${esc(x)}<small>${TIER_S[String(x).slice(-1)]||""}</small></th>`).join("")}<th style="text-align:right">Status</th></tr></thead><tbody>${rows}</tbody></table></div>
     <div class="mxleg"><span><span class="cell origin" style="--pen:var(--pen-2)"><i></i></span>origin</span><span><span class="cell reach" style="--pen:var(--pen-3)"><i></i></span>reached</span><span><span class="cell pend" style="--pen:var(--pen-4)"><i></i></span>on its way</span><span><span class="cell pend tgt" style="--pen:var(--pen-3)"><i></i></span>destination</span><span style="color:var(--accent2)">▌ a ToC brackets the transports it bundles</span></div></div>`;
   host.querySelectorAll("tr.mtr").forEach(r=>r.onclick=()=>onPick(r.dataset.id));}
 
