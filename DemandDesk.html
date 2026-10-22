@@ -1463,6 +1463,23 @@
   .wr-row{font-size:12.5px;line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .wr-ask{font-size:12.5px;line-height:1.5;margin-bottom:6px}
   .wr-acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:11px}
+  #newerBar{position:fixed;left:0;right:0;top:0;z-index:70;padding:8px 16px;font-size:13px;line-height:1.4;background:#b3261e;color:#fff;box-shadow:0 2px 10px #0004}
+  .enc-warn{border-color:var(--red,#c0392b)!important;margin-bottom:14px}
+  .enc-warn p{font-size:12.5px;line-height:1.5;margin:4px 0 8px}
+  .ew-acts{display:flex;gap:6px;flex-wrap:wrap}
+  #stPanel{position:fixed;top:12px;right:12px;bottom:12px;width:min(460px,calc(100vw - 24px));z-index:80;overflow:auto;padding:14px 16px;border-radius:10px;
+    background:var(--panel,#fff);color:var(--ink,var(--text,#222));border:2px solid var(--line2,#999);box-shadow:0 8px 30px #0005;font-size:13px}
+  #stPanel.good{border-color:var(--green,#2a8a4a)}#stPanel.bad{border-color:var(--red,#c0392b)}
+  #stPanel.min{bottom:auto;height:auto;max-height:44px;overflow:hidden;cursor:pointer}
+  #stPanel.min>:not(.st-head){display:none}
+  .st-head{display:flex;align-items:center;gap:10px}.st-head b{font-size:15px}.st-head span{flex:1;color:var(--muted,#777);font-size:12px}
+  .st-sum{font-size:18px;font-weight:650;margin:10px 0 2px}#stPanel.good .st-sum{color:var(--green,#2a8a4a)}#stPanel.bad .st-sum{color:var(--red,#c0392b)}
+  .st-note{font-size:11.5px;color:var(--muted,#777);margin:4px 0 10px}
+  .st-acts{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+  .st-sec h4{margin:14px 0 6px;font-size:12px;letter-spacing:.06em;text-transform:uppercase}.st-sec h4 span{font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted,#777)}
+  .st-row{display:flex;gap:8px;padding:3px 0;font-size:12.5px;line-height:1.4}.st-row i{font-style:normal;width:14px;flex:none}
+  .st-row.ok i{color:var(--green,#2a8a4a)}.st-row.no i,.st-row.no{color:var(--red,#c0392b)}
+  .st-row small{display:block;color:var(--muted,#777);font-size:11px;word-break:break-word}
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -1576,7 +1593,14 @@ function objTypeUsage(type){let n=0;state.tasks.forEach(t=>t.objects.forEach(o=>
 const DEF_LANDSCAPES=["H0","H1","H2","H3","H4","H5","H6"];
 const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod / QA",short:"QA"},{d:"1",label:"Production",short:"PRD"}];
 
-let state={version:27,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
+/* The data format this copy understands. Bump it whenever a change adds or reshapes saved data —
+   an older copy then refuses to save a file written by a newer one, instead of dropping fields
+   it doesn't know about. */
+const DATA_VERSION=28;
+let dataNewer=0;   /* the version of a loaded file that's newer than this copy (0 = fine) */
+const SELFTEST=/[?&]selftest\b/.test(location.search);   /* sandbox: nothing is read from or written to your data */
+function newerMsg(){return `This data was saved by a newer Demand Desk (data version ${dataNewer}); this copy understands up to ${DATA_VERSION}. Saving is switched off so nothing gets dropped — open the file with the newest DemandDesk.html.`;}
+let state={version:DATA_VERSION,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false, lastWriteAt=0, autoSaveDue=0, diskConflict=null, fileSig=null, savePromise=null, backupUnreadable=false;
 let view="today";
 let activeId=null, activeTab="overview", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -1647,7 +1671,7 @@ function noteContent(){if(isValidState(state)&&contentCount()>0)hadContent=true;
 /* defensive guard: returns true if it is SAFE to persist current state */
 /* never while the startup unlock is pending: the in-memory state is then an empty
    placeholder, and persisting it would overwrite the real (encrypted) data */
-function safeToPersist(){return !pendingEncrypted&&isValidState(state)&&!(hadContent&&contentCount()===0);}
+function safeToPersist(){return !SELFTEST&&!dataNewer&&!pendingEncrypted&&isValidState(state)&&!(hadContent&&contentCount()===0);}
 /* editSeq counts edits, so a save only clears "dirty" if nothing changed while the file
    was being written — an edit made mid-write stays unsaved and goes out with the next save. */
 let editSeq=0;
@@ -1664,7 +1688,7 @@ function renderSaveState(){const el=document.getElementById("saveState");
 /* ---------- auto-save (writes to the connected file ~30s after the last change) ---------- */
 function scheduleAutoSave(){clearTimeout(autoSaveTimer);if(!state.settings.autosave||!supportsFS)return;autoSaveTimer=setTimeout(autoSaveNow,30000);autoSaveDue=Date.now()+30000;}
 async function autoSaveNow(){
-  if(!state.settings.autosave||!fileHandle||!dirty||diskConflict||pendingEncrypted)return;
+  if(!state.settings.autosave||!fileHandle||!dirty||diskConflict||pendingEncrypted||dataNewer||SELFTEST)return;
   if(!isValidState(state)||(hadContent&&contentCount()===0))return; /* silent guard — never auto-write a suspicious state; manual Save still asks */
   if(savePromise){scheduleAutoSave();return;}
   try{const f=await diskChanged();
@@ -1675,6 +1699,7 @@ async function autoSaveNow(){
 /* The one place that writes the data file. Serialised, so an auto-save and a Ctrl+S
    can never interleave two writes to the same file. */
 function writeFile(){
+  if(dataNewer||SELFTEST)return Promise.reject(new Error(SELFTEST?"self-test sandbox — nothing is saved":newerMsg()));
   const run=(savePromise||Promise.resolve()).catch(()=>{}).then(async()=>{
     const seq=editSeq;
     const w=await fileHandle.createWritable();await w.write(await serializeData());await w.close();
@@ -1764,7 +1789,7 @@ async function getSnapshots(){
   if(useIdb){try{const v=await idbGet("snapshots");if(v!=null)return JSON.parse(v);}catch(e){}}
   try{return JSON.parse(localStorage.getItem(SNAP_KEY)||"[]");}catch(e){return [];}
 }
-function setSnapshots(arr){const str=JSON.stringify(arr);try{localStorage.setItem(SNAP_KEY,str);}catch(e){}if(useIdb)idbSet("snapshots",str).catch(()=>{});}
+function setSnapshots(arr){if(dataNewer||SELFTEST)return;const str=JSON.stringify(arr);try{localStorage.setItem(SNAP_KEY,str);}catch(e){}if(useIdb)idbSet("snapshots",str).catch(()=>{});}
 async function maybeSnapshot(){try{
   const arr=await getSnapshots();const today=todayStr();
   if(arr.length&&arr[arr.length-1].date===today)return;
@@ -1810,7 +1835,8 @@ function updateReconnectUI(){const b=document.getElementById("btnReconnect");if(
 async function forgetHandle(){savedHandle=null;if(useIdb)await idbDel("handle");updateReconnectUI();}
 
 function migrate(d){
-  d.version=27;
+  dataNewer=(+d.version||0)>DATA_VERSION?+d.version:0;
+  d.version=DATA_VERSION;
   d.settings=d.settings||{};
   d.settings.landscapes=d.settings.landscapes&&d.settings.landscapes.length?d.settings.landscapes:[...DEF_LANDSCAPES];
   d.settings.tiers=d.settings.tiers&&d.settings.tiers.length?d.settings.tiers:DEF_TIERS;
@@ -1821,6 +1847,8 @@ function migrate(d){
   {const a=(d.settings.objTypes||[]).map(x=>String(x||"").trim()).filter(Boolean);
    d.settings.objTypes=[...new Set(a.length?a:DEF_OBJ_TYPES)];}
   d.settings.imageExpiryDays=(typeof d.settings.imageExpiryDays==="number")?d.settings.imageExpiryDays:90;
+  /* v28: the length of your working day — the full-day mark for hours logged */
+  d.settings.dayHours=(+d.settings.dayHours>=1&&+d.settings.dayHours<=16)?Math.round(+d.settings.dayHours*4)/4:8;
   d.images=(d.images||[]).map(normImage);
   d.playbook=(d.playbook||[]).map(normPlay);
   /* hours logged (v22): demand rows keep their taskId even if the demand is later removed from another copy */
@@ -2023,6 +2051,8 @@ async function openFile(){if(!supportsFS)return importViaInput();
     fileHandle=h;diskConflict=null;dirty=false;setFileLabel(h.name);await noteFileSig();rememberHandle();resetActive();backupLocal();renderApp();toast("Opened "+h.name);
   }catch(e){if(e.name!=="AbortError")toast("Couldn't open: "+e.message,true);}}
 function saveGuardOk(action){
+  if(SELFTEST){toast("Self-test sandbox — nothing is saved",true);return false;}
+  if(dataNewer){toast(newerMsg(),true);return false;}
   if(pendingEncrypted){toast("Unlock first — nothing can be saved while the data is still locked",true);return false;}
   if(!isValidState(state)){toast("Save blocked — data looks corrupted; your file was NOT overwritten.",true);return false;}
   if(hadContent&&contentCount()===0){return confirm("⚠ You're about to "+action+" an EMPTY dataset — every demand, debug session, journal entry etc. is currently empty.\n\nThis is unusual and may be a mistake. Continue anyway?");}
@@ -2167,6 +2197,7 @@ function demandLabel(t){if(!t)return "";if(!t.demandId)return t.title;return dem
    TOP-LEVEL RENDER
    ============================================================ */
 function renderApp(){
+  EF_DAY=+state.settings.dayHours||8;renderNewerBar();
   noteContent();meetingsEffortCatchUp();
   document.querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
   document.querySelector("main").classList.toggle("wide",view==="today"&&benchOn()&&contentCount()>0);
@@ -2302,7 +2333,7 @@ function renderToday(){
   else html+=`<div class="dash-grid">`+cards.map((c,ci)=>{const exp=renderToday._exp&&renderToday._exp[c.title];const shown=exp?c.items:c.items.slice(0,8);
     return `<div class="dashcard ${c.tone}"><h3>${c.icon} ${c.title}<span class="cnt">${c.items.length}</span></h3>${shown.map((it,ii)=>`<div class="dashitem" data-c="${ci}" data-i="${ii}"><span class="di-main">${it.main}</span>${it.sub?`<span class="di-sub">${it.sub}</span>`:""}${it.acts?`<span class="di-acts">${it.acts.map((a,ai)=>`<button class="sm ghost" data-c="${ci}" data-i="${ii}" data-a="${ai}" title="${esc(a[2]||"")}">${a[0]}</button>`).join("")}</span>`:""}</div>`).join("")}${c.items.length>shown.length?`<div class="dashitem" data-more="${ci}"><span class="di-main" style="color:var(--accent)">＋ ${c.items.length-shown.length} more…</span></div>`:""}</div>`;}).join("")+`</div>`;
   html+=`<div class="dash-grid" style="margin-top:14px"><div class="dashcard"><h3>📓 Today's journal</h3>${(todayJ&&(todayJ.body||todayJ.title))?`<div style="font-size:13px;white-space:pre-wrap;max-height:120px;overflow:auto;line-height:1.5">${esc(((todayJ.title?todayJ.title+"\n":"")+todayJ.body)).slice(0,400)}</div><button class="sm" id="openJ" style="margin-top:8px">Open journal</button>`:`<div class="dash-empty">No entry for today yet.</div><button class="sm" id="openJ" style="margin-top:8px">＋ Start today's note</button>`}</div>${efTodayHTML()}</div>`;
-  const attn=cards.reduce((n,c)=>n+c.items.length,0),wrap=wrapUpHTML();
+  const attn=cards.reduce((n,c)=>n+c.items.length,0),wrap=encWarnHTML()+wrapUpHTML();
   if(wrap&&!benchOn())html=wrap+html;
   host.innerHTML=benchOn()
     ?`<div class="dash cockpit"><div class="ck-in">${cockpitHTML()}${wrap}<div class="ck-sech"><span class="ck-lbl">Needs attention · ${attn}</span></div>${html}</div></div>`
@@ -2311,7 +2342,7 @@ function renderToday(){
   efWireToday(host);
   host.querySelectorAll(".dashitem[data-c]").forEach(el=>el.onclick=()=>cards[+el.dataset.c].items[+el.dataset.i].go());
   host.querySelectorAll(".di-acts button").forEach(b=>b.onclick=e=>{e.stopPropagation();cards[+b.dataset.c].items[+b.dataset.i].acts[+b.dataset.a][1]();});
-  wireWrapUp(host);
+  wireWrapUp(host);wireEncWarn(host);
   host.querySelectorAll(".dashitem[data-more]").forEach(el=>el.onclick=()=>{(renderToday._exp=renderToday._exp||{})[cards[+el.dataset.more].title]=true;renderToday();});
   const oj=host.querySelector("#openJ");if(oj)oj.onclick=newJournalToday;
 }
@@ -2350,6 +2381,24 @@ function wireWrapUp(host){const q=s=>host.querySelector(s);if(!q(".wrapup"))retu
   host.querySelectorAll("[data-wgo]").forEach(a=>a.onclick=e=>{e.preventDefault();view="demands";activeId=a.dataset.wgo;activeTab="overview";renderApp();});
   host.querySelectorAll("[data-wfill]").forEach(a=>a.onclick=e=>{e.preventDefault();openLogTime({date:a.dataset.wfill});});
   host.querySelectorAll("[data-woff]").forEach(a=>a.onclick=e=>{e.preventDefault();openDaysOff({date:a.dataset.woff});});}
+
+/* a file from a newer copy: say so, permanently, until a newer copy opens it */
+function renderNewerBar(){let b=document.getElementById("newerBar");
+  if(!dataNewer){if(b)b.remove();return;}
+  if(!b){b=document.createElement("div");b.id="newerBar";document.body.appendChild(b);}
+  b.innerHTML=`<b>⛔ Saving is off.</b> ${esc(newerMsg())}`;}
+
+/* ---------- encryption off while the file holds secrets ---------- */
+function secretCounts(){return {creds:state.credentials.length,refs:state.tasks.reduce((n,t)=>n+(t.reference||[]).filter(r=>r.secret).length,0)};}
+function encWarnHTML(){if(state.settings.encryption)return "";const c=secretCounts();if(!c.creds&&!c.refs)return "";
+  if(viewPref("encWarn.until","")>todayStr())return "";
+  const what=[c.creds?`${c.creds} password${c.creds>1?"s":""} in the Vault`:"",c.refs?`${c.refs} secret reference${c.refs>1?"s":""} on demands`:""].filter(Boolean).join(" and ");
+  return `<div class="dashcard enc-warn"><h3>🔓 Your data file isn't encrypted</h3>
+    <p>It holds ${what} in plain text — anyone with a copy of the .json, or of a backup of it, can read them. A master password encrypts the whole file; nothing else changes.</p>
+    <div class="ew-acts"><button class="sm primary" id="ewOn">🔒 Turn on encryption</button><button class="sm ghost" id="ewLater" title="Hide this for 30 days">Remind me in a month</button></div></div>`;}
+function wireEncWarn(host){const on=host.querySelector("#ewOn");if(!on)return;
+  on.onclick=()=>openEncryptionDialog();
+  host.querySelector("#ewLater").onclick=()=>{setViewPref("encWarn.until",efAdd(todayStr(),30));renderApp();};}
 
 /* ===================== DEMANDS ===================== */
 /* ===================== DEMAND LIST VIEW =====================
@@ -4968,6 +5017,9 @@ function openMenu(){
         <input type="number" id="mn-imgexp" min="0" max="3650" value="${state.settings.imageExpiryDays}" style="width:70px;padding:3px 6px"> days (0 = never) — expired images surface on Today</span>
     </div>
     <div style="display:flex;align-items:center;gap:10px;margin:8px 0;padding:9px 11px;border:1px solid var(--line2);border-radius:8px">
+      <span style="flex:1;font-size:13px">⏱ Working day <span class="faint" style="font-size:11px">— a full day of logged hours (day bars, week sheet, wrap-up)</span></span>
+      <input type="number" id="mn-dayh" min="1" max="16" step="0.25" value="${state.settings.dayHours}" style="width:70px;padding:3px 6px"> h</div>
+    <div style="display:flex;align-items:center;gap:10px;margin:8px 0;padding:9px 11px;border:1px solid var(--line2);border-radius:8px">
       <span style="flex:1;font-size:13px">🧩 Object types <span class="faint" style="font-size:11px">(${objTypes().length} in the Objects-tab dropdown)</span></span>
       <button class="sm" id="mn-objtypes">Edit…</button>
     </div>
@@ -4995,6 +5047,8 @@ function openMenu(){
   root.querySelector("#mn-notes").onclick=()=>{close();openSearch("");};
   root.querySelector("#mn-imgdir").onclick=async()=>{imagesDir=null;imgDirSaved=null;if(await ensureImgDir(true)){close();openMenu();}};
   const mif=root.querySelector("#mn-imgforget");if(mif)mif.onclick=async()=>{await forgetImgDir();toast("Images folder forgotten (files untouched)");close();openMenu();};
+  root.querySelector("#mn-dayh").onchange=e=>{const v=Math.round(+e.target.value*4)/4;if(!(v>=1&&v<=16)){toast("A working day between 1 and 16 hours",true);e.target.value=state.settings.dayHours;return;}
+    state.settings.dayHours=v;markDirty();renderApp();toast(`Working day set to ${efFh(v)} h`);};
   root.querySelector("#mn-imgexp").onchange=e=>{const n=Math.max(0,parseInt(e.target.value||"0",10)||0);state.settings.imageExpiryDays=n;markDirty();};
   root.querySelector("#mn-objtypes").onclick=()=>{close();openObjTypes(()=>renderApp());};
   root.querySelector("#mn-week").onclick=()=>{close();openWeekly();};
@@ -5766,7 +5820,8 @@ document.addEventListener("keydown",e=>{
 const EF_ACTS=[["Analysis","pen-2"],["Build","pen-3"],["Testing","pen-6"],["Debug / fix","pen-1"],["Transport & Basis","pen-4"],["Documentation","pen-5"],["Meetings & admin","ink-3"],["Support","pen-7"],["Learning","pen-8"]];
 const EF_ACTC=Object.fromEntries(EF_ACTS),EF_ORD=EF_ACTS.map(a=>a[0]),EF_DEMAND_ACTS=EF_ORD.slice(0,6);
 const EF_BUCKETS={mtg:{l:"Meetings",act:"Meetings & admin"},adm:{l:"Admin & email",act:"Meetings & admin"},sup:{l:"Support & small asks",act:"Support"},lrn:{l:"Learning",act:"Learning"}};
-const EF_PAL=["pen-2","pen-3","pen-4","pen-5","pen-6","pen-7","pen-8"],EF_DAY=8;
+const EF_PAL=["pen-2","pen-3","pen-4","pen-5","pen-6","pen-7","pen-8"];
+let EF_DAY=8;   /* your working day in hours — settings.dayHours, applied on every render */
 function normEffort(x){const task=!x.bucket&&!x.epicId&&x.taskId?String(x.taskId):"",epic=!task&&!x.bucket&&x.epicId?String(x.epicId):"",bucket=task||epic?"":(EF_BUCKETS[x.bucket]?x.bucket:"sup");
   return{id:x.id||uid(),date:/^\d{4}-\d\d-\d\d$/.test(x.date||"")?x.date:todayStr(),hours:Math.max(0,Math.round((+x.hours||0)*4)/4),taskId:task,epicId:epic,bucket,
     activity:EF_ACTC[x.activity]?x.activity:(bucket?EF_BUCKETS[bucket].act:epic?"Meetings & admin":"Build"),note:String(x.note||""),subtaskId:task?(x.subtaskId||""):"",meetingId:String(x.meetingId||""),createdAt:x.createdAt||Date.now()};}
@@ -6134,7 +6189,7 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
     <div class="ef-lgrow"><span class="ef-lb" style="margin:0">${EF_GROUPS[g]}s · click to focus${g==="demand"?" · double-click to open":""}</span>${A.keys.map(k=>{const m=efGMeta(k);return `<button class="ef-lgi ${efFocus===k?"on":efFocus?"off":""}" data-k="${esc(k)}" style="--pen:var(--${m.col})" title="${esc(m.sub||"")}"><span class="ef-pd"></span>${esc(m.l)}<b>${efFh(A.tot.get(k))}</b></button>`;}).join("")}</div>
     <div class="ck-unit"><div class="ck-head"><h2>26 weeks in dots</h2><span class="ck-meta">a pie per day · size = hours · slices = where they went · red ring = a working day with no log · shaded = the range · click a day</span></div><canvas class="ef-cal" id="efCal"></canvas></div>
     <div class="ef-gw">
-      <div class="ck-unit"><div class="ck-head"><h2>Where the hours went</h2><span class="ck-meta">${A.mode==="day"?"per day · a dot = ½ h · dashed = 8 h":A.mode==="week"?"per week · a dot = 1 h · dashed = 40 h":"per month · a dot = 4 h · dashed = 168 h"} · click a column</span></div><canvas class="ef-wkc" id="efWk"></canvas></div>
+      <div class="ck-unit"><div class="ck-head"><h2>Where the hours went</h2><span class="ck-meta">${A.mode==="day"?`per day · a dot = ½ h · dashed = ${efFh(EF_DAY)} h`:A.mode==="week"?`per week · a dot = 1 h · dashed = ${efFh(EF_DAY*5)} h`:`per month · a dot = 4 h · dashed = ${efFh(EF_DAY*21)} h`} · click a column</span></div><canvas class="ef-wkc" id="efWk"></canvas></div>
       <div class="ck-unit"><div class="ck-head"><h2>Activity mix</h2><span class="ck-meta">${efFh(total)} h</span></div><div class="ef-mixw"><canvas id="efMix"></canvas><div>${efMixRows(A.R)}</div></div></div></div>
     <div class="ck-unit" id="efSheet"></div>
     <div class="ef-g3">
@@ -6918,6 +6973,153 @@ function journeyEffort(c,w,h,t,X,xMax,label){const es=efFor(t.id);if(!es.length|
     list.slice().sort((a,b)=>EF_ORD.indexOf(a.activity)-EF_ORD.indexOf(b.activity)).forEach(e=>{const k=Math.max(1,Math.round(e.hours));for(let j=0;j<k&&n<9;j++,n++){DK.dot(c,x,yy,1.35,EC[EF_ACTC[e.activity]]||EC["pen-2"],.9);yy-=3;}});});
   label(c,`DAYS WORKED · ${efFh(Math.round(efSum(es)*10)/10)} H`,28,base+11,{size:7,align:"left"});}
 
+/* ===================== SELF-TEST =====================
+   DemandDesk.html?selftest — a sandbox: your file, the browser backup and the snapshots are never
+   read or written. It upgrades old-format data and checks nothing is lost, checks the numbers the
+   app shows (rework, rounds, hours, transports…), then opens every page, tab and dialog in every
+   theme and reports anything that broke. Run it after every update — on the work laptop too. */
+function stOldFixture(){return {version:10,settings:{landscapes:["H0","H4"],tiers:DEF_TIERS,defaultSystem:"H03",clients:{H0:["010"]}},
+  tasks:[{id:"st-o1",demandId:"ST-100",title:"Old-format demand with a legacy ToC",status:"delivered",type:"Report change",requestor:"Legacy requestor",receivedDate:"2025-01-10",
+    description:"Legacy description text",notes:"Legacy working notes",epicId:"st-missing-epic",
+    transports:[{id:"st-otr1",number:"H03K000001",desc:"Legacy transport text",system:"H03",released:false,toc:"H03K000099",syncs:[{system:"H43",date:"2025-02-01"}],dest:["H03","H43"],notes:"Legacy transport note"}],
+    objects:[{name:"ZST_LEGACY_REPORT",type:"Report",desc:"Legacy object note"}],
+    subtasks:[{title:"Legacy subtask",children:[{title:"Legacy sub-subtask"}],comments:[{text:"Legacy subtask comment"}]}],
+    comments:[{text:"Legacy demand comment"}],reference:[{label:"Legacy endpoint",value:"https://example.invalid/legacy"}],
+    timeline:[{ts:Date.UTC(2025,0,30),type:"status",from:"open",to:"delivered"},{ts:Date.UTC(2025,0,31),type:"note",note:"Legacy history note"}]}],
+  calls:[{id:"st-c1",date:"2025-01-12",title:"Legacy call title",attendees:"Legacy attendee",body:"Legacy call notes",taskIds:["st-o1"]}],
+  teamMeetings:[{id:"st-tm1",date:"2025-01-13",title:"Legacy team meeting",team:"Legacy team",body:"Legacy team notes",actions:[{text:"Legacy action point",owner:"Legacy owner"}]}],
+  journal:[{date:"2025-01-14",title:"Legacy journal title",body:"Legacy journal body"}],todos:[{text:"Legacy to-do"}],
+  debug:[{title:"Legacy debug session",resume:"Legacy resume note",findings:[{text:"Legacy finding"}],breakpoints:[{object:"ZST_LEGACY_REPORT",line:"120",note:"Legacy breakpoint note"}]}],
+  credentials:[{system:"H03",label:"Legacy sample login",username:"legacy-sample-user",password:"not-a-real-password"}],
+  playbook:[{kind:"faq",title:"Legacy FAQ",body:"Legacy FAQ answer"}],
+  efforts:[{date:"2025-01-15",hours:2.5,taskId:"st-o1",activity:"Build",note:"Legacy effort note"},{date:"2025-01-16",hours:1,bucket:"lrn",note:"Legacy learning"}],
+  leaveDays:["2025-01-20"],wins:[{date:"2025-01-16",kind:"thanks",text:"Legacy win"}],images:[],epics:[]};}
+function stSample(){const T=todayStr(),D=n=>efAdd(T,n),ts=n=>new Date(D(n)+"T10:00:00").getTime(),st=(id,to,n,x)=>({id,ts:ts(n),type:"status",from:"",to,...(x||{})});
+  return {version:DATA_VERSION,settings:{landscapes:["H0","H4"],tiers:DEF_TIERS,defaultSystem:"H03",clients:{H0:["010"]},encryption:false},
+  epics:[{id:"st-e1",code:"ST-EPIC",name:"Sample epic",status:"active",targetDate:D(10),waves:[{name:"Wave 1",target:D(14)}],deps:[{team:"Sample team",what:"Interface ready",since:D(-40),expected:D(-5)}],log:[{date:D(-20),kind:"note",text:"Sample epic note"}]}],
+  tasks:[
+   {id:"st-a",demandId:"ST-1",title:"Sample report gets a filter",status:"progress",type:"Report change",epicId:"st-e1",wave:"Wave 1",system:"H03",receivedDate:D(-30),dueDate:D(-2),estimate:16,
+    nextAction:{date:T,note:"Chase the sample QA"},waiting:{on:"QA team",since:D(-3)},
+    timeline:[st("x1","progress",-29),st("x2","delivered",-15),st("x3","bug",-12),st("x4","progress",-11),{id:"x5",ts:ts(-8),type:"note",note:"Next action done: Write the sample spec"}],
+    objects:[{id:"st-o-a",name:"ZST_SHARED_CLASS",type:"Class",action:"Modified"}],
+    transports:[{id:"st-tr-a1",number:"H03K900001",desc:"ST : ST-1 : Sample filter : AB07",system:"H03",released:true,dest:["H43","H42","H41"],syncs:[{system:"H43",date:D(-10)}],objectIds:["st-o-a"],tocId:"st-toc-a"},
+                {id:"st-tr-a2",number:"H03K900002",desc:"ST : ST-1 : Sample filter : AB08",system:"H03",released:false,syncs:[]}],
+    tocs:[{id:"st-toc-a",number:"H03K900099",desc:"Sample ToC",syncs:[{system:"H42",date:D(-5)}]}],
+    subtasks:[{title:"Sample subtask",children:[{title:"Sample sub-subtask",done:true}]}],
+    reference:[{label:"Sample URL",value:"https://example.invalid/sample",pinned:true},{label:"Sample secret",value:"not-a-real-secret",secret:true}],
+    lessons:[{date:D(-1),text:"Sample lesson"}],comments:[{text:"Sample comment"}]},
+   {id:"st-b",demandId:"ST-2",title:"Sample interface, requirement changed",status:"delivered",type:"Interface",receivedDate:D(-60),
+    timeline:[st("y1","progress",-58),st("y2","delivered",-40),st("y3","progress",-30,{cause:"change",from:"delivered",est:6}),st("y4","delivered",-20)],transports:[]},
+   {id:"st-c",demandId:"ST-3",title:"First half of a split ticket",status:"open",type:"Enhancement",objects:[{name:"ZST_SHARED_CLASS",type:"Class",action:"Modified"}],transports:[],timeline:[]},
+   {id:"st-d",demandId:"ST-3",title:"Second half of a split ticket",status:"closed",type:"Enhancement",transports:[],timeline:[st("z1","closed",-3)]}],
+  meetings:[{id:"st-m1",date:D(-1),title:"Sample sync",team:"Sample team",taskIds:["st-a"],actions:[{text:"Sample action",owner:"Sample owner",due:D(2)}]}],
+  journal:[{id:"st-j1",date:T,title:"Sample journal",body:"Sample journal body"}],todos:[{text:"Sample to-do",due:D(1)}],
+  debug:[{id:"st-dbg1",title:"Sample quiet session",status:"active",taskId:"st-a",updatedAt:ts(-20),findings:[{kind:"works",text:"Sample finding"}]}],
+  playbook:[{id:"st-p1",kind:"freeze",title:"Sample freeze",from:D(-1),to:D(5),systems:["H41"]},{kind:"recurring",title:"Sample recurring",due:D(3),recur:"annual"},{kind:"process",title:"Sample process",steps:[{text:"Sample step"}]}],
+  credentials:[{system:"H03",label:"Sample login",username:"sample-user",password:"not-a-real-password"}],
+  efforts:[{date:D(-1),hours:3,taskId:"st-a",activity:"Build",note:"Sample build"},{date:D(-2),hours:2,taskId:"st-a",activity:"Testing"},{date:D(-2),hours:1.5,epicId:"st-e1",activity:"Meetings & admin"},
+    {date:D(-3),hours:1,bucket:"adm"},{date:D(-25),hours:4,taskId:"st-b",activity:"Build"},{date:D(-3),hours:2,taskId:"st-c",activity:"Analysis"},{date:D(-3),hours:1,taskId:"st-d",activity:"Analysis"}],
+  daysOff:[{date:"2030-01-07",kind:"holiday",label:"Sample holiday"}],wins:[{date:D(-2),kind:"thanks",text:"Sample win"}],images:[],reviewNotes:{}};}
+/* every piece of text in a data object (ids and the one deliberately-cleared link excepted) */
+function stTexts(o,k,out){out=out||[];
+  if(typeof o==="string"){if(o.length>=3&&!["id","epicId","ts"].includes(k))out.push(o);}
+  else if(Array.isArray(o))o.forEach(x=>stTexts(x,k,out));
+  else if(o&&typeof o==="object")Object.keys(o).forEach(x=>stTexts(o[x],x,out));
+  return out;}
+function stPanel(){let p=document.getElementById("stPanel");if(!p){p=document.createElement("div");p.id="stPanel";document.body.appendChild(p);}return p;}
+async function runSelfTest(){
+  const R=[],sec=n=>R.push({sec:n}),ok=(name,pass,detail)=>{R.push({name,pass:!!pass,detail:pass?"":String(detail==null?"":detail)});};
+  const errs=[],onErr=e=>errs.push(String((e&&(e.message||(e.reason&&(e.reason.message||e.reason))))||"error"));
+  window.addEventListener("error",onErr);window.addEventListener("unhandledrejection",onErr);
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms)),clone=o=>JSON.parse(JSON.stringify(o)),panel=stPanel(),t0=Date.now();
+  const prog=txt=>{panel.innerHTML=`<div class="st-head"><b>🧪 Self-test</b><span>${esc(txt)}</span></div><p class="st-note">Sandbox — your data file, backup and snapshots are not touched.</p>`;};
+  const step=async(name,fn)=>{const n=errs.length;let thrown="";try{await fn();}catch(e){thrown=(e&&e.message)||String(e);}await sleep(30);
+    ok(name,!thrown&&errs.length===n,thrown||errs.slice(n).join(" | "));};
+  const eq=(a,b)=>JSON.stringify(a)===JSON.stringify(b),got=(a,b)=>`expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`;
+
+  prog("upgrading old data…");
+  sec("Data upgrade");
+  {const old=stOldFixture(),m1=migrate(clone(old)),s1=JSON.stringify(m1),texts=stTexts(old),lost=texts.filter(x=>!s1.includes(JSON.stringify(x).slice(1,-1)));
+   ok(`Old-format data upgrades to data version ${DATA_VERSION}`,m1.version===DATA_VERSION&&isValidState(m1),got(m1.version,DATA_VERSION));
+   ok(`No text lost in the upgrade (${texts.length} values checked)`,!lost.length,"missing: "+lost.slice(0,6).join(" · "));
+   ok("Upgrading a second time changes nothing",eq(migrate(clone(m1)),m1),"the second pass gave different data");
+   ok("Old calls and team meetings move into Meetings",m1.meetings.length===2&&!m1.calls.length&&!m1.teamMeetings.length,got(m1.meetings.length,2));
+   ok("An old free-text ToC becomes a ToC record",m1.tasks[0].tocs.length===1&&m1.tasks[0].transports[0].tocId===m1.tasks[0].tocs[0].id);
+   ok("Old leave days become days off",m1.daysOff.length===1&&m1.daysOff[0].date==="2025-01-20");
+   ok("A transport's own origin is dropped from its destinations",eq(m1.tasks[0].transports[0].dest,["H43"]),got(m1.tasks[0].transports[0].dest,["H43"]));
+   ok("A transport already imported elsewhere is marked released",m1.tasks[0].transports[0].released===true);
+   ok("Hours logged survive",efSum(m1.efforts)===3.5,got(efSum(m1.efforts),3.5));
+   ok("A link to a deleted epic is cleared",m1.tasks[0].epicId==="");
+   migrate({version:DATA_VERSION+3,tasks:[]});const nv=dataNewer;dataNewer=0;
+   ok("A file from a newer copy switches saving off",nv===DATA_VERSION+3,got(nv,DATA_VERSION+3));
+   migrate({version:DATA_VERSION,tasks:[]});ok("A file of this version saves normally",dataNewer===0);
+   ok("The sandbox can't save",!safeToPersist());}
+
+  prog("checking the numbers…");
+  sec("Numbers");
+  state=migrate(stSample());dataNewer=0;resetActive();
+  {const T=todayStr(),D=n=>efAdd(T,n),tk=id=>state.tasks.find(t=>t.id===id),a=tk("st-a"),b=tk("st-b"),c=tk("st-c"),tr=a.transports[0];
+   ok("Rework: one return to Bug counts once",reworkCount(a)===1,got(reworkCount(a),1));
+   ok("Rounds: a changed requirement starts round 2",roundCount(b)===2,got(roundCount(b),2));
+   ok("Rounds: each round's first delivery counts",roundDeliveries(b).length===2,got(roundDeliveries(b).length,2));
+   ok("Hours on a demand add up",efSum(efFor("st-a"))===5,got(efSum(efFor("st-a")),5));
+   {const v=rvStats(D(-30),T).hours;ok("Review: hours in a period add up",v===14.5,got(v,14.5));}
+   ok("Transports: the origin is never missing",!trMissing(a,{...tr,dest:["H03","H43"]}).length);
+   ok("Transports: a ToC move counts as reached",eq(trMissing(a,tr),["H41"]),got(trMissing(a,tr),["H41"]));
+   ok("Go-live check flags the unfinished demand",!!golivePending(a));
+   {const x={system:"H03",released:false};ok("Syncing to another system marks a transport released",syncReleases(x,"H43")&&x.released&&!syncReleases({system:"H03",released:false},"H03"));}
+   ok("Object clash found between two open demands",openClashCount(a)===1,got(openClashCount(a),1));
+   ok("Shared ticket IDs are told apart",demandLabel(a)==="ST-1"&&demandLabel(c).startsWith("ST-3 · "),demandLabel(c));
+   {const v=trDescSuggest(a);ok("Next transport description follows the pattern",v==="ST : ST-1 : Sample filter : AB09",got(v,"ST : ST-1 : Sample filter : AB09"));}
+   ok("Next working day skips the weekend and holidays",nextWorkDay("2030-01-04")==="2030-01-08",got(nextWorkDay("2030-01-04"),"2030-01-08"));
+   ok("Done steps read back from History",eq(nextActionTrail(a).map(x=>x.note),["Write the sample spec"]));
+   {const m=state.meetings[0],mine=()=>state.efforts.filter(e=>e.meetingId===m.id);
+    m.hours=1.5;meetingEffortSync(m);const c1=mine().length===1&&mine()[0].taskId==="st-a"&&mine()[0].hours===1.5;
+    m.logTo="b:mtg";meetingEffortSync(m);const c2=mine().length===1&&mine()[0].bucket==="mtg";
+    m.hours=0;meetingEffortSync(m);const c3=mine().length===0;
+    ok("A meeting's duration logs, moves and clears its Effort entry",c1&&c2&&c3,`create ${c1} · move ${c2} · clear ${c3}`);}
+   {const d0=state.settings.dayHours;state.settings.dayHours=8.5;renderApp();const v=EF_DAY;state.settings.dayHours=d0;renderApp();ok("The working-day setting is used",v===8.5,got(v,8.5));}
+   ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
+
+  sec("Screens");
+  const views=["today","demands","epics","debug","journal","meetings","playbook","vault","effort","review","month","search"];
+  const tabs=["overview","work","objects","transports","effort","history","reference","calls","images"],etabs=["overview","story","details","deps","subtasks","effort"];
+  const a=state.tasks.find(t=>t.id==="st-a");
+  const pick=()=>{activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
+  const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
+  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Days off",()=>openDaysOff()],
+    ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
+    ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
+  const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;
+  for(const th of themes){applyTheme(th);lastTind=null;const L=THEME_OPTS[th],fails0=R.filter(r=>r.pass===false).length;
+    for(const v of views){prog(`screens — ${L} · ${++n}/${total}`);await step(`${L} · ${v}`,()=>{pick();view=v;renderApp();});}
+    for(const tb of tabs){prog(`screens — ${L} · ${++n}/${total}`);await step(`${L} · demand tab ${tb}`,()=>{pick();view="demands";activeTab=tb;renderApp();});}
+    for(const tb of etabs){prog(`screens — ${L} · ${++n}/${total}`);await step(`${L} · epic tab ${tb}`,()=>{pick();view="epics";epicTab=tb;renderApp();});}
+    for(const [nm,fn] of modals){prog(`screens — ${L} · ${++n}/${total}`);await step(`${L} · ${nm}`,()=>{pick();view="demands";activeTab="overview";renderApp();fn();});closeAll();}
+    wrapForce=false;}
+  applyTheme(currentTheme());lastTind=null;view="today";resetActive();renderApp();
+  window.removeEventListener("error",onErr);window.removeEventListener("unhandledrejection",onErr);
+  dirty=false;renderSaveState();stReport(R,Date.now()-t0);}
+function stReport(R,ms){const panel=stPanel(),tests=R.filter(r=>r.name),bad=tests.filter(r=>!r.pass);
+  const groups=[];R.forEach(r=>{if(r.sec)groups.push({sec:r.sec,rows:[]});else groups[groups.length-1].rows.push(r);});
+  const scr=groups.find(g=>g.sec==="Screens");
+  const txt=[`Demand Desk self-test — ${new Date().toLocaleString()} — data version ${DATA_VERSION}`,bad.length?`${bad.length} of ${tests.length} checks FAILED`:`All ${tests.length} checks passed`,"",
+    ...groups.flatMap(g=>[`## ${g.sec}`,...g.rows.filter(r=>g.sec!=="Screens"||!r.pass).map(r=>`${r.pass?"✓":"✗"} ${r.name}${r.detail?" — "+r.detail:""}`),g.sec==="Screens"?`(${g.rows.filter(r=>r.pass).length} of ${g.rows.length} screens opened cleanly)`:"",""])].join("\n");
+  panel.className=bad.length?"bad":"good";
+  panel.innerHTML=`<div class="st-head"><b>🧪 Self-test</b><span>${(ms/1000).toFixed(1)} s</span><button class="sm ghost" id="stHide" title="Look around the sandbox">Hide</button></div>
+    <div class="st-sum">${bad.length?`✗ ${bad.length} of ${tests.length} checks failed`:`✓ All ${tests.length} checks passed`}</div>
+    <p class="st-note">Sandbox — your data file, backup and snapshots were not touched. Nothing here is saved.</p>
+    <div class="st-acts"><button class="sm" id="stCopy">⧉ Copy report</button><button class="sm" id="stAgain">↻ Run again</button><button class="sm primary" id="stBack">Back to my data</button></div>
+    ${groups.map(g=>{const show=g.sec==="Screens"?g.rows.filter(r=>!r.pass):g.rows;
+      return `<div class="st-sec"><h4>${esc(g.sec)}${g.sec==="Screens"?` <span>${g.rows.filter(r=>r.pass).length} of ${g.rows.length} opened cleanly — every page, tab and dialog in ${Object.keys(THEME_OPTS).length} themes</span>`:""}</h4>
+        ${show.map(r=>`<div class="st-row ${r.pass?"ok":"no"}"><i>${r.pass?"✓":"✗"}</i><span>${esc(r.name)}${r.detail?`<small>${esc(r.detail)}</small>`:""}</span></div>`).join("")}</div>`;}).join("")}`;
+  const q=s=>panel.querySelector(s);
+  q("#stCopy").onclick=()=>navigator.clipboard.writeText(txt).then(()=>toast("Report copied")).catch(()=>toast("Copy failed",true));
+  q("#stAgain").onclick=()=>location.reload();
+  q("#stBack").onclick=()=>{location.href=location.pathname;};
+  q("#stHide").onclick=()=>{panel.classList.add("min");panel.onclick=()=>panel.classList.remove("min");};
+  q("#stHide").addEventListener("click",e=>e.stopPropagation());}
+
 /* ===================== WIRE UP ===================== */
 document.querySelectorAll(".navbtn,.rb[data-view]").forEach(b=>b.onclick=()=>{view=b.dataset.view;meetingRollup=false;journalTodos=false;renderApp();});
 document.getElementById("railMenu").onclick=()=>openMenu();
@@ -7089,6 +7291,7 @@ function seedState(){
         watches:[{id:uid(),name:"LV_AMOUNT",value:"0",where:"ZHR_PAYRUN_F01 - 412"},{id:uid(),name:"SY-SUBRC",value:"4",where:"after PA0008 READ - 388"}]}]});
 }
 async function boot(){
+  if(SELFTEST){seedState();renderApp();runSelfTest();return;}
   await initStore();
   const res=await loadBackup();
   if(res==="encrypted"){ renderApp(); await unlockStartup(); }

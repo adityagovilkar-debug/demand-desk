@@ -156,6 +156,20 @@ Click any item to jump straight to it.
 **getting-started** guide appears when the data file is empty.
 
 ## Data safety
+- **Self-test** — open `DemandDesk.html?selftest` (add `?selftest` to the address).
+  It runs in a sandbox: your data file, the browser backup and the snapshots are
+  never read or written. It upgrades old-format data and checks no text is lost and
+  a second upgrade changes nothing; checks the numbers the app shows (rework, rounds,
+  hours, review totals, transports and ToCs, clashes, shared ticket IDs, meeting
+  time…); then opens every page, demand tab, epic tab and dialog in all six themes.
+  A green or red report lists anything that broke (**⧉ Copy report** to send it on).
+  Takes about 15 seconds — run it after every update, on the work laptop too.
+- **Newer-data guard** — every data file records the format version that wrote it.
+  If an **older copy** of the app opens a file from a **newer** one, it shows a red
+  bar and **switches all saving off** (file, auto-save, browser backup, snapshots),
+  because saving would silently drop the fields it doesn't know. Open the file with
+  the newest `DemandDesk.html` instead. Copies older than this guard (before data
+  version 28) can't protect themselves — delete old copies of the HTML.
 - **Defensive save guard** — the app refuses to overwrite your file (or the local
   backup) with a corrupted state, and asks for confirmation before saving an
   *empty* dataset over a file that had data. A freak bug can't silently nuke your
@@ -202,6 +216,9 @@ Click any item to jump straight to it.
   daily snapshots are convenience/rollback only.
 
 ## Security & encryption
+- **Reminder on Today** — while the file isn't encrypted but holds Vault passwords
+  or secret reference entries, Today opens with a card saying how many, with
+  **🔒 Turn on encryption** (or *Remind me in a month*).
 - **Optional master password** (Vault banner, or ⋯ menu) AES-GCM-encrypts the
   **entire** data file at rest using the browser's built-in Web Crypto
   (PBKDF2, 200k iterations). The local-storage mirror and snapshots are encrypted
@@ -352,6 +369,9 @@ Log what you worked on, and see where your time goes.
   `1:15`), an activity (Analysis · Build · Testing · Debug / fix · Transport & Basis ·
   Documentation) and what you did. A bar shows how full that day already is
   ("3.5 h logged + 2 = 5.5 h of 8"). `Ctrl+Enter` logs.
+- **Your working day** — ⋯ menu → *⏱ Working day* (default 8 h, quarter hours
+  allowed): the full-day mark for the day bars, the dashed line in *Where the hours
+  went*, missing-hours hints and the week wrap-up.
 - **Not every hour is a demand** — Meetings, Admin & email, Support & small asks and
   Learning are buckets of their own, so a whole day adds up.
 - **Log against an epic** — in the Log time dialog, *Against → Epics* (or the box on

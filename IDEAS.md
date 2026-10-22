@@ -5,19 +5,12 @@ them. Nothing here is decided; pick, drop or reorder freely. Last updated 22 Oct
 (built since the real-use review: origin counts as reached, syncing marks a transport
 released, shared ticket IDs told apart, next-action chains, meeting durations, transport
 descriptions from the naming pattern, one-step ToCs, the Friday wrap-up and quiet debug
-sessions — the whole review list is done).
+sessions — the whole review list is done; then the self-test, the newer-data guard,
+the encryption reminder and a working-day setting).
 
-## 1. Safety — worth doing before more features
+## 1. Safety
 
-1. **Built-in self-test** — open `DemandDesk.html?selftest`: it builds sample data in a
-   sandbox (never your file), opens every page and tab in every theme, upgrades old-format
-   data and checks nothing is lost, checks key numbers (rework, rounds, hours, review),
-   and shows a green/red report. Run before every update; you can run it on the work
-   laptop too.
-2. **Newer-data guard** — an older copy of the app refuses to save a data file written by
-   a newer version (today an older copy could drop fields it doesn't know, like estimates
-   or requirement-change rounds).
-3. **"Why is it coming back?" from the ✎ Edit dialog too** — today only the status
+1. **"Why is it coming back?" from the ✎ Edit dialog too** — today only the status
    buttons, the board and the dropdown ask; changing status inside Edit doesn't.
 
 ## 2. Finding things you didn't know to look for
