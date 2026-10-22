@@ -1447,6 +1447,22 @@
   .cx-natr .cxl{display:block;margin-top:4px;font-size:11px}
   .mt-eff{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:12px}
   .mt-eff select{width:auto;max-width:280px;padding:2px 6px;font-size:12px}
+  .di-acts{display:inline-flex;gap:4px;margin-left:auto;flex:none}
+  .di-acts button{padding:1px 7px;font-size:11px}
+  .wrapup{margin-bottom:14px}
+  .wrapup h3{display:flex;align-items:center;gap:8px}
+  .wr-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:6px}
+  @media (max-width:900px){.wr-grid{grid-template-columns:1fr}}
+  .wr-k{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3,var(--muted));font-weight:600;margin-bottom:4px}
+  .wr-big{font-size:20px;font-weight:650}
+  .wr-big .faint{font-size:12px;font-weight:400}
+  .wr-bar{height:4px;border-radius:2px;background:var(--rule-strong,var(--line,#8884));margin:6px 0 8px;overflow:hidden}
+  .wr-bar i{display:block;height:100%;background:var(--accent)}
+  .wr-miss{font-size:12px;line-height:1.8;color:var(--amber,var(--watch))}
+  .wr-ok{font-size:12px;color:var(--green,var(--good))}
+  .wr-row{font-size:12.5px;line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .wr-ask{font-size:12.5px;line-height:1.5;margin-bottom:6px}
+  .wr-acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px;font-size:11px}
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -1939,6 +1955,23 @@ function effectiveSyncs(t,tr){
 /* a transport that has reached another system has been released — never leave it "not released"
    (ToC moves don't count: a ToC carries the objects while the transport itself stays open) */
 function syncReleases(tr,sys){if(!tr||tr.released||!sys||sys===tr.system)return false;tr.released=true;return true;}
+/* Transport descriptions often follow one naming pattern ending in initials + a running number
+   ("… : AB12"). Suggest the next: this demand's last such description (else the newest one elsewhere,
+   with that demand's ticket ID and text swapped for this one's), numbered one past the highest in use.
+   SAP keeps 60 characters of a transport's short text, so the suggestion stays within that. */
+const TR_SEQ=/^(.*[:|\-\/]\s*)([A-Za-z]{1,4})(\d{1,5})\s*$/;
+function trDescSuggest(t){const hits=[];
+  state.tasks.slice().sort((a,b)=>(a.updatedAt||0)-(b.updatedAt||0)).forEach(x=>x.transports.forEach(tr=>{const m=TR_SEQ.exec(tr.desc||"");if(m)hits.push({x,m});}));
+  if(!hits.length)return "";
+  const own=hits.filter(h=>h.x===t),src=own.length?own[own.length-1]:hits.slice().reverse().find(h=>h.x.demandId&&t.demandId&&h.m[1].includes(h.x.demandId));
+  if(!src)return "";
+  const ini=src.m[2],top=Math.max(...hits.filter(h=>h.m[2].toUpperCase()===ini.toUpperCase()).map(h=>+h.m[3])),seq=ini+String(top+1).padStart(src.m[3].length,"0");
+  let pre=src.m[1];
+  if(src.x!==t){const id=src.x.demandId,i=pre.indexOf(id),after=pre.slice(i+id.length),sep=(/^\s*[:|\-\/]\s*/.exec(after)||[" : "])[0],tail=(/\s*[:|\-\/]\s*$/.exec(pre)||[" : "])[0];
+    const head=pre.slice(0,i)+t.demandId+sep,room=60-head.length-tail.length-seq.length;
+    const tt=t.title.length>room?t.title.slice(0,room+1).replace(/\s+\S*$/,""):t.title;
+    pre=room>=8?head+tt.trim()+tail:head;}
+  return (pre+seq).slice(0,60);}
 function reachedSystems(t,tr){const set=new Set();effectiveSyncs(t,tr).forEach(s=>set.add(s.system));return set;}
 function prodTargetFor(t){ /* default go-live target = production tier of the first transport's landscape */
   const tr=t.transports[0]; if(!tr||!tr.system)return "";
@@ -2167,6 +2200,7 @@ function renderToday(){
       <button id="qWeek" style="width:100%">🗓 Weekly summary</button>
       <button id="qHand" style="width:100%">🧳 Handover pack</button>
       <button id="qWin" style="width:100%">🏆 Note a win</button>
+      <button id="qWrap" style="width:100%">🗓 Week wrap-up</button>
     </div>
     <div class="stats" id="todayStats"></div>
     <div class="listwrap"><p class="faint" style="font-size:12px;padding:10px;line-height:1.6">Your cockpit — everything needing attention, pulled from all workspaces. Click any item to jump to it.</p></div>`;
@@ -2176,6 +2210,7 @@ function renderToday(){
   document.getElementById("qWeek").onclick=openWeekly;
   document.getElementById("qHand").onclick=openHandover;
   document.getElementById("qWin").onclick=()=>openWin();
+  document.getElementById("qWrap").onclick=()=>{wrapForce=true;renderToday();setTimeout(()=>{const w=document.querySelector(".wrapup");if(w)w.scrollIntoView({block:"center",behavior:motionOn()?"smooth":"auto"});},80);};
   const active=tasks.filter(t=>["open","progress","bug"].includes(t.status)).length;
   const overdueC=tasks.filter(t=>{const d=earliestOpenDue(t);return d&&daysUntil(d)<0;}).length;
   document.getElementById("todayStats").innerHTML=`<div class="stat op"><b>${active}</b>active</div><div class="stat ov"><b>${overdueC}</b>overdue</div><div class="stat"><b>${tasks.filter(t=>t.status==="bug").length}</b>bugs</div><div class="stat"><b>${tasks.filter(isWaiting).length}</b>waiting</div>`;
@@ -2256,22 +2291,65 @@ function renderToday(){
   const frz=state.playbook.filter(p=>p.kind==="freeze"&&p.from&&p.to&&p.to>=todayStr()&&daysUntil(p.from)<=14).sort((a,b)=>a.from.localeCompare(b.from));
   card("Freeze periods","❄","warn",frz.map(p=>{const act=p.from<=todayStr();return{main:esc(p.title),sub:(act?"ACTIVE until "+p.to:"from "+p.from)+" · "+(p.systems||[]).length+" system(s)",go:()=>{view="playbook";activePlayId=p.id;renderApp();}};}));
   card("Stale (open, untouched 14d+)","🕸","",stale.map(t=>({main:dlabel(t),sub:`${Math.floor((Date.now()-t.updatedAt)/86400000)}d`,go:goDemand(t.id)})));
+  /* debug sessions stay "active" until someone says otherwise — after two quiet weeks, ask */
+  const dbgSet=(s,st)=>{s.status=st;s.updatedAt=Date.now();markDirty();renderApp();toast(`🐞 ${s.title||"Session"} → ${DEBUG_STATUS[st].label}`);};
+  card("Debug sessions gone quiet (14d+)","🐞","",state.debug.filter(s=>s.status==="active"&&Date.now()-(s.updatedAt||0)>14*86400000).sort((a,b)=>(a.updatedAt||0)-(b.updatedAt||0))
+    .map(s=>{const t=s.taskId&&state.tasks.find(x=>x.id===s.taskId);return {main:esc(s.title||"(untitled session)"),sub:`${t?esc(demandLabel(t))+" · ":""}${Math.floor((Date.now()-(s.updatedAt||0))/86400000)}d`,
+      go:()=>{view="debug";activeDebugId=s.id;renderApp();},acts:[["✓ Resolved",()=>dbgSet(s,"resolved"),"Found it — mark the session resolved"],["⏸ Paused",()=>dbgSet(s,"paused"),"Not now — park it"]]};}));
 
   let html="";
   if(!cards.length)html+=`<div class="dashcard" style="max-width:440px"><h3>✓ All clear</h3><div class="dash-empty">Nothing overdue, no bugs, nothing waiting. Nice.</div></div>`;
   else html+=`<div class="dash-grid">`+cards.map((c,ci)=>{const exp=renderToday._exp&&renderToday._exp[c.title];const shown=exp?c.items:c.items.slice(0,8);
-    return `<div class="dashcard ${c.tone}"><h3>${c.icon} ${c.title}<span class="cnt">${c.items.length}</span></h3>${shown.map((it,ii)=>`<div class="dashitem" data-c="${ci}" data-i="${ii}"><span class="di-main">${it.main}</span>${it.sub?`<span class="di-sub">${it.sub}</span>`:""}</div>`).join("")}${c.items.length>shown.length?`<div class="dashitem" data-more="${ci}"><span class="di-main" style="color:var(--accent)">＋ ${c.items.length-shown.length} more…</span></div>`:""}</div>`;}).join("")+`</div>`;
+    return `<div class="dashcard ${c.tone}"><h3>${c.icon} ${c.title}<span class="cnt">${c.items.length}</span></h3>${shown.map((it,ii)=>`<div class="dashitem" data-c="${ci}" data-i="${ii}"><span class="di-main">${it.main}</span>${it.sub?`<span class="di-sub">${it.sub}</span>`:""}${it.acts?`<span class="di-acts">${it.acts.map((a,ai)=>`<button class="sm ghost" data-c="${ci}" data-i="${ii}" data-a="${ai}" title="${esc(a[2]||"")}">${a[0]}</button>`).join("")}</span>`:""}</div>`).join("")}${c.items.length>shown.length?`<div class="dashitem" data-more="${ci}"><span class="di-main" style="color:var(--accent)">＋ ${c.items.length-shown.length} more…</span></div>`:""}</div>`;}).join("")+`</div>`;
   html+=`<div class="dash-grid" style="margin-top:14px"><div class="dashcard"><h3>📓 Today's journal</h3>${(todayJ&&(todayJ.body||todayJ.title))?`<div style="font-size:13px;white-space:pre-wrap;max-height:120px;overflow:auto;line-height:1.5">${esc(((todayJ.title?todayJ.title+"\n":"")+todayJ.body)).slice(0,400)}</div><button class="sm" id="openJ" style="margin-top:8px">Open journal</button>`:`<div class="dash-empty">No entry for today yet.</div><button class="sm" id="openJ" style="margin-top:8px">＋ Start today's note</button>`}</div>${efTodayHTML()}</div>`;
-  const attn=cards.reduce((n,c)=>n+c.items.length,0);
+  const attn=cards.reduce((n,c)=>n+c.items.length,0),wrap=wrapUpHTML();
+  if(wrap&&!benchOn())html=wrap+html;
   host.innerHTML=benchOn()
-    ?`<div class="dash cockpit"><div class="ck-in">${cockpitHTML()}<div class="ck-sech"><span class="ck-lbl">Needs attention · ${attn}</span></div>${html}</div></div>`
+    ?`<div class="dash cockpit"><div class="ck-in">${cockpitHTML()}${wrap}<div class="ck-sech"><span class="ck-lbl">Needs attention · ${attn}</span></div>${html}</div></div>`
     :`<div class="dash"><div class="dash-head"><h1>Today</h1><span class="faint">${new Date().toDateString()}</span></div>${html}</div>`;
   if(benchOn())mountCockpit(host);
   efWireToday(host);
   host.querySelectorAll(".dashitem[data-c]").forEach(el=>el.onclick=()=>cards[+el.dataset.c].items[+el.dataset.i].go());
+  host.querySelectorAll(".di-acts button").forEach(b=>b.onclick=e=>{e.stopPropagation();cards[+b.dataset.c].items[+b.dataset.i].acts[+b.dataset.a][1]();});
+  wireWrapUp(host);
   host.querySelectorAll(".dashitem[data-more]").forEach(el=>el.onclick=()=>{(renderToday._exp=renderToday._exp||{})[cards[+el.dataset.more].title]=true;renderToday();});
   const oj=host.querySelector("#openJ");if(oj)oj.onclick=newJournalToday;
 }
+
+/* ---------- the Friday wrap-up: the week in one card, before it's forgotten ----------
+   Shown Friday to Sunday (or any day from the 🗓 button) until you tick it off for the week:
+   hours against the working days so far, days with no log, and the wins and lessons noted —
+   with a nudge to add one while the week is still fresh. */
+let wrapForce=false;
+function wrapWeek(){const t=todayStr(),mon=efMon(t),days=[0,1,2,3,4].map(i=>efAdd(mon,i)),past=days.filter(d=>d<=t);
+  const es=state.efforts.filter(e=>e.date>=mon&&e.date<=efAdd(mon,6)),have=new Set(es.map(e=>e.date));
+  const work=past.filter(d=>!efOff(d)),miss=work.filter(d=>!have.has(d)&&d<t);
+  const wins=state.wins.filter(w=>w.date>=mon&&w.date<=t),lessons=state.tasks.flatMap(x=>(x.lessons||[]).filter(l=>l.date>=mon&&l.date<=t).map(l=>({t:x,l})));
+  const by=new Map();es.filter(e=>e.taskId).forEach(e=>by.set(e.taskId,(by.get(e.taskId)||0)+e.hours));
+  const worked=[...by].sort((a,b)=>b[1]-a[1]).map(([id])=>state.tasks.find(x=>x.id===id)).filter(Boolean);
+  const moved=state.tasks.filter(x=>(x.timeline||[]).some(e=>e.type==="status"&&["delivered","closed"].includes(e.to)&&isoTs(e.ts)>=mon&&isoTs(e.ts)<=t));
+  return {mon,days,h:efSum(es),target:work.length*EF_DAY,miss,off:past.filter(d=>efOff(d)),wins,lessons,worked,moved};}
+function wrapUpHTML(){const dow=efDow(todayStr()),W=wrapWeek();
+  if(!wrapForce&&(![5,6,0].includes(dow)||viewPref("wrap.done","")===W.mon))return "";
+  const pct=W.target?Math.min(100,Math.round(W.h/W.target*100)):0;
+  return `<div class="dashcard wrapup efx"><h3>🗓 Week wrap-up <span class="faint" style="font-weight:400;text-transform:none;letter-spacing:0">${efSh(W.mon)} – ${efSh(efAdd(W.mon,4))}</span><button class="sm ghost" id="wrDone" style="margin-left:auto" title="Hide it until next Friday">✓ Wrapped up</button></h3>
+    <div class="wr-grid">
+      <div><div class="wr-k">Hours</div><div class="wr-big">${efFh(Math.round(W.h*10)/10)} h <span class="faint">of ${W.target} h</span></div><div class="wr-bar"><i style="width:${pct}%"></i></div>
+        ${W.miss.length?`<div class="wr-miss">⚠ No log on ${W.miss.map(d=>`<span class="mono">${efWdl(d)}</span> <a href="#" data-wfill="${d}">＋ log</a> · <a href="#" data-woff="${d}">day off</a>`).join("<br>")}</div>`:`<div class="wr-ok">✓ every working day logged${W.off.length?` · ${W.off.length} day${W.off.length>1?"s":""} off`:""}</div>`}</div>
+      <div><div class="wr-k">Done this week</div>${W.moved.length?W.moved.slice(0,5).map(x=>`<div class="wr-row"><a href="#" data-wgo="${x.id}">${esc(demandLabel(x))}</a> <span class="faint">${STATUS[x.status].label.toLowerCase()}</span></div>`).join(""):`<div class="faint wr-row">Nothing delivered or closed yet.</div>`}
+        ${W.worked.length?`<div class="wr-k" style="margin-top:8px">Most time on</div>${W.worked.slice(0,3).map(x=>`<div class="wr-row">${esc(demandLabel(x))}</div>`).join("")}`:""}</div>
+      <div><div class="wr-k">Wins &amp; lessons</div>
+        ${W.wins.map(w=>`<div class="wr-row">${WIN_KINDS[w.kind].icon} ${esc(w.text.length>60?w.text.slice(0,59)+"…":w.text)}</div>`).join("")}${W.lessons.map(({t,l})=>`<div class="wr-row">💡 ${esc(l.text.length>60?l.text.slice(0,59)+"…":l.text)} <span class="faint">${esc(demandLabel(t))}</span></div>`).join("")}
+        ${W.wins.length||W.lessons.length?"":`<div class="wr-ask">Any win or lesson this week? A thank-you, a rescue, something you'd do differently — it's gone by review time.</div>`}
+        <div class="wr-acts"><button class="sm" id="wrWin">🏆 Note a win</button>${W.worked.length?`<span class="faint">💡 lesson on</span>${W.worked.slice(0,3).map(x=>`<button class="sm ghost" data-wles="${x.id}">${esc(demandLabel(x))}</button>`).join("")}`:""}</div></div>
+    </div></div>`;}
+function wireWrapUp(host){const q=s=>host.querySelector(s);if(!q(".wrapup"))return;
+  q("#wrDone").onclick=()=>{setViewPref("wrap.done",efMon(todayStr()));wrapForce=false;renderApp();toast("Week wrapped up — see you next Friday");};
+  q("#wrWin").onclick=()=>openWin();
+  host.querySelectorAll("[data-wles]").forEach(b=>b.onclick=()=>{const t=state.tasks.find(x=>x.id===b.dataset.wles);if(t)openLesson(t);});
+  host.querySelectorAll("[data-wgo]").forEach(a=>a.onclick=e=>{e.preventDefault();view="demands";activeId=a.dataset.wgo;activeTab="overview";renderApp();});
+  host.querySelectorAll("[data-wfill]").forEach(a=>a.onclick=e=>{e.preventDefault();openLogTime({date:a.dataset.wfill});});
+  host.querySelectorAll("[data-woff]").forEach(a=>a.onclick=e=>{e.preventDefault();openDaysOff({date:a.dataset.woff});});}
 
 /* ===================== DEMANDS ===================== */
 /* ===================== DEMAND LIST VIEW =====================
@@ -2836,7 +2914,7 @@ function renderTransports(body,t){
     <div id="tocList"></div>`;
   body.querySelector("#expTr").onclick=exportTransportsCSV;
   body.querySelector("#runSheet").onclick=()=>openRunSheet([t],`${t.demandId?t.demandId+" — ":""}${t.title}`,goliveTargetFor(t));
-  body.querySelector("#addTr").onclick=()=>{t.transports.push({id:uid(),number:"",desc:"",system:t.system||state.settings.defaultSystem,released:false,kind:"workbench",client:"",syncs:[],tocId:"",toc:"",objectIds:[],dest:[],notes:""});touch(t);renderTransports(body,t);renderDetail();};
+  body.querySelector("#addTr").onclick=()=>{const sg=trDescSuggest(t);if(sg)toast("Description suggested from your naming pattern — edit it if it's not right");t.transports.push({id:uid(),number:"",desc:sg,system:t.system||state.settings.defaultSystem,released:false,kind:"workbench",client:"",syncs:[],tocId:"",toc:"",objectIds:[],dest:[],notes:""});touch(t);renderTransports(body,t);renderDetail();};
   body.querySelector("#addToc").onclick=()=>{(t.tocs=t.tocs||[]).push(normToc({system:state.settings.defaultSystem}));touch(t);renderTransports(body,t);};
   drawReadiness();drawTrs();drawTocs();
 
@@ -2891,7 +2969,7 @@ function renderTransports(body,t){
           </div>
           <div style="flex:0 0 230px">
             <label>Bundled in Transport of Copies</label>
-            <select class="tocsel">${tocOpts}</select>
+            <select class="tocsel">${tocOpts}</select>${tr.tocId?"":`<button class="ghost sm tocone" style="margin-top:4px" title="Create a ToC just for this transport and bundle it in — you type only the ToC number">＋ ToC for this transport</button>`}
             ${toc&&toc.syncs.filter(s=>s.system).length?`<div class="chiprow" style="margin-top:6px">${toc.syncs.filter(s=>s.system).map(s=>`<span class="sys ${sysTierCls(s.system)}" title="via ToC ${esc(toc.number)}">${esc(s.system)}<span class="d">via ToC</span>${cust&&tr.client?" · <span class='d'>🗂 "+esc(tr.client)+"</span>":""}${s.date?" · <span class='d'>"+s.date+"</span>":""}</span>`).join("")}</div>`:(toc?`<div class="faint" style="font-size:11px;margin-top:6px">ToC not moved anywhere yet</div>`:"")}
             <label style="margin-top:10px">Notes</label>
             <input class="notes" value="${esc(tr.notes)}">
@@ -2918,6 +2996,9 @@ function renderTransports(body,t){
       q(".rel").onchange=e=>{tr.released=e.target.checked;touch(t);};
       q(".notes").onchange=e=>{tr.notes=e.target.value;touch(t);};
       q(".tocsel").onchange=e=>{tr.tocId=e.target.value;touch(t);drawTrs();drawReadiness();};
+      {const b=q(".tocone");if(b)b.onclick=()=>{const n=prompt(`ToC number for ${tr.number||"this transport"}:`,"");if(n===null)return;
+        const c=normToc({number:n.trim(),desc:tr.desc});(t.tocs=t.tocs||[]).push(c);tr.tocId=c.id;touch(t);drawTrs();drawTocs();drawReadiness();
+        toast(`${c.number||"New ToC"} created and ${tr.number||"the transport"} bundled in — record where the ToC moves under Transports of Copies`);};}
       q(".del").onclick=()=>{if((tr.number||tr.syncs.some(x=>x.system))&&!confirm(`Delete transport ${tr.number||"(unnumbered)"}? Its sync history goes with it.`))return;t.transports=t.transports.filter(x=>x.id!==tr.id);touch(t);renderTransports(body,t);renderDetail();};
       q(".up").onclick=()=>{if(idx>0){[t.transports[idx-1],t.transports[idx]]=[t.transports[idx],t.transports[idx-1]];touch(t);drawTrs();drawReadiness();}};
       q(".down").onclick=()=>{if(idx<t.transports.length-1){[t.transports[idx+1],t.transports[idx]]=[t.transports[idx],t.transports[idx+1]];touch(t);drawTrs();drawReadiness();}};
@@ -5126,7 +5207,7 @@ function cockpitHTML(){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>Math.m
         <h1 id="ckGreet">${esc(greetText())}</h1>
         <div class="ck-sub"><b>${c.active.length}</b> active &nbsp;·&nbsp; <b class="${c.over.length?"bad":""}">${c.over.length}</b> overdue &nbsp;·&nbsp; <b class="${c.clash?"bad":""}">${c.clash}</b> object clash${c.clash===1?"":"es"} &nbsp;·&nbsp; <b>${c.short}</b> transport${c.short===1?"":"s"} short of go-live</div>
         <button class="ck-search" id="ckSearch"><span class="caret"></span>Find a demand, an object, a transport, a system…<kbd>Ctrl K</kbd></button>
-        <div class="ck-acts"><button class="primary" id="ckNew">＋ New demand</button><button id="ckJ">Today's journal</button><button id="ckDbg">Debug session</button><button id="ckLog">⏱ Log time</button><button id="ckWin">🏆 Win</button><button id="ckWeek">Weekly summary</button><button id="ckHand">Handover pack</button></div></div>
+        <div class="ck-acts"><button class="primary" id="ckNew">＋ New demand</button><button id="ckJ">Today's journal</button><button id="ckDbg">Debug session</button><button id="ckLog">⏱ Log time</button><button id="ckWin">🏆 Win</button><button id="ckWrap" title="This week: hours, missing days, wins and lessons">Week wrap-up</button><button id="ckWeek">Weekly summary</button><button id="ckHand">Handover pack</button></div></div>
       <div class="ck-clock"><div class="ck-lbl" style="text-align:right">local · offline · ${state.settings.autosave?"autosave on":"autosave off"}</div><div class="big" id="ckClock"></div></div></div>
     <div class="ck-sech"><span class="ck-lbl">Pulse · read from your data file</span></div>
     <div class="ck-tiles">${CK_TILES.map((x,i)=>`<div class="ck-unit ck-tile" data-i="${i}" style="--pen:${x.pen}"><div class="top"><span class="no">${x.no}</span><span class="st"><i></i><span>${x.st}</span></span></div>
@@ -5146,7 +5227,7 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
   q("#ckNew").onclick=()=>{view="demands";renderApp();openTaskModal(null);};
   q("#ckJ").onclick=newJournalToday;
   q("#ckDbg").onclick=()=>{const s={id:uid(),title:"New debug session",demandId:"",taskId:"",status:"active",resume:"",notes:"",objects:[],breakpoints:[],findings:[],watches:[],createdAt:Date.now(),updatedAt:Date.now()};state.debug.unshift(s);activeDebugId=s.id;view="debug";markDirty();renderApp();};
-  q("#ckWeek").onclick=openWeekly;q("#ckHand").onclick=openHandover;
+  q("#ckWeek").onclick=openWeekly;q("#ckWrap").onclick=()=>{wrapForce=true;renderToday();setTimeout(()=>{const w=document.querySelector(".wrapup");if(w)w.scrollIntoView({block:"center",behavior:motionOn()?"smooth":"auto"});},80);};q("#ckHand").onclick=openHandover;
   q("#ckPipeU").onclick=()=>goView(CK_TILES[3].view);
   host.querySelectorAll(".ck-ep").forEach(el=>el.onclick=()=>{view="epics";activeEpicId=el.dataset.e;epicTab="overview";renderApp();});
   const bc=q("#ckClock");if(bc){const d=new Date();bc.innerHTML=`${p2(d.getHours())}:${p2(d.getMinutes())}<small>:${p2(d.getSeconds())}</small>`;}

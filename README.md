@@ -143,8 +143,16 @@ A cross-cutting dashboard that pulls everything needing attention into one glanc
 coverage), **Waiting on** (blocked demands), **Due this week**, **Open action
 points** (from meetings), **My action items** (personal reminders),
 **Recurring processes due** and **Freeze periods** (from the Playbook), **Stale**
-(open, untouched 14d+), plus today's journal. Click any item to jump straight to
-it. Empty sections are hidden; if everything's clear it says so. A first-run
+(open, untouched 14d+), **Debug sessions gone quiet** (active but untouched 14d+ —
+one click **✓ Resolved** or **⏸ Paused** right on the card), plus today's journal.
+Click any item to jump straight to it.
+- **🗓 Week wrap-up** — Friday to Sunday a card opens the page: hours this week
+  against the working days so far (holidays and leave left out), any day with no
+  log (＋ log / day off), what was delivered or closed, where most time went, and
+  the wins and lessons noted — and if there are none, *"any win or lesson this
+  week?"* with **🏆 Note a win** and **💡 lesson on** buttons for the demands you
+  worked on. **✓ Wrapped up** hides it until next Friday; **Week wrap-up** (cockpit
+  buttons / sidebar) opens it any day. Empty sections are hidden; if everything's clear it says so. A first-run
 **getting-started** guide appears when the data file is empty.
 
 ## Data safety
@@ -456,6 +464,12 @@ above).
   a transport reached another system marks it released — a ToC move doesn't), and a
   list of **sync targets** (each system + import date). Transports are **ordered**
   (release order; reorder with ↑↓).
+  - **Description from your naming pattern** — if your descriptions end in initials
+    and a running number (`… : AB12`), **＋ Add transport** fills in the next one:
+    this demand's last description with the number one past the highest you've
+    used anywhere; on a demand without one yet, your latest from another demand
+    with the ticket ID and text swapped for this demand's (kept within SAP's 60
+    characters). Edit it if it's not right.
   - **Workbench vs Customizing** — each TR is marked **🔧 Workbench**
     (client-independent — moving H13 → H12 copies across all clients, so no
     client is shown) or **🗂 Customizing** (client-dependent). A customizing TR
@@ -471,6 +485,9 @@ above).
     its own sync targets, and you bundle TRs into it. A bundled TR then **inherits
     the ToC's downstream systems** — so 9-10 TRs carried to Prod by one ToC show
     "reached H01 via ToC" instead of looking stuck in QA.
+  - **＋ ToC for this transport** (under *Bundled in Transport of Copies*) — for
+    one-ToC-per-transport demands: asks only the ToC number, creates the ToC with
+    the transport's description and bundles the transport into it.
   - **Go-live coverage check** (top of the tab) — pick a target system (defaults
     to the production tier of the origin landscape) and it flags any TR that
     hasn't reached it (counting ToC coverage), so you don't miss a TR before
