@@ -265,8 +265,12 @@ it. Empty sections are hidden; if everything's clear it says so. A first-run
 - **⏰ Next action** — "look at this again on…": a date plus what to do. Quick
   picks (tomorrow, next Monday, in 2 weeks…). It shows under the demand title and
   on its card, and the demand comes back on **Today → Next actions due** on that
-  date. **✓ Done** notes it in History and clears it. A demand parked with a
-  future next action isn't counted as stale.
+  date. A demand parked with a future next action isn't counted as stale.
+  - **A chain of steps** — **✓ Done** ticks the step off and asks *"and the next
+    step?"* in the same box, dated the next working day (weekends, holidays and
+    leave skipped). **Set next step** carries on; **Just done** stops there.
+    Every finished step is noted in History, and the context rail lists them
+    under the next action (**Done so far**).
 - **Delete safety** — deleting a subtask that has sub-subtasks or comments, a
   numbered transport (its sync history goes with it) or a named object asks first.
 - **Subtasks** — branch infinitely; each has its own received/due dates, a done
@@ -309,6 +313,11 @@ it. Empty sections are hidden; if everything's clear it says so. A first-run
 - **📈 Aging** (sidebar) — open demands ranked by age (days since received, days
   in current status, waiting-on), red >30d / amber >14d, plus delivery lead-time
   stats (received → first delivered: average, median, and rework counts).
+
+- **Several demands, one ticket ID** — when a ticket is split into several demands,
+  everywhere that shows only the ID (effort charts and legends, clash warnings,
+  search, readiness, dialogs) shows *ID · start of the title* instead, so they never
+  look alike.
 
 ### When the requirement changes (rounds)
 - Moving a **Delivered** or **Closed** demand backwards (status buttons, the board, the
@@ -367,7 +376,8 @@ Log what you worked on, and see where your time goes.
   - **Where the hours went** (dot columns per week or day), **activity mix**,
     **week sheet** (demands × Mon–Sun; click an empty cell to log it;
     **⧉ Copy for timesheet** gives a tab-separated table to paste into your
-    timesheet or Excel), **estimate vs actual**, **rework cost**, and **your week's
+    timesheet or Excel; when demands share a ticket ID, **By ticket** adds them
+    up into one row — the copy follows), **estimate vs actual**, **rework cost**, and **your week's
     rhythm** (demand work vs everything else, per weekday). **⬇ CSV** exports every
     entry.
 - **Holidays & leave** — **🏖 Days off** (Effort workspace, Today) marks a day, or a
@@ -442,7 +452,8 @@ above).
   Each row shows how many objects use that type; renaming or removing one never
   touches objects already logged — a removed type simply stops being offered and
   still shows on the objects that carry it.
-- **Transports** — TR number, description, origin system, released flag, and a
+- **Transports** — TR number, description, origin system, released flag (recording
+  a transport reached another system marks it released — a ToC move doesn't), and a
   list of **sync targets** (each system + import date). Transports are **ordered**
   (release order; reorder with ↑↓).
   - **Workbench vs Customizing** — each TR is marked **🔧 Workbench**
@@ -470,7 +481,9 @@ above).
     TR card: *＋ destination…* adds a whole route (H4 route = H43 → H42 → H41) or
     single systems, ✕ removes one, and *↺ use go-live target* goes back to the
     default. Each destination shows ✓ with the date it was reached, or ○ while
-    pending — click a pending one to record it reached today. The transport is
+    pending — click a pending one to record it reached today. The origin is
+    always reached (a transport is in the system it was built in), so a whole
+    route never lists it. The transport is
     **complete** when every destination is reached. A TR without its own
     destinations follows the demand's go-live target, as before. Everything that
     checks completion uses this: the go-live check, object clash warnings, Today,
@@ -554,6 +567,12 @@ and **action points** (text, owner, due date, done).
   the answer (e.g. "Confirmed: cutover on 15.08"). The note stays with the point
   after you close it — the question and its answer live together — shows in the
   rollup, and is searchable. Click the teal ↳ line to edit it.
+- **Duration — the meeting's time, logged once.** Give a meeting a duration
+  (`45m`, `1.5h`) and it's logged in **Effort** for you, as *Meetings & admin*,
+  against its linked demand (or epic; else the Meetings bucket) — the line under
+  the header lets you pick which. Changing the meeting's date, duration, title or
+  links moves the entry; editing it in Effort updates the meeting, and deleting it
+  there clears the duration. A meeting dated in the future is logged on its day.
 
 ### Journal
 - **Daily entries** — one consolidated rough-notes entry per day.

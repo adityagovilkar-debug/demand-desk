@@ -1435,6 +1435,18 @@
   .efx .mo-ev:hover{background:var(--paper-2)}
   .efx .mo-ev i{width:7px;height:7px;border-radius:50%;background:var(--pen);transform:translateY(-1px)}
   .efx .mo-ev b{color:var(--ink);font-weight:600}
+  .na-donestep{display:flex;gap:8px;align-items:baseline;margin:-4px 0 12px;padding:8px 10px;border:1px dashed var(--line,#ccc);border-radius:6px;font-size:13px;color:var(--muted,#666)}
+  .na-donestep span{color:var(--good,#2a8a4a);font-weight:700}
+  .na-donestep s{text-decoration-thickness:1px}
+  .cx-natr{margin-top:10px;padding-top:8px;border-top:1px dotted var(--rule-strong)}
+  .cx-natr .h{font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:4px}
+  .cx-natr .r{display:flex;gap:6px;align-items:baseline;font-size:11.5px;color:var(--ink-3);padding:2px 0}
+  .cx-natr .k{color:var(--good)}
+  .cx-natr .s{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:line-through;text-decoration-color:var(--rule-strong)}
+  .cx-natr .d{font-family:var(--mono,monospace);font-size:10px}
+  .cx-natr .cxl{display:block;margin-top:4px;font-size:11px}
+  .mt-eff{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:12px}
+  .mt-eff select{width:auto;max-width:280px;padding:2px 6px;font-size:12px}
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -1548,7 +1560,7 @@ function objTypeUsage(type){let n=0;state.tasks.forEach(t=>t.objects.forEach(o=>
 const DEF_LANDSCAPES=["H0","H1","H2","H3","H4","H5","H6"];
 const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod / QA",short:"QA"},{d:"1",label:"Production",short:"PRD"}];
 
-let state={version:26,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
+let state={version:27,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false, lastWriteAt=0, autoSaveDue=0, diskConflict=null, fileSig=null, savePromise=null, backupUnreadable=false;
 let view="today";
 let activeId=null, activeTab="overview", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -1782,7 +1794,7 @@ function updateReconnectUI(){const b=document.getElementById("btnReconnect");if(
 async function forgetHandle(){savedHandle=null;if(useIdb)await idbDel("handle");updateReconnectUI();}
 
 function migrate(d){
-  d.version=26;
+  d.version=27;
   d.settings=d.settings||{};
   d.settings.landscapes=d.settings.landscapes&&d.settings.landscapes.length?d.settings.landscapes:[...DEF_LANDSCAPES];
   d.settings.tiers=d.settings.tiers&&d.settings.tiers.length?d.settings.tiers:DEF_TIERS;
@@ -1818,6 +1830,10 @@ function migrate(d){
       dest:(tr.dest||[]).map(x=>String(x).trim()).filter(Boolean),
       notes:(tr.notes||"")+(tr.syncedTo?` [legacy synced-to: ${tr.syncedTo}]`:"")
     }));
+    /* v27: the origin is never a destination of its own transport, and a transport whose
+       own syncs reached another system must have been released */
+    transports.forEach(tr=>{tr.dest=tr.dest.filter(x=>x!==tr.system);
+      if(!tr.released&&tr.syncs.some(s=>s.system&&s.system!==tr.system))tr.released=true;});
     /* migrate legacy free-text ToC numbers into first-class ToC records */
     transports.forEach(tr=>{ if(!tr.tocId && tr.toc){ let toc=tocs.find(x=>x.number===tr.toc); if(!toc){toc=normToc({number:tr.toc}); tocs.push(toc);} tr.tocId=toc.id; } tr.toc=""; });
     return {
@@ -1857,7 +1873,7 @@ function migrate(d){
 function normSub(s){return{id:s.id||uid(),title:s.title||"",done:!!s.done,receivedDate:s.receivedDate||"",dueDate:s.dueDate||"",collapsed:!!s.collapsed,comments:(s.comments||[]).map(normComment),children:(s.children||[]).map(normSub)};}
 function normComment(c){return{id:c.id||uid(),text:c.text||"",ts:c.ts||Date.now()};}
 function normAction(a){return{id:a.id||uid(),text:a.text||"",owner:a.owner||"",done:!!a.done,due:a.due||"",resolution:a.resolution||""};}
-function normMeeting(m){return{id:m.id||uid(),date:m.date||todayStr(),title:m.title||"(untitled meeting)",team:m.team||"",attendees:m.attendees||"",body:m.body||"",taskIds:(m.taskIds||[]).slice(),epicIds:(m.epicIds||[]).slice(),actions:(m.actions||[]).map(normAction),createdAt:m.createdAt||Date.now(),updatedAt:m.updatedAt||Date.now()};}
+function normMeeting(m){return{id:m.id||uid(),date:m.date||todayStr(),title:m.title||"(untitled meeting)",team:m.team||"",attendees:m.attendees||"",body:m.body||"",taskIds:(m.taskIds||[]).slice(),epicIds:(m.epicIds||[]).slice(),actions:(m.actions||[]).map(normAction),hours:Math.max(0,Math.round((+m.hours||0)*4)/4),logTo:String(m.logTo||""),createdAt:m.createdAt||Date.now(),updatedAt:m.updatedAt||Date.now()};}
 function normTodo(x){return{id:x.id||uid(),text:x.text||"",done:!!x.done,due:x.due||"",resolution:x.resolution||"",createdAt:x.createdAt||Date.now(),doneAt:x.doneAt||null};}
 function normImage(x){return{id:x.id||uid(),file:x.file||"",label:x.label||"",expiry:x.expiry||"",links:(x.links||[]).filter(l=>l&&l.kind&&l.id).map(l=>({kind:l.kind,id:l.id})),addedAt:x.addedAt||Date.now()};}
 /* ---------- epics ----------
@@ -1920,6 +1936,9 @@ function effectiveSyncs(t,tr){
   const viaToc=toc?toc.syncs.filter(s=>s.system).map(s=>({system:s.system,date:s.date,via:toc.number||"ToC"})):[];
   return [...own,...viaToc];
 }
+/* a transport that has reached another system has been released — never leave it "not released"
+   (ToC moves don't count: a ToC carries the objects while the transport itself stays open) */
+function syncReleases(tr,sys){if(!tr||tr.released||!sys||sys===tr.system)return false;tr.released=true;return true;}
 function reachedSystems(t,tr){const set=new Set();effectiveSyncs(t,tr).forEach(s=>set.add(s.system));return set;}
 function prodTargetFor(t){ /* default go-live target = production tier of the first transport's landscape */
   const tr=t.transports[0]; if(!tr||!tr.system)return "";
@@ -1935,9 +1954,9 @@ function goliveTargetFor(t){return t.goliveTarget||prodTargetFor(t)||"";}
    some are built in one system only to be synced elsewhere — H03 → H43 → H42 → H41 —
    or to several landscapes at once. Those carry their own destinations (tr.dest), and
    they're complete when every destination has been reached. */
-function trDest(t,tr){return (tr&&tr.dest&&tr.dest.length)?tr.dest:[];}
+function trDest(t,tr){return (tr&&tr.dest&&tr.dest.length)?tr.dest.filter(x=>x!==tr.system):[];}   /* a transport is always in its origin */
 function trTargets(t,tr){const d=trDest(t,tr);if(d.length)return d;const g=goliveTargetFor(t);return g?[g]:[];}
-function trMissing(t,tr){const R=reachedSystems(t,tr);return trTargets(t,tr).filter(x=>!R.has(x));}
+function trMissing(t,tr){const R=reachedSystems(t,tr);return trTargets(t,tr).filter(x=>x!==tr.system&&!R.has(x));}
 function trComplete(t,tr){return trTargets(t,tr).length>0&&trMissing(t,tr).length===0;}
 function golivePending(t){if(!t.transports.length)return null;
   const missing=t.transports.filter(tr=>trTargets(t,tr).length&&!trComplete(t,tr));
@@ -2076,7 +2095,7 @@ function waveOrder(ts){ /* waves in the order they were first received */
    arrival / status changes / notes, transports reaching systems, linked meetings and
    journal entries, and when other teams started blocking or delivered. */
 function epicStory(e){
-  const ev=[],ts=tasksForEpic(e.id),dl=t=>(t.demandId||t.title)+(t.wave?" ["+t.wave+"]":"");
+  const ev=[],ts=tasksForEpic(e.id),dl=t=>(demandLabel(t))+(t.wave?" ["+t.wave+"]":"");
   e.log.forEach(x=>ev.push({date:x.date,src:"log",icon:EPIC_LOG[x.kind].icon,kind:x.kind,text:x.text,id:x.id,ord:0}));
   ts.forEach(t=>{
     if(t.receivedDate)ev.push({date:t.receivedDate,src:"demand",icon:"📥",text:`${dl(t)} received — ${t.title}`,tid:t.id,ord:1});
@@ -2102,12 +2121,20 @@ function linkedCount(id){return meetingsForTask(id).length+journalForTask(id).le
 function meetingOpenActions(m){return m.actions.filter(a=>!a.done).length;}
 function distinctMeetingTeams(){return [...new Set(state.meetings.map(m=>m.team).filter(Boolean))].sort();}
 function taskLabel(t){return (t.demandId?t.demandId+" · ":"")+t.title;}
+/* how many demands use each ticket ID — a ticket split into several demands */
+function demandIdCounts(){const c=demandIdCounts;
+  if(!c.m||c.arr!==state.tasks||Date.now()-c.at>500){c.arr=state.tasks;c.at=Date.now();c.m=new Map();state.tasks.forEach(x=>{if(x.demandId)c.m.set(x.demandId,(c.m.get(x.demandId)||0)+1);});}
+  return c.m;}
+function demandIdsShared(){return new Set([...demandIdCounts()].filter(([,n])=>n>1).map(([k])=>k));}
+const demandShort=s=>{s=String(s||"").trim();return s.length>26?s.slice(0,25).replace(/\s+\S*$/,"")+"…":s;};
+/* a demand's short name: its ticket ID, plus the start of its title when other demands share that ID */
+function demandLabel(t){if(!t)return "";if(!t.demandId)return t.title;return demandIdCounts().get(t.demandId)>1?t.demandId+" · "+demandShort(t.title):t.demandId;}
 
 /* ============================================================
    TOP-LEVEL RENDER
    ============================================================ */
 function renderApp(){
-  noteContent();
+  noteContent();meetingsEffortCatchUp();
   document.querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
   document.querySelector("main").classList.toggle("wide",view==="today"&&benchOn()&&contentCount()>0);
   document.querySelector("main").classList.toggle("effortv",["effort","review","search","month"].includes(view));
@@ -2197,7 +2224,7 @@ function renderToday(){
    tasks.forEach(t=>taskClashes(t,cidx).forEach(({o,open})=>open.forEach(x=>{const k=objKey(o.name)+"|"+[t.id,x.t.id].sort().join("|");
      if(seen.has(k))return;seen.add(k);pairs.push({t,o,x});})));
    card("Object clashes — in flight in two demands","⚠","alert",pairs.map(({t,o,x})=>({main:`<span class="mono">${esc(o.name)}</span>`,
-     sub:`${esc(t.demandId||t.title)} ↔ ${esc(x.t.demandId||x.t.title)}`,go:goDemand(t.id,"objects")})));}
+     sub:`${esc(demandLabel(t))} ↔ ${esc(demandLabel(x.t))}`,go:goDemand(t.id,"objects")})));}
   card("Next actions due","⏰","warn",tasks.filter(nextActionDue).sort((a,b)=>a.nextAction.date.localeCompare(b.nextAction.date))
     .map(t=>({main:dlabel(t),sub:`${t.nextAction.note?esc(t.nextAction.note.length>38?t.nextAction.note.slice(0,37)+"…":t.nextAction.note)+" · ":""}${t.nextAction.date===todayStr()?"today":t.nextAction.date}`,go:goDemand(t.id)})));
   card("Bugs / Rework","🐞","alert",bugs.map(t=>({main:dlabel(t),sub:reworkCount(t)?`↻ ${reworkCount(t)}`:"",go:goDemand(t.id)})));
@@ -2560,7 +2587,7 @@ function renderDetail(){
         ${t.nextAction&&t.nextAction.date?`<div class="nextact ${nextActionDue(t)?"due":""}">⏰ Next action <b class="mono">${t.nextAction.date}</b>${(()=>{const n=daysUntil(t.nextAction.date);return n<0?` (${-n}d ago)`:n===0?" (today)":` (in ${n}d)`;})()}${t.nextAction.note?` — ${esc(t.nextAction.note)}`:""}
           <button class="ghost sm" id="na-done" title="Did it — note it in History and clear">✓ Done</button><button class="ghost sm" id="na-edit" title="Change date or text">✎</button></div>`:""}
         ${(()=>{const cl=taskClashes(t).filter(x=>x.open.length);if(!cl.length)return "";const x=cl[0],o=x.open[0],more=cl.reduce((n,y)=>n+y.open.length,0)-1;
-          return `<div class="clashband"><canvas class="orbit"></canvas><span>⚠ <b class="mono">${esc(x.o.name)}</b> is also in flight in <a class="cb-go" data-id="${o.t.id}">${esc(o.t.demandId||o.t.title)}</a> <span class="clw">— ${esc(clashWhere(o))}${more>0?` · +${more} more`:""}</span></span><button class="sm ghost cb-obj">Objects ›</button></div>`;})()}
+          return `<div class="clashband"><canvas class="orbit"></canvas><span>⚠ <b class="mono">${esc(x.o.name)}</b> is also in flight in <a class="cb-go" data-id="${o.t.id}">${esc(demandLabel(o.t))}</a> <span class="clw">— ${esc(clashWhere(o))}${more>0?` · +${more} more`:""}</span></span><button class="sm ghost cb-obj">Objects ›</button></div>`;})()}
       </div>
       <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
         ${benchOn()?statusSegHTML(t):`<select id="dh-status" class="pill ${st.cls} statsel" title="Change status — logged in History">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${k===t.status?"selected":""}>${v.label}</option>`).join("")}</select>`}
@@ -2762,7 +2789,7 @@ function renderObjects(body,t){
   /* the warning line under an object: every other demand where it's also in flight */
   const drawClash=(o,idx)=>{const row=tb.querySelector(`tr.clashrow[data-for="${o.id}"]`);if(!row)return 0;
     const c=clashesFor(t,o,idx);row.classList.toggle("hide",!c.length);
-    row.firstElementChild.innerHTML=c.map(x=>`<div class="clash ${x.ack?"ack":""}">⚠ <b class="mono">${esc(o.name)}</b> is also in flight in <a class="cl-go" data-id="${x.t.id}">${esc(x.t.demandId||x.t.title)}</a> <span>— ${esc(clashWhere(x))}</span>
+    row.firstElementChild.innerHTML=c.map(x=>`<div class="clash ${x.ack?"ack":""}">⚠ <b class="mono">${esc(o.name)}</b> is also in flight in <a class="cl-go" data-id="${x.t.id}">${esc(demandLabel(x.t))}</a> <span>— ${esc(clashWhere(x))}</span>
       <button class="ghost sm cl-ack" data-id="${x.t.id}" title="${x.ack?"Flag this pair again":"You've agreed the order with the other demand — stop flagging this pair (on Today, the list and the run sheet)"}">${x.ack?"↺ Warn again":"✓ Sequenced — stop warning"}</button></div>`).join("");
     row.querySelectorAll(".cl-go").forEach(a=>a.onclick=()=>{activeId=a.dataset.id;activeTab="objects";renderApp();});
     row.querySelectorAll(".cl-ack").forEach(b=>b.onclick=()=>{const x=c.find(y=>y.t.id===b.dataset.id);setClashAck(t,o,x.t,!x.ack);renderDetail();});
@@ -2876,11 +2903,12 @@ function renderTransports(body,t){
       q(".trtgl").onclick=()=>{if(trOpen.has(tr.id))trOpen.delete(tr.id);else trOpen.add(tr.id);card.classList.toggle("collapsed",!trOpen.has(tr.id));};
       /* destinations: add a whole route (H43 → H42 → H41) or single systems; a pending one can be ticked reached */
       q(".dadd").onchange=e=>{const v=e.target.value;if(!v)return;tr.dest=tr.dest||[];
-        const add=v.startsWith("L:")?routeTiers().map(d=>v.slice(2)+d):[v];
+        const add=(v.startsWith("L:")?routeTiers().map(d=>v.slice(2)+d):[v]).filter(x=>x!==tr.system);
+        if(!add.length){toast(`${v} is where this transport was built — it's there already`);drawTrs();return;}
         add.forEach(x=>{if(!tr.dest.includes(x))tr.dest.push(x);});touch(t);drawTrs();drawReadiness();};
       card.querySelectorAll(".dchip").forEach(ch=>{const x=ch.dataset.s,rm=ch.querySelector(".x");
         if(rm)rm.onclick=ev=>{ev.stopPropagation();tr.dest=(tr.dest||[]).filter(y=>y!==x);touch(t);drawTrs();drawReadiness();};
-        if(ch.classList.contains("no"))ch.onclick=()=>{tr.syncs.push({system:x,date:todayStr()});touch(t);drawTrs();drawReadiness();toast(`Recorded ${tr.number||"the transport"} reached ${x} today`);};});
+        if(ch.classList.contains("no"))ch.onclick=()=>{tr.syncs.push({system:x,date:todayStr()});const rel=syncReleases(tr,x);touch(t);drawTrs();drawReadiness();toast(`Recorded ${tr.number||"the transport"} reached ${x} today${rel?" — and marked it released":""}`);};});
       {const dr=q(".dreset");if(dr)dr.onclick=()=>{tr.dest=[];touch(t);drawTrs();drawReadiness();};}
       q(".num").onchange=e=>{tr.number=e.target.value;touch(t);drawReadiness();};
       q(".dsc").onchange=e=>{tr.desc=e.target.value;touch(t);};
@@ -2897,7 +2925,7 @@ function renderTransports(body,t){
       const drawSyncs=()=>{syncHost.innerHTML="";
         tr.syncs.forEach((sy,i)=>{const r=document.createElement("div");r.className="syncrow";
           r.innerHTML=`<select class="s-sys">${systemOptions(sy.system)}</select><input type="date" class="s-date" value="${sy.date||""}"><button class="ghost sm danger s-del">✕</button>`;
-          r.querySelector(".s-sys").onchange=e=>{sy.system=e.target.value;touch(t);drawReadiness();drawTrs();};
+          r.querySelector(".s-sys").onchange=e=>{sy.system=e.target.value;const rel=syncReleases(tr,sy.system);touch(t);drawReadiness();drawTrs();if(rel)toast(`${tr.number||"The transport"} reached ${sy.system}, so it's marked released`);};
           r.querySelector(".s-date").onchange=e=>{sy.date=e.target.value;touch(t);};
           r.querySelector(".s-del").onclick=()=>{tr.syncs.splice(i,1);touch(t);drawSyncs();drawReadiness();};
           syncHost.appendChild(r);});
@@ -2967,8 +2995,8 @@ function destHTML(t,tr){const own=trDest(t,tr),T=trTargets(t,tr),R=reachedSystem
     ${T.map(x=>{const ok=R.has(x);return `<span class="dchip ${ok?"ok":"no"}" data-s="${esc(x)}" title="${ok?"Reached"+(when[x]?" "+when[x]:""):"Not there yet — click to record it reached today"}">${ok?"✓":"○"} ${esc(x)}${ok&&when[x]?` <span class="d">${when[x]}</span>`:""}${own.length?`<span class="x" title="Remove this destination">✕</span>`:""}</span>`;}).join("")||`<span class="faint">none yet</span>`}
     ${own.length?`<button class="ghost sm dreset" title="Drop these and follow the demand's go-live target again">↺ use go-live target</button>`:`<span class="faint dhint">(the demand's go-live target)</span>`}
     <select class="dadd" title="Where this transport has to end up — e.g. built in H03, only ever synced to H43 → H42 → H41"><option value="">＋ destination…</option>
-      <optgroup label="Whole route">${state.settings.landscapes.map(L=>`<option value="L:${esc(L)}">${esc(L)} route — ${tiers.map(d=>esc(L+d)).join(" → ")}</option>`).join("")}</optgroup>
-      <optgroup label="Single system">${state.settings.landscapes.flatMap(L=>tiers.map(d=>L+d)).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("")}</optgroup></select></div>`;}
+      <optgroup label="Whole route">${state.settings.landscapes.map(L=>`<option value="L:${esc(L)}">${esc(L)} route — ${tiers.map(d=>L+d).filter(x=>x!==tr.system).map(esc).join(" → ")}</option>`).join("")}</optgroup>
+      <optgroup label="Single system">${state.settings.landscapes.flatMap(L=>tiers.map(d=>L+d)).filter(x=>x!==tr.system).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("")}</optgroup></select></div>`;}
 function csvCell(v){v=(v==null?"":String(v));return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
 function exportTransportsCSV(){
   const tier=id=>{const m=tierMeta(id);return m?m.short:"";};
@@ -3029,7 +3057,7 @@ function buildTechSpecMarkdown(t){
 }
 function openTechSpec(t){
   const root=document.getElementById("modalRoot");
-  root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:780px"><h2>📄 Post-Delivery Tech Spec — ${esc(t.demandId||t.title)}</h2>
+  root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:780px"><h2>📄 Post-Delivery Tech Spec — ${esc(demandLabel(t))}</h2>
     <p class="faint" style="font-size:12px;margin-top:-8px">Assembled from everything captured below. Edit freely after copying into Word, or print straight to PDF.</p>
     <div class="specpaper specdoc" id="specPrev">${buildTechSpecHTML(t)}</div>
     <div class="modal-foot"><button id="sp-copy">📋 Copy Markdown</button><button id="sp-md">⬇ Download .md</button><button id="sp-print">🖨 Print / Save PDF</button><button id="sp-close" class="primary">Close</button></div></div></div>`;
@@ -3269,7 +3297,8 @@ function renderMeetingDetail(){
         <span>Date <input type="date" id="mt-date" value="${m.date}" style="width:150px"></span>
         <span>Team <input id="mt-team" list="dl-team-m" value="${esc(m.team)}" placeholder="e.g. Portal Team" style="width:150px"><datalist id="dl-team-m">${distinctMeetingTeams().map(x=>`<option value="${esc(x)}">`).join("")}</datalist></span>
         <span style="flex:1">Attendees <input id="mt-att" value="${esc(m.attendees)}" placeholder="Names…"></span>
-      </div></div>
+        <span>Duration <input id="mt-hrs" value="${m.hours?efFh(m.hours):""}" placeholder="45m · 1.5h" style="width:90px" title="Logged in Effort for you — don't log it again there"></span>
+      </div><div id="mt-eff"></div></div>
       <button class="sm danger" id="mt-del" style="align-self:flex-start">🗑 Delete</button></div>
     <div class="tabs"><button class="tab active">Notes, Demands &amp; Action Points</button></div></div>
     <div class="detail-body">
@@ -3281,19 +3310,49 @@ function renderMeetingDetail(){
       <div id="mt-acts"></div>
       <div id="mt-imgs" style="margin-top:18px"></div>
     </div>`;
-  host.querySelector("#mt-title").onchange=e=>{m.title=e.target.value||"(untitled meeting)";touch(m);renderMeetingSidebar();};
-  host.querySelector("#mt-date").onchange=e=>{m.date=e.target.value||todayStr();touch(m);renderMeetingSidebar();};
+  host.querySelector("#mt-title").onchange=e=>{m.title=e.target.value||"(untitled meeting)";touch(m);meetingEffortSync(m);drawMeetingEff(m);renderMeetingSidebar();};
+  host.querySelector("#mt-date").onchange=e=>{m.date=e.target.value||todayStr();touch(m);meetingEffortSync(m);drawMeetingEff(m);renderMeetingSidebar();};
+  host.querySelector("#mt-hrs").onchange=e=>{const h=Math.round(efParseH(e.target.value)*4)/4;
+    if(isNaN(h)||h>24){toast("How long? e.g. 45m · 1h · 1.5h · 1h30",true);e.target.value=m.hours?efFh(m.hours):"";return;}
+    m.hours=h;e.target.value=h?efFh(h):"";touch(m);meetingEffortSync(m);drawMeetingEff(m);};
   host.querySelector("#mt-team").onchange=e=>{m.team=e.target.value.trim();touch(m);renderMeetingSidebar();};
   host.querySelector("#mt-att").onchange=e=>{m.attendees=e.target.value;touch(m);renderMeetingSidebar();};
   host.querySelector("#mt-body").onchange=e=>{m.body=e.target.value;touch(m);const l=host.querySelector("#mt-links");if(l)l.innerHTML=linkChips(m.body);};
-  host.querySelector("#mt-del").onclick=()=>{if(confirm("Delete this meeting and its action points?")){state.meetings=state.meetings.filter(x=>x.id!==m.id);state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="meeting"&&l.id===m.id)));activeMeetingId=null;markDirty();renderApp();}};
+  host.querySelector("#mt-del").onclick=()=>{if(confirm("Delete this meeting and its action points?")){state.meetings=state.meetings.filter(x=>x.id!==m.id);meetingEffortRemove(m.id);state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="meeting"&&l.id===m.id)));activeMeetingId=null;markDirty();renderApp();}};
   host.querySelector("#mt-link").onclick=()=>openLinkDemandsToMeeting(m);
   host.querySelector("#mt-addact").onclick=()=>{m.actions.push(normAction({}));touch(m);drawMeetingActions(m);renderMeetingSidebar();};
   drawMeetingChips(m);drawMeetingActions(m);
   renderImagesSection(host.querySelector("#mt-imgs"),"meeting",m.id);
 }
-function drawMeetingChips(m){drawLinkChips(document.getElementById("mt-chips"),m,()=>{drawMeetingChips(m);renderMeetingSidebar();},"No epics or demands linked.");}
-function openLinkDemandsToMeeting(m){openLinkPicker(m,`Link to “${esc(m.title)}”`,()=>{drawMeetingChips(m);renderMeetingSidebar();});}
+function drawMeetingChips(m){drawLinkChips(document.getElementById("mt-chips"),m,()=>{drawMeetingChips(m);renderMeetingSidebar();},"No epics or demands linked.");meetingEffortSync(m,true);drawMeetingEff(m);}
+/* A meeting with a duration logs its own time in Effort — against the demand or epic it's linked to,
+   else the Meetings bucket — so the hours are written once. Editing the meeting moves the entry;
+   editing or deleting the entry in Effort updates the meeting. */
+function meetingLogOpts(m){return [...(m.taskIds||[]).filter(id=>efTaskOf(id)).map(id=>({k:id,l:demandLabel(efTaskOf(id))})),
+  ...(m.epicIds||[]).filter(id=>epicById(id)).map(id=>({k:"e:"+id,l:"◆ "+epicLabel(epicById(id))})),{k:"b:mtg",l:"Meetings (no demand)"}];}
+function meetingEffortKey(m){const ks=meetingLogOpts(m).map(o=>o.k);return ks.includes(m.logTo)?m.logTo:ks[0];}
+function meetingEffortRemove(id){let n=0;for(let i=state.efforts.length-1;i>=0;i--)if(state.efforts[i].meetingId===id){state.efforts.splice(i,1);n++;}if(n)markDirty();return n;}
+/* soft: only create a missing entry (when a planned meeting's day arrives) — never overwrite one */
+function meetingEffortSync(m,soft){const cur=state.efforts.filter(e=>e.meetingId===m.id);
+  if(!(m.hours>0)||m.date>todayStr()){if(!soft)meetingEffortRemove(m.id);return;}
+  if(soft&&cur.length)return;
+  const k=meetingEffortKey(m),want={date:m.date,hours:m.hours,taskId:"",epicId:"",bucket:"",note:"Meeting — "+m.title,meetingId:m.id};
+  if(k.startsWith("b:"))want.bucket=k.slice(2);else if(k.startsWith("e:"))want.epicId=k.slice(2);else want.taskId=k;
+  const e=cur[0];
+  if(e&&["date","hours","taskId","epicId","bucket","note"].every(f=>e[f]===want[f]))return;
+  if(e)Object.assign(e,want,{subtaskId:""});else state.efforts.push(normEffort({...want,activity:"Meetings & admin"}));
+  cur.slice(1).forEach(x=>state.efforts.splice(state.efforts.indexOf(x),1));
+  markDirty();efTimerUI();}
+function meetingsEffortCatchUp(){const c=meetingsEffortCatchUp;if(c.at&&Date.now()-c.at<60000)return;c.at=Date.now();(state.meetings||[]).forEach(m=>{if(m.hours>0)meetingEffortSync(m,true);});}
+function drawMeetingEff(m){const host=document.getElementById("mt-eff");if(!host)return;
+  if(!(m.hours>0)){host.innerHTML=`<div class="mt-eff faint">Add a duration and its time is logged in Effort for you.</div>`;return;}
+  const e=state.efforts.find(x=>x.meetingId===m.id),opts=meetingLogOpts(m),k=meetingEffortKey(m);
+  host.innerHTML=`<div class="mt-eff"><span>⏱ ${m.date>todayStr()?`${efFh(m.hours)} h will be logged on ${esc(m.date)}`:e?`${efFh(e.hours)} h logged in Effort`:`${efFh(m.hours)} h`} against</span>
+    <select id="mt-logto">${opts.map(o=>`<option value="${esc(o.k)}" ${o.k===k?"selected":""}>${esc(o.l)}</option>`).join("")}</select>
+    ${e?`<a href="#" id="mt-effgo">see the day ›</a>`:""}</div>`;
+  host.querySelector("#mt-logto").onchange=ev=>{m.logTo=ev.target.value;touch(m);meetingEffortSync(m);drawMeetingEff(m);};
+  const g=host.querySelector("#mt-effgo");if(g)g.onclick=ev=>{ev.preventDefault();openEfDay(m.date,k);};}
+function openLinkDemandsToMeeting(m){openLinkPicker(m,`Link to “${esc(m.title)}”`,()=>{drawMeetingChips(m);meetingEffortSync(m);drawMeetingEff(m);renderMeetingSidebar();});}
 function drawMeetingActions(m){
   const host=document.getElementById("mt-acts");if(!host)return;
   if(!m.actions.length){host.innerHTML=`<div class="faint" style="font-size:12px;padding:4px 2px">No action points yet.</div>`;return;}
@@ -3505,7 +3564,7 @@ function openObjectIndex(){
     listEl.innerHTML=show.map(n=>{const uses=map[n]||[],duses=dmap[n]||[];
       return `<div class="pickrow" style="display:block;cursor:default">
         <div class="mono" style="color:var(--accent);font-weight:600">${esc(n)} <span class="faint" style="font-weight:400">· ${uses.length} demand(s)${duses.length?" · "+duses.length+" debug":""}</span>${cidx.has(n)?`<span class="clashtag">⚠ in flight in ${new Set(cidx.get(n).map(x=>x.t.id)).size} demands</span>`:""}</div>
-        ${uses.map(u=>{const trs=trsForObject(u.t,u.o.id);return `<div style="font-size:12px;margin:3px 0 0 6px"><a class="oi-go" data-id="${u.t.id}" style="cursor:pointer">📋 ${esc(u.t.demandId||u.t.title)}</a> <span class="faint">— ${esc(u.o.action)}${u.o.desc?": "+esc(u.o.desc):""}${trs.length?" · in "+trs.map(x=>esc(x.number||"(TR)")).join(", "):""}</span></div>`;}).join("")}
+        ${uses.map(u=>{const trs=trsForObject(u.t,u.o.id);return `<div style="font-size:12px;margin:3px 0 0 6px"><a class="oi-go" data-id="${u.t.id}" style="cursor:pointer">📋 ${esc(demandLabel(u.t))}</a> <span class="faint">— ${esc(u.o.action)}${u.o.desc?": "+esc(u.o.desc):""}${trs.length?" · in "+trs.map(x=>esc(x.number||"(TR)")).join(", "):""}</span></div>`;}).join("")}
         ${duses.map(u=>`<div style="font-size:12px;margin:3px 0 0 6px"><a class="oi-dgo" data-id="${u.s.id}" style="cursor:pointer">🐞 ${esc(u.s.title)}</a> <span class="faint">${u.note?"— "+esc(u.note):""}</span></div>`).join("")}</div>`;}).join("");
     listEl.querySelectorAll(".oi-go").forEach(a=>a.onclick=()=>{view="demands";activeId=a.dataset.id;activeTab="objects";close();renderApp();});
     listEl.querySelectorAll(".oi-dgo").forEach(a=>a.onclick=()=>{view="debug";activeDebugId=a.dataset.id;close();renderApp();});
@@ -3976,16 +4035,16 @@ function renderEpicOverview(body,e,r,pk,fu){
   if(!r.trs.length)gh.innerHTML=`<div class="faint" style="font-size:12px;padding:4px 2px">No transports recorded on this epic's demands yet.</div>`;
   else if(!r.pending.length)gh.innerHTML=`<div class="readybar ok"><b style="color:var(--green)">✓ every transport across ${r.ts.length} demand(s) has reached its go-live target</b></div>`;
   else gh.innerHTML=`<div class="readybar warn"><span><b style="color:var(--amber)">⚠ ${r.pending.length} demand(s) still have transports short of their target:</b></span>
-    <span style="flex-basis:100%;font-size:12px">${r.pending.map(x=>`<span class="mono">${esc(x.t.demandId||x.t.title)}</span> — ${x.g.missing.length} TR(s) → ${x.g.target}${(()=>{const f=freezeFor(x.g.target);return f?` <span style="color:var(--teal)">❄ frozen until ${f.to}</span>`:"";})()}`).join("<br>")}</span></div>`;
+    <span style="flex-basis:100%;font-size:12px">${r.pending.map(x=>`<span class="mono">${esc(demandLabel(x.t))}</span> — ${x.g.missing.length} TR(s) → ${x.g.target}${(()=>{const f=freezeFor(x.g.target);return f?` <span style="color:var(--teal)">❄ frozen until ${f.to}</span>`:"";})()}`).join("<br>")}</span></div>`;
   const oh=body.querySelector("#ep-objects"),cidx=clashIndex();
   oh.innerHTML=r.objects.length?`<div class="tbl-wrap"><table><thead><tr><th style="width:26%">Object</th><th style="width:18%">Type</th><th style="width:12%">Action</th><th>Demand</th></tr></thead><tbody>
-    ${r.objects.map(({o,t})=>`<tr class="ep-obj" data-id="${t.id}" style="cursor:pointer"><td class="mono">${esc(o.name)}${clashesFor(t,o,cidx).some(x=>!x.ack)?`<span class="clashtag" title="Also in flight in another demand">⚠ clash</span>`:""}</td><td>${esc(o.type)}</td><td>${esc(o.action)}</td><td class="faint">${esc(t.demandId||t.title)}</td></tr>`).join("")}</tbody></table></div>`
+    ${r.objects.map(({o,t})=>`<tr class="ep-obj" data-id="${t.id}" style="cursor:pointer"><td class="mono">${esc(o.name)}${clashesFor(t,o,cidx).some(x=>!x.ack)?`<span class="clashtag" title="Also in flight in another demand">⚠ clash</span>`:""}</td><td>${esc(o.type)}</td><td>${esc(o.action)}</td><td class="faint">${esc(demandLabel(t))}</td></tr>`).join("")}</tbody></table></div>`
     :`<div class="faint" style="font-size:12px;padding:4px 2px">No objects logged yet.</div>`;
   oh.querySelectorAll(".ep-obj").forEach(row=>row.onclick=()=>goEpicDemand(row.dataset.id,"objects"));
   const th=body.querySelector("#ep-trs");
   th.innerHTML=r.trs.length?`<div class="tbl-wrap"><table><thead><tr><th style="width:22%">TR</th><th style="width:14%">Kind</th><th style="width:14%">Origin</th><th>Reached</th><th style="width:22%">Demand</th></tr></thead><tbody>
     ${r.trs.map(({tr,t})=>{const cl=isCust(tr)&&tr.client?" / "+esc(tr.client):"";
-      return `<tr class="ep-tr" data-id="${t.id}" style="cursor:pointer"><td class="mono">${esc(tr.number||"(unnumbered)")}</td><td>${isCust(tr)?"🗂 Customizing":"🔧 Workbench"}</td><td class="mono">${esc(tr.system)}${cl}</td><td class="mono" style="font-size:11px">${[...reachedSystems(t,tr)].join(", ")||"—"}</td><td class="faint">${esc(t.demandId||t.title)}</td></tr>`;}).join("")}</tbody></table></div>`
+      return `<tr class="ep-tr" data-id="${t.id}" style="cursor:pointer"><td class="mono">${esc(tr.number||"(unnumbered)")}</td><td>${isCust(tr)?"🗂 Customizing":"🔧 Workbench"}</td><td class="mono">${esc(tr.system)}${cl}</td><td class="mono" style="font-size:11px">${[...reachedSystems(t,tr)].join(", ")||"—"}</td><td class="faint">${esc(demandLabel(t))}</td></tr>`;}).join("")}</tbody></table></div>`
     :`<div class="faint" style="font-size:12px;padding:4px 2px">No transports yet.</div>`;
   th.querySelectorAll(".ep-tr").forEach(row=>row.onclick=()=>goEpicDemand(row.dataset.id,"transports"));
   {const b=body.querySelector("#ep-run");if(b)b.onclick=()=>{const ordered=waves.flatMap(w=>r.ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"9999").localeCompare(b.receivedDate||"9999")));
@@ -4128,9 +4187,9 @@ function buildEpicBriefHTML(e){
     <h3>Demands (${r.ts.length} · ${r.done} done)</h3>
     ${r.ts.length?waves.map(w=>`${waves.length>1||w?`<h4>${w?esc(w):"No wave"}${waveTarget(e,w)?` — target ${waveTarget(e,w)}`:""}</h4>`:""}<table><tr><th>Demand</th><th>Title</th><th>System</th><th>Status</th><th>Received</th><th>Transports</th></tr>${r.ts.filter(t=>(t.wave||"")===w).sort((a,b)=>(a.receivedDate||"").localeCompare(b.receivedDate||"")).map(t=>`<tr><td>${esc(t.demandId||"—")}</td><td>${esc(t.title)}</td><td>${esc(t.system)||"—"}${t.client?" / "+esc(t.client):""}</td><td>${STATUS[t.status].label}</td><td>${t.receivedDate||"—"}</td><td>${t.transports.map(tr=>esc(tr.number||"(TR)")).join(", ")||"—"}</td></tr>`).join("")}</table>`).join(""):"<p><i>none</i></p>"}
     ${e.deps.length?`<h3>Dependencies on other teams</h3><table><tr><th>Team</th><th>What</th><th>Since</th><th>Expected</th><th>State</th></tr>${e.deps.map(x=>`<tr><td>${esc(x.team)}</td><td>${esc(x.what)}</td><td>${x.since||"—"}</td><td>${x.expected||"—"}</td><td>${x.done?"✓ delivered "+x.doneDate:(x.lastCheck?"open · last chased "+x.lastCheck:"open")}</td></tr>`).join("")}</table>`:""}
-    <h3>Go-live readiness</h3><p>${!r.trs.length?"No transports recorded.":!r.pending.length?"✓ Every transport has reached its go-live target.":r.pending.map(x=>`${esc(x.t.demandId||x.t.title)} — ${x.g.missing.length} TR(s) not yet in ${x.g.target}`).join("<br>")}</p>
+    <h3>Go-live readiness</h3><p>${!r.trs.length?"No transports recorded.":!r.pending.length?"✓ Every transport has reached its go-live target.":r.pending.map(x=>`${esc(demandLabel(x.t))} — ${x.g.missing.length} TR(s) not yet in ${x.g.target}`).join("<br>")}</p>
     ${e.subtasks.length?`<h3>Epic subtasks</h3>${subs(e.subtasks)}`:""}
-    ${r.objects.length?`<h3>Objects touched</h3><table><tr><th>Object</th><th>Type</th><th>Action</th><th>Demand</th></tr>${r.objects.map(({o,t})=>`<tr><td>${esc(o.name)}</td><td>${esc(o.type)}</td><td>${esc(o.action)}</td><td>${esc(t.demandId||t.title)}</td></tr>`).join("")}</table>`:""}
+    ${r.objects.length?`<h3>Objects touched</h3><table><tr><th>Object</th><th>Type</th><th>Action</th><th>Demand</th></tr>${r.objects.map(({o,t})=>`<tr><td>${esc(o.name)}</td><td>${esc(o.type)}</td><td>${esc(o.action)}</td><td>${esc(demandLabel(t))}</td></tr>`).join("")}</table>`:""}
     <h3>Story</h3>${story.length?`<table><tr><th style="width:95px">Date</th><th>Event</th></tr>${story.map(x=>`<tr><td>${esc(x.date)}</td><td>${x.icon} ${x.src==="log"?`<b>${EPIC_LOG[x.kind].label}:</b> `:""}${esc(x.text)}</td></tr>`).join("")}</table>`:"<p><i>nothing recorded</i></p>"}
     ${e.notes?`<h3>Notes</h3><p style="white-space:pre-wrap">${esc(e.notes)}</p>`:""}
     <p style="color:#888;font-size:11px">Generated by Demand Desk on ${todayStr()}</p>`;
@@ -4149,7 +4208,7 @@ function buildEpicBriefMarkdown(e){
   L.push(``);
   if(e.deps.length){L.push(`## Dependencies on other teams`,`| Team | What | Since | Expected | State |`,`|---|---|---|---|---|`);
     e.deps.forEach(x=>L.push(`| ${x.team} | ${x.what} | ${x.since||"—"} | ${x.expected||"—"} | ${x.done?"delivered "+x.doneDate:(x.lastCheck?"open · last chased "+x.lastCheck:"open")} |`));L.push(``);}
-  L.push(`## Go-live readiness`,!r.trs.length?"No transports recorded.":!r.pending.length?"✓ Every transport has reached its go-live target.":r.pending.map(x=>`- ${x.t.demandId||x.t.title} — ${x.g.missing.length} TR(s) not yet in ${x.g.target}`).join("\n"),``);
+  L.push(`## Go-live readiness`,!r.trs.length?"No transports recorded.":!r.pending.length?"✓ Every transport has reached its go-live target.":r.pending.map(x=>`- ${demandLabel(x.t)} — ${x.g.missing.length} TR(s) not yet in ${x.g.target}`).join("\n"),``);
   if(e.subtasks.length){L.push(`## Epic subtasks`);subs(e.subtasks,0);L.push(``);}
   L.push(`## Story`);
   if(story.length)story.forEach(x=>L.push(`- **${x.date}** ${x.icon} ${x.src==="log"?EPIC_LOG[x.kind].label+": ":""}${x.text}`));else L.push("_nothing recorded_");
@@ -4546,40 +4605,48 @@ function clashWhere(x){const trs=trsForObject(x.t,x.o.id);
     :" · not on a transport yet");}
 function trClashHtml(t,tr,idx){const out=[];
   (tr.objectIds||[]).forEach(id=>{const o=t.objects.find(x=>x.id===id);if(!o)return;
-    clashesFor(t,o,idx).filter(x=>!x.ack).forEach(x=>out.push(`⚠ Carries <b class="mono">${esc(o.name)}</b>, also in flight in <b>${esc(x.t.demandId||x.t.title)}</b> (${esc(clashWhere(x))}) — agree the import order.`));});
+    clashesFor(t,o,idx).filter(x=>!x.ack).forEach(x=>out.push(`⚠ Carries <b class="mono">${esc(o.name)}</b>, also in flight in <b>${esc(demandLabel(x.t))}</b> (${esc(clashWhere(x))}) — agree the import order.`));});
   return out.map(x=>`<div class="clash">${x}</div>`).join("");}
 
 /* ===================== NEXT ACTION ===================== */
 /* "Look at this again on …" — a date (and what to do) that brings a demand back onto
    Today, so it can be parked without being forgotten. */
 function nextActionDue(t){const n=t.nextAction;return !!(n&&n.date&&n.date<=todayStr()&&t.status!=="closed");}
-function openNextAction(t){
-  const n=t.nextAction||{date:"",note:""};
+/* the next working day after a date — skips weekends and marked holidays / leave */
+function nextWorkDay(d){let x=efAdd(d||todayStr(),1);for(let i=0;i<30&&(!efWd(x)||efOff(x));i++)x=efAdd(x,1);return x;}
+/* done: the step just ticked off (✓ Done) — the box then asks for the step after it */
+function openNextAction(t,done){
+  const n=done?{date:"",note:""}:(t.nextAction||{date:"",note:""});
   const plus=d=>{const x=new Date(todayStr()+"T00:00:00");x.setDate(x.getDate()+d);return isoD(x);};
-  const nextMon=(()=>{const x=new Date(todayStr()+"T00:00:00");x.setDate(x.getDate()+((8-x.getDay())%7||7));return isoD(x);})();
-  const quick=[["Tomorrow",plus(1)],["In 3 days",plus(3)],["Next Monday",nextMon],["In 1 week",plus(7)],["In 2 weeks",plus(14)],["In a month",plus(30)]];
+  const nextMon=(()=>{const x=new Date(todayStr()+"T00:00:00");x.setDate(x.getDate()+((8-x.getDay())%7||7));return isoD(x);})(),nwd=nextWorkDay();
+  const quick=[["Next working day",nwd],...(nwd!==plus(1)?[["Tomorrow",plus(1)]]:[]),["In 3 days",plus(3)],["Next Monday",nextMon],["In 1 week",plus(7)],["In 2 weeks",plus(14)],["In a month",plus(30)]];
   const root=document.getElementById("modalRoot");
-  root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:460px"><h2>⏰ Next action — ${esc(t.demandId||t.title)}</h2>
-    <p class="faint" style="font-size:12px;margin-top:-8px">On this date the demand comes back up on <b>Today</b> — park it without forgetting it.</p>
-    <div class="field"><label>What to do</label><input id="na-note" value="${esc(n.note)}" placeholder="e.g. Chase QA for test results, check the TR reached H02"></div>
-    <div class="field"><label>On</label><input type="date" id="na-date" value="${n.date||plus(1)}" style="width:170px"></div>
+  root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:460px"><h2>${done?"✓ Done — and the next step?":"⏰ Next action"} — ${esc(demandLabel(t))}</h2>
+    ${done?`<div class="na-donestep"><span>✓</span><s>${esc(done.note||"(no note)")}</s></div>`:`<p class="faint" style="font-size:12px;margin-top:-8px">On this date the demand comes back up on <b>Today</b> — park it without forgetting it.</p>`}
+    <div class="field"><label>${done?"Next step":"What to do"}</label><input id="na-note" value="${esc(n.note)}" placeholder="${done?"What comes after it — leave empty if nothing yet":"e.g. Chase QA for test results, check the TR reached H02"}"></div>
+    <div class="field"><label>On</label><input type="date" id="na-date" value="${n.date||nwd}" style="width:170px"></div>
     <div class="chiprow">${quick.map(([l,d])=>`<button class="sm na-q" data-d="${d}" title="${d}">${l}</button>`).join("")}</div>
-    <div class="modal-foot">${n.date?`<button id="na-clear" class="ghost" style="margin-right:auto">Clear</button>`:""}<button id="na-cancel" class="ghost">Cancel</button><button id="na-save" class="primary">Set</button></div></div></div>`;
+    <div class="modal-foot">${done?`<button id="na-just" class="ghost" style="margin-right:auto" title="Tick it off without a next step">Just done</button>`:n.date?`<button id="na-clear" class="ghost" style="margin-right:auto">Clear</button>`:""}<button id="na-cancel" class="ghost">Cancel</button><button id="na-save" class="primary">${done?"Set next step":"Set"}</button></div></div></div>`;
   const close=()=>root.innerHTML="";
+  const tick=()=>{if(done)logTimeline(t,"note","","",`Next action done${done.note?": "+done.note:""}`);};
   root.querySelectorAll(".na-q").forEach(b=>b.onclick=()=>{root.querySelector("#na-date").value=b.dataset.d;});
   root.querySelector("#na-cancel").onclick=close;
   root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
   const clr=root.querySelector("#na-clear");if(clr)clr.onclick=()=>{t.nextAction={date:"",note:""};touch(t);close();renderApp();};
-  const save=()=>{const d=root.querySelector("#na-date").value;if(!d){toast("Pick a date",true);return;}
-    t.nextAction={date:d,note:root.querySelector("#na-note").value.trim()};touch(t);close();renderApp();
-    toast(d<=todayStr()?"Next action is due now — it's on Today":"Back on Today on "+d);};
+  const just=()=>{tick();t.nextAction={date:"",note:""};touch(t);close();renderApp();toast("Done — noted in History");};
+  const jb=root.querySelector("#na-just");if(jb)jb.onclick=just;
+  const save=()=>{const d=root.querySelector("#na-date").value,note=root.querySelector("#na-note").value.trim();
+    if(done&&!note){just();return;}
+    if(!d){toast("Pick a date",true);return;}
+    tick();t.nextAction={date:d,note};touch(t);close();renderApp();
+    toast((done?"Done — noted in History. ":"")+(d<=todayStr()?"Next step is due now — it's on Today":"Back on Today on "+d));};
   root.querySelector("#na-save").onclick=save;
   root.querySelectorAll("input").forEach(i=>i.onkeydown=e=>{if(e.key==="Enter")save();});
   root.querySelector("#na-note").focus();
 }
-function nextActionDone(t){const n=t.nextAction;if(!n||!n.date)return;
-  logTimeline(t,"note","","",`Next action done${n.note?": "+n.note:""}`);
-  t.nextAction={date:"",note:""};touch(t);renderApp();toast("Done — noted in History. Set the next one with ⏰ when you know it.");}
+function nextActionDone(t){const n=t.nextAction;if(!n||!n.date)return;openNextAction(t,{note:n.note||""});}
+/* the steps already done, newest first — read back from History */
+function nextActionTrail(t){return (t.timeline||[]).filter(e=>e.type==="note"&&/^Next action done/.test(e.note||"")).map(e=>({ts:e.ts,note:(e.note||"").replace(/^Next action done:?\s*/,"")||"(no note)"})).sort((a,b)=>b.ts-a.ts);}
 
 /* ===================== TRANSPORT RUN SHEET ===================== */
 /* What Basis has to import into one system, in release order. A ToC stands in for the
@@ -4606,7 +4673,7 @@ function runSheetData(tasks,target,showDone){
     const cidx=clashIndex();
     rows.forEach(r=>{r.warn=r.released?[]:["not released yet"];
       [...new Set(r.objIds)].map(id=>r.t.objects.find(o=>o.id===id)).filter(Boolean).forEach(o=>
-        clashesFor(r.t,o,cidx).filter(x=>!x.ack).forEach(x=>r.warn.push(`${o.name} is also in flight in ${x.t.demandId||x.t.title} — check the order`)));});}
+        clashesFor(r.t,o,cidx).filter(x=>!x.ack).forEach(x=>r.warn.push(`${o.name} is also in flight in ${demandLabel(x.t)} — check the order`)));});}
   const todo=rows.filter(r=>!r.done);
   return {rows,todo,list:showDone?rows:todo,other,tier:tierMeta(target),freeze:target?freezeFor(target):null,
     multi:new Set(rows.map(r=>r.t.id)).size>1};
@@ -4620,7 +4687,7 @@ function runSheetHTML(d,target,label,notes){
     ${d.list.length?`<p>Please import in this order:</p>
     <table style="border-collapse:collapse;font-size:12px"><tr><th ${cell}>#</th><th ${cell}>Transport</th><th ${cell}>Type</th><th ${cell}>Client</th><th ${cell}>Description</th>${d.multi?`<th ${cell}>Demand</th>`:""}<th ${cell}>Remarks</th></tr>
     ${d.list.map(r=>`<tr${r.done?' style="color:#888"':""}><td ${cell}>${r.done?"✓":++n}</td><td ${cell}><b>${esc(r.number)}</b></td><td ${cell}>${r.type}</td><td ${cell}>${esc(r.client)||"—"}</td>
-      <td ${cell}>${esc(r.desc||"")}${r.members?`<br><i>contains ${r.members.map(m=>esc(m.number||"(TR)")).join(", ")}</i>`:""}</td>${d.multi?`<td ${cell}>${esc(r.t.demandId||r.t.title)}</td>`:""}
+      <td ${cell}>${esc(r.desc||"")}${r.members?`<br><i>contains ${r.members.map(m=>esc(m.number||"(TR)")).join(", ")}</i>`:""}</td>${d.multi?`<td ${cell}>${esc(demandLabel(r.t))}</td>`:""}
       <td ${cell}>${r.done?"already in "+esc(target)+(r.doneDate?" ("+esc(r.doneDate)+")":""):r.warn.map(w=>"⚠ "+esc(w)).join("<br>")}</td></tr>`).join("")}</table>`
     :`<p><i>Nothing left to import into ${esc(target)} — everything has reached it.</i></p>`}
     ${notes?`<p><b>Notes:</b><br>${esc(notes).replace(/\n/g,"<br>")}</p>`:""}`;
@@ -4630,7 +4697,7 @@ function runSheetText(d,target,label,notes){
   if(d.freeze)L.push(`NOTE: ${target} is in a change freeze until ${d.freeze.to} (${d.freeze.title}).`,"");
   if(!d.todo.length)L.push(`Nothing left to import into ${target}.`);
   else{L.push("Please import in this order:");const w=Math.max(...d.todo.map(r=>r.number.length));
-    d.todo.forEach((r,i)=>{L.push(`${String(i+1).padStart(3)}. ${r.number.padEnd(w)}  ${r.type}${r.client?" → client "+r.client:""}${r.desc?" — "+r.desc:""}${r.members?` [contains ${r.members.map(m=>m.number||"(TR)").join(", ")}]`:""}${d.multi?` (${r.t.demandId||r.t.title})`:""}`);
+    d.todo.forEach((r,i)=>{L.push(`${String(i+1).padStart(3)}. ${r.number.padEnd(w)}  ${r.type}${r.client?" → client "+r.client:""}${r.desc?" — "+r.desc:""}${r.members?` [contains ${r.members.map(m=>m.number||"(TR)").join(", ")}]`:""}${d.multi?` (${demandLabel(r.t)})`:""}`);
       r.warn.forEach(x=>L.push(`       ⚠ ${x}`));});}
   if(notes)L.push("","Notes: "+notes);
   return L.join("\n");
@@ -4669,7 +4736,7 @@ function openRunSheet(tasks,label,defTarget){
     const mk=root.querySelector("#rs-mark");if(mk)mk.onclick=()=>{
       const v=prompt(`Basis imported all ${d.todo.length} item(s) into ${target}? Date of the import (YYYY-MM-DD):`,todayStr());if(v===null)return;
       const dt=v.trim();if(!/^\d{4}-\d{2}-\d{2}$/.test(dt)){toast("Use the YYYY-MM-DD format",true);return;}
-      const touched=new Set();d.todo.forEach(r=>{(r.toc||r.tr).syncs.push({system:target,date:dt});touched.add(r.t);});
+      const touched=new Set();d.todo.forEach(r=>{(r.toc||r.tr).syncs.push({system:target,date:dt});if(!r.toc)syncReleases(r.tr,target);touched.add(r.t);});
       touched.forEach(t=>touch(t));draw();toast(`Recorded ${d.todo.length} import(s) into ${target} on ${dt}`);};
   };
   draw();
@@ -4713,7 +4780,7 @@ function handoverDoc(s,ts){
       return `${tr.number||"(unnumbered)"} — ${isCust(tr)?"customizing"+(tr.client?", client "+tr.client:""):"workbench"}${tr.released?"":", NOT released"}${r.length?", reached "+r.join("/"):", not moved yet"}${trDest(t,tr).length?", destinations "+trDest(t,tr).join(" → ")+(trComplete(t,tr)?" (complete)":""):""}${toc?", in ToC "+(toc.number||"(unnumbered)"):""}${tr.desc?" · "+tr.desc:""}`;});
     const g=golivePending(t);if(g)trs.push(`⚠ ${g.missing.length} transport(s) not yet in ${g.target}: ${g.missing.map(x=>x.number||"(TR)").join(", ")}`);
     list("Transports",trs);
-    list("⚠ Object clashes",taskClashes(t,cidx).flatMap(({o,open})=>open.map(x=>`${o.name} is also in flight in ${x.t.demandId||x.t.title} (${clashWhere(x)})`)));
+    list("⚠ Object clashes",taskClashes(t,cidx).flatMap(({o,open})=>open.map(x=>`${o.name} is also in flight in ${demandLabel(x.t)} (${clashWhere(x)})`)));
     if(s.refs)list("Reference",(t.reference||[]).filter(r=>r.label||r.value).map(r=>`${r.label||"(no label)"}: ${r.secret?"(secret — not included, ask me)":r.value}`));
     list("Debugging in progress",debugForTask(t.id).filter(x=>["active","paused"].includes(x.status)).map(x=>`${x.title}${x.resume?" — resume here: "+x.resume.replace(/\s+/g," "):""}`));
     list("Latest comments",(t.comments||[]).slice(-3).map(c=>`${isoTs(c.ts)} — ${c.text.replace(/\s+/g," ")}`));
@@ -5257,7 +5324,7 @@ function demandHeadBench(t,sub,lc){
       isWaiting(t)?{k:"Waiting on",v:esc(t.waiting.on)+(waitDays(t)!=null?`<small>${waitDays(t)} d</small>`:""),cls:"warn"}:null])}
     ${na?`<div class="bband ${nad<=0?"watch":""}"><canvas class="natick"></canvas><span class="k">Next action · ${nad<0?(-nad)+" d ago":nad===0?"today":"in "+nad+" d"}</span><span class="tx"><b>${esc(na.note||"(no note)")}</b> <span class="mono faint">${na.date}</span></span><button class="sm" id="na-done" title="Did it — note it in History and clear">✓ Done</button><button class="sm ghost" id="na-edit" title="Change date or text">✎</button></div>`:""}
     ${cl.length?(()=>{const x=cl[0],o=x.open[0],more=cl.reduce((n,y)=>n+y.open.length,0)-1;
-      return `<div class="clashband"><canvas class="orbit"></canvas><span><span class="ck">Object clash</span> <b class="mono">${esc(x.o.name)}</b> is also in flight in <a class="cb-go" data-id="${o.t.id}">${esc(o.t.demandId||o.t.title)}</a> <span class="clw">— ${esc(clashWhere(o))}${more>0?` · +${more} more`:""}. Agree the import order.</span></span><button class="sm cb-obj">Objects ›</button></div>`;})():""}
+      return `<div class="clashband"><canvas class="orbit"></canvas><span><span class="ck">Object clash</span> <b class="mono">${esc(x.o.name)}</b> is also in flight in <a class="cb-go" data-id="${o.t.id}">${esc(demandLabel(o.t))}</a> <span class="clw">— ${esc(clashWhere(o))}${more>0?` · +${more} more`:""}. Agree the import order.</span></span><button class="sm cb-obj">Objects ›</button></div>`;})():""}
     <div class="tabs">
       <button class="tab ${activeTab==="overview"?"active":""}" data-tab="overview" title="1">Overview</button>
       <button class="tab ${activeTab==="work"?"active":""}" data-tab="work" title="2">Work<span class="count">${sub.n}</span></button>
@@ -5434,7 +5501,7 @@ function renderBoard(){const host=document.getElementById("boardHost");if(!host)
       if(needsComeback(t,col.dataset.s)){openComeback(t,col.dataset.s,()=>{renderBoard();renderStats();if(activeId===t.id)renderDetail();},()=>renderBoard());return;}
       logTimeline(t,"status",t.status,col.dataset.s);t.status=col.dataset.s;touch(t);renderBoard();renderStats();
       const c=host.querySelector(`.tcard[data-id="${t.id}"]`);if(c&&motionOn())c.classList.add("land");
-      if(activeId===t.id)renderDetail();toast(`${t.demandId||t.title} → ${STATUS[t.status].label} · logged in History`);};});}
+      if(activeId===t.id)renderDetail();toast(`${demandLabel(t)} → ${STATUS[t.status].label} · logged in History`);};});}
 function setDemandsMode(m){setViewPref("demandsMode",m);syncDemandsLayout();renderDemandSidebar();renderDetail();renderCtxRail();}
 
 /* ---------- context rail: what you glance at while working ---------- */
@@ -5449,7 +5516,8 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
   host.innerHTML=`<div class="cx-in">
     <div class="ck-unit cxs" style="--pen:var(--watch)"><div class="ck-head"><h2>Next action</h2><span class="ck-meta">${na?(nad<0?(-nad)+" d ago":nad===0?"today":"in "+nad+" d"):""}</span></div>
       ${na?`<div class="nx"><canvas class="nxc"></canvas><div><div class="t">${esc(na.note||"(no note)")}</div><div class="w mono">${na.date}</div></div></div><div class="cxa"><button class="sm" id="cxNaDone">✓ Done</button><button class="sm ghost" id="cxNaEdit">✎ Change</button></div>`
-        :`<button class="sm" id="cxNaSet" style="width:100%">⏰ When should this come back up?</button>`}</div>
+        :`<button class="sm" id="cxNaSet" style="width:100%">⏰ When should this come back up?</button>`}
+      ${(()=>{const tr=nextActionTrail(t);return tr.length?`<div class="cx-natr"><div class="h">Done so far · ${tr.length}</div>${tr.slice(0,5).map(x=>`<div class="r"><span class="k">✓</span><span class="s" title="${esc(x.note)}">${esc(x.note)}</span><span class="d">${shortD(isoTs(x.ts))}</span></div>`).join("")}${tr.length>5?`<a class="cxl" data-tab="history">+ ${tr.length-5} earlier in History ›</a>`:""}</div>`:"";})()}</div>
     <div class="ck-unit cxs"><div class="ck-head"><h2>Facts</h2><a class="cxl" id="cxEdit">✎ edit</a></div><div class="kv">
       <span class="k">System</span><span class="v mono">${t.system?esc(t.system)+" · "+(TIER_S[t.system.slice(-1)]||"")+(t.client?" · client "+esc(t.client):""):"—"}</span>
       ${ep?`<span class="k">Epic</span><span class="v"><a class="cxl ep" id="cxEpic">◆ ${esc(ep.code||ep.name)}${t.wave?" · "+esc(t.wave):""}</a></span>`:""}
@@ -5620,12 +5688,12 @@ const EF_BUCKETS={mtg:{l:"Meetings",act:"Meetings & admin"},adm:{l:"Admin & emai
 const EF_PAL=["pen-2","pen-3","pen-4","pen-5","pen-6","pen-7","pen-8"],EF_DAY=8;
 function normEffort(x){const task=!x.bucket&&!x.epicId&&x.taskId?String(x.taskId):"",epic=!task&&!x.bucket&&x.epicId?String(x.epicId):"",bucket=task||epic?"":(EF_BUCKETS[x.bucket]?x.bucket:"sup");
   return{id:x.id||uid(),date:/^\d{4}-\d\d-\d\d$/.test(x.date||"")?x.date:todayStr(),hours:Math.max(0,Math.round((+x.hours||0)*4)/4),taskId:task,epicId:epic,bucket,
-    activity:EF_ACTC[x.activity]?x.activity:(bucket?EF_BUCKETS[bucket].act:epic?"Meetings & admin":"Build"),note:String(x.note||""),subtaskId:task?(x.subtaskId||""):"",createdAt:x.createdAt||Date.now()};}
+    activity:EF_ACTC[x.activity]?x.activity:(bucket?EF_BUCKETS[bucket].act:epic?"Meetings & admin":"Build"),note:String(x.note||""),subtaskId:task?(x.subtaskId||""):"",meetingId:String(x.meetingId||""),createdAt:x.createdAt||Date.now()};}
 const efKey=e=>e.taskId||(e.epicId?"e:"+e.epicId:"b:"+e.bucket);
 const efTaskOf=k=>k&&!String(k).startsWith("b:")&&!String(k).startsWith("e:")?state.tasks.find(t=>t.id===k)||null:null;
 function efName(k){if(String(k).startsWith("b:"))return (EF_BUCKETS[k.slice(2)]||{l:"Other"}).l;
   if(String(k).startsWith("e:")){const ep=epicById(k.slice(2));return ep?"◆ "+(ep.code||ep.name)+" (epic)":"(deleted epic)";}
-  const t=efTaskOf(k);return t?(t.demandId||t.title):"(deleted demand)";}
+  const t=efTaskOf(k);return t?(demandLabel(t)):"(deleted demand)";}
 const efKeyValid=k=>!!k&&(String(k).startsWith("b:")?!!EF_BUCKETS[k.slice(2)]:String(k).startsWith("e:")?!!epicById(k.slice(2)):!!efTaskOf(k));
 const efHash=s=>{let h=7;for(const c of String(s))h=(h*31+c.charCodeAt(0))|0;return h>>>0;};
 /* colours go round the palette in the order demands arrived, so demands open at the same time never share one */
@@ -5787,7 +5855,8 @@ function efMountComposer(host,o,done){
       if(!h||isNaN(h)||h>24){const hi=q('[data-f="hours"]');hi.classList.remove("ef-shake");void hi.offsetWidth;hi.classList.add("ef-shake");hi.focus();toast("How many hours? e.g. 2 · 1.5 · 2h30 · 90m",true);return;}
       if(st.date>todayStr()){toast("That day hasn't happened yet",true);return;}
       const isB=st.key.startsWith("b:"),isE=st.key.startsWith("e:"),prev=o.editId?state.efforts.find(x=>x.id===o.editId):null;
-      const e=normEffort({id:o.editId||uid(),date:st.date,hours:h,taskId:isB||isE?"":st.key,epicId:isE?st.key.slice(2):"",bucket:isB?st.key.slice(2):"",activity:st.act,note:st.note.trim(),subtaskId:isB||isE?"":st.sub,createdAt:prev?prev.createdAt:Date.now()});
+      const e=normEffort({id:o.editId||uid(),date:st.date,hours:h,taskId:isB||isE?"":st.key,epicId:isE?st.key.slice(2):"",bucket:isB?st.key.slice(2):"",activity:st.act,note:st.note.trim(),subtaskId:isB||isE?"":st.sub,meetingId:prev?prev.meetingId:"",createdAt:prev?prev.createdAt:Date.now()});
+      {const mt=e.meetingId&&state.meetings.find(x=>x.id===e.meetingId);if(mt){mt.hours=e.hours;mt.date=e.date;mt.logTo=efKey(e);mt.updatedAt=Date.now();}}
       if(isE){const ep=epicById(e.epicId);if(ep)ep.updatedAt=Date.now();}
       if(prev)state.efforts[state.efforts.indexOf(prev)]=e;else state.efforts.push(e);
       const t=efTaskOf(e.taskId);if(t)t.updatedAt=Date.now();
@@ -5816,9 +5885,10 @@ function openLogTime(o={}){const root=document.getElementById("modalRoot");
 function efAfterLog(e,edited){setViewPref("ef.last",efKey(e));efFlashId=e.id;
   toast(`${edited?"Updated":"Logged"} ${efFh(e.hours)} h · ${efName(efKey(e))} · ${e.activity}`);renderApp();efTimerUI();
   const d=document.getElementById("efDrw");if(d&&d.classList.contains("on"))openEfDay(d.dataset.date,d.dataset.key||"");}
-function efDelete(e){const i=state.efforts.indexOf(e);if(i<0)return;state.efforts.splice(i,1);markDirty();renderApp();efTimerUI();
+function efDelete(e){const i=state.efforts.indexOf(e);if(i<0)return;state.efforts.splice(i,1);
+  const mt=e.meetingId&&state.meetings.find(x=>x.id===e.meetingId),mh=mt?mt.hours:0;if(mt)mt.hours=0;markDirty();renderApp();efTimerUI();
   const d=document.getElementById("efDrw");if(d&&d.classList.contains("on"))openEfDay(d.dataset.date,d.dataset.key||"");
-  efToastUndo(`Deleted ${efFh(e.hours)} h from ${efWdl(e.date)}`,()=>{state.efforts.splice(Math.min(i,state.efforts.length),0,e);markDirty();renderApp();efTimerUI();});}
+  efToastUndo(`Deleted ${efFh(e.hours)} h from ${efWdl(e.date)}`,()=>{state.efforts.splice(Math.min(i,state.efforts.length),0,e);if(mt)mt.hours=mh;markDirty();renderApp();efTimerUI();});}
 const efEdit=e=>openLogTime({key:efKey(e),date:e.date,hours:e.hours,act:e.activity,note:e.note,sub:e.subtaskId,editId:e.id});
 
 /* ---------- a running timer (kept in this browser, not the data file) ---------- */
@@ -5936,7 +6006,7 @@ function efGKey(e){const g=efG();if(g==="activity")return e.activity;
   if(g==="demand")return e.taskId;if(g==="epic")return t&&t.epicId&&epicById(t.epicId)?t.epicId:"_noe";return t&&t.theme?t.theme:"_nt";}
 function efGMeta(k){const g=efG();if(k==="_non")return {l:"Not demand work",col:"ink-3"};if(k==="_ep")return {l:"◆ Epic-level work",col:"pen-5"};
   if(String(k).startsWith("e:")){const ep=epicById(k.slice(2));return {l:"◆ "+(ep?(ep.code||ep.name):"(deleted epic)"),sub:"epic-level work"+(ep&&ep.code?" · "+ep.name:""),col:efPen(k)};}
-  if(g==="demand"){const t=efTaskOf(k);return t?{l:t.demandId||t.title,sub:t.demandId?t.title:"",col:efPen(k)}:{l:"(deleted demand)",col:"ink-4"};}
+  if(g==="demand"){const t=efTaskOf(k);return t?{l:demandLabel(t),sub:t.demandId?t.title:"",col:efPen(k)}:{l:"(deleted demand)",col:"ink-4"};}
   if(g==="epic"){if(k==="_noe")return {l:"No epic",col:"pen-4"};const e=epicById(k);return {l:"◆ "+(e?(e.code||e.name):"epic"),sub:e&&e.code?e.name:"",col:efEpicPen(k)};}
   if(g==="activity")return {l:k,col:EF_ACTC[k]||"ink-3"};
   return k==="_nt"?{l:"No theme",col:"ink-2"}:{l:k,col:efThemePen(k)};}
@@ -6065,20 +6135,27 @@ function efMixRows(R){const M=efMixTotals(R).sort((a,b)=>b[1]-a[1]),tot=M.reduce
 function efRenderSheet(pin){const host=document.getElementById("efSheet");if(!host)return;
   const m=efMonOff(0)-efWk*7,ds=[0,1,2,3,4,5,6].map(i=>m+i),es=state.efforts.filter(e=>{const o=daysUntil(e.date);return o>=m&&o<=m+6;}),tot=efSum(es);
   const keys=[...new Set(es.map(efKey))].sort((a,b)=>(a.startsWith("b:"))-(b.startsWith("b:"))||efName(a).localeCompare(efName(b)));
-  const cell=(k,o)=>efSum(es.filter(e=>efKey(e)===k&&e.date===efOffD(o))),we=o=>{const g=efDow(efOffD(o));return g===0||g===6;},first=state.efforts.reduce((x,e)=>e.date<x?e.date:x,"9999");
+  /* demands that share one ticket ID can be added up into one row — that's how a timesheet wants them */
+  const shared=demandIdsShared(),byT=shared.size>0&&viewPref("ef.sheetBy","demand")==="ticket",rows=[];
+  keys.forEach(k=>{const t=efTaskOf(k),g=byT&&t&&shared.has(t.demandId)?"T:"+t.demandId:k,r=rows.find(x=>x.g===g);if(r)r.keys.push(k);else rows.push({g,keys:[k],id:t?t.demandId:""});});
+  const res=r=>es.filter(e=>r.keys.includes(efKey(e))),cell=(r,o)=>efSum(res(r).filter(e=>e.date===efOffD(o))),we=o=>{const g=efDow(efOffD(o));return g===0||g===6;},first=state.efforts.reduce((x,e)=>e.date<x?e.date:x,"9999");
+  const many=r=>r.keys.length>1,titles=r=>r.keys.map(k=>efTaskOf(k).title);
+  const rl=r=>{const k=r.keys[0],t=efTaskOf(k);return many(r)?`<b class="mono">${esc(r.id)}</b> <span class="faint" title="${esc(titles(r).join("\n"))}">${r.keys.length} demands added up</span>`:t?`<b class="mono">${esc(t.demandId||"")}</b> <span class="faint">${esc(t.title)}</span>`:esc(efName(k));};
+  const rt=r=>{const t=efTaskOf(r.keys[0]);return many(r)?`${r.id} ${titles(r).join(" + ")}`:t?`${t.demandId?t.demandId+" ":""}${t.title}`:efName(r.keys[0]);};
   host.innerHTML=`<div class="ck-head"><h2>Week sheet</h2><span class="ck-meta">${efSh(efOffD(m))} – ${efSh(efOffD(m+6))} · ${efFh(tot)} h · click an empty cell to log it, a filled one to see the day</span>
-    <span class="ef-wnav"><button class="sm ghost" id="efWkP" title="Week before">‹</button><button class="sm ${efWk?"":"ghost"}" id="efWk0">This week</button><button class="sm ghost" id="efWkN" title="Week after" ${efWk===0?"disabled":""}>›</button><button class="sm" id="efWkCopy" title="A tab-separated table — paste into your timesheet or Excel">⧉ Copy for timesheet</button></span></div>
-    <div style="overflow-x:auto"><table class="ef-sheet ${pin?"pin":""}"><thead><tr><th>Demand / bucket</th>${ds.map(o=>`<th class="c ${we(o)?"we":""} ${o===0?"td":""}" title="${esc(efOffTxt(efOff(efOffD(o))))}">${efFmt(efOffD(o),{weekday:"short"})}${efOff(efOffD(o))?" "+EF_OFF[efOff(efOffD(o)).kind].icon:""}<small>${efSh(efOffD(o))}</small></th>`).join("")}<th class="tt">Total</th></tr></thead>
-    <tbody>${keys.map(k=>{const t=efTaskOf(k);return `<tr><td class="rl"><span class="ef-pd" style="--pen:var(--${efPen(k)})"></span> ${t?`<b class="mono">${esc(t.demandId||"")}</b> <span class="faint">${esc(t.title)}</span>`:esc(efName(k))}</td>${ds.map(o=>{const v=cell(k,o);return `<td class="c ${v?"has":"e"} ${we(o)?"we":""} ${o===0?"td":""} ${o>0?"fu":""}" data-o="${o}" data-k="${esc(k)}">${v?efFh(v):""}</td>`;}).join("")}<td class="tt">${efFh(efSum(es.filter(e=>efKey(e)===k)))}</td></tr>`;}).join("")||`<tr><td class="rl faint" colspan="9">Nothing logged this week.</td></tr>`}</tbody>
+    <span class="ef-wnav">${shared.size?`<button class="sm ${byT?"ghost":""}" id="efByD" title="One row per demand">By demand</button><button class="sm ${byT?"":"ghost"}" id="efByT" title="Demands that share a ticket ID added up into one row">By ticket</button><span style="width:8px"></span>`:""}<button class="sm ghost" id="efWkP" title="Week before">‹</button><button class="sm ${efWk?"":"ghost"}" id="efWk0">This week</button><button class="sm ghost" id="efWkN" title="Week after" ${efWk===0?"disabled":""}>›</button><button class="sm" id="efWkCopy" title="A tab-separated table — paste into your timesheet or Excel">⧉ Copy for timesheet</button></span></div>
+    <div style="overflow-x:auto"><table class="ef-sheet ${pin?"pin":""}"><thead><tr><th>${byT?"Ticket":"Demand"} / bucket</th>${ds.map(o=>`<th class="c ${we(o)?"we":""} ${o===0?"td":""}" title="${esc(efOffTxt(efOff(efOffD(o))))}">${efFmt(efOffD(o),{weekday:"short"})}${efOff(efOffD(o))?" "+EF_OFF[efOff(efOffD(o)).kind].icon:""}<small>${efSh(efOffD(o))}</small></th>`).join("")}<th class="tt">Total</th></tr></thead>
+    <tbody>${rows.map((r,ri)=>`<tr><td class="rl"><span class="ef-pd" style="--pen:var(--${efPen(r.keys[0])})"></span> ${rl(r)}</td>${ds.map(o=>{const v=cell(r,o);return `<td class="c ${v?"has":"e"} ${we(o)?"we":""} ${o===0?"td":""} ${o>0?"fu":""}" data-o="${o}" data-r="${ri}">${v?efFh(v):""}</td>`;}).join("")}<td class="tt">${efFh(efSum(res(r)))}</td></tr>`).join("")||`<tr><td class="rl faint" colspan="9">Nothing logged this week.</td></tr>`}</tbody>
     <tfoot><tr><td class="rl faint">Day total</td>${ds.map(o=>{const d=efOffD(o),v=efSum(es.filter(e=>e.date===d)),lv=efOff(d),un=!lv&&!we(o)&&o<0&&!v&&d>=first;
       return `<td class="${we(o)?"we":""} ${o===0?"td":""}">${v?`${efDayBar(v,0,16,4.2)}${efFh(v)}`:lv?`<span class="faint" style="cursor:pointer" data-day="${d}" title="${esc(efOffTxt(lv))}">${EF_OFF[lv.kind].icon} ${EF_OFF[lv.kind].l.toLowerCase()}</span>`:un?`<span class="ef-bad">no log</span><div class="ef-tiny"><a href="#" data-fill="${d}">＋ log</a> · <a href="#" data-off="${d}">day off</a></div>`:""}</td>`;}).join("")}<td class="tt">${efFh(tot)}</td></tr></tfoot></table></div>`;
   host.querySelector("#efWkP").onclick=()=>{efWk++;efRenderSheet();};host.querySelector("#efWkN").onclick=()=>{if(efWk>0){efWk--;efRenderSheet();}};host.querySelector("#efWk0").onclick=()=>{efWk=0;efRenderSheet();};
-  host.querySelectorAll("td.c").forEach(td=>td.onclick=()=>{const o=+td.dataset.o;if(o>0)return;if(td.classList.contains("has"))openEfDay(efOffD(o),td.dataset.k);else openLogTime({key:td.dataset.k,date:efOffD(o)});});
+  [["#efByD","demand"],["#efByT","ticket"]].forEach(([id,v])=>{const b=host.querySelector(id);if(b)b.onclick=()=>{setViewPref("ef.sheetBy",v);efRenderSheet(pin);};});
+  host.querySelectorAll("td.c").forEach(td=>td.onclick=()=>{const o=+td.dataset.o,r=rows[+td.dataset.r];if(o>0||!r)return;if(td.classList.contains("has"))openEfDay(efOffD(o),many(r)?"":r.keys[0]);else openLogTime({key:r.keys[0],date:efOffD(o)});});
   host.querySelectorAll("[data-fill]").forEach(el=>el.onclick=e=>{e.preventDefault();openLogTime({date:el.dataset.fill});});
   host.querySelectorAll("[data-off]").forEach(el=>el.onclick=e=>{e.preventDefault();openDaysOff({date:el.dataset.off});});
   host.querySelectorAll("[data-day]").forEach(el=>el.onclick=()=>openEfDay(el.dataset.day));
-  host.querySelector("#efWkCopy").onclick=()=>{const rows=[["Demand / bucket",...ds.map(efOffD),"Total"].join("\t"),...keys.map(k=>{const t=efTaskOf(k);return [t?`${t.demandId?t.demandId+" ":""}${t.title}`:efName(k),...ds.map(o=>{const v=cell(k,o);return v?efFh(v):"";}),efFh(efSum(es.filter(e=>efKey(e)===k)))].join("\t");})];
-    navigator.clipboard.writeText(rows.join("\n")).then(()=>toast(`Copied ${keys.length} row${keys.length===1?"":"s"} — paste into your timesheet or Excel`)).catch(()=>toast("Copy failed",true));};}
+  host.querySelector("#efWkCopy").onclick=()=>{const out=[[`${byT?"Ticket":"Demand"} / bucket`,...ds.map(efOffD),"Total"].join("\t"),...rows.map(r=>[rt(r),...ds.map(o=>{const v=cell(r,o);return v?efFh(v):"";}),efFh(efSum(res(r)))].join("\t"))];
+    navigator.clipboard.writeText(out.join("\n")).then(()=>toast(`Copied ${rows.length} row${rows.length===1?"":"s"} — paste into your timesheet or Excel`)).catch(()=>toast("Copy failed",true));};}
 function efEstRows(A){const ids=[...new Set(A.R.filter(e=>efTaskOf(e.taskId)&&+efTaskOf(e.taskId).estimate).map(e=>e.taskId))];
   const rows=ids.map(id=>{const t=efTaskOf(id);return {t,a:efSum(efFor(id)),e:+t.estimate};}).sort((x,y)=>(y.a/y.e)-(x.a/x.e)),mx=Math.max(...rows.map(r=>Math.max(r.a,r.e)),1),N=34,u=mx/N;
   const noEst=new Set(A.R.filter(e=>{const t=efTaskOf(e.taskId);return t&&!+t.estimate;}).map(e=>e.taskId)).size;
@@ -6103,7 +6180,7 @@ let efNoticeActs=[];
 function efNoticedHTML(A,total,dem,unl){efNoticeActs=[];const out=[],act=(l,fn)=>{efNoticeActs.push(fn);return `<button class="sm" data-act="${efNoticeActs.length-1}">${l}</button>`;},g=efG();
   const k0=A.keys.find(k=>k!=="_non");if(k0){const m=efGMeta(k0);out.push([m.col,`<b>${esc(m.l)}</b>${m.sub?` <span class="faint">${esc(m.sub)}</span>`:""} took <b>${efPct(A.tot.get(k0),total)}%</b> of your hours — the most of any ${EF_GROUPS[g].toLowerCase()}.`,""]);}
   const over=[...new Set(A.R.filter(e=>e.taskId).map(e=>e.taskId))].map(efTaskOf).filter(t=>t&&+t.estimate&&efSum(efFor(t.id))>+t.estimate).sort((a,b)=>(efSum(efFor(b.id))-b.estimate)-(efSum(efFor(a.id))-a.estimate));
-  over.slice(0,2).forEach(t=>out.push(["bad",`<b>${esc(t.demandId||t.title)}</b> is <b>${efFh(efSum(efFor(t.id))-t.estimate)} h over</b> its ${efFh(t.estimate)} h estimate.`,act("Open",()=>{view="demands";activeId=t.id;activeTab="effort";renderApp();})]));
+  over.slice(0,2).forEach(t=>out.push(["bad",`<b>${esc(demandLabel(t))}</b> is <b>${efFh(efSum(efFor(t.id))-t.estimate)} h over</b> its ${efFh(t.estimate)} h estimate.`,act("Open",()=>{view="demands";activeId=t.id;activeTab="effort";renderApp();})]));
   const rw=A.R.filter(e=>{const t=efTaskOf(e.taskId);return t&&efStatusOn(t,e.date)==="bug";});
   if(rw.length){const ids=[...new Set(rw.map(e=>e.taskId))].sort((a,b)=>efSum(rw.filter(e=>e.taskId===b))-efSum(rw.filter(e=>e.taskId===a)));
     out.push(["bad",`<b>${efFh(efSum(rw))} h</b> went to rework (${efPct(efSum(rw),dem)}% of demand work) — mostly <b>${esc(efName(ids[0]))}</b>.`,""]);}
@@ -6234,9 +6311,9 @@ function rvDoc(P,S,R,note){const H=[],M=[],md=x=>String(x??"").replace(/\|/g,"\\
     return {h:`<b>${esc(dl(t))}</b> <span class="meta">(${esc(meta)})</span>${short?`<br>${esc(short)}`:""}`,m:`**${dl(t)}** (${meta})${short?" — "+short:""}`};}));
   if(S.wins.length){H.push(`<h3>Wins</h3>`);M.push(`## Wins`,``);
     Object.entries(WIN_KINDS).forEach(([k,v])=>{const ws=S.wins.filter(w=>w.kind===k);if(!ws.length)return;
-      H.push(`<p><b>${v.icon} ${v.l}</b></p><ul>${ws.map(w=>{const t=rvTask(w.taskId);return `<li>${rvLong(w.date)} — ${esc(w.text)}${t?` <span class="meta">(${esc(t.demandId||t.title)})</span>`:""}</li>`;}).join("")}</ul>`);
-      M.push(`**${v.icon} ${v.l}**`,``,...ws.map(w=>{const t=rvTask(w.taskId);return `- ${rvLong(w.date)} — ${w.text}${t?` (${t.demandId||t.title})`:""}`;}),``);});}
-  list("Lessons learned",S.lessons.map(({t,l})=>({h:`${esc(l.text).replace(/\n/g,"<br>")} <span class="meta">(${esc(t.demandId||t.title)} · ${rvLong(l.date)})</span>`,m:`${l.text.replace(/\n/g," ")} (${t.demandId||t.title} · ${rvLong(l.date)})`})));
+      H.push(`<p><b>${v.icon} ${v.l}</b></p><ul>${ws.map(w=>{const t=rvTask(w.taskId);return `<li>${rvLong(w.date)} — ${esc(w.text)}${t?` <span class="meta">(${esc(demandLabel(t))})</span>`:""}</li>`;}).join("")}</ul>`);
+      M.push(`**${v.icon} ${v.l}**`,``,...ws.map(w=>{const t=rvTask(w.taskId);return `- ${rvLong(w.date)} — ${w.text}${t?` (${demandLabel(t)})`:""}`;}),``);});}
+  list("Lessons learned",S.lessons.map(({t,l})=>({h:`${esc(l.text).replace(/\n/g,"<br>")} <span class="meta">(${esc(demandLabel(t))} · ${rvLong(l.date)})</span>`,m:`${l.text.replace(/\n/g," ")} (${demandLabel(t)} · ${rvLong(l.date)})`})));
   table("Epics",["Epic","My role","My part","Delivered in period","Hours"],S.epics.map(e=>{const ts=tasksForEpic(e.id);
     return [epicLabel(e),e.role==="lead"?"Lead":"Contributor",e.myScope||"—",String(S.del.filter(x=>x.t.epicId===e.id).length)+" of "+ts.length,efFh(Math.round(ts.reduce((a,t)=>a+S.hoursOf(t.id),0)+efSum(S.ef.filter(x=>x.epicId===e.id))))||"0"];}));
   table("Delivered",["Demand","Title","Type","Theme","Requestor","Delivered","Days","Hours","Notes"],S.del.map(({t,d,r,from})=>{
@@ -6276,7 +6353,7 @@ function renderReview(){const host=document.getElementById("detail");efHideTip()
       </div>
       <div class="ef-stack">
         <div class="ck-unit"><div class="ck-head"><h2>Wins</h2><span class="ck-meta">${S.wins.length} · press W anywhere</span></div>
-          ${S.wins.length?S.wins.slice().reverse().map(w=>{const t=rvTask(w.taskId),k=WIN_KINDS[w.kind];return `<div class="rv-win" style="--pen:var(--${k.pen})"><span class="ic" title="${k.l}">${k.icon}</span><div style="min-width:0"><div>${linkify(w.text)}</div><div class="m">${rvLong(w.date)} · ${k.l}${t?` · ${esc(t.demandId||t.title)}`:""}</div></div><span class="ops"><button class="ghost sm" data-wed="${w.id}" title="Edit">✎</button><button class="ghost sm danger" data-wrm="${w.id}" title="Delete">✕</button></span></div>`;}).join("")
+          ${S.wins.length?S.wins.slice().reverse().map(w=>{const t=rvTask(w.taskId),k=WIN_KINDS[w.kind];return `<div class="rv-win" style="--pen:var(--${k.pen})"><span class="ic" title="${k.l}">${k.icon}</span><div style="min-width:0"><div>${linkify(w.text)}</div><div class="m">${rvLong(w.date)} · ${k.l}${t?` · ${esc(demandLabel(t))}`:""}</div></div><span class="ops"><button class="ghost sm" data-wed="${w.id}" title="Edit">✎</button><button class="ghost sm danger" data-wrm="${w.id}" title="Delete">✕</button></span></div>`;}).join("")
             :`<div class="faint" style="font-size:12px;line-height:1.55">No wins noted in this period. A thank-you mail, a clean go-live, a colleague you helped — note them as they happen; they're the first thing you forget.</div>`}
           <button class="sm" id="rvWin2" style="margin-top:10px">＋ Note a win</button></div>
         <div class="ck-unit"><div class="ck-head"><h2>Where the time went</h2><span class="ck-meta">${S.hours?efFh(Math.round(S.hours))+" h":"no hours logged"}</span></div>${rvTimeRows(S)}</div>
@@ -6369,7 +6446,7 @@ function roundEstimates(t){const ch=changeEvents(t),add=ch.reduce((a,e)=>a+(+e.e
 const needsComeback=(t,v)=>["delivered","closed"].includes(t.status)&&["open","progress","bug"].includes(v);
 /* a delivered (or closed) demand moving backwards: ask why, once */
 function openComeback(t,v,done,cancel){const root=document.getElementById("modalRoot"),n=roundCount(t)+1,st={why:v==="bug"?"defect":"change",to:v==="open"?"open":"progress"};
-  root.innerHTML=`<div class="modal-bg"><div class="modal efx ef-modal"><h2>↩ ${esc(t.demandId||t.title)} is coming back — why?</h2>
+  root.innerHTML=`<div class="modal-bg"><div class="modal efx ef-modal"><h2>↩ ${esc(demandLabel(t))} is coming back — why?</h2>
     <p class="faint" style="font-size:12px;margin-top:-6px;line-height:1.5">It was ${STATUS[t.status].label.toLowerCase()}. The reason decides how the work from here on is counted — a changed requirement is not a mistake.</p>
     <div class="cb-opts">
       <button class="cb-opt" data-why="defect" style="--pen:var(--bad)"><b>🐞 A defect in my work</b><span>Goes to Bug / rework, and counts as rework.</span></button>
@@ -6472,7 +6549,7 @@ function renderEpicEffort(body,e){const all=epicEfforts(e).sort((a,b)=>a.date.lo
       [...mo.by.entries()].sort((a,b)=>(a[0]==="◆")-(b[0]==="◆")||b[1]-a[1]).forEach(([k,v])=>{const col=k==="◆"?C["pen-5"]:C[efPen(k)];for(let z=0;z<Math.round(v/unit);z++){if(j++>=show)return;efDot(c,xc,y,r,col,.9);y-=pitch;}});
       if(n<=24||i%2===0)efLabel(c,efFmt(mo.m+"-01",{month:"short"}).toUpperCase(),xc,h-9,{size:7.5,color:sel?C.ink:C["ink-3"]});
       s.hits.push({x:xc,y:h/2,rx:cw/2,ry:h/2,i,mo});});}),
-    hit=>{const mo=hit.mo;return `<b>${efFmt(mo.m+"-01",{month:"long",year:"numeric"})}</b> · ${efFh(Math.round(mo.tot*10)/10)} h`+[...mo.by.entries()].sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const t=k==="◆"?null:rvTask(k);return `<div class="r" style="--pen:var(--${k==="◆"?"pen-5":efPen(k)})"><i></i><span>${k==="◆"?"◆ Epic-level work":esc(t?(t.demandId||t.title):"(deleted demand)")}</span><span>${efFh(Math.round(v*10)/10)}</span></div>`;}).join("")+`<div class="hint">click to see this month</div>`;},
+    hit=>{const mo=hit.mo;return `<b>${efFmt(mo.m+"-01",{month:"long",year:"numeric"})}</b> · ${efFh(Math.round(mo.tot*10)/10)} h`+[...mo.by.entries()].sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const t=k==="◆"?null:rvTask(k);return `<div class="r" style="--pen:var(--${k==="◆"?"pen-5":efPen(k)})"><i></i><span>${k==="◆"?"◆ Epic-level work":esc(t?(demandLabel(t)):"(deleted demand)")}</span><span>${efFh(Math.round(v*10)/10)}</span></div>`;}).join("")+`<div class="hint">click to see this month</div>`;},
     hit=>{epPer={...epPer,mode:"month",month:hit.mo.m};rr();});}
 /* a demand's hours split by round (Effort tab) */
 function efRoundRows(t,es){const n=roundCount(t),st=roundStarts(t),ests=roundEstimates(t),rows=[];
@@ -6547,7 +6624,7 @@ function searchTerms(q){const out=[];String(q||"").replace(/"([^"]+)"|(\S+)/g,(_
 function searchAll(q){const terms=searchTerms(q);if(!terms.length)return [];const hits=[];
   const add=(k,label,parts,date,go,sub)=>{const text=parts.filter(Boolean).join(" · "),low=text.toLowerCase();if(!terms.every(t=>low.includes(t)))return;hits.push({k,label,sub:sub||"",text,low,date:date||"",go});};
   const td=t=>t.receivedDate||isoTs(t.createdAt);
-  state.tasks.forEach(t=>{const ep=epicById(t.epicId),go=tab=>()=>{view="demands";activeId=t.id;activeTab=tab;},dl=t.demandId||t.title;
+  state.tasks.forEach(t=>{const ep=epicById(t.epicId),go=tab=>()=>{view="demands";activeId=t.id;activeTab=tab;},dl=demandLabel(t);
     add("Demand",`${t.demandId||"—"} · ${t.title}`,[t.demandId,t.title,t.description,t.notes,t.type,t.requestor,t.project,t.theme,t.wave,t.system,t.client?"client "+t.client:"",t.nextAction&&t.nextAction.note,ep?epicLabel(ep):"",(t.comments||[]).map(c=>c.text).join(" · ")],td(t),go("overview"),[STATUS[t.status].label,t.system,t.theme].filter(Boolean).join(" · "));
     t.objects.forEach(o=>add("Object",`${o.name||"(object)"} — ${o.action}`,[o.name,o.type,o.desc],td(t),go("objects"),dl));
     t.transports.forEach(tr=>{const toc=tocFor(t,tr),syn=effectiveSyncs(t,tr);
@@ -6665,7 +6742,7 @@ function promoteLesson(t,l){const first=l.text.split(/\n/)[0].trim(),title=first
   state.playbook.unshift(p);l.playId=p.id;return p;}
 function openLesson(t,o={}){const root=document.getElementById("modalRoot"),L=t.lessons||(t.lessons=[]),l=o.id?L.find(x=>x.id===o.id):null,inPb=l&&l.playId?state.playbook.find(p=>p.id===l.playId):null;
   root.innerHTML=`<div class="modal-bg"><div class="modal efx ef-modal"><h2>${o.closing?"💡 Closed — anything worth remembering?":l?"✎ Edit lesson":"💡 A lesson from this demand"}</h2>
-    <p class="faint" style="font-size:12px;margin-top:-6px;line-height:1.5">${o.closing?`<b>${esc(t.demandId||t.title)}</b> is closed. If there's one thing you'd tell yourself before the next demand like it, note it — it stays with this demand and shows up in search.`:`What would you tell yourself before the next demand like <b>${esc(t.demandId||t.title)}</b>?`}</p>
+    <p class="faint" style="font-size:12px;margin-top:-6px;line-height:1.5">${o.closing?`<b>${esc(demandLabel(t))}</b> is closed. If there's one thing you'd tell yourself before the next demand like it, note it — it stays with this demand and shows up in search.`:`What would you tell yourself before the next demand like <b>${esc(demandLabel(t))}</b>?`}</p>
     <div class="ef-qc"><textarea id="lsText" rows="4" placeholder="e.g. Ask FI for the final cost-center list before building the selection screen — it changed twice">${esc(l?l.text:"")}</textarea>
       ${inPb?`<div class="faint" style="font-size:12px">💡 Also in the Playbook — <a href="#" id="lsPb">open it ›</a> <span class="faint">(that copy is edited separately)</span></div>`
         :`<label class="ls-pb"><input type="checkbox" id="lsToPb"><span><b>Also add to the Playbook</b> as a “Lesson learned” — for rules you'd follow on <i>any</i> demand, not just this one.</span></label>`}
@@ -6701,7 +6778,7 @@ let MON={ym:"",kinds:new Set()};
 const MON_KINDS={demand:{l:"Demands",pen:"pen-2"},transport:{l:"Transports",pen:"pen-3"},meeting:{l:"Meetings",pen:"pen-4"},journal:{l:"Journal",pen:"pen-3"},effort:{l:"Hours",pen:"pen-2"},
   win:{l:"Wins & lessons",pen:"pen-4"},epic:{l:"Epics",pen:"pen-5"},debug:{l:"Debug",pen:"pen-1"},note:{l:"Old notes",pen:"pen-7"},off:{l:"Days off",pen:"ink-3"}};
 function monthEvents(){const ev=[],push=(d,k,h,go,x)=>{if(d&&/^\d{4}-\d\d-\d\d/.test(d))ev.push({d:d.slice(0,10),k,h,go,...(x||{})});};
-  state.tasks.forEach(t=>{const dl=esc(t.demandId||t.title),go=tab=>()=>{view="demands";activeId=t.id;activeTab=tab;renderApp();};
+  state.tasks.forEach(t=>{const dl=esc(demandLabel(t)),go=tab=>()=>{view="demands";activeId=t.id;activeTab=tab;renderApp();};
     push(t.receivedDate,"demand",`📥 <b>${dl}</b> received — ${esc(t.title)}`,go("overview"),{o:0});
     (t.timeline||[]).forEach(e=>{const d=isoTs(e.ts);
       if(e.type==="status"&&e.from){const to=STATUS[e.to]?STATUS[e.to].label:e.to;
