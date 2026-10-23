@@ -314,6 +314,14 @@ Click any item to jump straight to it.
   demand, plus the aggregated objects and transports, for "all work done for X".
 - **Requestor** — "who asked" per demand, shown on cards/header and filterable
   in the sidebar (handy when management circles back months later).
+- **👷 Built by** — when you hand a demand to someone in your team, add them as its
+  builder (one or more people): in the side panel (*Built by*), the header, or ✎ Edit,
+  where *＋ new person* also adds someone to your team list. None ticked means you're
+  building it. It shows on the card, in the header and the Tech Spec; History notes
+  every hand-over ("Built by Ravi (was …)" / "Back with you"). Your own hours —
+  guiding, reviewing, testing — are still logged on the demand as usual. In the list:
+  ⚙ View → *Filter by: Built by* (a person, or "me"), *Only: built by someone in my
+  team*, or *Group by: Built by*.
 - **⏳ Waiting on** — flag a demand as blocked (QA team / Functional / Transport
   import / …) with a since-date; shows an amber badge with days-waiting on the
   card/header and surfaces in the Today dashboard.
@@ -693,6 +701,12 @@ record grouping demands; *Project* and *Theme* remain free-text labels for a
 named initiative and a functional area (Travel, TRem, Payroll).
 
 ### Playbook
+**👥 My team** is pinned at the top of the Playbook list: the people you hand
+demands to (name and an optional role or note — nothing more). Each person shows the
+demands they're building, open first, and your own hours on those demands over the
+last 30 days. Tick **moved on** when someone leaves the team — they stay on their old
+demands but no longer appear when assigning. People are found by Ctrl+K search too.
+
 Your team's tribal knowledge — the stuff that otherwise dies in old mails and
 long Teams chats — kept in one searchable place. One flexible entry type with
 five **kinds**, all sharing a title, a **category** (free text with type-ahead:

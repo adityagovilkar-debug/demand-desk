@@ -1480,6 +1480,25 @@
   .st-row{display:flex;gap:8px;padding:3px 0;font-size:12.5px;line-height:1.4}.st-row i{font-style:normal;width:14px;flex:none}
   .st-row.ok i{color:var(--green,#2a8a4a)}.st-row.no i,.st-row.no{color:var(--red,#c0392b)}
   .st-row small{display:block;color:var(--muted,#777);font-size:11px;word-break:break-word}
+  .bld-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .bld.on{border-color:var(--accent);color:var(--accent);font-weight:600}
+  .bld-new{display:inline-flex;gap:4px}.bld-new input{width:140px;padding:3px 6px;font-size:12px}
+  .bld-tag{font-size:12px;color:var(--accent2,var(--muted))}
+  .bld-link{cursor:pointer}
+  .pin-team{border-left:3px solid var(--accent)!important;margin-bottom:6px}
+  .tm-add{display:flex;gap:6px;flex-wrap:wrap;margin:10px 4px 2px}.tm-add input{width:auto;flex:1;min-width:140px}
+  .tm-card{border:1px solid var(--line2,var(--rule-strong));border-radius:8px;padding:10px 12px;margin-bottom:10px}
+  .tm-card.gone{opacity:.6}
+  .tm-top{display:grid;grid-template-columns:minmax(0,200px) minmax(0,1fr) auto auto;gap:8px;align-items:center}
+  .tm-top input.tm-n,.tm-top input.tm-r{width:100%;min-width:0;border-color:transparent!important;background:transparent!important;box-shadow:none!important}
+  .tm-top .tm-n{font-weight:650;font-size:14px}.tm-top .tm-r{font-size:12px}
+  .tm-top .tm-n:hover,.tm-top .tm-r:hover,.tm-top .tm-n:focus,.tm-top .tm-r:focus{border-color:var(--line2,var(--rule-strong))}
+  .tm-stat{font-size:12px;color:var(--muted,var(--ink-3));margin:0 0 6px 6px}
+  .tm-act{display:flex;gap:4px;align-items:center;font-size:12px;color:var(--muted,var(--ink-3));white-space:nowrap}.tm-act input{width:auto}
+  .tm-d{display:flex;gap:8px;align-items:center;padding:4px 2px;font-size:12.5px;cursor:pointer;border-top:1px dotted var(--line2,var(--rule-strong))}
+  .tm-d:hover{background:var(--hover,rgba(127,127,127,.08))}
+  .tm-d .tt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tm-none{font-size:12px;padding:2px}
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -1596,11 +1615,11 @@ const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod 
 /* The data format this copy understands. Bump it whenever a change adds or reshapes saved data —
    an older copy then refuses to save a file written by a newer one, instead of dropping fields
    it doesn't know about. */
-const DATA_VERSION=28;
+const DATA_VERSION=29;
 let dataNewer=0;   /* the version of a loaded file that's newer than this copy (0 = fine) */
 const SELFTEST=/[?&]selftest\b/.test(location.search);   /* sandbox: nothing is read from or written to your data */
 function newerMsg(){return `This data was saved by a newer Demand Desk (data version ${dataNewer}); this copy understands up to ${DATA_VERSION}. Saving is switched off so nothing gets dropped — open the file with the newest DemandDesk.html.`;}
-let state={version:DATA_VERSION,settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
+let state={version:DATA_VERSION,people:[],settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false, lastWriteAt=0, autoSaveDue=0, diskConflict=null, fileSig=null, savePromise=null, backupUnreadable=false;
 let view="today";
 let activeId=null, activeTab="overview", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -1859,6 +1878,8 @@ function migrate(d){
   d.wins=(d.wins||[]).map(normWin).filter(w=>w.text);
   d.reviewNotes=(d.reviewNotes&&typeof d.reviewNotes==="object"&&!Array.isArray(d.reviewNotes))?d.reviewNotes:{};
   d.epics=(d.epics||[]).map(normEpic);
+  /* v29: your team — people a demand can be handed to (t.builders holds their ids) */
+  d.people=(d.people||[]).map(normPerson).filter(p=>p.name);
   /* referential integrity: a demand pointing at a deleted epic falls back to none,
      so a stale id can never render as a phantom grouping */
   {const eids=new Set(d.epics.map(e=>e.id));
@@ -1887,6 +1908,7 @@ function migrate(d){
     waiting:{on:(t.waiting&&t.waiting.on)||"",since:(t.waiting&&t.waiting.since)||""},goliveTarget:t.goliveTarget||"",
     nextAction:{date:(t.nextAction&&t.nextAction.date)||"",note:(t.nextAction&&t.nextAction.note)||""},
     receivedDate:t.receivedDate||"",dueDate:t.dueDate||"",estimate:(+t.estimate>0?Math.round(+t.estimate*4)/4:0),star:!!t.star,
+    builders:[...new Set((t.builders||[]).filter(id=>(d.people||[]).some(p=>p.id===id)))],
     lessons:(t.lessons||[]).map(l=>({id:l.id||uid(),date:/^\d{4}-\d\d-\d\d$/.test(l.date||"")?l.date:todayStr(),text:String(l.text||""),playId:l.playId||""})).filter(l=>l.text.trim()),description:t.description||"",notes:t.notes||"",
     timeline:(t.timeline||[]).map(e=>({id:e.id||uid(),ts:e.ts||Date.now(),type:e.type||"note",from:e.from||"",to:e.to||"",note:e.note||"",cause:e.cause==="change"?"change":"",est:+e.est>0?+e.est:0})),
     subtasks:(t.subtasks||[]).map(normSub),
@@ -1914,6 +1936,7 @@ function migrate(d){
     createdAt:s.createdAt||Date.now(),updatedAt:s.updatedAt||Date.now()}));
   return d;
 }
+function normPerson(p){p=p||{};return{id:p.id||uid(),name:String(p.name||"").trim(),role:String(p.role||"").trim(),active:p.active!==false,createdAt:p.createdAt||Date.now()};}
 function normSub(s){return{id:s.id||uid(),title:s.title||"",done:!!s.done,receivedDate:s.receivedDate||"",dueDate:s.dueDate||"",collapsed:!!s.collapsed,comments:(s.comments||[]).map(normComment),children:(s.children||[]).map(normSub)};}
 function normComment(c){return{id:c.id||uid(),text:c.text||"",ts:c.ts||Date.now()};}
 function normAction(a){return{id:a.id||uid(),text:a.text||"",owner:a.owner||"",done:!!a.done,due:a.due||"",resolution:a.resolution||""};}
@@ -2198,6 +2221,7 @@ function demandLabel(t){if(!t)return "";if(!t.demandId)return t.title;return dem
    ============================================================ */
 function renderApp(){
   EF_DAY=+state.settings.dayHours||8;renderNewerBar();
+  if(view!=="playbook")playTeam=false;
   noteContent();meetingsEffortCatchUp();
   document.querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
   document.querySelector("main").classList.toggle("wide",view==="today"&&benchOn()&&contentCount()>0);
@@ -2400,18 +2424,79 @@ function wireEncWarn(host){const on=host.querySelector("#ewOn");if(!on)return;
   on.onclick=()=>openEncryptionDialog();
   host.querySelector("#ewLater").onclick=()=>{setViewPref("encWarn.until",efAdd(todayStr(),30));renderApp();};}
 
+/* ---------- your team: who actually builds a demand ----------
+   Some demands you start and then hand to someone in your team; you still guide, test and log
+   your own time on them. t.builders = the people building it (none = you). The list of people
+   lives in Playbook → 👥 My team. */
+let playTeam=false;
+const personById=id=>(state.people||[]).find(p=>p.id===id)||null;
+const buildersOf=t=>(t.builders||[]).map(personById).filter(Boolean);
+const builderNames=t=>buildersOf(t).map(p=>p.name).join(", ");
+const demandsOf=id=>state.tasks.filter(t=>(t.builders||[]).includes(id));
+/* the toggle chips used by the Edit dialog and the assign dialog; sel is changed in place */
+function builderChipsHTML(sel){const ppl=state.people.filter(p=>p.active||sel.includes(p.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  return `<div class="bld-chips">${ppl.map(p=>`<button type="button" class="sm bld ${sel.includes(p.id)?"on":""}" data-p="${p.id}" title="${esc(p.role||"")}">${sel.includes(p.id)?"✓ ":""}${esc(p.name)}${p.active?"":" (moved on)"}</button>`).join("")||`<span class="faint" style="font-size:12px">No one in your team list yet.</span>`}
+    <span class="bld-new"><input placeholder="＋ new person" class="bld-in"><button type="button" class="sm ghost bld-add">Add</button></span></div>`;}
+function wireBuilderChips(host,sel,redraw){
+  host.querySelectorAll(".bld[data-p]").forEach(b=>b.onclick=()=>{const id=b.dataset.p,i=sel.indexOf(id);if(i<0)sel.push(id);else sel.splice(i,1);redraw();});
+  const inp=host.querySelector(".bld-in"),add=()=>{const n=inp.value.trim();if(!n)return;
+    let p=state.people.find(x=>x.name.toLowerCase()===n.toLowerCase());
+    if(!p){p=normPerson({name:n});state.people.push(p);markDirty();toast(`${n} added to your team list (Playbook → My team)`);}
+    if(!sel.includes(p.id))sel.push(p.id);redraw();};
+  host.querySelector(".bld-add").onclick=add;inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();e.stopPropagation();add();}};}
+function setBuilders(t,ids){const before=builderNames(t);t.builders=[...new Set(ids)];const after=builderNames(t);
+  if(before!==after)logTimeline(t,"note","","",after?`Built by ${after}${before?" (was "+before+")":""}`:`Back with you (was built by ${before})`);
+  touch(t);}
+function openBuilders(t){const root=document.getElementById("modalRoot"),sel=(t.builders||[]).slice();
+  const draw=()=>{root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:480px"><h2>👷 Who's building ${esc(demandLabel(t))}?</h2>
+    <p class="faint" style="font-size:12px;margin-top:-8px">Pick the people building it. Leave everyone unticked if you're building it yourself — you keep logging your own time either way.</p>
+    <div id="bl-host">${builderChipsHTML(sel)}</div>
+    <div class="modal-foot"><button id="bl-cancel" class="ghost">Cancel</button><button id="bl-save" class="primary">Save</button></div></div></div>`;
+    wireBuilderChips(root.querySelector("#bl-host"),sel,draw);
+    root.querySelector("#bl-cancel").onclick=()=>root.innerHTML="";
+    root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))root.innerHTML="";};
+    root.querySelector("#bl-save").onclick=()=>{setBuilders(t,sel);root.innerHTML="";renderApp();toast(sel.length?`Built by ${builderNames(t)}`:"Back with you");};};
+  draw();}
+/* Playbook → 👥 My team: the people, and what each is building */
+function renderTeamPage(host){const ppl=state.people.slice().sort((a,b)=>(b.active-a.active)||a.name.localeCompare(b.name)),open=t=>!["delivered","closed"].includes(t.status);
+  const mon=efAdd(todayStr(),-29);
+  host.innerHTML=`<div class="detail-head"><div class="dh-top"><div style="flex:1"><h2 style="margin:2px 4px">👥 My team</h2>
+      <p class="faint" style="font-size:12px;margin:4px">The people you hand demands to. Assign them on a demand (<b>👷 Built by</b> in the side panel, or ✎ Edit); each one's demands show here.</p></div></div>
+    <div class="tm-add"><input id="tm-name" placeholder="Name"><input id="tm-role" placeholder="Role or note (optional)"><button class="sm primary" id="tm-addb">＋ Add person</button></div></div>
+    <div class="detail-body">${ppl.length?ppl.map(p=>{const ds=demandsOf(p.id).sort((a,b)=>(open(b)-open(a))||(b.updatedAt-a.updatedAt)),no=ds.filter(open).length,
+        mine=efSum(state.efforts.filter(e=>e.date>=mon&&ds.some(t=>t.id===e.taskId)));
+      return `<div class="tm-card ${p.active?"":"gone"}" data-p="${p.id}"><div class="tm-top">
+          <input class="tm-n" value="${esc(p.name)}" title="Name"><input class="tm-r" value="${esc(p.role)}" placeholder="Role or note">
+          <label class="tm-act" title="Moved to another team or left — kept on their old demands, hidden when assigning"><input type="checkbox" class="tm-gone" ${p.active?"":"checked"}> moved on</label>
+          <button class="ghost sm danger tm-del" title="Remove from the list">✕</button></div>
+          <div class="tm-stat">${no?`<b>${no}</b> open`:"nothing open"}${ds.length>no?` · ${ds.length-no} done`:""}${mine?` · your time on these, last 30 days: <b>${efFh(mine)} h</b>`:""}</div>
+        ${ds.length?ds.map(t=>`<div class="tm-d" data-id="${t.id}"><span class="pill ${STATUS[t.status].cls}">${STATUS[t.status].label}</span><b class="mono">${esc(t.demandId||"—")}</b><span class="tt">${esc(t.title)}</span>${buildersOf(t).length>1?`<span class="faint">with ${esc(buildersOf(t).filter(x=>x.id!==p.id).map(x=>x.name).join(", "))}</span>`:""}</div>`).join(""):`<div class="faint tm-none">Not building any demand.</div>`}</div>`;}).join("")
+      :`<div class="empty" style="padding:30px 0">No one yet. Add the people you hand demands to — then assign them on a demand.</div>`}</div>`;
+  const q=s=>host.querySelector(s),add=()=>{const n=q("#tm-name").value.trim();if(!n){toast("A name, please",true);return;}
+    if(state.people.some(x=>x.name.toLowerCase()===n.toLowerCase())){toast(`${n} is already on the list`,true);return;}
+    state.people.push(normPerson({name:n,role:q("#tm-role").value}));markDirty();renderApp();setTimeout(()=>{const i=document.getElementById("tm-name");if(i)i.focus();},30);};
+  q("#tm-addb").onclick=add;q("#tm-name").onkeydown=q("#tm-role").onkeydown=e=>{if(e.key==="Enter")add();};
+  host.querySelectorAll(".tm-card").forEach(c=>{const p=personById(c.dataset.p),cq=s=>c.querySelector(s);
+    cq(".tm-n").onchange=e=>{const v=e.target.value.trim();if(!v){e.target.value=p.name;return;}p.name=v;markDirty();};
+    cq(".tm-r").onchange=e=>{p.role=e.target.value.trim();markDirty();};
+    cq(".tm-gone").onchange=e=>{p.active=!e.target.checked;markDirty();renderApp();};
+    cq(".tm-del").onclick=()=>{const ds=demandsOf(p.id);
+      if(!confirm(ds.length?`Remove ${p.name}? They come off ${ds.length} demand(s) too — or tick “moved on” instead to keep them there.`:`Remove ${p.name} from your team list?`))return;
+      ds.forEach(t=>setBuilders(t,t.builders.filter(x=>x!==p.id)));state.people=state.people.filter(x=>x.id!==p.id);markDirty();renderApp();};
+    c.querySelectorAll(".tm-d").forEach(r=>r.onclick=()=>{view="demands";activeId=r.dataset.id;activeTab="overview";playTeam=false;renderApp();});});}
+
 /* ===================== DEMANDS ===================== */
 /* ===================== DEMAND LIST VIEW =====================
    One "view" decides what the list shows: grouping, sort order, statuses, field filters
    and "only …" toggles. It's edited in the ⚙ View panel, summed up as removable chips
    above the list, and can be saved as named one-click views. Per viewer (localStorage),
    never in the data file. */
-const DV_GROUPS={none:"No grouping",epic:"Epic",wave:"Epic wave",status:"Status",system:"System",project:"Project",theme:"Theme",requestor:"Requestor",type:"Demand type",due:"Due date",next:"Next action"};
+const DV_GROUPS={none:"No grouping",epic:"Epic",wave:"Epic wave",status:"Status",system:"System",project:"Project",theme:"Theme",requestor:"Requestor",type:"Demand type",due:"Due date",next:"Next action",builder:"Built by"};
 const DV_SORTS={due:{label:"Due date",dir:"asc"},next:{label:"Next action",dir:"asc"},received:{label:"Received",dir:"desc"},updated:{label:"Last updated",dir:"desc"},
   age:{label:"Age",dir:"desc"},waiting:{label:"Time waiting",dir:"desc"},status:{label:"Status",dir:"asc"},clash:{label:"Object clashes",dir:"desc"},
   demand:{label:"Demand ID",dir:"asc"},title:{label:"Title",dir:"asc"}};
-const DV_ONLY={overdue:"Overdue",waiting:"Waiting on someone",clash:"With object clashes",notprod:"Transports not yet in Prod",next:"Next action due"};
-const DV_FIELDS={epic:"Epic",system:"System",project:"Project",theme:"Theme",requestor:"Requestor",type:"Type"};
+const DV_ONLY={delegated:"Built by someone in my team",overdue:"Overdue",waiting:"Waiting on someone",clash:"With object clashes",notprod:"Transports not yet in Prod",next:"Next action due"};
+const DV_FIELDS={builder:"Built by",epic:"Epic",system:"System",project:"Project",theme:"Theme",requestor:"Requestor",type:"Type"};
 const STATUS_ORDER=Object.keys(STATUS),STATUS_RANK={bug:0,progress:1,open:2,delivered:3,closed:4};
 const DV_PRESETS=[
   {name:"My active",view:{group:"epic",sort:"due",status:["open","progress","bug"]}},
@@ -2452,6 +2537,7 @@ function dvMatches(v,cidx){
   return t=>{
     if(v.status.length){if(!v.status.includes(t.status))return false;}
     else if((v.hideClosed&&t.status==="closed")||(v.hideDelivered&&t.status==="delivered"))return false;
+    if(f.builder&&(f.builder==="__none"?(t.builders||[]).length>0:!(t.builders||[]).includes(f.builder)))return false;
     if(f.epic&&(f.epic==="__none"?!!epicById(t.epicId):t.epicId!==f.epic))return false;
     if(f.system&&t.system!==f.system)return false;
     if(f.project&&t.project!==f.project)return false;
@@ -2463,9 +2549,10 @@ function dvMatches(v,cidx){
       else if(k==="waiting"){if(!isWaiting(t))return false;}
       else if(k==="clash"){if(!openClashCount(t,cidx))return false;}
       else if(k==="notprod"){if(t.status==="closed"||!golivePending(t))return false;}
-      else if(k==="next"){if(!nextActionDue(t))return false;}}
+      else if(k==="next"){if(!nextActionDue(t))return false;}
+      else if(k==="delegated"){if(!buildersOf(t).length)return false;}}
     if(words.length){const e=epicById(t.epicId);
-      const blob=[t.demandId,t.title,t.requestor,t.project,t.theme,t.wave,t.system,t.client,t.type,e?epicLabel(e):"",
+      const blob=[t.demandId,t.title,t.requestor,builderNames(t),t.project,t.theme,t.wave,t.system,t.client,t.type,e?epicLabel(e):"",
         ...t.objects.map(o=>o.name),...t.transports.map(tr=>tr.number),...(t.tocs||[]).map(c=>c.number)].join(" ").toLowerCase();
       if(!words.every(w=>blob.includes(w)))return false;}
     return true;};
@@ -2505,6 +2592,8 @@ function dvGroupOf(t,g){
     case "due":{const d=earliestOpenDue(t);if(!d)return{k:"none",label:`<span class="faint">No due date</span>`,rank:4};const n=daysUntil(d);
       return n<0?{k:"over",label:`<span style="color:var(--red)">⚑ Overdue</span>`,rank:0}:n<=7?{k:"week",label:"Due within 7 days",rank:1}
         :n<=30?{k:"month",label:"Due within 30 days",rank:2}:{k:"later",label:"Due later",rank:3};}
+    case "builder":{const b=buildersOf(t);if(!b.length)return{k:"",label:`<span class="faint">👷 You</span>`,rank:9};
+      return{k:b.map(p=>p.id).sort().join("|"),label:`👷 <b>${esc(b.map(p=>p.name).join(", "))}</b>`,rank:0,sl:b.map(p=>p.name).join(", ")};}
     case "next":{const n=t.nextAction;if(!n||!n.date||t.status==="closed")return{k:"none",label:`<span class="faint">No next action</span>`,rank:3};
       return n.date<=todayStr()?{k:"due",label:`<span style="color:var(--amber)">⏰ Next action due</span>`,rank:0}
         :daysUntil(n.date)<=7?{k:"week",label:"⏰ Within 7 days",rank:1}:{k:"later",label:"⏰ Later",rank:2};}
@@ -2519,13 +2608,14 @@ function dvChipList(v){const c=[];
   if(v.status.length)c.push({t:"Status: "+v.status.map(s=>STATUS[s].label).join(", "),rm:x=>{x.status=[];}});
   else{if(v.hideClosed)c.push({t:"Closed hidden",rm:x=>{x.hideClosed=false;}});
     if(v.hideDelivered)c.push({t:"Delivered hidden",rm:x=>{x.hideDelivered=false;}});}
-  Object.entries(v.f).forEach(([k,val])=>{const e=k==="epic"&&val!=="__none"?epicById(val):null;
-    c.push({t:`${DV_FIELDS[k]}: ${k==="epic"?(val==="__none"?"none":(e?epicLabel(e):"?")):val}`,rm:x=>{delete x.f[k];}});});
+  Object.entries(v.f).forEach(([k,val])=>{const e=k==="epic"&&val!=="__none"?epicById(val):null,p=k==="builder"&&val!=="__none"?personById(val):null;
+    c.push({t:`${DV_FIELDS[k]}: ${k==="epic"?(val==="__none"?"none":(e?epicLabel(e):"?")):k==="builder"?(val==="__none"?"me":(p?p.name:"?")):val}`,rm:x=>{delete x.f[k];}});});
   v.only.forEach(k=>c.push({t:"Only: "+DV_ONLY[k].toLowerCase(),rm:x=>{x.only=x.only.filter(y=>y!==k);}}));
   return c;}
 function dvFilterCount(v){return dvChipList(v).length-2;}
 function renderDemandSidebar(){
-  {const v=dvGet();if(v.f.epic&&v.f.epic!=="__none"&&!epicById(v.f.epic)){delete v.f.epic;dvSet(v);}} /* epic deleted since */
+  {const v=dvGet();if(v.f.epic&&v.f.epic!=="__none"&&!epicById(v.f.epic)){delete v.f.epic;dvSet(v);} /* epic deleted since */
+   if(v.f.builder&&v.f.builder!=="__none"&&!personById(v.f.builder)){delete v.f.builder;dvSet(v);}}
   const v=dvGet(),saved=dvSaved(),n=dvFilterCount(v),cur=saved.find(s=>dvSame(s.view,v)),cidxV=benchOn()?clashIndex():null;
   document.getElementById("side").innerHTML=`
     <div class="side-tools">
@@ -2584,11 +2674,12 @@ function openViewPanel(){
   const update=fn=>{const v=dvGet();fn(v);dvSet(v);renderDemandSidebar();draw();};
   const draw=()=>{const keep=panel.scrollTop,v=dvGet(),saved=dvSaved();
     const opt=(type,name,val,on,label)=>`<label class="dvopt"><input type="${type}" name="${name}" value="${esc(val)}" ${on?"checked":""}> ${label}</label>`;
-    const vals={epic:[["__none","— no epic —"],...state.epics.slice().sort((a,b)=>epicLabel(a).localeCompare(epicLabel(b))).map(e=>[e.id,"◆ "+epicLabel(e)])],
+    const vals={builder:[["__none","— me (not handed on) —"],...state.people.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(p=>[p.id,"👷 "+p.name+(p.active?"":" (moved on)")])],
+      epic:[["__none","— no epic —"],...state.epics.slice().sort((a,b)=>epicLabel(a).localeCompare(epicLabel(b))).map(e=>[e.id,"◆ "+epicLabel(e)])],
       system:distinctVals("system").map(x=>[x,x+(clientsUsedFor(x).length?" · "+clientsUsedFor(x).join("/"):"")]),
       project:distinctVals("project").map(x=>[x,x]),theme:distinctVals("theme").map(x=>[x,x]),
       requestor:distinctVals("requestor").map(x=>[x,x]),type:distinctVals("type").map(x=>[x,x])};
-    const plural={epic:"epics",system:"systems",project:"projects",theme:"themes",requestor:"requestors",type:"types"};
+    const plural={builder:"builders",epic:"epics",system:"systems",project:"projects",theme:"themes",requestor:"requestors",type:"types"};
     panel.innerHTML=`<div class="dvcols">
       <div><h4>Group by</h4>${Object.entries(DV_GROUPS).map(([k,l])=>opt("radio","dvg",k,v.group===k,esc(l))).join("")}</div>
       <div><h4>Sort by</h4>${Object.entries(DV_SORTS).map(([k,s])=>opt("radio","dvs",k,v.sort===k,esc(s.label))).join("")}
@@ -2654,6 +2745,7 @@ function demandCard(t,grouped,cidx){if(benchOn())return demandCardBench(t,groupe
         ${t.project?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">▦ ${esc(t.project)}</span>`:""}
         ${t.theme?`<span class="pill type">${esc(t.theme)}</span>`:`<span class="pill type">${esc(t.type)}</span>`}
         ${t.requestor?`<span class="faint">👤 ${esc(t.requestor)}</span>`:""}
+        ${buildersOf(t).length?`<span class="bld-tag" title="Built by">👷 ${esc(builderNames(t))}</span>`:""}
         ${sub.n?`<span class="faint">☑ ${sub.done}/${sub.n}</span>`:""}
         ${lc?`<span class="lc-badge">🔗 ${lc}</span>`:""}
         ${(t.reference&&t.reference.length)?`<span class="lc-badge">🔑 ${t.reference.length}</span>`:""}
@@ -2710,7 +2802,7 @@ function renderDetail(){
       <div class="dh-top"><div style="flex:1">
         <div class="dh-demand">${esc(t.demandId||"— no demand id —")}</div>
         <h1>${esc(t.title)}</h1>
-        <div class="dh-dates"><span>Type: <b>${esc(t.type)}</b></span>${t.system?`<span>System: ${sysPill(t.system,"",t.client)}</span>`:""}${(()=>{const ep=epicById(t.epicId);return ep?`<span>Epic: <b class="ep-go" style="color:var(--accent2);cursor:pointer">◆ ${esc(epicLabel(ep))}</b>${t.wave?` · <b>${esc(t.wave)}</b>`:""}</span>`:"";})()}${t.project?`<span>Project: <b>▦ ${esc(t.project)}</b></span>`:""}${t.theme?`<span>Theme: <b>${esc(t.theme)}</b></span>`:""}${t.requestor?`<span>Requestor: <b>👤 ${esc(t.requestor)}</b></span>`:""}<span>Received: <b class="mono">${t.receivedDate||"—"}</b></span><span>Due: <b class="mono due ${dueClass(t.dueDate,t.status)}">${t.dueDate||"—"}</b></span>${reworkCount(t)?`<span style="color:var(--red)">↻ ${reworkCount(t)} rework cycle(s)</span>`:""}</div>
+        <div class="dh-dates"><span>Type: <b>${esc(t.type)}</b></span>${t.system?`<span>System: ${sysPill(t.system,"",t.client)}</span>`:""}${(()=>{const ep=epicById(t.epicId);return ep?`<span>Epic: <b class="ep-go" style="color:var(--accent2);cursor:pointer">◆ ${esc(epicLabel(ep))}</b>${t.wave?` · <b>${esc(t.wave)}</b>`:""}</span>`:"";})()}${t.project?`<span>Project: <b>▦ ${esc(t.project)}</b></span>`:""}${t.theme?`<span>Theme: <b>${esc(t.theme)}</b></span>`:""}${t.requestor?`<span>Requestor: <b>👤 ${esc(t.requestor)}</b></span>`:""}<span>Built by: <a class="bld-link" id="dh-build" title="Who's building it">👷 ${buildersOf(t).length?esc(builderNames(t)):"you"}</a></span><span>Received: <b class="mono">${t.receivedDate||"—"}</b></span><span>Due: <b class="mono due ${dueClass(t.dueDate,t.status)}">${t.dueDate||"—"}</b></span>${reworkCount(t)?`<span style="color:var(--red)">↻ ${reworkCount(t)} rework cycle(s)</span>`:""}</div>
         ${t.nextAction&&t.nextAction.date?`<div class="nextact ${nextActionDue(t)?"due":""}">⏰ Next action <b class="mono">${t.nextAction.date}</b>${(()=>{const n=daysUntil(t.nextAction.date);return n<0?` (${-n}d ago)`:n===0?" (today)":` (in ${n}d)`;})()}${t.nextAction.note?` — ${esc(t.nextAction.note)}`:""}
           <button class="ghost sm" id="na-done" title="Did it — note it in History and clear">✓ Done</button><button class="ghost sm" id="na-edit" title="Change date or text">✎</button></div>`:""}
         ${(()=>{const cl=taskClashes(t).filter(x=>x.open.length);if(!cl.length)return "";const x=cl[0],o=x.open[0],more=cl.reduce((n,y)=>n+y.open.length,0)-1;
@@ -2740,6 +2832,7 @@ function renderDetail(){
   host.querySelector("#dhWin").onclick=()=>openWin({taskId:t.id});
   {const ct=host.querySelector("#cxToggle");if(ct)ct.onclick=()=>{setViewPref("ctxRail",ctxRailOn()?"0":"1");syncDemandsLayout();renderDetail();};
    const dc=host.querySelector("#dhClose");if(dc)dc.onclick=()=>document.querySelector("main").classList.remove("open");}
+  {const b=host.querySelector("#dh-build");if(b)b.onclick=()=>openBuilders(t);}
   {const d=host.querySelector("#na-done");if(d)d.onclick=()=>nextActionDone(t);const ed=host.querySelector("#na-edit");if(ed)ed.onclick=()=>openNextAction(t);}
   {const ds=host.querySelector("#dh-status");if(ds)ds.onchange=ev=>setDemandStatus(t,ev.target.value,ds);
    host.querySelectorAll("#dh-seg button").forEach(b=>b.onclick=()=>setDemandStatus(t,b.dataset.s,b));
@@ -3151,7 +3244,7 @@ function buildTechSpecHTML(t){
   const calls=meetingsForTask(t.id);
   return `<h1>Post-Delivery Technical Specification</h1>
    <h2>${esc(t.demandId||"(no demand id)")} — ${esc(t.title)}</h2>
-   <p class="meta"><b>Type:</b> ${esc(t.type)} &nbsp;|&nbsp; <b>Status:</b> ${STATUS[t.status].label} &nbsp;|&nbsp; <b>System:</b> ${esc(t.system)||"—"}${t.client?" / "+esc(t.client):""} &nbsp;|&nbsp; <b>Requestor:</b> ${esc(t.requestor)||"—"} &nbsp;|&nbsp; <b>Received:</b> ${t.receivedDate||"—"} &nbsp;|&nbsp; <b>Due:</b> ${t.dueDate||"—"} &nbsp;|&nbsp; <b>Generated:</b> ${todayStr()}</p>
+   <p class="meta"><b>Type:</b> ${esc(t.type)} &nbsp;|&nbsp; <b>Status:</b> ${STATUS[t.status].label} &nbsp;|&nbsp; <b>System:</b> ${esc(t.system)||"—"}${t.client?" / "+esc(t.client):""} &nbsp;|&nbsp; <b>Requestor:</b> ${esc(t.requestor)||"—"}${buildersOf(t).length?` &nbsp;|&nbsp; <b>Built by:</b> ${esc(builderNames(t))}`:""} &nbsp;|&nbsp; <b>Received:</b> ${t.receivedDate||"—"} &nbsp;|&nbsp; <b>Due:</b> ${t.dueDate||"—"} &nbsp;|&nbsp; <b>Generated:</b> ${todayStr()}</p>
    ${(()=>{const e=epicById(t.epicId);return e?`<p class="meta"><b>Epic:</b> ${esc(epicLabel(e))}${e.owner?" ("+esc(e.owner)+")":""}</p>`:"";})()}
    ${(t.project||t.theme)?`<p class="meta"><b>Project:</b> ${esc(t.project)||"—"} &nbsp;|&nbsp; <b>Theme:</b> ${esc(t.theme)||"—"}</p>`:""}
    ${(reworkCount(t)||deliveredDates(t).length)?`<p class="meta"><b>Delivered:</b> ${deliveredDates(t).join(", ")||"—"} &nbsp;|&nbsp; <b>Rework cycles:</b> ${reworkCount(t)}</p>`:""}
@@ -3365,8 +3458,10 @@ function openTaskModal(existing){
       <div class="field"><label>Due date</label><input type="date" id="m-due" value="${t.dueDate||""}"></div></div>
     <div class="grid2"><div class="field"><label>⏳ Waiting on (blocked by)</label><input id="m-wait" list="dl-wait" value="${esc((t.waiting&&t.waiting.on)||"")}" placeholder="blank = not blocked"><datalist id="dl-wait">${WAIT_OPTIONS.map(x=>`<option value="${x}">`).join("")}</datalist></div>
       <div class="field"><label>Waiting since</label><input type="date" id="m-waitsince" value="${(t.waiting&&t.waiting.since)||""}"></div></div>
+    <div class="field"><label>👷 Built by <span class="faint" style="font-weight:400;text-transform:none;letter-spacing:0">— someone in your team; none ticked = you</span></label><div id="m-build"></div></div>
     <div class="field"><label>Description</label><textarea id="m-desc">${esc(t.description)||""}</textarea></div>
     <div class="modal-foot"><button id="m-cancel" class="ghost">Cancel</button><button id="m-save" class="primary">${existing?"Save changes":"Create demand"}</button></div></div></div>`;
+  const bsel=(t.builders||[]).slice(),bhost=root.querySelector("#m-build"),bdraw=()=>{bhost.innerHTML=builderChipsHTML(bsel);wireBuilderChips(bhost,bsel,bdraw);};bdraw();
   const close=()=>root.innerHTML="";
   /* a stray click outside (or Esc) no longer throws away a half-filled demand */
   let edited=false;const md=root.querySelector(".modal");
@@ -3381,8 +3476,8 @@ function openTaskModal(existing){
   root.querySelector("#m-save").onclick=()=>{const g=id=>root.querySelector(id).value;
     const won=g("#m-wait").trim();let wsince=g("#m-waitsince");if(won&&!wsince)wsince=todayStr();if(!won)wsince="";
     const data={demandId:g("#m-demand").trim(),type:g("#m-type"),title:g("#m-title").trim()||"(untitled)",requestor:g("#m-req").trim(),epicId:g("#m-epic"),wave:g("#m-wave").trim(),system:g("#m-sys"),client:g("#m-client"),project:g("#m-proj").trim(),theme:g("#m-theme").trim(),waiting:{on:won,since:wsince},receivedDate:g("#m-rec"),dueDate:g("#m-due"),status:g("#m-status"),description:g("#m-desc")};
-    if(existing){if(existing.status!==data.status)logTimeline(existing,"status",existing.status,data.status);Object.assign(existing,data);touch(existing);}
-    else{const nt={id:uid(),...data,goliveTarget:"",nextAction:{date:"",note:""},notes:"",timeline:[],subtasks:[],objects:[],transports:[],tocs:[],comments:[],reference:[],createdAt:Date.now(),updatedAt:Date.now()};
+    if(existing){if(existing.status!==data.status)logTimeline(existing,"status",existing.status,data.status);Object.assign(existing,data);setBuilders(existing,bsel);touch(existing);}
+    else{const nt={id:uid(),...data,builders:[...new Set(bsel)],goliveTarget:"",nextAction:{date:"",note:""},notes:"",timeline:[],subtasks:[],objects:[],transports:[],tocs:[],comments:[],reference:[],createdAt:Date.now(),updatedAt:Date.now()};
       logTimeline(nt,"status","",data.status);state.tasks.push(nt);activeId=nt.id;markDirty();}
     close();renderApp();};
 }
@@ -4390,12 +4485,16 @@ function renderPlaybookSidebar(){
     <div class="listwrap" id="pbList"></div>`;
   document.getElementById("btnNewPlay").onclick=()=>{
     const p=normPlay({kind:renderPlaybookSidebar._fk||"process",title:"New entry",category:renderPlaybookSidebar._fc||""});
-    state.playbook.unshift(p);activePlayId=p.id;markDirty();renderApp();};
+    state.playbook.unshift(p);activePlayId=p.id;playTeam=false;markDirty();renderApp();};
   const fk=document.getElementById("pFk");fk.value=renderPlaybookSidebar._fk||"";
   fk.onchange=()=>{renderPlaybookSidebar._fk=fk.value;renderPlaybookSidebar();};
   const fc=document.getElementById("pFc");
   if(fc){fc.value=renderPlaybookSidebar._fc||"";fc.onchange=()=>{renderPlaybookSidebar._fc=fc.value;renderPlaybookSidebar();};}
   const el=document.getElementById("pbList");
+  {const n=state.people.filter(p=>p.active).length,busy=state.people.filter(p=>demandsOf(p.id).some(t=>!["delivered","closed"].includes(t.status))).length;
+   el.insertAdjacentHTML("beforebegin",`<div class="tcard pin-team ${playTeam?"active":""}" id="pbTeam"><div class="demand">👥 My team</div><div class="ttitle">The people you hand demands to</div>
+     <div class="meta"><span class="faint">${n?`${n} ${n>1?"people":"person"}${busy?` · ${busy} building something`:""}`:"add your team"}</span></div></div>`);
+   document.getElementById("pbTeam").onclick=()=>{playTeam=true;activePlayId=null;renderApp();};}
   let rows=state.playbook.filter(p=>(!renderPlaybookSidebar._fk||p.kind===renderPlaybookSidebar._fk)&&(!renderPlaybookSidebar._fc||p.category===renderPlaybookSidebar._fc));
   rows.sort((a,b)=>(b.pinned-a.pinned)||b.updatedAt-a.updatedAt);
   if(!rows.length){el.innerHTML=`<div class="empty">No entries${renderPlaybookSidebar._fk||renderPlaybookSidebar._fc?" match the filter":""} yet.<br>Capture a process before it gets<br>lost in old mails and chats.</div>`;return;}
@@ -4409,10 +4508,11 @@ function renderPlaybookSidebar(){
       <div class="demand">${K.icon} ${K.label}${p.pinned?" · 📌":""}</div>
       <div class="ttitle">${esc(p.title)}</div>
       <div class="meta">${p.category?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">${esc(p.category)}</span>`:""}${sub}${imagesFor("playbook",p.id).length?`<span class="lc-badge">📷 ${imagesFor("playbook",p.id).length}</span>`:""}</div></div>`;}).join("");
-  el.querySelectorAll(".tcard").forEach(x=>x.onclick=()=>{activePlayId=x.dataset.id;renderApp();});
+  el.querySelectorAll(".tcard").forEach(x=>x.onclick=()=>{activePlayId=x.dataset.id;playTeam=false;renderApp();});
 }
 function renderPlaybookDetail(){
   const p=activePlay(),host=document.getElementById("detail");
+  if(playTeam){renderTeamPage(host);return;}
   if(!p){host.innerHTML=nopick("Select an entry, or create one —<br>a process, FAQ, freeze period,<br>recurring task or contact list.");return;}
   const K=PLAY_KINDS[p.kind];
   host.innerHTML=`<div class="detail-head"><div class="dh-top"><div style="flex:1">
@@ -5443,7 +5543,7 @@ function demandHeadBench(t,sub,lc){
     <div class="bh-top"><div class="bh-l">
         <div class="bh-no">${esc(t.demandId||"no demand id")}${ep?` · <a class="ep-go" title="Open the epic">◆ ${esc(ep.code||ep.name)}</a>`:""}${t.wave?` · ${esc(t.wave)}`:""}</div>
         <h1>${esc(t.title)}</h1>
-        <div class="bh-sub">${esc(t.type)}${t.requestor?` · asked by ${esc(t.requestor)}`:""}${t.project?` · ▦ ${esc(t.project)}`:""}${t.theme?` · ${esc(t.theme)}`:""}</div></div>
+        <div class="bh-sub">${esc(t.type)}${t.requestor?` · asked by ${esc(t.requestor)}`:""}${buildersOf(t).length?` · 👷 built by ${esc(builderNames(t))}`:""}${t.project?` · ▦ ${esc(t.project)}`:""}${t.theme?` · ${esc(t.theme)}`:""}</div></div>
       <div class="bh-acts">${statusSegHTML(t)}
         <div class="bh-btns"><button class="sm" id="btnNext" title="When should this demand come back up on Today?">⏰ Next action</button><button class="sm" id="dhWin" title="Note a win about this demand (W)">🏆 Win</button><button class="sm" id="btnSpec" title="Generate post-delivery technical spec">📄 Tech spec</button><button class="sm" id="btnEditTask">✎ Edit</button><button class="sm ghost danger" id="btnDelTask" title="Delete this demand">🗑</button>${demandsMode()==="list"?`<button class="sm cx-t" id="cxToggle" title="Show or hide the context rail">${ctxRailOn()?"Context ⟩":"⟨ Context"}</button>`:""}<button class="sm bh-close" id="dhClose" title="Back to the board (Esc)">✕ Close</button></div></div></div>
     ${roHTML([
@@ -5615,7 +5715,7 @@ function demandCardBench(t,grouped,cidx,board){const ep=epicById(t.epicId),nc=op
     <div class="l1"><span>${esc(t.demandId||"no demand id")}</span>${ep&&!grouped?`<span class="ep">◆ ${esc(ep.code||ep.name)}</span>`:""}${t.wave?`<span class="wv">· ${esc(t.wave)}</span>`:""}<span class="when">${whenTxt(t)}</span></div>
     <div class="tt">${esc(t.title)}</div>
     <div class="l3">${board?"":btag(`<i class="pdot"></i>${STATUS[t.status].label}`,STATUS_PEN[t.status])}${t.system&&!board?btag(`${esc(t.system)}<span class="t">${TIER_S[t.system.slice(-1)]||""}</span>${t.client?"·"+esc(t.client):""}`):""}
-      ${isWaiting(t)?btag(`⏳ ${esc(t.waiting.on)}${waitDays(t)!=null?" "+waitDays(t)+"d":""}`,"var(--watch)"):""}${nc?btag(`⚠ ${nc} clash`,"var(--bad)","Object(s) also in flight in another demand"):""}
+      ${buildersOf(t).length?btag(`👷 ${esc(builderNames(t))}`,"var(--pen-5)","Built by"):""}${isWaiting(t)?btag(`⏳ ${esc(t.waiting.on)}${waitDays(t)!=null?" "+waitDays(t)+"d":""}`,"var(--watch)"):""}${nc?btag(`⚠ ${nc} clash`,"var(--bad)","Object(s) also in flight in another demand"):""}
       ${na?btag(`⏰ ${na.date===todayStr()?"today":na.date<todayStr()?"due":shortD(na.date)}`,"var(--watch)",na.note):""}${(()=>{const h=efSum(efFor(t.id)),e=+t.estimate||0;return h&&!board?btag(`⏱ ${efFh(h)}${e?"/"+efFh(e):""} h`,e&&h>e?"var(--bad)":"","Hours logged"+(e?" / estimate":"")):"";})()}
       <span class="strip" title="Transports: ● complete · ◐ on its way · ○ built · dashed = not released">${trStripSVG(t)}</span></div></div>`;}
 
@@ -5657,6 +5757,7 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
       <span class="k">System</span><span class="v mono">${t.system?esc(t.system)+" · "+(TIER_S[t.system.slice(-1)]||"")+(t.client?" · client "+esc(t.client):""):"—"}</span>
       ${ep?`<span class="k">Epic</span><span class="v"><a class="cxl ep" id="cxEpic">◆ ${esc(ep.code||ep.name)}${t.wave?" · "+esc(t.wave):""}</a></span>`:""}
       <span class="k">Requestor</span><span class="v">${esc(t.requestor)||"—"}</span>
+      <span class="k">Built by</span><span class="v"><a class="cxl" id="cxBuild" title="Who's building it — someone in your team, or you">👷 ${buildersOf(t).length?esc(builderNames(t)):"you"}</a></span>
       ${t.project?`<span class="k">Project</span><span class="v">▦ ${esc(t.project)}</span>`:""}${t.theme?`<span class="k">Theme</span><span class="v">${esc(t.theme)}</span>`:""}
       <span class="k">Type</span><span class="v">${esc(t.type)}</span>
       <span class="k">Received</span><span class="v mono">${t.receivedDate||"—"}</span>
@@ -5672,6 +5773,7 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
   const q=s=>host.querySelector(s);wireNotesRail(host,t);
   if(q("#cxNaDone"))q("#cxNaDone").onclick=()=>nextActionDone(t);
   if(q("#cxNaEdit"))q("#cxNaEdit").onclick=()=>openNextAction(t);
+  if(q("#cxBuild"))q("#cxBuild").onclick=()=>openBuilders(t);
   if(q("#cxNaSet"))q("#cxNaSet").onclick=()=>openNextAction(t);
   q("#cxEdit").onclick=()=>openTaskModal(t);
   if(q("#cxEpic"))q("#cxEpic").onclick=()=>{view="epics";activeEpicId=t.epicId;epicTab="overview";renderApp();};
@@ -6761,7 +6863,7 @@ function searchAll(q){const terms=searchTerms(q);if(!terms.length)return [];cons
   const add=(k,label,parts,date,go,sub)=>{const text=parts.filter(Boolean).join(" · "),low=text.toLowerCase();if(!terms.every(t=>low.includes(t)))return;hits.push({k,label,sub:sub||"",text,low,date:date||"",go});};
   const td=t=>t.receivedDate||isoTs(t.createdAt);
   state.tasks.forEach(t=>{const ep=epicById(t.epicId),go=tab=>()=>{view="demands";activeId=t.id;activeTab=tab;},dl=demandLabel(t);
-    add("Demand",`${t.demandId||"—"} · ${t.title}`,[t.demandId,t.title,t.description,t.notes,t.type,t.requestor,t.project,t.theme,t.wave,t.system,t.client?"client "+t.client:"",t.nextAction&&t.nextAction.note,ep?epicLabel(ep):"",(t.comments||[]).map(c=>c.text).join(" · ")],td(t),go("overview"),[STATUS[t.status].label,t.system,t.theme].filter(Boolean).join(" · "));
+    add("Demand",`${t.demandId||"—"} · ${t.title}`,[t.demandId,t.title,t.description,t.notes,t.type,t.requestor,builderNames(t),t.project,t.theme,t.wave,t.system,t.client?"client "+t.client:"",t.nextAction&&t.nextAction.note,ep?epicLabel(ep):"",(t.comments||[]).map(c=>c.text).join(" · ")],td(t),go("overview"),[STATUS[t.status].label,t.system,t.theme].filter(Boolean).join(" · "));
     t.objects.forEach(o=>add("Object",`${o.name||"(object)"} — ${o.action}`,[o.name,o.type,o.desc],td(t),go("objects"),dl));
     t.transports.forEach(tr=>{const toc=tocFor(t,tr),syn=effectiveSyncs(t,tr);
       add("Transport",`${tr.number||"(TR)"}${tr.desc?" — "+tr.desc:""}`,[tr.number,tr.desc,tr.notes,"origin "+tr.system,syn.map(s=>s.system).join(" "),toc?"ToC "+toc.number:"",(tr.dest||[]).join(" "),tr.client,isCust(tr)?"customizing cust config":"workbench"],syn.map(s=>s.date).filter(Boolean).sort().pop()||td(t),go("transports"),dl);});
@@ -6769,6 +6871,7 @@ function searchAll(q){const terms=searchTerms(q);if(!terms.length)return [];cons
     (function w(a){a.forEach(s=>{add("Subtask",s.title||"(subtask)",[s.title,(s.comments||[]).map(c=>c.text).join(" · ")],s.dueDate||s.receivedDate||td(t),go("work"),dl);w(s.children||[]);});})(t.subtasks);
     (t.reference||[]).forEach(r=>add("Reference",`${r.label||"(reference)"}${r.secret?" 🔒":""}`,[r.label,r.secret?"":r.value],td(t),go("reference"),dl));
     (t.lessons||[]).forEach(l=>add("Lesson",`💡 ${l.text.split("\n")[0].slice(0,90)}`,[l.text],l.date,go("overview"),dl));});
+  (state.people||[]).forEach(p=>{const ds=demandsOf(p.id);add("Team",`👷 ${p.name}`,[p.name,p.role],"",()=>{view="playbook";playTeam=true;activePlayId=null;},`${ds.length} demand${ds.length===1?"":"s"}${p.role?" · "+p.role:""}`);});
   state.meetings.forEach(m=>{const go=()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;};
     add("Meeting",m.title,[m.title,m.team,m.attendees,m.body],m.date,go,m.team);
     m.actions.forEach(a=>add("Action",`${a.done?"✓ ":""}${a.text||"(action)"}${a.owner?" ("+a.owner+")":""}`,[a.text,a.owner,a.resolution&&"↳ "+a.resolution],a.due||m.date,go,m.title));});
@@ -7010,7 +7113,7 @@ function stSample(){const T=todayStr(),D=n=>efAdd(T,n),ts=n=>new Date(D(n)+"T10:
     lessons:[{date:D(-1),text:"Sample lesson"}],comments:[{text:"Sample comment"}]},
    {id:"st-b",demandId:"ST-2",title:"Sample interface, requirement changed",status:"delivered",type:"Interface",receivedDate:D(-60),
     timeline:[st("y1","progress",-58),st("y2","delivered",-40),st("y3","progress",-30,{cause:"change",from:"delivered",est:6}),st("y4","delivered",-20)],transports:[]},
-   {id:"st-c",demandId:"ST-3",title:"First half of a split ticket",status:"open",type:"Enhancement",objects:[{name:"ZST_SHARED_CLASS",type:"Class",action:"Modified"}],transports:[],timeline:[]},
+   {id:"st-c",demandId:"ST-3",title:"First half of a split ticket",status:"open",type:"Enhancement",builders:["st-p-1","st-p-gone"],objects:[{name:"ZST_SHARED_CLASS",type:"Class",action:"Modified"}],transports:[],timeline:[]},
    {id:"st-d",demandId:"ST-3",title:"Second half of a split ticket",status:"closed",type:"Enhancement",transports:[],timeline:[st("z1","closed",-3)]}],
   meetings:[{id:"st-m1",date:D(-1),title:"Sample sync",team:"Sample team",taskIds:["st-a"],actions:[{text:"Sample action",owner:"Sample owner",due:D(2)}]}],
   journal:[{id:"st-j1",date:T,title:"Sample journal",body:"Sample journal body"}],todos:[{text:"Sample to-do",due:D(1)}],
@@ -7019,7 +7122,8 @@ function stSample(){const T=todayStr(),D=n=>efAdd(T,n),ts=n=>new Date(D(n)+"T10:
   credentials:[{system:"H03",label:"Sample login",username:"sample-user",password:"not-a-real-password"}],
   efforts:[{date:D(-1),hours:3,taskId:"st-a",activity:"Build",note:"Sample build"},{date:D(-2),hours:2,taskId:"st-a",activity:"Testing"},{date:D(-2),hours:1.5,epicId:"st-e1",activity:"Meetings & admin"},
     {date:D(-3),hours:1,bucket:"adm"},{date:D(-25),hours:4,taskId:"st-b",activity:"Build"},{date:D(-3),hours:2,taskId:"st-c",activity:"Analysis"},{date:D(-3),hours:1,taskId:"st-d",activity:"Analysis"}],
-  daysOff:[{date:"2030-01-07",kind:"holiday",label:"Sample holiday"}],wins:[{date:D(-2),kind:"thanks",text:"Sample win"}],images:[],reviewNotes:{}};}
+  daysOff:[{date:"2030-01-07",kind:"holiday",label:"Sample holiday"}],wins:[{date:D(-2),kind:"thanks",text:"Sample win"}],images:[],reviewNotes:{},
+  people:[{id:"st-p-1",name:"Sample Builder",role:"Developer"},{id:"st-p-2",name:"Moved-on Builder",active:false}]};}
 /* every piece of text in a data object (ids and the one deliberately-cleared link excepted) */
 function stTexts(o,k,out){out=out||[];
   if(typeof o==="string"){if(o.length>=3&&!["id","epicId","ts"].includes(k))out.push(o);}
@@ -7079,20 +7183,25 @@ async function runSelfTest(){
     m.hours=0;meetingEffortSync(m);const c3=mine().length===0;
     ok("A meeting's duration logs, moves and clears its Effort entry",c1&&c2&&c3,`create ${c1} · move ${c2} · clear ${c3}`);}
    {const d0=state.settings.dayHours;state.settings.dayHours=8.5;renderApp();const v=EF_DAY;state.settings.dayHours=d0;renderApp();ok("The working-day setting is used",v===8.5,got(v,8.5));}
+   ok("Team: a demand keeps its builders, a deleted person is dropped",eq(c.builders,["st-p-1"]),got(c.builders,["st-p-1"]));
+   ok("Team: each person's demands are found",demandsOf("st-p-1").length===1&&builderNames(c)==="Sample Builder");
+   ok("Team: the list filters by builder",state.tasks.filter(dvMatches({...dvBlank(),f:{builder:"st-p-1"}})).length===1&&state.tasks.filter(dvMatches({...dvBlank(),only:["delegated"]})).length===1);
+   {setBuilders(a,["st-p-1"]);const n1=a.timeline[a.timeline.length-1].note;setBuilders(a,[]);const n2=a.timeline[a.timeline.length-1].note;
+    ok("Team: handing a demand on (and back) is noted in History",n1==="Built by Sample Builder"&&/^Back with you/.test(n2),n1+" / "+n2);}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
-  const views=["today","demands","epics","debug","journal","meetings","playbook","vault","effort","review","month","search"];
+  const views=["today","demands","epics","debug","journal","meetings","playbook","team","vault","effort","review","month","search"];
   const tabs=["overview","work","objects","transports","effort","history","reference","calls","images"],etabs=["overview","story","details","deps","subtasks","effort"];
   const a=state.tasks.find(t=>t.id==="st-a");
   const pick=()=>{activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
   const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
   const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Days off",()=>openDaysOff()],
     ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
-    ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
+    ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
   const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;
   for(const th of themes){applyTheme(th);lastTind=null;const L=THEME_OPTS[th],fails0=R.filter(r=>r.pass===false).length;
-    for(const v of views){prog(`screens — ${L} · ${++n}/${total}`);await step(`${L} · ${v}`,()=>{pick();view=v;renderApp();});}
+    for(const v of views){prog(`screens — ${L} · ${++n}/${total}`);await step(`${L} · ${v}`,()=>{pick();if(v==="team"){view="playbook";renderApp();playTeam=true;activePlayId=null;}else view=v;renderApp();});}
     for(const tb of tabs){prog(`screens — ${L} · ${++n}/${total}`);await step(`${L} · demand tab ${tb}`,()=>{pick();view="demands";activeTab=tb;renderApp();});}
     for(const tb of etabs){prog(`screens — ${L} · ${++n}/${total}`);await step(`${L} · epic tab ${tb}`,()=>{pick();view="epics";epicTab=tb;renderApp();});}
     for(const [nm,fn] of modals){prog(`screens — ${L} · ${++n}/${total}`);await step(`${L} · ${nm}`,()=>{pick();view="demands";activeTab="overview";renderApp();fn();});closeAll();}
