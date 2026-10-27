@@ -133,7 +133,7 @@ Copy `DemandDesk.html` **and** your `.json` data file to any folder, USB stick,
 or OneDrive. Open the HTML there, then **📂 Open** the JSON. Identical anywhere.
 
 ## Workspaces (top nav)
-**Today**, **Demands**, **Epics**, **Debug**, **Journal**, **Meetings**,
+**Today**, **Demands**, **Tasks**, **Epics**, **Debug**, **Journal**, **Meetings**,
 **Playbook**, and **🔒 Vault** — switch between them in the header. The search box
 (top, or `Ctrl+K`) spans all of them.
 
@@ -457,6 +457,34 @@ Log what you worked on, and see where your time goes.
 - Wins appear in the Review (edit ✎ / delete ✕ with Undo), the month chart, the
   draft summary and the document, and in search.
 - Stored as `wins` and `reviewNotes` in your data file — data version 24.
+
+### Tasks — work that isn't a demand
+The ask from a call ("check this with Basis by Friday"), the mail nobody owns, anything
+you've been asked to do that has no transports or objects. Each task has:
+- **The ask** — title, *asked by* (type-ahead from earlier tasks), *came in by* (call,
+  meeting, email, chat, myself), received date and **expected by** date, and the brief
+  as given.
+- **Log** — dated entries typed 📞 Call · 🔍 Analysis · 📨 Update in · ✉ Sent / reported ·
+  📝 Note, newest first; adding the first entry moves the task to *In progress*.
+- **Next action** — the same chain as demands: **✓ Done** asks for the next step (next
+  working day), and each finished step lands in the log.
+- **⏳ Waiting on** — who and since when; shown on the list and on Today after 3 days.
+- **Reference** — label / value facts (contacts, mailboxes, numbers); tick *secret* to
+  hide a value.
+- **Linked** — the meeting it was asked in (that meeting's duration can then be logged
+  against the task), and demands or epics if it turns out to touch one.
+- **Time** — every hour logged against it; click one to edit.
+- **✓ Close…** asks what you reported back and when, and says whether that was before,
+  on or after the date expected. Set the status to *Dropped* for tasks that stopped
+  mattering.
+
+The list filters Open / Waiting / Done / All with a text filter. Tasks show up on
+**Today** (expected within 3 days or late, next action due, waiting 3+ days), in ⏱ **Log
+time** and the timer (*Tasks — not demands*), in Effort charts, the week sheet and the
+day ledger, in the **Friday wrap-up** (done this week), in **Review** (tasks handled and
+how many were answered by the date expected — a tile, a line and a table in the
+document), in **Search** and in **Browse by month**. A Journal to-do that grows into
+more than a one-liner has **↗ Task** to move it here.
 
 ### Debug
 A debugging workbench per investigation, so a weekend gap doesn't lose you:

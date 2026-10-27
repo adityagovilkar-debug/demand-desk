@@ -1499,6 +1499,22 @@
   .tm-d:hover{background:var(--hover,rgba(127,127,127,.08))}
   .tm-d .tt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .tm-none{font-size:12px;padding:2px}
+  .jb-seg{display:flex;gap:4px}.jb-seg button{flex:1}
+  .jb-bandrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:12.5px}
+  .jb-bandrow input,.jb-bandrow select{width:auto}
+  .jb-closed{margin-top:10px;padding:7px 10px;border-radius:4px;font-size:12.5px;border:1px solid var(--line2,var(--rule-strong))}
+  .jb-closed.ok{border-color:var(--green);color:var(--green)}.jb-closed.late{border-color:var(--red);color:var(--red)}
+  .jb-add{border:1px solid var(--line2,var(--rule-strong));border-radius:6px;padding:8px;margin-bottom:8px}
+  .jb-kinds{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}.jb-kinds .on{border-color:var(--accent);color:var(--accent);font-weight:600}
+  .jb-addrow{display:flex;gap:6px}.jb-addrow input:not([type=date]){flex:1}
+  .jb-le{display:flex;gap:8px;align-items:baseline;padding:5px 2px;border-top:1px dotted var(--line2,var(--rule-strong));font-size:13px}
+  .jb-le .ic{flex:none;width:18px;text-align:center}.jb-le .d{flex:none;font-size:11px;color:var(--muted,var(--ink-3));width:52px}
+  .jb-le .tx{flex:1;min-width:0;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+  .jb-le button{opacity:.35}.jb-le:hover button{opacity:1}
+  .jb-ref{display:flex;gap:6px;align-items:center;margin-bottom:5px}.jb-ref .rl{flex:0 0 200px}.jb-ref .rv{flex:1}
+  .jb-ref label{display:flex;gap:3px;align-items:center;font-size:11px;white-space:nowrap;color:var(--muted,var(--ink-3))}.jb-ref label input{width:auto}
+  .jb-te{display:flex;gap:10px;align-items:center;padding:4px 2px;font-size:12.5px;cursor:pointer;border-top:1px dotted var(--line2,var(--rule-strong))}
+  .jb-te:hover{background:var(--hover,rgba(127,127,127,.08))}.jb-te .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted,var(--ink-3))}
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -1520,6 +1536,7 @@
     <div class="nav">
       <button class="navbtn" data-view="today">Today</button>
       <button class="navbtn" data-view="demands">Demands</button>
+      <button class="navbtn" data-view="jobs">Tasks</button>
       <button class="navbtn" data-view="epics">Epics</button>
       <button class="navbtn" data-view="debug">Debug</button>
       <button class="navbtn" data-view="journal">Journal</button>
@@ -1554,6 +1571,7 @@
     <button class="rb" data-view="today" style="--pen:var(--ink)"><svg viewBox="0 0 18 18"><rect x="2.5" y="2.5" width="5" height="5"/><rect x="10.5" y="2.5" width="5" height="5"/><rect x="2.5" y="10.5" width="5" height="5"/><rect x="10.5" y="10.5" width="5" height="5"/></svg><span class="pd"></span><span class="tip">Today</span></button>
     <div class="sep"></div>
     <button class="rb" data-view="demands" style="--pen:var(--pen-2)"><svg viewBox="0 0 18 18"><path d="M3 4.5h12M3 9h12M3 13.5h7"/><circle cx="14" cy="13.5" r="1.4"/></svg><span class="pd"></span><span class="cnt" id="rcDemands"></span><span class="tip">Demands</span></button>
+    <button class="rb" data-view="jobs" style="--pen:var(--pen-7)"><svg viewBox="0 0 18 18"><rect x="2.5" y="2.5" width="13" height="13" rx="1.5"/><path d="M5.5 9.2l2.3 2.3 4.7-5"/></svg><span class="pd"></span><span class="cnt" id="rcJobs"></span><span class="tip">Tasks · not demands</span></button>
     <button class="rb" data-view="epics" style="--pen:var(--pen-5)"><svg viewBox="0 0 18 18"><path d="M9 2.5l6.5 6.5L9 15.5 2.5 9z"/><path d="M9 6v6"/></svg><span class="pd"></span><span class="tip">Epics</span></button>
     <button class="rb" data-view="debug" style="--pen:var(--pen-1)"><svg viewBox="0 0 18 18"><rect x="5" y="5" width="8" height="10" rx="4"/><path d="M9 5V3M5 9H2.5M15.5 9H13M5.5 13l-2 1.5M12.5 13l2 1.5"/></svg><span class="pd"></span><span class="tip">Debug</span></button>
     <button class="rb" data-view="journal" style="--pen:var(--pen-3)"><svg viewBox="0 0 18 18"><path d="M4 2.5h9a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4z"/><path d="M7 6.5h4M7 9.5h4"/></svg><span class="pd"></span><span class="cnt" id="rcJournal"></span><span class="tip">Journal · to-dos</span></button>
@@ -1615,11 +1633,11 @@ const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod 
 /* The data format this copy understands. Bump it whenever a change adds or reshapes saved data —
    an older copy then refuses to save a file written by a newer one, instead of dropping fields
    it doesn't know about. */
-const DATA_VERSION=29;
+const DATA_VERSION=30;
 let dataNewer=0;   /* the version of a loaded file that's newer than this copy (0 = fine) */
 const SELFTEST=/[?&]selftest\b/.test(location.search);   /* sandbox: nothing is read from or written to your data */
 function newerMsg(){return `This data was saved by a newer Demand Desk (data version ${dataNewer}); this copy understands up to ${DATA_VERSION}. Saving is switched off so nothing gets dropped — open the file with the newest DemandDesk.html.`;}
-let state={version:DATA_VERSION,people:[],settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
+let state={version:DATA_VERSION,people:[],jobs:[],settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false, lastWriteAt=0, autoSaveDue=0, diskConflict=null, fileSig=null, savePromise=null, backupUnreadable=false;
 let view="today";
 let activeId=null, activeTab="overview", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -1684,7 +1702,7 @@ async function serializeData(){return isEncrypted()?await encryptStateStr(master
 
 /* ---------- persistence ---------- */
 let hadContent=false;
-function contentCount(){return state.tasks.length+state.epics.length+state.meetings.length+state.credentials.length+state.journal.length+state.todos.length+state.debug.length+state.images.length+state.playbook.length+(state.efforts||[]).length+(state.wins||[]).length;}
+function contentCount(){return (state.jobs||[]).length+state.tasks.length+state.epics.length+state.meetings.length+state.credentials.length+state.journal.length+state.todos.length+state.debug.length+state.images.length+state.playbook.length+(state.efforts||[]).length+(state.wins||[]).length;}
 function isValidState(s){return s&&typeof s==="object"&&Array.isArray(s.tasks)&&Array.isArray(s.epics)&&Array.isArray(s.meetings)&&Array.isArray(s.credentials)&&Array.isArray(s.journal)&&Array.isArray(s.todos)&&Array.isArray(s.debug)&&Array.isArray(s.images)&&Array.isArray(s.playbook)&&(s.efforts===undefined||Array.isArray(s.efforts));}
 function noteContent(){if(isValidState(state)&&contentCount()>0)hadContent=true;}
 /* defensive guard: returns true if it is SAFE to persist current state */
@@ -1880,6 +1898,8 @@ function migrate(d){
   d.epics=(d.epics||[]).map(normEpic);
   /* v29: your team — people a demand can be handed to (t.builders holds their ids) */
   d.people=(d.people||[]).map(normPerson).filter(p=>p.name);
+  /* v30: tasks that aren't demands */
+  d.jobs=(d.jobs||[]).map(normJob);
   /* referential integrity: a demand pointing at a deleted epic falls back to none,
      so a stale id can never render as a phantom grouping */
   {const eids=new Set(d.epics.map(e=>e.id));
@@ -2231,6 +2251,7 @@ function renderApp(){
   if(view==="today"){renderToday();}
   else if(view==="demands"){renderDemandSidebar();renderDetail();}
   else if(view==="debug"){renderDebugSidebar();renderDebugDetail();}
+  else if(view==="jobs"){renderJobSidebar();renderJobDetail();}
   else if(view==="journal"){renderJournalSidebar();renderJournalDetail();}
   else if(view==="meetings"){renderMeetingSidebar();renderMeetingDetail();}
   else if(view==="epics"){renderEpicSidebar();renderEpicDetail();}
@@ -2251,6 +2272,7 @@ function renderToday(){
     <div class="side-tools">
       <button class="primary" id="qNewDemand" style="width:100%">＋ New Demand</button>
       <button id="qJournal" style="width:100%">📓 Today's journal</button>
+      <button id="qJob" style="width:100%">☐ New task</button>
       <button id="qDebug" style="width:100%">🐞 New debug session</button>
       <button id="qWeek" style="width:100%">🗓 Weekly summary</button>
       <button id="qHand" style="width:100%">🧳 Handover pack</button>
@@ -2261,6 +2283,7 @@ function renderToday(){
     <div class="listwrap"><p class="faint" style="font-size:12px;padding:10px;line-height:1.6">Your cockpit — everything needing attention, pulled from all workspaces. Click any item to jump to it.</p></div>`;
   document.getElementById("qNewDemand").onclick=()=>{view="demands";renderApp();openTaskModal(null);};
   document.getElementById("qJournal").onclick=newJournalToday;
+  document.getElementById("qJob").onclick=()=>newJob();
   document.getElementById("qDebug").onclick=()=>{const s={id:uid(),title:"New debug session",demandId:"",taskId:"",status:"active",resume:"",notes:"",objects:[],breakpoints:[],findings:[],watches:[],createdAt:Date.now(),updatedAt:Date.now()};state.debug.unshift(s);activeDebugId=s.id;view="debug";markDirty();renderApp();};
   document.getElementById("qWeek").onclick=openWeekly;
   document.getElementById("qHand").onclick=openHandover;
@@ -2345,6 +2368,7 @@ function renderToday(){
   card("Recurring processes due","🔁","warn",recDue.map(p=>({main:esc(p.title),sub:(daysUntil(p.due)<0?"⚠ overdue · ":"")+p.due,go:()=>{view="playbook";activePlayId=p.id;renderApp();}})));
   const frz=state.playbook.filter(p=>p.kind==="freeze"&&p.from&&p.to&&p.to>=todayStr()&&daysUntil(p.from)<=14).sort((a,b)=>a.from.localeCompare(b.from));
   card("Freeze periods","❄","warn",frz.map(p=>{const act=p.from<=todayStr();return{main:esc(p.title),sub:(act?"ACTIVE until "+p.to:"from "+p.from)+" · "+(p.systems||[]).length+" system(s)",go:()=>{view="playbook";activePlayId=p.id;renderApp();}};}));
+  card("Tasks — due, next steps, waiting","☐","warn",jobsNeedingYou().map(({j,why})=>({main:esc(j.title),sub:why.join(" · "),go:()=>{view="jobs";activeJobId=j.id;renderApp();}})));
   card("Stale (open, untouched 14d+)","🕸","",stale.map(t=>({main:dlabel(t),sub:`${Math.floor((Date.now()-t.updatedAt)/86400000)}d`,go:goDemand(t.id)})));
   /* debug sessions stay "active" until someone says otherwise — after two quiet weeks, ask */
   const dbgSet=(s,st)=>{s.status=st;s.updatedAt=Date.now();markDirty();renderApp();toast(`🐞 ${s.title||"Session"} → ${DEBUG_STATUS[st].label}`);};
@@ -2383,7 +2407,8 @@ function wrapWeek(){const t=todayStr(),mon=efMon(t),days=[0,1,2,3,4].map(i=>efAd
   const by=new Map();es.filter(e=>e.taskId).forEach(e=>by.set(e.taskId,(by.get(e.taskId)||0)+e.hours));
   const worked=[...by].sort((a,b)=>b[1]-a[1]).map(([id])=>state.tasks.find(x=>x.id===id)).filter(Boolean);
   const moved=state.tasks.filter(x=>(x.timeline||[]).some(e=>e.type==="status"&&["delivered","closed"].includes(e.to)&&isoTs(e.ts)>=mon&&isoTs(e.ts)<=t));
-  return {mon,days,h:efSum(es),target:work.length*EF_DAY,miss,off:past.filter(d=>efOff(d)),wins,lessons,worked,moved};}
+  const jobsDone=state.jobs.filter(j=>j.status==="done"&&j.closedOn>=mon&&j.closedOn<=t);
+  return {mon,days,h:efSum(es),target:work.length*EF_DAY,miss,off:past.filter(d=>efOff(d)),wins,lessons,worked,moved,jobsDone};}
 function wrapUpHTML(){const dow=efDow(todayStr()),W=wrapWeek();
   if(!wrapForce&&(![5,6,0].includes(dow)||viewPref("wrap.done","")===W.mon))return "";
   const pct=W.target?Math.min(100,Math.round(W.h/W.target*100)):0;
@@ -2391,7 +2416,7 @@ function wrapUpHTML(){const dow=efDow(todayStr()),W=wrapWeek();
     <div class="wr-grid">
       <div><div class="wr-k">Hours</div><div class="wr-big">${efFh(Math.round(W.h*10)/10)} h <span class="faint">of ${W.target} h</span></div><div class="wr-bar"><i style="width:${pct}%"></i></div>
         ${W.miss.length?`<div class="wr-miss">⚠ No log on ${W.miss.map(d=>`<span class="mono">${efWdl(d)}</span> <a href="#" data-wfill="${d}">＋ log</a> · <a href="#" data-woff="${d}">day off</a>`).join("<br>")}</div>`:`<div class="wr-ok">✓ every working day logged${W.off.length?` · ${W.off.length} day${W.off.length>1?"s":""} off`:""}</div>`}</div>
-      <div><div class="wr-k">Done this week</div>${W.moved.length?W.moved.slice(0,5).map(x=>`<div class="wr-row"><a href="#" data-wgo="${x.id}">${esc(demandLabel(x))}</a> <span class="faint">${STATUS[x.status].label.toLowerCase()}</span></div>`).join(""):`<div class="faint wr-row">Nothing delivered or closed yet.</div>`}
+      <div><div class="wr-k">Done this week</div>${W.moved.length||W.jobsDone.length?W.moved.slice(0,5).map(x=>`<div class="wr-row"><a href="#" data-wgo="${x.id}">${esc(demandLabel(x))}</a> <span class="faint">${STATUS[x.status].label.toLowerCase()}</span></div>`).join("")+W.jobsDone.slice(0,5).map(j=>{const tm=jobTiming(j);return `<div class="wr-row">☑ <a href="#" data-wjob="${j.id}">${esc(j.title)}</a>${tm?` <span class="faint">${tm.txt}</span>`:""}</div>`;}).join(""):`<div class="faint wr-row">Nothing delivered or closed yet.</div>`}
         ${W.worked.length?`<div class="wr-k" style="margin-top:8px">Most time on</div>${W.worked.slice(0,3).map(x=>`<div class="wr-row">${esc(demandLabel(x))}</div>`).join("")}`:""}</div>
       <div><div class="wr-k">Wins &amp; lessons</div>
         ${W.wins.map(w=>`<div class="wr-row">${WIN_KINDS[w.kind].icon} ${esc(w.text.length>60?w.text.slice(0,59)+"…":w.text)}</div>`).join("")}${W.lessons.map(({t,l})=>`<div class="wr-row">💡 ${esc(l.text.length>60?l.text.slice(0,59)+"…":l.text)} <span class="faint">${esc(demandLabel(t))}</span></div>`).join("")}
@@ -2403,6 +2428,7 @@ function wireWrapUp(host){const q=s=>host.querySelector(s);if(!q(".wrapup"))retu
   q("#wrWin").onclick=()=>openWin();
   host.querySelectorAll("[data-wles]").forEach(b=>b.onclick=()=>{const t=state.tasks.find(x=>x.id===b.dataset.wles);if(t)openLesson(t);});
   host.querySelectorAll("[data-wgo]").forEach(a=>a.onclick=e=>{e.preventDefault();view="demands";activeId=a.dataset.wgo;activeTab="overview";renderApp();});
+  host.querySelectorAll("[data-wjob]").forEach(a=>a.onclick=e=>{e.preventDefault();view="jobs";activeJobId=a.dataset.wjob;renderApp();});
   host.querySelectorAll("[data-wfill]").forEach(a=>a.onclick=e=>{e.preventDefault();openLogTime({date:a.dataset.wfill});});
   host.querySelectorAll("[data-woff]").forEach(a=>a.onclick=e=>{e.preventDefault();openDaysOff({date:a.dataset.woff});});}
 
@@ -2484,6 +2510,183 @@ function renderTeamPage(host){const ppl=state.people.slice().sort((a,b)=>(b.acti
       if(!confirm(ds.length?`Remove ${p.name}? They come off ${ds.length} demand(s) too — or tick “moved on” instead to keep them there.`:`Remove ${p.name} from your team list?`))return;
       ds.forEach(t=>setBuilders(t,t.builders.filter(x=>x!==p.id)));state.people=state.people.filter(x=>x.id!==p.id);markDirty();renderApp();};
     c.querySelectorAll(".tm-d").forEach(r=>r.onclick=()=>{view="demands";activeId=r.dataset.id;activeTab="overview";playTeam=false;renderApp();});});}
+
+/* ===================== TASKS — work that isn't a demand =====================
+   The ask from a call, the mystery mail nobody owns, the "check this with Basis by Friday":
+   a title, who asked and how, when they expect an answer, the brief as given, a dated log of
+   what happened (calls, analysis, updates in, what you sent), the next action and who you're
+   waiting on, reference facts, and finally what you reported back and whether it was in time.
+   Hours are logged against a task like any demand (effort key "j:<id>"). Stored as state.jobs
+   (state.todos is the Journal's quick checklist; state.tasks are demands). */
+const JOB_STATUS={open:{l:"To do",cls:"open"},progress:{l:"In progress",cls:"progress"},done:{l:"Done",cls:"delivered"},dropped:{l:"Dropped",cls:"closed"}};
+const JOB_SRC={call:"📞 Call",meeting:"👥 Meeting",email:"✉ Email",chat:"💬 Chat",self:"🙋 Myself",other:"Other"};
+const JOB_LOG={call:{i:"📞",l:"Call"},analysis:{i:"🔍",l:"Analysis"},update:{i:"📨",l:"Update in"},sent:{i:"✉",l:"Sent / reported"},note:{i:"📝",l:"Note"},step:{i:"✓",l:"Step done"}};
+let activeJobId=null,jobFilter="open",jobQuery="";
+function normJob(j){j=j||{};const d=x=>/^\d{4}-\d\d-\d\d$/.test(x||"")?x:"";
+  return{id:j.id||uid(),title:String(j.title||"").trim()||"(untitled task)",askedBy:String(j.askedBy||"").trim(),source:JOB_SRC[j.source]?j.source:"other",
+    received:d(j.received)||isoTs(j.createdAt||Date.now()),due:d(j.due),status:JOB_STATUS[j.status]?j.status:"open",brief:String(j.brief||""),
+    log:(j.log||[]).map(x=>({id:x.id||uid(),date:d(x.date)||todayStr(),kind:JOB_LOG[x.kind]?x.kind:"note",text:String(x.text||"")})).filter(x=>x.text.trim()),
+    nextAction:{date:(j.nextAction&&j.nextAction.date)||"",note:(j.nextAction&&j.nextAction.note)||""},
+    waiting:{on:(j.waiting&&j.waiting.on)||"",since:(j.waiting&&j.waiting.since)||""},
+    refs:(j.refs||[]).map(r=>({id:r.id||uid(),label:String(r.label||""),value:String(r.value||""),secret:!!r.secret})),
+    outcome:String(j.outcome||""),closedOn:d(j.closedOn),meetingId:String(j.meetingId||""),
+    taskIds:(j.taskIds||[]).slice(),epicIds:(j.epicIds||[]).slice(),createdAt:j.createdAt||Date.now(),updatedAt:j.updatedAt||Date.now()};}
+const jobById=id=>(state.jobs||[]).find(j=>j.id===id)||null;
+const activeJob=()=>jobById(activeJobId);
+const isJob=x=>!!x&&(state.jobs||[]).includes(x);
+const jobOpen=j=>j.status==="open"||j.status==="progress";
+const jobHours=j=>efSum(state.efforts.filter(e=>e.jobId===j.id));
+const jobWaiting=j=>jobOpen(j)&&!!(j.waiting&&j.waiting.on);
+const jobWaitDays=j=>j.waiting&&j.waiting.since?Math.max(0,-daysUntil(j.waiting.since)):null;
+function jobLog(j,kind,text,date){j.log.push({id:uid(),date:date||todayStr(),kind,text:String(text||"")});touch(j);}
+/* answered before / on / after the date they expected */
+function jobTiming(j){if(!j.due||!j.closedOn||j.status!=="done")return null;
+  const n=Math.round((new Date(j.due+"T00:00:00")-new Date(j.closedOn+"T00:00:00"))/864e5);
+  return {n,txt:n>0?`${n} day${n>1?"s":""} before expected`:n===0?"on the day expected":`${-n} day${n<-1?"s":""} after expected`,ok:n>=0};}
+/* what needs you: overdue or due within 3 days, a next action due, or waiting 3+ days */
+function jobsNeedingYou(){const t=todayStr(),out=[];
+  state.jobs.filter(jobOpen).forEach(j=>{const why=[];
+    if(j.due){const n=daysUntil(j.due);if(n<0)why.push(`⚑ ${-n}d past expected`);else if(n<=3)why.push(n===0?"expected today":`expected in ${n}d`);}
+    if(j.nextAction.date&&j.nextAction.date<=t)why.push(`⏰ ${esc(j.nextAction.note||"next action")}`);
+    if(jobWaiting(j)&&(jobWaitDays(j)||0)>=3)why.push(`⏳ ${esc(j.waiting.on)} ${jobWaitDays(j)}d`);
+    if(why.length)out.push({j,why,rank:j.due?daysUntil(j.due):99});});
+  return out.sort((a,b)=>a.rank-b.rank);}
+function newJob(o){const j=normJob({received:todayStr(),status:"open",source:"call",...(o||{})});state.jobs.unshift(j);activeJobId=j.id;view="jobs";markDirty();renderApp();
+  setTimeout(()=>{const i=document.getElementById("jb-title");if(i&&!o)i.select();},40);return j;}
+
+function renderJobSidebar(){const F={open:"Open",waiting:"Waiting",done:"Done",all:"All"},t=todayStr();
+  document.getElementById("side").innerHTML=`<div class="side-tools">
+      <button class="primary" id="btnNewJob" style="width:100%">＋ New task</button>
+      <div class="jb-seg">${Object.entries(F).map(([k,l])=>`<button class="sm ${jobFilter===k?"on":"ghost"}" data-jf="${k}">${l}</button>`).join("")}</div>
+      <input id="jbQ" placeholder="Filter: title, who asked…" value="${esc(jobQuery)}" autocomplete="off">
+      <p class="faint" style="font-size:11px;margin:0">Work that isn't a demand — an ask from a call, a mail nobody owns. Hours log against it like a demand.</p></div>
+    <div class="stats"><div class="stat op"><b>${state.jobs.filter(jobOpen).length}</b>open</div><div class="stat ov"><b>${state.jobs.filter(j=>jobOpen(j)&&j.due&&j.due<t).length}</b>late</div><div class="stat"><b>${state.jobs.filter(jobWaiting).length}</b>waiting</div></div>
+    <div class="listwrap" id="jbList"></div>`;
+  document.getElementById("btnNewJob").onclick=()=>newJob();
+  document.querySelectorAll("[data-jf]").forEach(b=>b.onclick=()=>{jobFilter=b.dataset.jf;renderJobSidebar();});
+  const q=document.getElementById("jbQ");q.oninput=()=>{jobQuery=q.value;drawJobList();};
+  drawJobList();}
+function drawJobList(){const el=document.getElementById("jbList");if(!el)return;const words=jobQuery.toLowerCase().split(/\s+/).filter(Boolean),t=todayStr();
+  let rows=state.jobs.filter(j=>jobFilter==="all"||(jobFilter==="open"?jobOpen(j):jobFilter==="waiting"?jobWaiting(j):!jobOpen(j)));
+  if(words.length)rows=rows.filter(j=>{const b=[j.title,j.askedBy,j.brief,j.outcome,j.waiting.on,...j.log.map(x=>x.text)].join(" ").toLowerCase();return words.every(w=>b.includes(w));});
+  rows.sort((a,b)=>(jobOpen(b)-jobOpen(a))||(jobOpen(a)?(a.due||"9999").localeCompare(b.due||"9999")||a.received.localeCompare(b.received):(b.closedOn||"").localeCompare(a.closedOn||"")));
+  if(!rows.length){el.innerHTML=`<div class="empty">${state.jobs.length?"Nothing here.":"No tasks yet.<br>The ask from a call, the mail nobody<br>owns — anything that isn't a demand."}</div>`;return;}
+  el.innerHTML=rows.map(j=>{const st=JOB_STATUS[j.status],h=jobHours(j),dc=j.due&&jobOpen(j)?dueClass(j.due,"open"):"",tm=jobTiming(j);
+    return `<div class="tcard s-${st.cls} ${j.id===activeJobId?"active":""}" data-id="${j.id}">
+      <div class="demand">${JOB_SRC[j.source].split(" ")[0]} ${esc(j.askedBy||"—")}</div>
+      <div class="ttitle">${esc(j.title)}</div>
+      <div class="meta"><span class="pill ${st.cls}">${st.l}</span>
+        ${jobWaiting(j)?`<span class="pill" style="color:var(--amber);border-color:var(--amber-line)">⏳ ${esc(j.waiting.on)}${jobWaitDays(j)!=null?" "+jobWaitDays(j)+"d":""}</span>`:""}
+        ${jobOpen(j)&&j.nextAction.date?`<span class="due ${j.nextAction.date<=t?"soon":""}" title="${esc(j.nextAction.note)}">⏰ ${j.nextAction.date.slice(5)}</span>`:""}
+        ${j.due&&jobOpen(j)?`<span class="due ${dc}">⚑ ${j.due}</span>`:""}${tm?`<span class="faint" style="color:var(--${tm.ok?"green":"red"})">${tm.ok?"✓":"⚑"} ${tm.txt}</span>`:""}
+        ${h?`<span class="faint">⏱ ${efFh(h)} h</span>`:""}</div></div>`;}).join("");
+  el.querySelectorAll(".tcard").forEach(x=>x.onclick=()=>{activeJobId=x.dataset.id;renderApp();});}
+
+function renderJobDetail(){const j=activeJob(),host=document.getElementById("detail");
+  if(!j){host.innerHTML=nopick("Select a task, or create one —<br>anything you've been asked that<br>isn't a demand.");return;}
+  const st=JOB_STATUS[j.status],na=jobOpen(j)&&j.nextAction.date?j.nextAction:null,nad=na?daysUntil(na.date):0,tm=jobTiming(j),bench=benchOn();
+  const asked=[...new Set(state.jobs.map(x=>x.askedBy).filter(Boolean))].sort();
+  host.innerHTML=`<div class="detail-head"><div class="dh-top"><div style="flex:1">
+      <input id="jb-title" value="${esc(j.title)}" style="font-size:18px;font-weight:650;border-color:transparent;background:transparent;padding:2px 4px;width:100%">
+      <div class="dh-dates" style="margin-top:8px">
+        <span>Status <select id="jb-status" style="width:130px">${Object.entries(JOB_STATUS).map(([k,v])=>`<option value="${k}" ${k===j.status?"selected":""}>${v.l}</option>`).join("")}</select></span>
+        <span>Asked by <input id="jb-asked" list="dl-jasked" value="${esc(j.askedBy)}" placeholder="e.g. my manager, team mailbox" style="width:180px"><datalist id="dl-jasked">${asked.map(a=>`<option value="${esc(a)}">`).join("")}</datalist></span>
+        <span>Came in by <select id="jb-src" style="width:130px">${Object.entries(JOB_SRC).map(([k,v])=>`<option value="${k}" ${k===j.source?"selected":""}>${v}</option>`).join("")}</select></span>
+        <span>Received <input type="date" id="jb-rec" value="${j.received}" style="width:150px"></span>
+        <span>Expected by <input type="date" id="jb-due" value="${j.due}" style="width:150px"></span>
+      </div></div>
+      <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end"><span class="pill ${st.cls}" style="font-size:12px">${st.l}</span>
+        <button class="sm" id="jb-logt" title="Log time against this task">⏱ Log time</button>
+        ${jobOpen(j)?`<button class="sm primary" id="jb-close" title="Record what you reported back">✓ Close…</button>`:""}
+        <button class="sm danger" id="jb-del">🗑 Delete</button></div></div>
+    ${na?(bench?`<div class="bband ${nad<=0?"watch":""}"><span class="k">Next action · ${nad<0?(-nad)+" d ago":nad===0?"today":"in "+nad+" d"}</span><span class="tx"><b>${esc(na.note||"(no note)")}</b> <span class="mono faint">${na.date}</span></span><button class="sm" id="jb-nadone">✓ Done</button><button class="sm ghost" id="jb-naedit">✎</button></div>`
+       :`<div class="nextact ${nad<=0?"due":""}">⏰ Next action <b class="mono">${na.date}</b> — ${esc(na.note||"(no note)")} <button class="ghost sm" id="jb-nadone">✓ Done</button><button class="ghost sm" id="jb-naedit">✎</button></div>`)
+      :jobOpen(j)?`<div class="jb-bandrow"><button class="sm ghost" id="jb-naset">⏰ Set the next action</button></div>`:""}
+    ${jobOpen(j)?`<div class="jb-bandrow">⏳ Waiting on <input id="jb-won" list="dl-jwait" value="${esc(j.waiting.on)}" placeholder="nobody — e.g. Basis team" style="width:200px"><datalist id="dl-jwait">${[...new Set([...WAIT_OPTIONS,...state.jobs.map(x=>x.waiting.on).filter(Boolean)])].map(x=>`<option value="${esc(x)}">`).join("")}</datalist>
+      ${j.waiting.on?`since <input type="date" id="jb-wsince" value="${j.waiting.since}" style="width:150px">${jobWaitDays(j)!=null?` <span class="faint">${jobWaitDays(j)} d</span>`:""}`:""}</div>`:""}
+    ${!jobOpen(j)?`<div class="jb-closed ${tm?(tm.ok?"ok":"late"):""}">${j.status==="done"?"✓ Done":"Dropped"}${j.closedOn?` on <b>${j.closedOn}</b>`:""}${tm?` — <b>${tm.txt}</b>`:""}</div>`:""}
+  </div>
+  <div class="detail-body">
+    ${!jobOpen(j)?`<div class="sec-title"><h3>${j.status==="done"?"What I reported back":"Why it was dropped"}</h3><div class="ln"></div></div><textarea id="jb-out" style="min-height:70px">${esc(j.outcome)}</textarea>`:""}
+    <div class="sec-title" style="margin-top:${jobOpen(j)?0:16}px"><h3>The ask</h3><div class="ln"></div></div>
+    <textarea id="jb-brief" placeholder="The instructions as given — what exactly they want to know, any constraints, who else is involved" style="min-height:90px">${esc(j.brief)}</textarea>
+    <div class="sec-title" style="margin-top:16px"><h3>Log</h3><div class="ln"></div><span class="faint" style="font-size:11px">${j.log.length} entr${j.log.length===1?"y":"ies"}</span></div>
+    <div class="jb-add"><div class="jb-kinds">${Object.entries(JOB_LOG).filter(([k])=>k!=="step").map(([k,v],i)=>`<button class="sm ${i===0?"on":"ghost"}" data-lk="${k}">${v.i} ${v.l}</button>`).join("")}</div>
+      <div class="jb-addrow"><input type="date" id="jb-ldate" value="${todayStr()}" style="flex:0 0 150px"><input id="jb-ltext" placeholder="What happened — e.g. Call with Basis: they need the client number first (Enter to add)"><button class="sm primary" id="jb-ladd">Add</button></div></div>
+    <div id="jb-log"></div>
+    <div class="sec-title" style="margin-top:18px"><h3>Reference</h3><div class="ln"></div><button class="sm" id="jb-refadd">＋ Add</button></div>
+    <div id="jb-refs"></div>
+    <div class="sec-title" style="margin-top:18px"><h3>Linked</h3><div class="ln"></div><button class="sm" id="jb-link" title="Only if it turns out to touch a demand or epic">🔗 Demand / epic</button></div>
+    <div class="jb-bandrow" style="margin-top:0">👥 Asked in meeting <select id="jb-mtg" style="max-width:360px"><option value="">— none —</option>${state.meetings.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,60).concat(j.meetingId&&!state.meetings.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,60).some(m=>m.id===j.meetingId)?state.meetings.filter(m=>m.id===j.meetingId):[]).map(m=>`<option value="${m.id}" ${m.id===j.meetingId?"selected":""}>${m.date} · ${esc(m.title)}</option>`).join("")}</select>${j.meetingId&&state.meetings.some(m=>m.id===j.meetingId)?` <a href="#" id="jb-mtggo">open ›</a>`:""}</div>
+    <div class="chiprow" id="jb-chips"></div>
+    <div class="sec-title" style="margin-top:18px"><h3>Time</h3><div class="ln"></div><span class="faint" style="font-size:11px" id="jb-hrs"></span><button class="sm" id="jb-logt2">⏱ Log time</button></div>
+    <div id="jb-time"></div>
+  </div>`;
+  const q=s=>host.querySelector(s),side=()=>renderJobSidebar();
+  q("#jb-title").onchange=e=>{j.title=e.target.value.trim()||"(untitled task)";touch(j);side();};
+  q("#jb-asked").onchange=e=>{j.askedBy=e.target.value.trim();touch(j);side();};
+  q("#jb-src").onchange=e=>{j.source=e.target.value;touch(j);side();};
+  q("#jb-rec").onchange=e=>{j.received=e.target.value||todayStr();touch(j);};
+  q("#jb-due").onchange=e=>{j.due=e.target.value;touch(j);side();};
+  q("#jb-status").onchange=e=>{const v=e.target.value;
+    if((v==="done"||v==="dropped")&&jobOpen(j)){e.target.value=j.status;openJobClose(j,v);return;}
+    if(jobOpen({status:v})&&!jobOpen(j)){j.closedOn="";jobLog(j,"note","Reopened");}
+    j.status=v;touch(j);renderApp();};
+  q("#jb-brief").onchange=e=>{j.brief=e.target.value;touch(j);};
+  {const o=q("#jb-out");if(o)o.onchange=e=>{j.outcome=e.target.value;touch(j);};}
+  q("#jb-logt").onclick=q("#jb-logt2").onclick=()=>openLogTime({key:"j:"+j.id});
+  {const c=q("#jb-close");if(c)c.onclick=()=>openJobClose(j,"done");}
+  q("#jb-del").onclick=()=>{const h=jobHours(j);if(!confirm(`Delete “${j.title}”?${h?` The ${efFh(h)} h logged on it stay in Effort as “(deleted task)”.`:""}`))return;
+    state.jobs=state.jobs.filter(x=>x.id!==j.id);activeJobId=null;markDirty();renderApp();};
+  {const d=q("#jb-nadone");if(d)d.onclick=()=>nextActionDone(j);const ed=q("#jb-naedit");if(ed)ed.onclick=()=>openNextAction(j);const s=q("#jb-naset");if(s)s.onclick=()=>openNextAction(j);}
+  {const w=q("#jb-won");if(w)w.onchange=e=>{const v=e.target.value.trim();if(v&&!j.waiting.on)jobLog(j,"note",`Waiting on ${v}`);j.waiting={on:v,since:v?(j.waiting.since||todayStr()):""};touch(j);renderApp();};
+   const ws=q("#jb-wsince");if(ws)ws.onchange=e=>{j.waiting.since=e.target.value;touch(j);renderApp();};}
+  /* log */
+  let kind="call";host.querySelectorAll("[data-lk]").forEach(b=>b.onclick=()=>{kind=b.dataset.lk;host.querySelectorAll("[data-lk]").forEach(x=>{x.classList.toggle("on",x===b);x.classList.toggle("ghost",x!==b);});q("#jb-ltext").focus();});
+  const addLog=()=>{const tx=q("#jb-ltext").value.trim();if(!tx)return;jobLog(j,kind,tx,q("#jb-ldate").value||todayStr());
+    if(j.status==="open")j.status="progress";q("#jb-ltext").value="";drawLog();side();};
+  q("#jb-ladd").onclick=addLog;q("#jb-ltext").onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();addLog();}};
+  const drawLog=()=>{const el=q("#jb-log"),L=j.log.slice().sort((a,b)=>b.date.localeCompare(a.date));
+    el.innerHTML=L.map(x=>`<div class="jb-le" data-id="${x.id}"><span class="ic" title="${JOB_LOG[x.kind].l}">${JOB_LOG[x.kind].i}</span><span class="mono d">${shortD(x.date)}</span><span class="tx">${linkify(x.text)}</span><button class="ghost sm jb-led" title="Edit">✎</button><button class="ghost sm danger jb-lrm" title="Delete">✕</button></div>`).join("")||`<div class="faint" style="font-size:12px;padding:4px 2px">Nothing yet — log calls, your analysis, updates that come in, and what you sent.</div>`;
+    el.querySelectorAll(".jb-le").forEach(r=>{const x=j.log.find(y=>y.id===r.dataset.id);
+      r.querySelector(".jb-led").onclick=()=>editInline(r.querySelector(".tx"),x.text,v=>{if(v.trim()){x.text=v.trim();touch(j);}drawLog();});
+      r.querySelector(".jb-lrm").onclick=()=>{j.log=j.log.filter(y=>y!==x);touch(j);drawLog();};});};
+  drawLog();
+  /* reference facts */
+  const drawRefs=()=>{const el=q("#jb-refs");
+    el.innerHTML=j.refs.map(r=>`<div class="jb-ref" data-id="${r.id}"><input class="rl" value="${esc(r.label)}" placeholder="Label — e.g. Contact, mailbox, ticket"><input class="rv ${r.secret?"mono":""}" type="${r.secret?"password":"text"}" value="${esc(r.value)}" placeholder="Value"><label title="Hide the value (it's still in your file — encrypt the file to protect it)"><input type="checkbox" class="rs" ${r.secret?"checked":""}> secret</label><button class="ghost sm danger rx">✕</button></div>`).join("")||`<div class="faint" style="font-size:12px;padding:2px">Names, numbers, mailboxes — the facts you'll need again.</div>`;
+    el.querySelectorAll(".jb-ref").forEach(row=>{const r=j.refs.find(x=>x.id===row.dataset.id);
+      row.querySelector(".rl").onchange=e=>{r.label=e.target.value;touch(j);};row.querySelector(".rv").onchange=e=>{r.value=e.target.value;touch(j);};
+      row.querySelector(".rs").onchange=e=>{r.secret=e.target.checked;touch(j);drawRefs();};row.querySelector(".rx").onclick=()=>{j.refs=j.refs.filter(x=>x!==r);touch(j);drawRefs();};});};
+  q("#jb-refadd").onclick=()=>{j.refs.push({id:uid(),label:"",value:"",secret:false});touch(j);drawRefs();const ins=q("#jb-refs").querySelectorAll(".rl");if(ins.length)ins[ins.length-1].focus();};
+  drawRefs();
+  /* links */
+  q("#jb-mtg").onchange=e=>{j.meetingId=e.target.value;touch(j);renderJobDetail();};
+  {const g=q("#jb-mtggo");if(g)g.onclick=e=>{e.preventDefault();view="meetings";meetingRollup=false;activeMeetingId=j.meetingId;renderApp();};}
+  const drawChips=()=>drawLinkChips(q("#jb-chips"),j,drawChips,"Not tied to any demand or epic — that's fine.");drawChips();
+  q("#jb-link").onclick=()=>openLinkPicker(j,`Link “${esc(j.title)}”`,drawChips);
+  /* time */
+  const es=state.efforts.filter(e=>e.jobId===j.id).sort((a,b)=>b.date.localeCompare(a.date));
+  q("#jb-hrs").textContent=es.length?`${efFh(efSum(es))} h over ${new Set(es.map(e=>e.date)).size} day(s)`:"";
+  q("#jb-time").innerHTML=es.map(e=>`<div class="jb-te" data-id="${e.id}"><span class="mono">${e.date}</span><span class="mono"><b>${efFh(e.hours)} h</b></span><span class="ef-tag" style="--pen:var(--${EF_ACTC[e.activity]})"><span class="ef-pd"></span>${esc(e.activity)}</span><span class="tx">${esc(e.note)}</span></div>`).join("")||`<div class="faint" style="font-size:12px;padding:2px">No time logged yet — ⏱ Log time, or the timer.</div>`;
+  host.querySelectorAll(".jb-te").forEach(r=>r.onclick=()=>{const e=state.efforts.find(x=>x.id===r.dataset.id);if(e)efEdit(e);});}
+
+/* closing: what did you report back, and when */
+function openJobClose(j,status){const root=document.getElementById("modalRoot"),done=status!=="dropped";
+  root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:500px"><h2>${done?"✓ Done — what did you report back?":"Drop this task?"}</h2>
+    <p class="faint" style="font-size:12px;margin-top:-8px">${esc(j.title)}${j.askedBy?` · asked by ${esc(j.askedBy)}`:""}${j.due?` · expected by <b>${j.due}</b>`:""}</p>
+    <div class="field"><label>${done?"The answer / what you sent":"Why (optional)"}</label><textarea id="jc-out" rows="4" placeholder="${done?"e.g. Confirmed with Basis: the job runs in client 150 only; told my manager on Thursday":"e.g. No longer needed — handled by another team"}">${esc(j.outcome)}</textarea></div>
+    <div class="field"><label>${done?"Reported on":"Dropped on"}</label><input type="date" id="jc-date" value="${todayStr()}" style="width:170px"> <span id="jc-tm" class="faint" style="font-size:12px;margin-left:8px"></span></div>
+    <div class="modal-foot"><button id="jc-cancel" class="ghost">Cancel</button><button id="jc-ok" class="primary">${done?"✓ Mark done":"Drop it"}</button></div></div></div>`;
+  const q=s=>root.querySelector(s),close=()=>root.innerHTML="";
+  const tmTxt=()=>{const el=q("#jc-tm");if(!done||!j.due){el.textContent="";return;}const x=jobTiming({...j,status:"done",closedOn:q("#jc-date").value});el.textContent=x?x.txt:"";el.style.color=x?`var(--${x.ok?"green":"red"})`:"";};
+  q("#jc-date").onchange=tmTxt;tmTxt();
+  q("#jc-cancel").onclick=close;q(".modal-bg").onclick=e=>{if(e.target===q(".modal-bg"))close();};
+  q("#jc-ok").onclick=()=>{const out=q("#jc-out").value.trim(),d=q("#jc-date").value||todayStr();
+    j.status=status;j.outcome=out;j.closedOn=d;j.nextAction={date:"",note:""};j.waiting={on:"",since:""};
+    if(done)jobLog(j,"sent",out?`Reported back: ${out}`:"Reported back",d);else jobLog(j,"note",out?`Dropped: ${out}`:"Dropped",d);
+    close();renderApp();const tm=jobTiming(j);toast(done?`Done${tm?" — "+tm.txt:""}`:"Dropped");};
+  setTimeout(()=>{const o=q("#jc-out");if(o)o.focus();},40);}
 
 /* ===================== DEMANDS ===================== */
 /* ===================== DEMAND LIST VIEW =====================
@@ -3554,17 +3757,18 @@ function drawMeetingChips(m){drawLinkChips(document.getElementById("mt-chips"),m
    else the Meetings bucket — so the hours are written once. Editing the meeting moves the entry;
    editing or deleting the entry in Effort updates the meeting. */
 function meetingLogOpts(m){return [...(m.taskIds||[]).filter(id=>efTaskOf(id)).map(id=>({k:id,l:demandLabel(efTaskOf(id))})),
-  ...(m.epicIds||[]).filter(id=>epicById(id)).map(id=>({k:"e:"+id,l:"◆ "+epicLabel(epicById(id))})),{k:"b:mtg",l:"Meetings (no demand)"}];}
+  ...(m.epicIds||[]).filter(id=>epicById(id)).map(id=>({k:"e:"+id,l:"◆ "+epicLabel(epicById(id))})),
+  ...(state.jobs||[]).filter(j=>j.meetingId===m.id).map(j=>({k:"j:"+j.id,l:"☐ "+j.title})),{k:"b:mtg",l:"Meetings (no demand)"}];}
 function meetingEffortKey(m){const ks=meetingLogOpts(m).map(o=>o.k);return ks.includes(m.logTo)?m.logTo:ks[0];}
 function meetingEffortRemove(id){let n=0;for(let i=state.efforts.length-1;i>=0;i--)if(state.efforts[i].meetingId===id){state.efforts.splice(i,1);n++;}if(n)markDirty();return n;}
 /* soft: only create a missing entry (when a planned meeting's day arrives) — never overwrite one */
 function meetingEffortSync(m,soft){const cur=state.efforts.filter(e=>e.meetingId===m.id);
   if(!(m.hours>0)||m.date>todayStr()){if(!soft)meetingEffortRemove(m.id);return;}
   if(soft&&cur.length)return;
-  const k=meetingEffortKey(m),want={date:m.date,hours:m.hours,taskId:"",epicId:"",bucket:"",note:"Meeting — "+m.title,meetingId:m.id};
-  if(k.startsWith("b:"))want.bucket=k.slice(2);else if(k.startsWith("e:"))want.epicId=k.slice(2);else want.taskId=k;
+  const k=meetingEffortKey(m),want={date:m.date,hours:m.hours,taskId:"",epicId:"",jobId:"",bucket:"",note:"Meeting — "+m.title,meetingId:m.id};
+  if(k.startsWith("b:"))want.bucket=k.slice(2);else if(k.startsWith("e:"))want.epicId=k.slice(2);else if(k.startsWith("j:"))want.jobId=k.slice(2);else want.taskId=k;
   const e=cur[0];
-  if(e&&["date","hours","taskId","epicId","bucket","note"].every(f=>e[f]===want[f]))return;
+  if(e&&["date","hours","taskId","epicId","jobId","bucket","note"].every(f=>e[f]===want[f]))return;
   if(e)Object.assign(e,want,{subtaskId:""});else state.efforts.push(normEffort({...want,activity:"Meetings & admin"}));
   cur.slice(1).forEach(x=>state.efforts.splice(state.efforts.indexOf(x),1));
   markDirty();efTimerUI();}
@@ -3928,11 +4132,13 @@ function renderTodos(host){
       row.innerHTML=`<span class="chk ${x.done?"done":""}">${x.done?"✓":""}</span>
         <span class="at">${esc(x.text)||"<span class='faint'>(click to write)</span>"}</span>
         <input type="date" class="du ${dc}" value="${x.due||""}" title="Due" style="flex:0 0 140px">
-        <span class="nact"><button class="ghost sm td-res" title="Outcome / resolution note">📝</button><button class="ghost sm danger td-del">🗑</button></span>
+        <span class="nact">${x.done?"":`<button class="ghost sm td-job" title="More than a one-liner? Make it a task — with a log, next actions, reference facts and hours">↗ Task</button>`}<button class="ghost sm td-res" title="Outcome / resolution note">📝</button><button class="ghost sm danger td-del">🗑</button></span>
         ${x.resolution?`<span class="ares" title="Outcome — click to edit">↳ ${esc(x.resolution)}</span>`:""}`;
       row.querySelector(".chk").onclick=()=>{x.done=!x.done;x.doneAt=x.done?Date.now():null;markDirty();renderTodos(host);renderJournalSidebar();};
       const at=row.querySelector(".at");at.onclick=()=>editInline(at,x.text,v=>{x.text=v;markDirty();renderTodos(host);});
       row.querySelector(".du").onchange=e=>{x.due=e.target.value;markDirty();renderTodos(host);};
+      {const jb=row.querySelector(".td-job");if(jb)jb.onclick=()=>{x.done=true;x.doneAt=Date.now();x.resolution=x.resolution||"→ moved to Tasks";
+        newJob({title:x.text,due:x.due||"",source:"self",received:isoTs(x.createdAt||Date.now())});toast("Moved to Tasks — the to-do is ticked off");};}
       row.querySelector(".td-del").onclick=()=>{state.todos=state.todos.filter(y=>y.id!==x.id);markDirty();renderTodos(host);renderJournalSidebar();};
       const editRes=()=>{let ar=row.querySelector(".ares");if(!ar){ar=document.createElement("span");ar.className="ares";row.appendChild(ar);}
         editInline(ar,x.resolution||"",v=>{x.resolution=v;markDirty();renderTodos(host);});};
@@ -4858,7 +5064,7 @@ function openNextAction(t,done){
     <div class="chiprow">${quick.map(([l,d])=>`<button class="sm na-q" data-d="${d}" title="${d}">${l}</button>`).join("")}</div>
     <div class="modal-foot">${done?`<button id="na-just" class="ghost" style="margin-right:auto" title="Tick it off without a next step">Just done</button>`:n.date?`<button id="na-clear" class="ghost" style="margin-right:auto">Clear</button>`:""}<button id="na-cancel" class="ghost">Cancel</button><button id="na-save" class="primary">${done?"Set next step":"Set"}</button></div></div></div>`;
   const close=()=>root.innerHTML="";
-  const tick=()=>{if(done)logTimeline(t,"note","","",`Next action done${done.note?": "+done.note:""}`);};
+  const tick=()=>{if(!done)return;if(isJob(t))jobLog(t,"step",done.note||"(step)");else logTimeline(t,"note","","",`Next action done${done.note?": "+done.note:""}`);};
   root.querySelectorAll(".na-q").forEach(b=>b.onclick=()=>{root.querySelector("#na-date").value=b.dataset.d;});
   root.querySelector("#na-cancel").onclick=close;
   root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
@@ -5309,6 +5515,7 @@ function syncRail(){const r=document.getElementById("rail");if(!r)return;
   const set=(id,n)=>{const el=document.getElementById(id);if(el)el.textContent=n?String(n):"";};
   set("rcDemands",state.tasks.filter(t=>["open","progress","bug"].includes(t.status)).length);
   set("rcJournal",state.todos.filter(x=>!x.done).length);
+  set("rcJobs",state.jobs.filter(jobOpen).length);
   set("rcMeetings",state.meetings.reduce((n,m)=>n+meetingOpenActions(m),0));}
 /* status bar: which file, whether it's saved, and when auto-save will write */
 function updateSb(){if(!benchOn())return;const f=document.getElementById("sbFile"),a=document.getElementById("sbAuto"),c=document.getElementById("sbCount"),r=document.getElementById("sbRight");if(!f)return;
@@ -5924,18 +6131,19 @@ const EF_ACTC=Object.fromEntries(EF_ACTS),EF_ORD=EF_ACTS.map(a=>a[0]),EF_DEMAND_
 const EF_BUCKETS={mtg:{l:"Meetings",act:"Meetings & admin"},adm:{l:"Admin & email",act:"Meetings & admin"},sup:{l:"Support & small asks",act:"Support"},lrn:{l:"Learning",act:"Learning"}};
 const EF_PAL=["pen-2","pen-3","pen-4","pen-5","pen-6","pen-7","pen-8"];
 let EF_DAY=8;   /* your working day in hours — settings.dayHours, applied on every render */
-function normEffort(x){const task=!x.bucket&&!x.epicId&&x.taskId?String(x.taskId):"",epic=!task&&!x.bucket&&x.epicId?String(x.epicId):"",bucket=task||epic?"":(EF_BUCKETS[x.bucket]?x.bucket:"sup");
-  return{id:x.id||uid(),date:/^\d{4}-\d\d-\d\d$/.test(x.date||"")?x.date:todayStr(),hours:Math.max(0,Math.round((+x.hours||0)*4)/4),taskId:task,epicId:epic,bucket,
-    activity:EF_ACTC[x.activity]?x.activity:(bucket?EF_BUCKETS[bucket].act:epic?"Meetings & admin":"Build"),note:String(x.note||""),subtaskId:task?(x.subtaskId||""):"",meetingId:String(x.meetingId||""),createdAt:x.createdAt||Date.now()};}
-const efKey=e=>e.taskId||(e.epicId?"e:"+e.epicId:"b:"+e.bucket);
-const efTaskOf=k=>k&&!String(k).startsWith("b:")&&!String(k).startsWith("e:")?state.tasks.find(t=>t.id===k)||null:null;
+function normEffort(x){const task=!x.bucket&&!x.epicId&&x.taskId?String(x.taskId):"",epic=!task&&!x.bucket&&x.epicId?String(x.epicId):"",job=!task&&!epic&&!x.bucket&&x.jobId?String(x.jobId):"",bucket=task||epic||job?"":(EF_BUCKETS[x.bucket]?x.bucket:"sup");
+  return{id:x.id||uid(),date:/^\d{4}-\d\d-\d\d$/.test(x.date||"")?x.date:todayStr(),hours:Math.max(0,Math.round((+x.hours||0)*4)/4),taskId:task,epicId:epic,jobId:job,bucket,
+    activity:EF_ACTC[x.activity]?x.activity:(bucket?EF_BUCKETS[bucket].act:epic?"Meetings & admin":job?"Analysis":"Build"),note:String(x.note||""),subtaskId:task?(x.subtaskId||""):"",meetingId:String(x.meetingId||""),createdAt:x.createdAt||Date.now()};}
+const efKey=e=>e.taskId||(e.epicId?"e:"+e.epicId:e.jobId?"j:"+e.jobId:"b:"+e.bucket);
+const efTaskOf=k=>k&&!/^[bej]:/.test(String(k))?state.tasks.find(t=>t.id===k)||null:null;
 function efName(k){if(String(k).startsWith("b:"))return (EF_BUCKETS[k.slice(2)]||{l:"Other"}).l;
   if(String(k).startsWith("e:")){const ep=epicById(k.slice(2));return ep?"◆ "+(ep.code||ep.name)+" (epic)":"(deleted epic)";}
+  if(String(k).startsWith("j:")){const j=jobById(k.slice(2));return j?"☐ "+j.title:"(deleted task)";}
   const t=efTaskOf(k);return t?(demandLabel(t)):"(deleted demand)";}
-const efKeyValid=k=>!!k&&(String(k).startsWith("b:")?!!EF_BUCKETS[k.slice(2)]:String(k).startsWith("e:")?!!epicById(k.slice(2)):!!efTaskOf(k));
+const efKeyValid=k=>!!k&&(String(k).startsWith("b:")?!!EF_BUCKETS[k.slice(2)]:String(k).startsWith("e:")?!!epicById(k.slice(2)):String(k).startsWith("j:")?!!jobById(k.slice(2)):!!efTaskOf(k));
 const efHash=s=>{let h=7;for(const c of String(s))h=(h*31+c.charCodeAt(0))|0;return h>>>0;};
 /* colours go round the palette in the order demands arrived, so demands open at the same time never share one */
-function efPen(k){if(String(k).startsWith("b:"))return "ink-3";if(String(k).startsWith("e:"))return efEpicPen(k.slice(2));const c=efPen;
+function efPen(k){if(String(k).startsWith("b:"))return "ink-3";if(String(k).startsWith("e:"))return efEpicPen(k.slice(2));if(String(k).startsWith("j:"))return EF_PAL[efHash(k)%EF_PAL.length];const c=efPen;
   if(c.arr!==state.tasks||c.n!==state.tasks.length){c.arr=state.tasks;c.n=state.tasks.length;c.m=new Map();
     state.tasks.slice().sort((x,y)=>(x.receivedDate||isoTs(x.createdAt)).localeCompare(y.receivedDate||isoTs(y.createdAt))).forEach((t,i)=>c.m.set(t.id,EF_PAL[i%EF_PAL.length]));}
   return c.m.get(k)||EF_PAL[efHash(k)%EF_PAL.length];}
@@ -6054,12 +6262,13 @@ function efToastUndo(msg,fn){toast(msg);const t=document.getElementById("toast")
 
 /* ---------- the composer: inline on a demand's Effort tab and in the ⏱ dialog ---------- */
 function efGuessAct(key,date){if(String(key).startsWith("b:"))return (EF_BUCKETS[key.slice(2)]||EF_BUCKETS.sup).act;
+  if(String(key).startsWith("j:")){const l=state.efforts.filter(e=>e.jobId===key.slice(2)).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt)[0];return l?l.activity:"Analysis";}
   if(String(key).startsWith("e:")){const l=state.efforts.filter(e=>e.epicId===key.slice(2)).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt)[0];return l?l.activity:"Meetings & admin";}const t=efTaskOf(key);if(t&&efStatusOn(t,date)==="bug")return "Debug / fix";
   const l=state.efforts.filter(e=>e.taskId===key).sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt)[0];return l?l.activity:"Analysis";}
-const efActList=k=>String(k).startsWith("b:")?EF_ORD.slice(6):String(k).startsWith("e:")?["Meetings & admin",...EF_DEMAND_ACTS]:EF_DEMAND_ACTS;
+const efActList=k=>String(k).startsWith("j:")?EF_ORD:String(k).startsWith("b:")?EF_ORD.slice(6):String(k).startsWith("e:")?["Meetings & admin",...EF_DEMAND_ACTS]:EF_DEMAND_ACTS;
 function efTaskOptions(sel){const o=t=>`<option value="${t.id}" ${t.id===sel?"selected":""}>${esc(t.demandId?t.demandId+" — "+t.title:t.title)}</option>`;
   const live=state.tasks.filter(t=>t.status!=="closed"),old=state.tasks.filter(t=>t.status==="closed");
-  return `${live.length?`<optgroup label="Demands">${live.map(o).join("")}</optgroup>`:""}${(()=>{const eps=state.epics.filter(e=>e.status!=="closed"||"e:"+e.id===sel);return eps.length?`<optgroup label="Epics — epic-level work (calls, planning)">${eps.map(e=>`<option value="e:${e.id}" ${"e:"+e.id===sel?"selected":""}>◆ ${esc(e.code?e.code+" — "+e.name:e.name)}</option>`).join("")}</optgroup>`:"";})()}<optgroup label="Not a demand">${Object.entries(EF_BUCKETS).map(([k,v])=>`<option value="b:${k}" ${"b:"+k===sel?"selected":""}>${v.l}</option>`).join("")}</optgroup>${old.length?`<optgroup label="Closed demands">${old.map(o).join("")}</optgroup>`:""}`;}
+  return `${live.length?`<optgroup label="Demands">${live.map(o).join("")}</optgroup>`:""}${(()=>{const eps=state.epics.filter(e=>e.status!=="closed"||"e:"+e.id===sel);return eps.length?`<optgroup label="Epics — epic-level work (calls, planning)">${eps.map(e=>`<option value="e:${e.id}" ${"e:"+e.id===sel?"selected":""}>◆ ${esc(e.code?e.code+" — "+e.name:e.name)}</option>`).join("")}</optgroup>`:"";})()}${(()=>{const js=state.jobs.filter(j=>jobOpen(j)||"j:"+j.id===sel);return js.length?`<optgroup label="Tasks — not demands">${js.map(j=>`<option value="j:${j.id}" ${"j:"+j.id===sel?"selected":""}>☐ ${esc(j.title)}</option>`).join("")}</optgroup>`:"";})()}<optgroup label="Not a demand">${Object.entries(EF_BUCKETS).map(([k,v])=>`<option value="b:${k}" ${"b:"+k===sel?"selected":""}>${v.l}</option>`).join("")}</optgroup>${old.length?`<optgroup label="Closed demands">${old.map(o).join("")}</optgroup>`:""}`;}
 function efLastKey(){const k=viewPref("ef.last","");if(efKeyValid(k))return k;const t=state.tasks.find(x=>["open","progress","bug"].includes(x.status));return t?t.id:"b:mtg";}
 function efMountComposer(host,o,done){
   const st={key:o.key,date:o.date||todayStr(),hs:o.hours!=null?String(o.hours):"",act:o.act||efGuessAct(o.key,o.date||todayStr()),note:o.note||"",sub:o.sub||""};
@@ -6072,7 +6281,7 @@ function efMountComposer(host,o,done){
         <div><span class="ef-lb">Hours</span><div class="ef-row">${[.5,1,1.5,2,3,4].map(v=>`<button class="ef-chip mono" data-h="${v}">${v}</button>`).join("")}<input class="ef-hin mono" data-f="hours" placeholder="2h30" value="${esc(st.hs)}" autocomplete="off"></div></div>
       </div>
       <div><span class="ef-lb">Activity</span><div class="ef-row">${efActList(st.key).map(a=>`<button class="ef-chip" data-a="${esc(a)}" style="--pen:var(--${EF_ACTC[a]})"><span class="ef-pd"></span>${esc(a)}</button>`).join("")}</div></div>
-      <div><span class="ef-lb">What I did</span><textarea class="ef-note" data-f="note" rows="2" placeholder="${t?"e.g. Built the cost-center range into the data fetch; unit-tested with CC 4711":String(st.key).startsWith("e:")?"e.g. Alignment call with the integration team about wave 2":"e.g. Stand-up, then the governance call"}">${esc(st.note)}</textarea></div>
+      <div><span class="ef-lb">What I did</span><textarea class="ef-note" data-f="note" rows="2" placeholder="${t?"e.g. Built the cost-center range into the data fetch; unit-tested with CC 4711":String(st.key).startsWith("j:")?"e.g. Call with Basis, then checked the job logs":String(st.key).startsWith("e:")?"e.g. Alignment call with the integration team about wave 2":"e.g. Stand-up, then the governance call"}">${esc(st.note)}</textarea></div>
       ${subs.length?`<div><span class="ef-lb">Against a subtask (optional)</span><select data-f="sub" style="max-width:420px"><option value="">—</option>${subs.map(s=>`<option value="${s.id}" ${s.id===st.sub?"selected":""}>${"   ".repeat(s.d)}${esc(s.title)}</option>`).join("")}</select></div>`:""}
       <div class="ef-foot"><div class="ef-dsf" data-f="dsf"></div><button class="ghost sm" data-f="off" title="Not working that day? Mark it as a holiday or leave">🏖 Day off…</button>${o.modal?`<button class="ghost" data-f="cancel">Cancel</button>`:`<button class="sm" data-f="timer" title="Start a timer on this demand — stop it on ⏱ in the title bar and the hours are filled in">▶ Start timer</button>`}<button class="primary" data-f="log">Log</button></div></div>`;
     wire();sync();};
@@ -6092,10 +6301,11 @@ function efMountComposer(host,o,done){
     const go=()=>{const h=Math.round(efParseH(st.hs)*4)/4;
       if(!h||isNaN(h)||h>24){const hi=q('[data-f="hours"]');hi.classList.remove("ef-shake");void hi.offsetWidth;hi.classList.add("ef-shake");hi.focus();toast("How many hours? e.g. 2 · 1.5 · 2h30 · 90m",true);return;}
       if(st.date>todayStr()){toast("That day hasn't happened yet",true);return;}
-      const isB=st.key.startsWith("b:"),isE=st.key.startsWith("e:"),prev=o.editId?state.efforts.find(x=>x.id===o.editId):null;
-      const e=normEffort({id:o.editId||uid(),date:st.date,hours:h,taskId:isB||isE?"":st.key,epicId:isE?st.key.slice(2):"",bucket:isB?st.key.slice(2):"",activity:st.act,note:st.note.trim(),subtaskId:isB||isE?"":st.sub,meetingId:prev?prev.meetingId:"",createdAt:prev?prev.createdAt:Date.now()});
+      const isB=st.key.startsWith("b:"),isE=st.key.startsWith("e:"),isJ=st.key.startsWith("j:"),prev=o.editId?state.efforts.find(x=>x.id===o.editId):null;
+      const e=normEffort({id:o.editId||uid(),date:st.date,hours:h,taskId:isB||isE||isJ?"":st.key,epicId:isE?st.key.slice(2):"",jobId:isJ?st.key.slice(2):"",bucket:isB?st.key.slice(2):"",activity:st.act,note:st.note.trim(),subtaskId:isB||isE||isJ?"":st.sub,meetingId:prev?prev.meetingId:"",createdAt:prev?prev.createdAt:Date.now()});
       {const mt=e.meetingId&&state.meetings.find(x=>x.id===e.meetingId);if(mt){mt.hours=e.hours;mt.date=e.date;mt.logTo=efKey(e);mt.updatedAt=Date.now();}}
       if(isE){const ep=epicById(e.epicId);if(ep)ep.updatedAt=Date.now();}
+      if(isJ){const jb=jobById(e.jobId);if(jb){jb.updatedAt=Date.now();if(jb.status==="open")jb.status="progress";}}
       if(prev)state.efforts[state.efforts.indexOf(prev)]=e;else state.efforts.push(e);
       const t=efTaskOf(e.taskId);if(t)t.updatedAt=Date.now();
       markDirty();done(e);};
@@ -6114,7 +6324,7 @@ function efMountComposer(host,o,done){
   draw();}
 let efFlashId=null;
 function openLogTime(o={}){const root=document.getElementById("modalRoot");
-  let key=o.key;if(!efKeyValid(key))key=view==="demands"&&activeTask()?activeId:view==="epics"&&activeEpic()?"e:"+activeEpicId:efLastKey();
+  let key=o.key;if(!efKeyValid(key))key=view==="demands"&&activeTask()?activeId:view==="epics"&&activeEpic()?"e:"+activeEpicId:view==="jobs"&&activeJob()?"j:"+activeJobId:efLastKey();
   root.innerHTML=`<div class="modal-bg"><div class="modal efx ef-modal"><h2>${o.editId?"✎ Edit time entry":"⏱ Log time"}</h2><div id="efMq"></div></div></div>`;
   const bg=root.querySelector(".modal-bg"),close=()=>{root.innerHTML="";};
   bg.onclick=e=>{if(e.target===bg)close();};
@@ -6239,10 +6449,12 @@ let efFocus=null,efWk=0,EFA=null;
 const efRg=()=>EF_RNG[viewPref("ef.range","q")]?viewPref("ef.range","q"):"q",efG=()=>EF_GROUPS[viewPref("ef.group","demand")]?viewPref("ef.group","demand"):"demand";
 const efOffD=o=>efAdd(todayStr(),o),efMonOff=o=>o-((efDow(efOffD(o))+6)%7);
 function efGKey(e){const g=efG();if(g==="activity")return e.activity;
+  if(e.jobId)return g==="demand"?"j:"+e.jobId:"_non";
   if(e.epicId)return g==="demand"?"e:"+e.epicId:g==="epic"?(epicById(e.epicId)?e.epicId:"_noe"):"_ep";
   if(!e.taskId)return "_non";const t=efTaskOf(e.taskId);
   if(g==="demand")return e.taskId;if(g==="epic")return t&&t.epicId&&epicById(t.epicId)?t.epicId:"_noe";return t&&t.theme?t.theme:"_nt";}
 function efGMeta(k){const g=efG();if(k==="_non")return {l:"Not demand work",col:"ink-3"};if(k==="_ep")return {l:"◆ Epic-level work",col:"pen-5"};
+  if(String(k).startsWith("j:")){const j=jobById(k.slice(2));return {l:j?"☐ "+j.title:"(deleted task)",sub:j?"task"+(j.askedBy?" · for "+j.askedBy:""):"",col:efPen(k)};}
   if(String(k).startsWith("e:")){const ep=epicById(k.slice(2));return {l:"◆ "+(ep?(ep.code||ep.name):"(deleted epic)"),sub:"epic-level work"+(ep&&ep.code?" · "+ep.name:""),col:efPen(k)};}
   if(g==="demand"){const t=efTaskOf(k);return t?{l:demandLabel(t),sub:t.demandId?t.title:"",col:efPen(k)}:{l:"(deleted demand)",col:"ink-4"};}
   if(g==="epic"){if(k==="_noe")return {l:"No epic",col:"pen-4"};const e=epicById(k);return {l:"◆ "+(e?(e.code||e.name):"epic"),sub:e&&e.code?e.name:"",col:efEpicPen(k)};}
@@ -6448,7 +6660,7 @@ function efCSV(){if(!state.efforts.length){toast("Nothing logged yet",true);retu
   const rows=[["Date","Weekday","Epic","Demand ID","Demand title","Bucket","Activity","Hours","Subtask","What I did"]];
   state.efforts.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.createdAt-b.createdAt).forEach(e=>{const t=efTaskOf(e.taskId);
     const ep=e.epicId?epicById(e.epicId):t&&t.epicId?epicById(t.epicId):null;
-    rows.push([e.date,efFmt(e.date,{weekday:"short"}),ep?(ep.code||ep.name):(e.epicId?"(deleted epic)":""),t?t.demandId:"",t?t.title:(e.taskId?"(deleted demand)":e.epicId?"(epic-level work)":""),e.taskId||e.epicId?"":EF_BUCKETS[e.bucket].l,e.activity,e.hours,efSubTitle(t,e.subtaskId),e.note]);});
+    rows.push([e.date,efFmt(e.date,{weekday:"short"}),ep?(ep.code||ep.name):(e.epicId?"(deleted epic)":""),t?t.demandId:"",t?t.title:e.jobId?(jobById(e.jobId)||{title:"(deleted task)"}).title:(e.taskId?"(deleted demand)":e.epicId?"(epic-level work)":""),e.taskId||e.epicId?"":e.jobId?"Task":EF_BUCKETS[e.bucket].l,e.activity,e.hours,efSubTitle(t,e.subtaskId),e.note]);});
   const csv="﻿"+rows.map(r=>r.map(csvCell).join(",")).join("\r\n");
   const b=new Blob([csv],{type:"text/csv;charset=utf-8"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="effort-"+todayStr()+".csv";a.click();URL.revokeObjectURL(a.href);
   toast("Exported "+(rows.length-1)+" time entries (CSV)");}
@@ -6503,6 +6715,7 @@ function rvStats(from,to){const end=to>todayStr()?todayStr():to,inP=d=>d&&d>=fro
     reqs:[...new Set(del.map(x=>x.t.requestor).filter(Boolean))],themes:[...new Set(del.map(x=>x.t.theme).filter(Boolean))],
     objects:[...new Set(del.flatMap(x=>x.t.objects.map(o=>o.name)).filter(Boolean))],meetings:state.meetings.filter(m=>inP(m.date)),learn,
     lessons:state.tasks.flatMap(t=>(t.lessons||[]).filter(l=>inP(l.date)).map(l=>({t,l}))),
+    jobs:state.jobs.filter(j=>j.status==="done"&&inP(j.closedOn)).sort((a,b)=>a.closedOn.localeCompare(b.closedOn)),
     changes:state.tasks.flatMap(t=>changeEvents(t).filter(e=>inP(isoTs(e.ts))).map(e=>({t,e}))),chH:efSum(ef.filter(e=>{const t=rvTask(e.taskId);return t&&roundOn(t,e.date)>1;})),
     topics:[...new Set(learn.map(e=>e.note.trim()).filter(Boolean))].slice(0,4)};}
 function rvPrev(from,to){const n=Math.round((new Date(to+"T00:00:00")-new Date(from+"T00:00:00"))/864e5),pto=efAdd(from,-1);return rvStats(efAdd(pto,-n),pto);}
@@ -6539,6 +6752,7 @@ function rvDoc(P,S,R,note){const H=[],M=[],md=x=>String(x??"").replace(/\|/g,"\\
   if(S.reqs.length)add(`Work for <b>${S.reqs.length}</b> requestor${S.reqs.length===1?"":"s"}: ${esc(S.reqs.join(", "))}`);
   if(S.objects.length)add(`<b>${S.objects.length}</b> object${S.objects.length===1?"":"s"} created or changed in delivered demands`);
   if(S.learn.length)add(`<b>${efFh(Math.round(efSum(S.learn)))} h</b> learning${S.topics.length?` — ${esc(rvList(S.topics))}`:""}`);
+  if(S.jobs.length){const wd=S.jobs.filter(j=>j.due),ok=wd.filter(j=>jobTiming(j).ok).length;add(`<b>${S.jobs.length}</b> other task${S.jobs.length===1?"":"s"} handled outside demands${wd.length?` — ${ok} of ${wd.length} answered by the date expected`:""}`);}
   if(S.meetings.length)add(`<b>${S.meetings.length}</b> meeting${S.meetings.length===1?"":"s"} noted`);
   if(S.wins.length)add(`<b>${S.wins.length}</b> win${S.wins.length===1?"":"s"} noted`);
   if(S.lessons.length)add(`<b>${S.lessons.length}</b> lesson${S.lessons.length===1?"":"s"} written down`);
@@ -6557,9 +6771,11 @@ function rvDoc(P,S,R,note){const H=[],M=[],md=x=>String(x??"").replace(/\|/g,"\\
   table("Delivered",["Demand","Title","Type","Theme","Requestor","Delivered","Days","Hours","Notes"],S.del.map(({t,d,r,from})=>{
     const lead=from&&from<=d?String(Math.round((new Date(d+"T00:00:00")-new Date(from+"T00:00:00"))/864e5)):"—",h=efSum(efFor(t.id));
     return [t.demandId||"—",t.title+(r>1?` (round ${r})`:""),t.type,t.theme||"—",t.requestor||"—",d,lead,h?efFh(Math.round(h*10)/10):"—",[r>1?"after a requirement change":"",reworkCount(t)?"reworked":"",t.dueDate&&d>t.dueDate&&r===roundCount(t)?"after due date":""].filter(Boolean).join(", ")||"—"];}));
+  table("Other tasks handled",["Task","Asked by","Received","Closed","Expected by","Timing","Hours"],S.jobs.map(j=>{const tm=jobTiming(j),h=jobHours(j);
+    return [j.title,j.askedBy||"—",j.received,j.closedOn,j.due||"—",tm?tm.txt:"—",h?efFh(Math.round(h*10)/10):"—"];}));
   if(S.hours){const by=(f)=>{const m=new Map();S.ef.forEach(e=>{const k=f(e);if(k)m.set(k,(m.get(k)||0)+e.hours);});return [...m.entries()].sort((a,b)=>b[1]-a[1]);};
     const fmt=a=>a.map(([k,h])=>({h:`${esc(k)} — ${efFh(Math.round(h))} h (${efPct(h,S.hours)}%)`,m:`${k} — ${efFh(Math.round(h))} h (${efPct(h,S.hours)}%)`}));
-    list("Where the time went — by theme",fmt(by(e=>{const t=rvTask(e.taskId);return e.taskId?(t&&t.theme)||"No theme":e.epicId?"◆ Epic-level work":"Not demand work";})));
+    list("Where the time went — by theme",fmt(by(e=>{const t=rvTask(e.taskId);return e.taskId?(t&&t.theme)||"No theme":e.epicId?"◆ Epic-level work":e.jobId?"Other tasks":"Not demand work";})));
     list("Where the time went — by activity",fmt(by(e=>e.activity)));}
   if(!S.del.length&&!S.hours&&!S.wins.length){H.push(`<p><i>Nothing delivered, logged or noted in this period yet.</i></p>`);M.push(`_Nothing delivered, logged or noted in this period yet._`);}
   return {html:H.join(""),md:M.join("\n")};}
@@ -6579,7 +6795,8 @@ function renderReview(){const host=document.getElementById("detail");efHideTip()
       {k:"Rework",v:S.rwPct==null?"—":`${S.rwPct}<small>%</small>${delta(S.rwPct,R.rwPct,"%",true)}`,cls:S.rwPct?"":""},
       {k:"On time",v:S.onTimePct==null?"—":U(S.onTimePct,"% of "+S.withDue)},
       {k:"Request → delivery",v:S.avgLead==null?"—":`${S.avgLead}<small>days</small>${delta(S.avgLead,R.avgLead," d",true)}`},
-      {k:"Wins",v:U(S.wins.length,"noted")}])}
+      {k:"Wins",v:U(S.wins.length,"noted")},
+      {k:"Other tasks",v:U(S.jobs.length,"handled")}])}
     <div class="ck-unit"><div class="ck-head"><h2>My summary</h2><span class="ck-meta">saved with this period · opens the document</span></div>
       <textarea id="rvNote" rows="4" placeholder="In your own words — what this year was about, what you're proud of, what you'd like next. Or start from a draft written from your data.">${esc(note)}</textarea>
       <div class="ef-foot" style="margin-top:8px"><span class="faint" style="font-size:11px">The draft only uses what's in this file. Make it yours before you send it.</span><button class="sm" id="rvDraft">✍ Draft one from my data</button></div></div>
@@ -6871,6 +7088,7 @@ function searchAll(q){const terms=searchTerms(q);if(!terms.length)return [];cons
     (function w(a){a.forEach(s=>{add("Subtask",s.title||"(subtask)",[s.title,(s.comments||[]).map(c=>c.text).join(" · ")],s.dueDate||s.receivedDate||td(t),go("work"),dl);w(s.children||[]);});})(t.subtasks);
     (t.reference||[]).forEach(r=>add("Reference",`${r.label||"(reference)"}${r.secret?" 🔒":""}`,[r.label,r.secret?"":r.value],td(t),go("reference"),dl));
     (t.lessons||[]).forEach(l=>add("Lesson",`💡 ${l.text.split("\n")[0].slice(0,90)}`,[l.text],l.date,go("overview"),dl));});
+  (state.jobs||[]).forEach(j=>add("Task",`☐ ${j.title}`,[j.title,j.askedBy,j.brief,j.outcome,j.waiting.on,j.nextAction.note,...j.log.map(x=>x.text),...j.refs.map(r=>r.label+(r.secret?"":" "+r.value))],j.received,()=>{view="jobs";activeJobId=j.id;},`${JOB_STATUS[j.status].l}${j.askedBy?" · "+j.askedBy:""}`));
   (state.people||[]).forEach(p=>{const ds=demandsOf(p.id);add("Team",`👷 ${p.name}`,[p.name,p.role],"",()=>{view="playbook";playTeam=true;activePlayId=null;},`${ds.length} demand${ds.length===1?"":"s"}${p.role?" · "+p.role:""}`);});
   state.meetings.forEach(m=>{const go=()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;};
     add("Meeting",m.title,[m.title,m.team,m.attendees,m.body],m.date,go,m.team);
@@ -6903,7 +7121,7 @@ function searchSnippets(text,terms,width=80,max=2){const t=String(text||""),low=
   const wins=[];pos.forEach(p=>{const a=Math.max(0,p-width),b=Math.min(t.length,p+width),l=wins[wins.length-1];if(l&&a<=l[1])l[1]=Math.max(l[1],b);else if(wins.length<max)wins.push([a,b]);});
   if(!wins.length)wins.push([0,Math.min(t.length,width*2)]);
   return wins.map(([a,b])=>(a>0?"…":"")+srMark(esc(t.slice(a,b).replace(/\s+/g," ")),terms)+(b<t.length?"…":"")).join(` <span class="faint">·</span> `);}
-const SR_PEN={Demand:"pen-2",Object:"pen-4",Transport:"pen-3",ToC:"pen-5",Subtask:"ink-2",Reference:"ink-2",Meeting:"pen-4",Action:"pen-4",Vault:"ink-3",Journal:"pen-3","To-do":"pen-3",Win:"pen-4",Effort:"pen-2",Epic:"pen-5","Epic story":"pen-5","Waiting on":"pen-4",Playbook:"pen-6",Image:"ink-3",Debug:"pen-1",Note:"pen-7",Lesson:"pen-4"};
+const SR_PEN={Task:"pen-7",Demand:"pen-2",Object:"pen-4",Transport:"pen-3",ToC:"pen-5",Subtask:"ink-2",Reference:"ink-2",Meeting:"pen-4",Action:"pen-4",Vault:"ink-3",Journal:"pen-3","To-do":"pen-3",Win:"pen-4",Effort:"pen-2",Epic:"pen-5","Epic story":"pen-5","Waiting on":"pen-4",Playbook:"pen-6",Image:"ink-3",Debug:"pen-1",Note:"pen-7",Lesson:"pen-4"};
 function openHit(h,terms){const box=document.getElementById("gsearchResults");if(box)box.classList.add("hide");
   if(h.k==="Note"){openNote(h.note,terms);return;}h.go();const gs=document.getElementById("globalSearch");if(gs)gs.value="";renderApp();}
 /* the title-bar box: the best few, then everything on the Search page */
@@ -7014,7 +7232,7 @@ function renderLessons(host,t){if(!host)return;const ls=(t.lessons||[]).slice().
    happened, not what it was called. Built from what's already in the file (and your old notes,
    dated by when the file was last saved). */
 let MON={ym:"",kinds:new Set()};
-const MON_KINDS={demand:{l:"Demands",pen:"pen-2"},transport:{l:"Transports",pen:"pen-3"},meeting:{l:"Meetings",pen:"pen-4"},journal:{l:"Journal",pen:"pen-3"},effort:{l:"Hours",pen:"pen-2"},
+const MON_KINDS={demand:{l:"Demands",pen:"pen-2"},job:{l:"Tasks",pen:"pen-7"},transport:{l:"Transports",pen:"pen-3"},meeting:{l:"Meetings",pen:"pen-4"},journal:{l:"Journal",pen:"pen-3"},effort:{l:"Hours",pen:"pen-2"},
   win:{l:"Wins & lessons",pen:"pen-4"},epic:{l:"Epics",pen:"pen-5"},debug:{l:"Debug",pen:"pen-1"},note:{l:"Old notes",pen:"pen-7"},off:{l:"Days off",pen:"ink-3"}};
 function monthEvents(){const ev=[],push=(d,k,h,go,x)=>{if(d&&/^\d{4}-\d\d-\d\d/.test(d))ev.push({d:d.slice(0,10),k,h,go,...(x||{})});};
   state.tasks.forEach(t=>{const dl=esc(demandLabel(t)),go=tab=>()=>{view="demands";activeId=t.id;activeTab=tab;renderApp();};
@@ -7027,6 +7245,10 @@ function monthEvents(){const ev=[],push=(d,k,h,go,x)=>{if(d&&/^\d{4}-\d\d-\d\d/.
     (t.lessons||[]).forEach(l=>push(l.date,"win",`💡 Lesson · <b>${dl}</b>: ${esc(l.text.length>180?l.text.slice(0,177)+"…":l.text)}`,go("overview"),{o:6}));
     t.transports.forEach(tr=>tr.syncs.forEach(s=>push(s.date,"transport",`🚚 <b class="mono">${esc(tr.number||"(TR)")}</b> reached ${esc(s.system)} · ${dl}`,go("transports"),{o:3})));
     (t.tocs||[]).forEach(c=>c.syncs.forEach(s=>push(s.date,"transport",`📦 ToC <b class="mono">${esc(c.number||"")}</b> reached ${esc(s.system)} · ${dl}`,go("transports"),{o:3})));});
+  (state.jobs||[]).forEach(j=>{const go=()=>{view="jobs";activeJobId=j.id;renderApp();},tl=esc(j.title);
+    push(j.received,"job",`☐ <b>${tl}</b> came in${j.askedBy?" from "+esc(j.askedBy):""}${j.due?` · expected by ${j.due}`:""}`,go,{o:0});
+    j.log.forEach(x=>push(x.date,"job",`${JOB_LOG[x.kind].i} <b>${tl}</b>: ${esc(x.text.length>160?x.text.slice(0,157)+"…":x.text)}`,go,{o:1}));
+    if(j.closedOn&&j.status==="done"){const tm=jobTiming(j);push(j.closedOn,"job",`☑ <b>${tl}</b> done${tm?" — "+tm.txt:""}`,go,{o:1,del:true});}});
   state.meetings.forEach(m=>push(m.date,"meeting",`👥 <b>${esc(m.title)}</b>${m.team?" · "+esc(m.team):""}${m.actions.length?` · ${m.actions.length} action point${m.actions.length===1?"":"s"}`:""}`,()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;renderApp();},{o:4}));
   state.journal.forEach(j=>push(j.date,"journal",`📓 <b>${esc(j.title||"Journal")}</b>${j.body?" — "+esc(j.body.replace(/\s+/g," ").slice(0,160)):""}`,()=>{view="journal";journalTodos=false;activeJournalId=j.id;renderApp();},{o:5}));
   const byDay=new Map();state.efforts.forEach(e=>{(byDay.get(e.date)||byDay.set(e.date,[]).get(e.date)).push(e);});
@@ -7121,9 +7343,13 @@ function stSample(){const T=todayStr(),D=n=>efAdd(T,n),ts=n=>new Date(D(n)+"T10:
   playbook:[{id:"st-p1",kind:"freeze",title:"Sample freeze",from:D(-1),to:D(5),systems:["H41"]},{kind:"recurring",title:"Sample recurring",due:D(3),recur:"annual"},{kind:"process",title:"Sample process",steps:[{text:"Sample step"}]}],
   credentials:[{system:"H03",label:"Sample login",username:"sample-user",password:"not-a-real-password"}],
   efforts:[{date:D(-1),hours:3,taskId:"st-a",activity:"Build",note:"Sample build"},{date:D(-2),hours:2,taskId:"st-a",activity:"Testing"},{date:D(-2),hours:1.5,epicId:"st-e1",activity:"Meetings & admin"},
-    {date:D(-3),hours:1,bucket:"adm"},{date:D(-25),hours:4,taskId:"st-b",activity:"Build"},{date:D(-3),hours:2,taskId:"st-c",activity:"Analysis"},{date:D(-3),hours:1,taskId:"st-d",activity:"Analysis"}],
+    {date:D(-3),hours:1,bucket:"adm"},{date:D(-25),hours:4,taskId:"st-b",activity:"Build"},{date:D(-3),hours:2,taskId:"st-c",activity:"Analysis"},{date:D(-3),hours:1,taskId:"st-d",activity:"Analysis"},{date:D(-1),hours:2,jobId:"st-job-1",activity:"Analysis",note:"Sample analysis"}],
   daysOff:[{date:"2030-01-07",kind:"holiday",label:"Sample holiday"}],wins:[{date:D(-2),kind:"thanks",text:"Sample win"}],images:[],reviewNotes:{},
-  people:[{id:"st-p-1",name:"Sample Builder",role:"Developer"},{id:"st-p-2",name:"Moved-on Builder",active:false}]};}
+  people:[{id:"st-p-1",name:"Sample Builder",role:"Developer"},{id:"st-p-2",name:"Moved-on Builder",active:false}],
+  jobs:[{id:"st-job-1",title:"Sample check with the Basis team",askedBy:"Sample manager",source:"call",received:D(-4),due:D(1),status:"progress",brief:"Sample brief",
+      log:[{date:D(-3),kind:"call",text:"Sample call"},{date:D(-2),kind:"update",text:"Sample update in"}],nextAction:{date:T,note:"Sample next step"},waiting:{on:"Basis team",since:D(-3)},
+      refs:[{label:"Sample contact",value:"Sample person"},{label:"Sample code",value:"not-a-real-secret",secret:true}],meetingId:"st-m1",taskIds:["st-a"]},
+    {id:"st-job-2",title:"Sample mail nobody owned",askedBy:"Team mailbox",source:"email",received:D(-10),due:D(-5),status:"done",closedOn:D(-6),outcome:"Sample outcome"}]};}
 /* every piece of text in a data object (ids and the one deliberately-cleared link excepted) */
 function stTexts(o,k,out){out=out||[];
   if(typeof o==="string"){if(o.length>=3&&!["id","epicId","ts"].includes(k))out.push(o);}
@@ -7167,7 +7393,7 @@ async function runSelfTest(){
    ok("Rounds: a changed requirement starts round 2",roundCount(b)===2,got(roundCount(b),2));
    ok("Rounds: each round's first delivery counts",roundDeliveries(b).length===2,got(roundDeliveries(b).length,2));
    ok("Hours on a demand add up",efSum(efFor("st-a"))===5,got(efSum(efFor("st-a")),5));
-   {const v=rvStats(D(-30),T).hours;ok("Review: hours in a period add up",v===14.5,got(v,14.5));}
+   {const v=rvStats(D(-30),T).hours;ok("Review: hours in a period add up",v===16.5,got(v,16.5));}
    ok("Transports: the origin is never missing",!trMissing(a,{...tr,dest:["H03","H43"]}).length);
    ok("Transports: a ToC move counts as reached",eq(trMissing(a,tr),["H41"]),got(trMissing(a,tr),["H41"]));
    ok("Go-live check flags the unfinished demand",!!golivePending(a));
@@ -7188,17 +7414,27 @@ async function runSelfTest(){
    ok("Team: the list filters by builder",state.tasks.filter(dvMatches({...dvBlank(),f:{builder:"st-p-1"}})).length===1&&state.tasks.filter(dvMatches({...dvBlank(),only:["delegated"]})).length===1);
    {setBuilders(a,["st-p-1"]);const n1=a.timeline[a.timeline.length-1].note;setBuilders(a,[]);const n2=a.timeline[a.timeline.length-1].note;
     ok("Team: handing a demand on (and back) is noted in History",n1==="Built by Sample Builder"&&/^Back with you/.test(n2),n1+" / "+n2);}
+   {const j1=jobById("st-job-1"),j2=jobById("st-job-2"),e=state.efforts.find(x=>x.jobId==="st-job-1");
+    ok("Tasks: hours log against a task",!!e&&efKey(e)==="j:st-job-1"&&efName("j:st-job-1")==="☐ Sample check with the Basis team"&&jobHours(j1)===2&&efKeyValid("j:st-job-1"));
+    ok("Tasks: answered before the date expected",jobTiming(j2)&&jobTiming(j2).n===1&&jobTiming(j2).ok,JSON.stringify(jobTiming(j2)));
+    ok("Tasks: what needs you shows on Today",jobsNeedingYou().some(x=>x.j===j1)&&!jobsNeedingYou().some(x=>x.j===j2));
+    ok("Tasks: a meeting can log its time against a task asked in it",meetingLogOpts(state.meetings[0]).some(o=>o.k==="j:st-job-1"));
+    ok("Tasks: the review counts tasks handled",rvStats(D(-30),T).jobs.length===1);
+    ok("Tasks: search finds a task by its log",searchAll("sample update in").some(h=>h.k==="Task"));
+    openNextAction(j1,{note:"Sample next step"});const r0=document.getElementById("modalRoot");r0.querySelector("#na-note").value="Sample following step";r0.querySelector("#na-save").click();
+    ok("Tasks: ✓ Done on a next action logs the step and sets the next",j1.log.some(x=>x.kind==="step"&&x.text==="Sample next step")&&j1.nextAction.note==="Sample following step",JSON.stringify(j1.nextAction));
+    const m2=migrate(clone({version:29,tasks:[],jobs:[clone(j1)],efforts:[clone(e)]}));ok("Tasks: survive an upgrade with their hours",m2.jobs.length===1&&m2.jobs[0].log.length===j1.log.length&&m2.efforts[0].jobId==="st-job-1");}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
-  const views=["today","demands","epics","debug","journal","meetings","playbook","team","vault","effort","review","month","search"];
+  const views=["today","demands","jobs","epics","debug","journal","meetings","playbook","team","vault","effort","review","month","search"];
   const tabs=["overview","work","objects","transports","effort","history","reference","calls","images"],etabs=["overview","story","details","deps","subtasks","effort"];
   const a=state.tasks.find(t=>t.id==="st-a");
-  const pick=()=>{activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
+  const pick=()=>{activeJobId="st-job-1";activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
   const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
   const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Days off",()=>openDaysOff()],
     ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
-    ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
+    ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Close a task",()=>openJobClose(jobById("st-job-1"),"done")],["Log time on a task",()=>openLogTime({key:"j:st-job-1"})],["A closed task",()=>{view="jobs";activeJobId="st-job-2";renderApp();}],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
   const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;
   for(const th of themes){applyTheme(th);lastTind=null;const L=THEME_OPTS[th],fails0=R.filter(r=>r.pass===false).length;
     for(const v of views){prog(`screens — ${L} · ${++n}/${total}`);await step(`${L} · ${v}`,()=>{pick();if(v==="team"){view="playbook";renderApp();playTeam=true;activePlayId=null;}else view=v;renderApp();});}
@@ -7233,7 +7469,7 @@ function stReport(R,ms){const panel=stPanel(),tests=R.filter(r=>r.name),bad=test
 document.querySelectorAll(".navbtn,.rb[data-view]").forEach(b=>b.onclick=()=>{view=b.dataset.view;meetingRollup=false;journalTodos=false;renderApp();});
 document.getElementById("railMenu").onclick=()=>openMenu();
 /* keep the epic pointer valid across restores/imports */
-function resetActive(){activeId=activeMeetingId=activeJournalId=activeDebugId=activePlayId=activeEpicId=null;meetingRollup=journalTodos=false;}
+function resetActive(){activeId=activeMeetingId=activeJournalId=activeDebugId=activePlayId=activeEpicId=activeJobId=null;meetingRollup=journalTodos=false;}
 document.getElementById("btnOpen").onclick=openFile;
 document.getElementById("btnSave").onclick=saveFile;
 document.getElementById("btnMenu").onclick=openMenu;
