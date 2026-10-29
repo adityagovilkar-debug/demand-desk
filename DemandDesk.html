@@ -3385,14 +3385,18 @@ function renderTransports(body,t){
       q(".up").onclick=()=>{if(idx>0){[t.transports[idx-1],t.transports[idx]]=[t.transports[idx],t.transports[idx-1]];touch(t);drawTrs();drawReadiness();}};
       q(".down").onclick=()=>{if(idx<t.transports.length-1){[t.transports[idx+1],t.transports[idx]]=[t.transports[idx],t.transports[idx+1]];touch(t);drawTrs();drawReadiness();}};
       const syncHost=q(".syncs");
-      const drawSyncs=()=>{syncHost.innerHTML="";
-        tr.syncs.forEach((sy,i)=>{const r=document.createElement("div");r.className="syncrow";
+      /* synced straight to many systems: the same grid as a ToC, date rows behind Edit moves */
+      const drawSyncs=()=>{syncHost.innerHTML="";const n=tr.syncs.filter(s=>s.system).length,many=n>3,open=!many||tocEdit.has(tr.id),ab=q(".addsync");
+        ab.style.display=open?"":"none";
+        if(open)tr.syncs.forEach((sy,i)=>{const r=document.createElement("div");r.className="syncrow";
           r.innerHTML=`<select class="s-sys">${systemOptions(sy.system)}</select><input type="date" class="s-date" value="${sy.date||""}"><button class="ghost sm danger s-del">✕</button>`;
           r.querySelector(".s-sys").onchange=e=>{sy.system=e.target.value;const rel=syncReleases(tr,sy.system);touch(t);drawReadiness();drawTrs();if(rel)toast(`${tr.number||"The transport"} reached ${sy.system}, so it's marked released`);};
           r.querySelector(".s-date").onchange=e=>{sy.date=e.target.value;touch(t);};
           r.querySelector(".s-del").onclick=()=>{tr.syncs.splice(i,1);touch(t);drawSyncs();drawReadiness();};
           syncHost.appendChild(r);});
-        if(tr.syncs.filter(s=>s.system).length){const chips=document.createElement("div");chips.className="chiprow";chips.innerHTML=tr.syncs.filter(s=>s.system).map(s=>sysPill(s.system,s.date,cust?tr.client:"")).join("");syncHost.appendChild(chips);}
+        if(n&&!(many&&open)){const chips=document.createElement("div"),g=reachGridHTML(tr.syncs,"Moved to",cust&&tr.client?" · 🗂 "+esc(tr.client):"");chips.className=g?"":"chiprow";chips.innerHTML=g||tr.syncs.filter(s=>s.system).map(s=>sysPill(s.system,s.date,cust?tr.client:"")).join("");syncHost.appendChild(chips);}
+        if(many){const b=document.createElement("button");b.className="sm "+(open?"":"ghost");b.style.margin="6px 6px 0 0";b.textContent=open?"✓ Done editing":`✎ Edit moves (${n})`;
+          b.title=open?"Back to the grid":"Change dates, add or remove systems";b.onclick=()=>{if(open)tocEdit.delete(tr.id);else tocEdit.add(tr.id);drawSyncs();};syncHost.appendChild(b);}
       };
       q(".addsync").onclick=()=>{tr.syncs.push({system:"",date:todayStr()});touch(t);drawSyncs();};
       drawSyncs();
@@ -3454,7 +3458,7 @@ function renderTransports(body,t){
   }
 }
 
-const tocEdit=new Set();   /* ToCs whose date rows are open for editing (this session only) */
+const tocEdit=new Set();   /* ToCs and transports whose date rows are open for editing (this session only) */
 function routeTiers(){return state.settings.tiers.map(x=>x.d).sort().reverse();}   /* "3","2","1" = Dev → QA → Prod */
 function destHTML(t,tr){const own=trDest(t,tr),T=trTargets(t,tr),R=reachedSystems(t,tr),when={};
   effectiveSyncs(t,tr).forEach(x=>{if(!when[x.system])when[x.system]=x.date;});

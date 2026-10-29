@@ -550,7 +550,8 @@ above).
     shows one line (*via ToC … · 12 systems · 28 – 29 Oct*) and a small grid — a
     row per landscape, a column per DEV / QA / PRD, the date on hover — instead of
     a chip per system. The ToC card shows the same grid; its date rows open with
-    **✎ Edit moves** and fold back with **✓ Done editing**.
+    **✎ Edit moves** and fold back with **✓ Done editing**. A transport synced
+    straight to more than three systems (no ToC) gets the same grid and folding.
   - **＋ ToC for this transport** (under *Bundled in Transport of Copies*) — for
     one-ToC-per-transport demands: asks only the ToC number, creates the ToC with
     the transport's description and bundles the transport into it.
