@@ -546,6 +546,11 @@ above).
     its own sync targets, and you bundle TRs into it. A bundled TR then **inherits
     the ToC's downstream systems** — so 9-10 TRs carried to Prod by one ToC show
     "reached H01 via ToC" instead of looking stuck in QA.
+    When a ToC has been moved to more than three systems, each bundled transport
+    shows one line (*via ToC … · 12 systems · 28 – 29 Oct*) and a small grid — a
+    row per landscape, a column per DEV / QA / PRD, the date on hover — instead of
+    a chip per system. The ToC card shows the same grid; its date rows open with
+    **✎ Edit moves** and fold back with **✓ Done editing**.
   - **＋ ToC for this transport** (under *Bundled in Transport of Copies*) — for
     one-ToC-per-transport demands: asks only the ToC number, creates the ToC with
     the transport's description and bundles the transport into it.

@@ -1534,6 +1534,13 @@
   main.board .filters button{flex:0 0 auto!important;padding-left:14px;padding-right:14px}
   main.board #btnNew{width:auto!important;align-self:flex-start}
   .ck-ep .es b{white-space:nowrap}
+  .rgrid{margin-top:6px;border:1px solid var(--line2,var(--rule));border-radius:6px;padding:7px 9px;display:inline-block;max-width:100%}
+  .rg-h{font-size:11px;color:var(--muted,var(--ink-3));margin-bottom:6px}
+  .rg-h b{color:var(--text,var(--ink));font-weight:600}
+  .rg-t{display:grid;gap:4px 5px;align-items:center}
+  .rg-k{font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted,var(--ink-3));text-align:center}
+  .rg-c.sys{margin:0;justify-content:center;font-size:11px;padding:1px 7px}
+  .rg-no{text-align:center;color:var(--faint,var(--ink-4))}
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -1672,6 +1679,16 @@ const supportsFS="showSaveFilePicker" in window;
 function tierFor(d){ return state.settings.tiers.find(t=>t.d===d); }
 function tierMeta(sysId){ const d=String(sysId||"").slice(-1); return tierFor(d); }
 function sysTierCls(sysId){ return "t"+(String(sysId||"").slice(-1)); }
+/* Where something has been moved, when that's many systems: one line saying how many and when,
+   then a grid — a row per landscape, a column per tier — with each system's date on hover.
+   Three or fewer stay as chips (returns null). */
+function reachGridHTML(syncs,lead,extra){const S=(syncs||[]).filter(s=>s.system);if(S.length<=3)return null;
+  const first=new Map();S.forEach(s=>{if(!first.has(s.system)||(s.date&&(!first.get(s.system)||s.date<first.get(s.system))))first.set(s.system,s.date||"");});
+  const tiers=routeTiers(),Ls=[...new Set([...first.keys()].map(landscapeOf))].sort(),ds=[...first.values()].filter(Boolean).sort();
+  const when=!ds.length?"":ds[0]===ds[ds.length-1]?shortD(ds[0]):shortD(ds[0])+" – "+shortD(ds[ds.length-1]);
+  return `<div class="rgrid"><div class="rg-h">${lead} · <b>${first.size} systems</b>${when?" · "+when:""}${extra||""}</div>
+    <div class="rg-t" style="grid-template-columns:repeat(${tiers.length},auto)">${tiers.map(d=>`<span class="rg-k">${esc((tierFor(d)||{}).short||d)}</span>`).join("")}${
+      Ls.map(L=>tiers.map(d=>{const x=L+d;return first.has(x)?`<span class="rg-c sys ${sysTierCls(x)}" title="${esc(x)} · ${first.get(x)?"reached "+first.get(x):"reached"}">${esc(x)}</span>`:`<span class="rg-c rg-no" title="${esc(x)} — not moved there">·</span>`;}).join("")).join("")}</div></div>`;}
 function sysPill(sysId,date,client){
   const m=tierMeta(sysId);
   return `<span class="sys ${sysTierCls(sysId)}">${esc(sysId)}<span class="d">${m?m.short:""}</span>${client?` · <span class="d">🗂 ${esc(client)}</span>`:""}${date?` · <span class="d">${date}</span>`:""}</span>`;
@@ -3335,7 +3352,7 @@ function renderTransports(body,t){
           <div style="flex:0 0 230px">
             <label>Bundled in Transport of Copies</label>
             <select class="tocsel">${tocOpts}</select>${tr.tocId?"":`<button class="ghost sm tocone" style="margin-top:4px" title="Create a ToC just for this transport and bundle it in — you type only the ToC number">＋ ToC for this transport</button>`}
-            ${toc&&toc.syncs.filter(s=>s.system).length?`<div class="chiprow" style="margin-top:6px">${toc.syncs.filter(s=>s.system).map(s=>`<span class="sys ${sysTierCls(s.system)}" title="via ToC ${esc(toc.number)}">${esc(s.system)}<span class="d">via ToC</span>${cust&&tr.client?" · <span class='d'>🗂 "+esc(tr.client)+"</span>":""}${s.date?" · <span class='d'>"+s.date+"</span>":""}</span>`).join("")}</div>`:(toc?`<div class="faint" style="font-size:11px;margin-top:6px">ToC not moved anywhere yet</div>`:"")}
+            ${toc&&toc.syncs.filter(s=>s.system).length?reachGridHTML(toc.syncs,"via ToC "+esc(toc.number||""),cust&&tr.client?" · 🗂 "+esc(tr.client):"")||`<div class="chiprow" style="margin-top:6px">${toc.syncs.filter(s=>s.system).map(s=>`<span class="sys ${sysTierCls(s.system)}" title="via ToC ${esc(toc.number)}">${esc(s.system)}<span class="d">via ToC</span>${cust&&tr.client?" · <span class='d'>🗂 "+esc(tr.client)+"</span>":""}${s.date?" · <span class='d'>"+s.date+"</span>":""}</span>`).join("")}</div>`:(toc?`<div class="faint" style="font-size:11px;margin-top:6px">ToC not moved anywhere yet</div>`:"")}
             <label style="margin-top:10px">Notes</label>
             <input class="notes" value="${esc(tr.notes)}">
           </div>
@@ -3417,14 +3434,18 @@ function renderTransports(body,t){
       q(".cnotes").onchange=e=>{c.notes=e.target.value;touch(t);};
       q(".cdel").onclick=()=>{if(members.length&&!confirm("Delete this ToC? "+members.length+" TR(s) will become un-bundled."))return;t.transports.forEach(tr=>{if(tr.tocId===c.id)tr.tocId="";});t.tocs=t.tocs.filter(x=>x.id!==c.id);touch(t);renderTransports(body,t);};
       const sh=q(".csyncs");
-      const drawCs=()=>{sh.innerHTML="";
-        c.syncs.forEach((sy,i)=>{const r=document.createElement("div");r.className="syncrow";
+      /* a ToC moved to many systems shows the grid; its date rows open only for editing */
+      const drawCs=()=>{sh.innerHTML="";const n=c.syncs.filter(s=>s.system).length,many=n>3,open=!many||tocEdit.has(c.id),ab=q(".caddsync");
+        ab.style.display=open?"":"none";
+        if(open)c.syncs.forEach((sy,i)=>{const r=document.createElement("div");r.className="syncrow";
           r.innerHTML=`<select class="s-sys">${systemOptions(sy.system)}</select><input type="date" class="s-date" value="${sy.date||""}"><button class="ghost sm danger s-del">✕</button>`;
           r.querySelector(".s-sys").onchange=e=>{sy.system=e.target.value;touch(t);drawTrs();drawReadiness();};
           r.querySelector(".s-date").onchange=e=>{sy.date=e.target.value;touch(t);drawTrs();};
           r.querySelector(".s-del").onclick=()=>{c.syncs.splice(i,1);touch(t);drawCs();drawTrs();drawReadiness();};
           sh.appendChild(r);});
-        if(c.syncs.filter(s=>s.system).length){const chips=document.createElement("div");chips.className="chiprow";chips.innerHTML=c.syncs.filter(s=>s.system).map(s=>sysPill(s.system,s.date)).join("");sh.appendChild(chips);}
+        if(n&&!(many&&open)){const chips=document.createElement("div"),g=reachGridHTML(c.syncs,"Moved to");chips.className=g?"":"chiprow";chips.innerHTML=g||c.syncs.filter(s=>s.system).map(s=>sysPill(s.system,s.date)).join("");sh.appendChild(chips);}
+        if(many){const b=document.createElement("button");b.className="sm "+(open?"":"ghost");b.style.margin="6px 6px 0 0";b.textContent=open?"✓ Done editing":`✎ Edit moves (${n})`;
+          b.title=open?"Back to the grid":"Change dates, add or remove systems";b.onclick=()=>{if(open)tocEdit.delete(c.id);else tocEdit.add(c.id);drawCs();};sh.appendChild(b);}
       };
       q(".caddsync").onclick=()=>{c.syncs.push({system:"",date:todayStr()});touch(t);drawCs();};
       drawCs();
@@ -3433,6 +3454,7 @@ function renderTransports(body,t){
   }
 }
 
+const tocEdit=new Set();   /* ToCs whose date rows are open for editing (this session only) */
 function routeTiers(){return state.settings.tiers.map(x=>x.d).sort().reverse();}   /* "3","2","1" = Dev → QA → Prod */
 function destHTML(t,tr){const own=trDest(t,tr),T=trTargets(t,tr),R=reachedSystems(t,tr),when={};
   effectiveSyncs(t,tr).forEach(x=>{if(!when[x.system])when[x.system]=x.date;});
@@ -7470,6 +7492,8 @@ async function runSelfTest(){
     const m2=migrate(clone({version:29,tasks:[],jobs:[clone(j1)],efforts:[clone(e)]}));ok("Tasks: survive an upgrade with their hours",m2.jobs.length===1&&m2.jobs[0].log.length===j1.log.length&&m2.efforts[0].jobId==="st-job-1");}
    {const m=state.tasks.filter(dvMatches({...dvBlank(),only:["due7"]}));ok("Today: the Overdue tile opens only late or due-soon demands",m.length>0&&m.every(x=>{const d=earliestOpenDue(x);return d&&daysUntil(d)<=7;})&&CK_TILES[1].view.only.includes("due7"));}
    ok("History dates read like the rest of the app",/^\d\d [A-Z][a-z]{2}( \d{4})? · \d\d:\d\d$/.test(fmtTs(Date.now())),fmtTs(Date.now()));
+   {const many=["H03","H02","H01","H43"].map(x=>({system:x,date:T})),g=reachGridHTML(many,"via ToC X");
+    ok("Transports: a ToC moved to many systems shows as a compact grid",!!g&&g.includes("4 systems")&&g.includes("rg-no")&&reachGridHTML(many.slice(0,3),"x")===null);}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");

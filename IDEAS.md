@@ -33,6 +33,11 @@ the encryption reminder and a working-day setting).
 
 6. **Excel notes** — you chose .txt only for now. When wanted: paste rows copied from
    Excel into the notes (no file reading needed, so no library).
+7. **Move a ToC along a whole route in one go** — pick e.g. "H4 route" and one date,
+   and H43 → H42 → H41 are recorded together (as destinations already work).
+8. **Waiting tile lists the longest waits** — the three longest waits by name with
+   day bars, instead of a dial for only the longest one.
+9. **Click a day in Next 10 weeks** — show what's due, freezing or recurring that day.
 
 ## 5. Suggested earlier — you passed on these (kept for reference)
 
