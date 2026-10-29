@@ -33,13 +33,18 @@ six themes. The classic themes keep the original layout exactly.
     actions, over a flow field whose colours are your demand statuses (more
     demands in a status → more of that colour);
   - **Active demands** ring (split by status), **Overdue radar** (distance from
-    the centre = days late; inner ring = due within 7 days), **Waiting** gauge
-    (longest open wait against a 30-day follow-up rule) and **Go-live** — each
-    tile opens the matching view of your demand list;
-  - **Transport pipeline:** every transport of an open demand, per landscape,
-    parked at the furthest system it has reached. Streams run along the routes
-    your transports have travelled; a hollow ring is not released, a pulse is
-    waiting for its next import; Prod shows an active or coming change freeze;
+    the centre = days late; inner ring = due within 7 days; the four most urgent
+    are labelled), **Waiting** gauge (longest open wait against a 30-day follow-up
+    rule) and **Go-live** (how many transports wait at DEV / QA / PRD in your two
+    busiest landscapes) — each tile opens the matching view of your demand list;
+    *Overdue & due soon* opens only the demands late or due within 7 days. The
+    counts in the greeting line (active, overdue, clashes, short of go-live) are
+    links to the same views;
+  - **Transport pipeline:** one bead per **demand**, per landscape, at the
+    furthest system its transports have reached (*10421 ×3* = three of them
+    there). Hover a bead to see its transports and where they're headed; click to
+    open them. A hollow ring is not released, a pulse is waiting for its next
+    import; Prod shows an active or coming change freeze;
   - **Epic rings** (share of demands done, follow-ups due) and a **10-week
     calendar** of freezes, recurring duties, due dates and next actions;
   - then the usual **Needs attention** cards and today's journal.

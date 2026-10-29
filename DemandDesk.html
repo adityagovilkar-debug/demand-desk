@@ -1304,7 +1304,7 @@
   .efx .ef-rh{display:flex;justify-content:space-around;align-items:flex-end;height:140px;padding-top:6px}
   .efx .ef-rh>div{display:flex;flex-direction:column;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--ink-3)}
   .efx .ef-rh>div b{font-weight:500;color:var(--ink-2)}
-  .efx .ef-rh>div.mx b{color:var(--ink)}
+  .efx .ef-rh>div.rh-best b{color:var(--ink)}
   .efx .ef-empty{max-width:720px}
   .efx .ef-empty p{font-size:13px;line-height:1.6;color:var(--ink-2)}
   @media (max-width:1500px){.efx .ef-gw{grid-template-columns:1fr}.efx .ef-g3{grid-template-columns:1fr 1fr}}
@@ -1515,6 +1515,25 @@
   .jb-ref label{display:flex;gap:3px;align-items:center;font-size:11px;white-space:nowrap;color:var(--muted,var(--ink-3))}.jb-ref label input{width:auto}
   .jb-te{display:flex;gap:10px;align-items:center;padding:4px 2px;font-size:12.5px;cursor:pointer;border-top:1px dotted var(--line2,var(--rule-strong))}
   .jb-te:hover{background:var(--hover,rgba(127,127,127,.08))}.jb-te .tx{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted,var(--ink-3))}
+  /* UI pass (v41) */
+  .ck-sub a.ck-sl{color:inherit;text-decoration:none;cursor:pointer;border-bottom:1px dotted transparent}
+  .ck-sub a.ck-sl:hover{border-bottom-color:currentColor}
+  .dash-grid{display:block;columns:330px;column-gap:14px}
+  .dash-grid>*{break-inside:avoid;margin:0 0 14px;width:100%;display:inline-block}
+  .dash-grid.dg-row{display:grid;columns:auto}.dash-grid.dg-row>*{margin:0;display:block}
+  span.du{white-space:nowrap}
+  .dashitem.two{flex-wrap:wrap;row-gap:2px}
+  .dashitem.two .di-main{flex:1 1 100%}
+  .dashitem.two .di-sub{flex:1 1 auto;white-space:normal;line-height:1.35}
+  .bro{display:flex;flex-wrap:wrap}
+  .bro-i{flex:1 1 104px}
+  .bro.stack .v small{display:block;margin:3px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dh-dates .dh-grow{display:flex;align-items:center;gap:8px;flex:1;min-width:220px}
+  .dh-dates .dh-grow input{flex:1}
+  :root[data-theme="bench"] .jb-wait{border:1px solid var(--rule);border-radius:3px;padding:6px 10px;margin-top:10px}
+  main.board .filters button{flex:0 0 auto!important;padding-left:14px;padding-right:14px}
+  main.board #btnNew{width:auto!important;align-self:flex-start}
+  .ck-ep .es b{white-space:nowrap}
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -2379,8 +2398,8 @@ function renderToday(){
   let html="";
   if(!cards.length)html+=`<div class="dashcard" style="max-width:440px"><h3>✓ All clear</h3><div class="dash-empty">Nothing overdue, no bugs, nothing waiting. Nice.</div></div>`;
   else html+=`<div class="dash-grid">`+cards.map((c,ci)=>{const exp=renderToday._exp&&renderToday._exp[c.title];const shown=exp?c.items:c.items.slice(0,8);
-    return `<div class="dashcard ${c.tone}"><h3>${c.icon} ${c.title}<span class="cnt">${c.items.length}</span></h3>${shown.map((it,ii)=>`<div class="dashitem" data-c="${ci}" data-i="${ii}"><span class="di-main">${it.main}</span>${it.sub?`<span class="di-sub">${it.sub}</span>`:""}${it.acts?`<span class="di-acts">${it.acts.map((a,ai)=>`<button class="sm ghost" data-c="${ci}" data-i="${ii}" data-a="${ai}" title="${esc(a[2]||"")}">${a[0]}</button>`).join("")}</span>`:""}</div>`).join("")}${c.items.length>shown.length?`<div class="dashitem" data-more="${ci}"><span class="di-main" style="color:var(--accent)">＋ ${c.items.length-shown.length} more…</span></div>`:""}</div>`;}).join("")+`</div>`;
-  html+=`<div class="dash-grid" style="margin-top:14px"><div class="dashcard"><h3>📓 Today's journal</h3>${(todayJ&&(todayJ.body||todayJ.title))?`<div style="font-size:13px;white-space:pre-wrap;max-height:120px;overflow:auto;line-height:1.5">${esc(((todayJ.title?todayJ.title+"\n":"")+todayJ.body)).slice(0,400)}</div><button class="sm" id="openJ" style="margin-top:8px">Open journal</button>`:`<div class="dash-empty">No entry for today yet.</div><button class="sm" id="openJ" style="margin-top:8px">＋ Start today's note</button>`}</div>${efTodayHTML()}</div>`;
+    return `<div class="dashcard ${c.tone}"><h3>${c.icon} ${c.title}<span class="cnt">${c.items.length}</span></h3>${shown.map((it,ii)=>`<div class="dashitem ${String(it.sub||"").replace(/<[^>]+>/g,"").length>26?"two":""}" data-c="${ci}" data-i="${ii}"><span class="di-main">${it.main}</span>${it.sub?`<span class="di-sub">${it.sub}</span>`:""}${it.acts?`<span class="di-acts">${it.acts.map((a,ai)=>`<button class="sm ghost" data-c="${ci}" data-i="${ii}" data-a="${ai}" title="${esc(a[2]||"")}">${a[0]}</button>`).join("")}</span>`:""}</div>`).join("")}${c.items.length>shown.length?`<div class="dashitem" data-more="${ci}"><span class="di-main" style="color:var(--accent)">＋ ${c.items.length-shown.length} more…</span></div>`:""}</div>`;}).join("")+`</div>`;
+  html+=`<div class="dash-grid dg-row" style="margin-top:14px"><div class="dashcard"><h3>📓 Today's journal</h3>${(todayJ&&(todayJ.body||todayJ.title))?`<div style="font-size:13px;white-space:pre-wrap;max-height:120px;overflow:auto;line-height:1.5">${esc(((todayJ.title?todayJ.title+"\n":"")+todayJ.body)).slice(0,400)}</div><button class="sm" id="openJ" style="margin-top:8px">Open journal</button>`:`<div class="dash-empty">No entry for today yet.</div><button class="sm" id="openJ" style="margin-top:8px">＋ Start today's note</button>`}</div>${efTodayHTML()}</div>`;
   const attn=cards.reduce((n,c)=>n+c.items.length,0),wrap=encWarnHTML()+wrapUpHTML();
   if(wrap&&!benchOn())html=wrap+html;
   host.innerHTML=benchOn()
@@ -2602,7 +2621,7 @@ function renderJobDetail(){const j=activeJob(),host=document.getElementById("det
     ${na?(bench?`<div class="bband ${nad<=0?"watch":""}"><span class="k">Next action · ${nad<0?(-nad)+" d ago":nad===0?"today":"in "+nad+" d"}</span><span class="tx"><b>${esc(na.note||"(no note)")}</b> <span class="mono faint">${na.date}</span></span><button class="sm" id="jb-nadone">✓ Done</button><button class="sm ghost" id="jb-naedit">✎</button></div>`
        :`<div class="nextact ${nad<=0?"due":""}">⏰ Next action <b class="mono">${na.date}</b> — ${esc(na.note||"(no note)")} <button class="ghost sm" id="jb-nadone">✓ Done</button><button class="ghost sm" id="jb-naedit">✎</button></div>`)
       :jobOpen(j)?`<div class="jb-bandrow"><button class="sm ghost" id="jb-naset">⏰ Set the next action</button></div>`:""}
-    ${jobOpen(j)?`<div class="jb-bandrow">⏳ Waiting on <input id="jb-won" list="dl-jwait" value="${esc(j.waiting.on)}" placeholder="nobody — e.g. Basis team" style="width:200px"><datalist id="dl-jwait">${[...new Set([...WAIT_OPTIONS,...state.jobs.map(x=>x.waiting.on).filter(Boolean)])].map(x=>`<option value="${esc(x)}">`).join("")}</datalist>
+    ${jobOpen(j)?`<div class="jb-bandrow jb-wait">⏳ Waiting on <input id="jb-won" list="dl-jwait" value="${esc(j.waiting.on)}" placeholder="nobody — e.g. Basis team" style="width:200px"><datalist id="dl-jwait">${[...new Set([...WAIT_OPTIONS,...state.jobs.map(x=>x.waiting.on).filter(Boolean)])].map(x=>`<option value="${esc(x)}">`).join("")}</datalist>
       ${j.waiting.on?`since <input type="date" id="jb-wsince" value="${j.waiting.since}" style="width:150px">${jobWaitDays(j)!=null?` <span class="faint">${jobWaitDays(j)} d</span>`:""}`:""}</div>`:""}
     ${!jobOpen(j)?`<div class="jb-closed ${tm?(tm.ok?"ok":"late"):""}">${j.status==="done"?"✓ Done":"Dropped"}${j.closedOn?` on <b>${j.closedOn}</b>`:""}${tm?` — <b>${tm.txt}</b>`:""}</div>`:""}
   </div>
@@ -2698,7 +2717,7 @@ const DV_GROUPS={none:"No grouping",epic:"Epic",wave:"Epic wave",status:"Status"
 const DV_SORTS={due:{label:"Due date",dir:"asc"},next:{label:"Next action",dir:"asc"},received:{label:"Received",dir:"desc"},updated:{label:"Last updated",dir:"desc"},
   age:{label:"Age",dir:"desc"},waiting:{label:"Time waiting",dir:"desc"},status:{label:"Status",dir:"asc"},clash:{label:"Object clashes",dir:"desc"},
   demand:{label:"Demand ID",dir:"asc"},title:{label:"Title",dir:"asc"}};
-const DV_ONLY={delegated:"Built by someone in my team",overdue:"Overdue",waiting:"Waiting on someone",clash:"With object clashes",notprod:"Transports not yet in Prod",next:"Next action due"};
+const DV_ONLY={delegated:"Built by someone in my team",overdue:"Overdue",due7:"Overdue or due within 7 days",waiting:"Waiting on someone",clash:"With object clashes",notprod:"Transports not yet in Prod",next:"Next action due"};
 const DV_FIELDS={builder:"Built by",epic:"Epic",system:"System",project:"Project",theme:"Theme",requestor:"Requestor",type:"Type"};
 const STATUS_ORDER=Object.keys(STATUS),STATUS_RANK={bug:0,progress:1,open:2,delivered:3,closed:4};
 const DV_PRESETS=[
@@ -2753,7 +2772,8 @@ function dvMatches(v,cidx){
       else if(k==="clash"){if(!openClashCount(t,cidx))return false;}
       else if(k==="notprod"){if(t.status==="closed"||!golivePending(t))return false;}
       else if(k==="next"){if(!nextActionDue(t))return false;}
-      else if(k==="delegated"){if(!buildersOf(t).length)return false;}}
+      else if(k==="delegated"){if(!buildersOf(t).length)return false;}
+      else if(k==="due7"){const d=earliestOpenDue(t);if(!(d&&daysUntil(d)<=7))return false;}}
     if(words.length){const e=epicById(t.epicId);
       const blob=[t.demandId,t.title,t.requestor,builderNames(t),t.project,t.theme,t.wave,t.system,t.client,t.type,e?epicLabel(e):"",
         ...t.objects.map(o=>o.name),...t.transports.map(tr=>tr.number),...(t.tocs||[]).map(c=>c.number)].join(" ").toLowerCase();
@@ -3182,7 +3202,7 @@ function renderTree(host,t,list,rr){
 }
 function editInline(span,val,cb){const inp=document.createElement("input");inp.value=val;inp.style.width="100%";span.replaceWith(inp);inp.focus();inp.select();const done=()=>cb(inp.value.trim());inp.onblur=done;inp.onkeydown=e=>{if(e.key==="Enter")inp.blur();if(e.key==="Escape"){e.stopPropagation();inp.value=val;inp.blur();}};}
 
-function fmtTs(ts){const d=new Date(ts);return d.toLocaleDateString()+" "+d.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});}
+function fmtTs(ts){const d=new Date(ts),y=d.getFullYear()!==new Date().getFullYear();return d.toLocaleDateString("en-GB",{day:"2-digit",month:"short",...(y?{year:"numeric"}:{})})+" · "+d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});}
 function renderComments(host,owner,onChange){
   const list=owner.comments||(owner.comments=[]);
   host.innerHTML=`<div class="cmts">${list.length?list.map(c=>`<div class="cmt" data-id="${c.id}"><div class="cmt-meta"><span>${fmtTs(c.ts)}</span><button class="ghost sm c-del" title="Delete">🗑</button></div><div class="cmt-text">${linkify(c.text)}</div></div>`).join(""):`<div class="faint" style="font-size:12px">No comments yet.</div>`}</div>
@@ -3724,7 +3744,7 @@ function renderMeetingDetail(){
       <div class="dh-dates" style="margin-top:8px">
         <span>Date <input type="date" id="mt-date" value="${m.date}" style="width:150px"></span>
         <span>Team <input id="mt-team" list="dl-team-m" value="${esc(m.team)}" placeholder="e.g. Portal Team" style="width:150px"><datalist id="dl-team-m">${distinctMeetingTeams().map(x=>`<option value="${esc(x)}">`).join("")}</datalist></span>
-        <span style="flex:1">Attendees <input id="mt-att" value="${esc(m.attendees)}" placeholder="Names…"></span>
+        <span class="dh-grow">Attendees <input id="mt-att" value="${esc(m.attendees)}" placeholder="Names…"></span>
         <span>Duration <input id="mt-hrs" value="${m.hours?efFh(m.hours):""}" placeholder="45m · 1.5h" style="width:90px" title="Logged in Effort for you — don't log it again there"></span>
       </div><div id="mt-eff"></div></div>
       <button class="sm danger" id="mt-del" style="align-self:flex-start">🗑 Delete</button></div>
@@ -5414,6 +5434,10 @@ const DK=(()=>{
     if("letterSpacing" in ctx)ctx.letterSpacing=spacing+"px";ctx.fillText(text,x,y);if("letterSpacing" in ctx)ctx.letterSpacing="0px";}
   function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
   /* one requestAnimationFrame loop for every canvas; a canvas that leaves the page drops out */
+  function fade(col,a){col=String(col||"").trim();let m;
+    if((m=col.match(/^#([0-9a-f]{3})$/i)))col="#"+m[1].split("").map(x=>x+x).join("");
+    if((m=col.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i)))return `rgba(${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)},${a})`;
+    if((m=col.match(/^rgba?\(([^)]+)\)/)))return `rgba(${m[1].split(",").slice(0,3).join(",")},${a})`;return col;}
   function scope(cv,draw,opts={}){if(!cv)return null;const s={cv,draw,ctx:cv.getContext("2d"),w:0,h:0,keep:!!opts.keep,dead:false,born:performance.now(),data:opts.data};scopes.push(s);return s;}
   let last=performance.now();
   function frame(t){const dt=Math.min(64,t-last);last=t;const dpr=window.devicePixelRatio||1;
@@ -5426,7 +5450,7 @@ const DK=(()=>{
       try{s.draw(s.ctx,w,h,t,dt,s);}catch(e){console.error(e);s.dead=true;}s.fresh=false;}
     requestAnimationFrame(frame);}
   requestAnimationFrame(frame);
-  return{TAU,C,readColors,dot,ring,dotArc,dotRing,label,rng,scope,get MONO(){return MONO;}};
+  return{TAU,C,readColors,dot,ring,dotArc,dotRing,label,rng,scope,fade,get MONO(){return MONO;}};
 })();
 const benchOn=()=>document.documentElement.getAttribute("data-theme")==="bench";
 /* Motion: Settings choice, or follow Windows' "reduce animations" */
@@ -5555,7 +5579,7 @@ function cockpitCounts(){const T=state.tasks,today=todayStr();
     unrel:new Set(pipe.lanes.flatMap(l=>l.items.filter(x=>!x.rel).map(x=>x.tr.id))).size,total:new Set(pipe.lanes.flatMap(l=>l.items.map(x=>x.tr.id))).size};}
 const CK_TILES=[
   {no:"01",pen:"var(--pen-2)",st:"live",nm:"Active demands",bl:"Open, in progress and rework — the ring splits by status.",view:{group:"epic",sort:"due",status:["open","progress","bug"]}},
-  {no:"02",pen:"var(--pen-1)",st:"sweeping",nm:"Overdue & due soon",bl:"Radar — distance from the centre is days late; the inner ring is due within 7 days.",view:{group:"due",sort:"due"}},
+  {no:"02",pen:"var(--pen-1)",st:"sweeping",nm:"Overdue & due soon",bl:"Radar — distance from the centre is days late; the inner ring is due within 7 days.",view:{group:"due",sort:"due",only:["due7"]}},
   {no:"03",pen:"var(--pen-4)",st:"waiting",nm:"Waiting on others",bl:"The longest open wait, against a 30-day follow-up rule.",view:{group:"none",sort:"waiting",dir:"desc",only:["waiting"]}},
   {no:"04",pen:"var(--pen-3)",st:"to prod",nm:"Go-live",bl:"Transports still on their way to the demand's go-live system.",view:{group:"system",sort:"due",only:["notprod"]}}];
 function cockpitHTML(){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>Math.max(m,-daysUntil(earliestOpenDue(t))),0),w=c.waiting[0];
@@ -5566,7 +5590,7 @@ function cockpitHTML(){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>Math.m
   return `<div class="ck-unit ck-hero"><canvas class="flow" id="ckFlow"></canvas>
       <div class="ck-hero-in"><div class="ck-lbl">${esc(new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"}))}</div>
         <h1 id="ckGreet">${esc(greetText())}</h1>
-        <div class="ck-sub"><b>${c.active.length}</b> active &nbsp;·&nbsp; <b class="${c.over.length?"bad":""}">${c.over.length}</b> overdue &nbsp;·&nbsp; <b class="${c.clash?"bad":""}">${c.clash}</b> object clash${c.clash===1?"":"es"} &nbsp;·&nbsp; <b>${c.short}</b> transport${c.short===1?"":"s"} short of go-live</div>
+        <div class="ck-sub"><a class="ck-sl" data-sl="0"><b>${c.active.length}</b> active</a> &nbsp;·&nbsp; <a class="ck-sl" data-sl="1"><b class="${c.over.length?"bad":""}">${c.over.length}</b> overdue</a> &nbsp;·&nbsp; <a class="ck-sl" data-sl="2"><b class="${c.clash?"bad":""}">${c.clash}</b> object clash${c.clash===1?"":"es"}</a> &nbsp;·&nbsp; <a class="ck-sl" data-sl="3"><b>${c.short}</b> transport${c.short===1?"":"s"} short of go-live</a></div>
         <button class="ck-search" id="ckSearch"><span class="caret"></span>Find a demand, an object, a transport, a system…<kbd>Ctrl K</kbd></button>
         <div class="ck-acts"><button class="primary" id="ckNew">＋ New demand</button><button id="ckJ">Today's journal</button><button id="ckDbg">Debug session</button><button id="ckLog">⏱ Log time</button><button id="ckWin">🏆 Win</button><button id="ckWrap" title="This week: hours, missing days, wins and lessons">Week wrap-up</button><button id="ckWeek">Weekly summary</button><button id="ckHand">Handover pack</button></div></div>
       <div class="ck-clock"><div class="ck-lbl" style="text-align:right">local · offline · ${state.settings.autosave?"autosave on":"autosave off"}</div><div class="big" id="ckClock"></div></div></div>
@@ -5575,8 +5599,8 @@ function cockpitHTML(){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>Math.m
       <canvas></canvas><div class="nm">${x.nm}</div><div class="bl">${x.bl}</div><div class="ft"><span>${foot[i]}</span><span class="go">Open ›</span></div></div>`).join("")}</div>
     <div class="ck-grid">
       <div class="ck-unit go" id="ckPipeU" style="--pen:var(--pen-3)" title="Open the go-live view of your demands"><div class="ck-head"><h2>Transport pipeline</h2><span class="ck-meta">${c.total} transports · ${c.short} short of go-live · ${c.unrel} not released</span></div>
-        <canvas id="ckPipe" style="width:100%;height:${lanesN*96+8}px;display:block"></canvas>
-        <div class="ck-note"><span class="ring"></span><span>Each dot is a transport of an open demand, parked at the furthest system it has reached in its landscape. Streams run along the routes your transports have travelled; a <b>hollow ring</b> is not released yet, a <b>pulse</b> is waiting for its next import. Prod shows a coming change freeze.</span></div></div>
+        <canvas id="ckPipe" style="width:100%;height:${lanesN*104+8}px;display:block"></canvas>
+        <div class="ck-note"><span class="ring"></span><span>Each bead is a <b>demand</b>, sitting at the furthest system its transports have reached (<b>×3</b> = three of them there) — hover to see the transports, click to open them. A <b>hollow ring</b> isn't released yet, a <b>pulse</b> is waiting for its next import. Prod shows a coming change freeze.</span></div></div>
       <div class="ck-unit"><div class="ck-head"><h2>Epics</h2><span class="ck-meta">${eps.length} active</span></div>
         ${eps.length?eps.map(e=>{const r=epicRollup(e),fu=epicFollowUps(e).length;return `<div class="ck-ep" data-e="${e.id}"><canvas></canvas><div style="min-width:0"><div class="ec">◆ ${esc(e.code||"EPIC")} · ${e.role==="contributor"?"contributor":"lead"}</div><div class="en">${esc(e.name)}</div>
           <div class="es">${r.done}/${r.ts.length} demands done${e.targetDate?" · target "+e.targetDate:""}${fu?` · <b>${fu} follow-up${fu>1?"s":""} due</b>`:""}</div></div></div>`;}).join(""):`<div class="ck-empty">No active epics.</div>`}</div>
@@ -5589,7 +5613,8 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
   q("#ckJ").onclick=newJournalToday;
   q("#ckDbg").onclick=()=>{const s={id:uid(),title:"New debug session",demandId:"",taskId:"",status:"active",resume:"",notes:"",objects:[],breakpoints:[],findings:[],watches:[],createdAt:Date.now(),updatedAt:Date.now()};state.debug.unshift(s);activeDebugId=s.id;view="debug";markDirty();renderApp();};
   q("#ckWeek").onclick=openWeekly;q("#ckWrap").onclick=()=>{wrapForce=true;renderToday();setTimeout(()=>{const w=document.querySelector(".wrapup");if(w)w.scrollIntoView({block:"center",behavior:motionOn()?"smooth":"auto"});},80);};q("#ckHand").onclick=openHandover;
-  q("#ckPipeU").onclick=()=>goView(CK_TILES[3].view);
+  {const SL=[CK_TILES[0].view,{group:"none",sort:"due",only:["overdue"]},{group:"none",sort:"clash",dir:"desc",only:["clash"]},CK_TILES[3].view];
+   host.querySelectorAll(".ck-sl").forEach(a=>a.onclick=()=>goView(SL[+a.dataset.sl]));}
   host.querySelectorAll(".ck-ep").forEach(el=>el.onclick=()=>{view="epics";activeEpicId=el.dataset.e;epicTab="overview";renderApp();});
   const bc=q("#ckClock");if(bc){const d=new Date();bc.innerHTML=`${p2(d.getHours())}:${p2(d.getMinutes())}<small>:${p2(d.getSeconds())}</small>`;}
   const mv=motionOn(),today=todayStr();
@@ -5606,7 +5631,9 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
         const nx=p.x+Math.cos(a)*sp*dt*.108,ny=p.y+Math.sin(a)*sp*dt*.06;ctx.globalAlpha=.3;ctx.strokeStyle=C[p.pen]||C["ink-3"];
         ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(nx,ny);ctx.stroke();p.x=nx;p.y=ny;
         if(--p.life<0||p.x<-5||p.x>w+5||p.y<-5||p.y>h+5)spawn(p,w,h);}
-      ctx.globalAlpha=.35;ctx.fillStyle=C.paper;ctx.fillRect(0,0,Math.min(w*.46,620),h);},{keep:true});}
+      /* calm the field behind the text with a soft fade, not a hard-edged block (it used to end in a visible seam) */
+      const fw=Math.min(w*.7,980),g=ctx.createLinearGradient(0,0,fw,0);g.addColorStop(0,DK.fade(C.paper,1));g.addColorStop(.45,DK.fade(C.paper,.85));g.addColorStop(1,DK.fade(C.paper,0));
+      ctx.globalAlpha=.35;ctx.fillStyle=g;ctx.fillRect(0,0,fw,h);},{keep:true});}
   /* tiles */
   const tiles=host.querySelectorAll(".ck-tile");tiles.forEach(el=>el.onclick=()=>goView(CK_TILES[+el.dataset.i].view));
   {const st={v:mv?0:1};scope(tiles[0].querySelector("canvas"),(ctx,w,h,t)=>{
@@ -5623,27 +5650,32 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
     for(let i=0;i<48;i++){const a=i/48*TAU;dot(ctx,cx+Math.cos(a)*R,cy+Math.sin(a)*R,.8,C["ink-4"]);}
     const sw=mv?(t*.0012)%TAU:-Math.PI/2;
     if(mv)for(let k=0;k<26;k++){const a=sw-k*.03;ctx.globalAlpha=.16*(1-k/26);ctx.strokeStyle=C["pen-1"];ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R);ctx.stroke();}
-    state.tasks.forEach(tk=>{const d=earliestOpenDue(tk);if(!d)return;const n=daysUntil(d);if(n>7)return;const late=n<0,a=hashAngle(tk.id);
-      const r=late?R*(.36+Math.min(.6,-n/120)):R*(.1+n/7*.2),x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;
+    /* evenly spread, most urgent first: hashed angles used to stack IDs on top of each other */
+    const L=state.tasks.map(tk=>({tk,d:earliestOpenDue(tk)})).filter(o=>o.d&&daysUntil(o.d)<=7).map(o=>({...o,n:daysUntil(o.d)})).sort((a,b)=>a.n-b.n);
+    L.forEach((o,i)=>{const late=o.n<0,a=-Math.PI/2+.35+i*TAU/Math.max(L.length,3);
+      const r=late?R*(.36+Math.min(.6,-o.n/120)):R*(.1+o.n/7*.2),x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;
       const since=((sw-a)%TAU+TAU)%TAU,glow=mv?Math.max(.3,1-since/TAU*1.3):1,pen=late?C["pen-1"]:C["pen-4"];
       dot(ctx,x,y,late?2.8:2.2,pen,glow);if(glow>.8)ring(ctx,x,y,6+(1-glow)*20,pen,.35);
-      label(ctx,(tk.demandId||tk.title).slice(-5),x+6,y-6,{font:DK.MONO,size:8,weight:400,align:"left",color:C["ink-3"]});});
+      if(i<4){const right=Math.cos(a)>=0;label(ctx,o.tk.demandId||o.tk.title.slice(0,8),x+(right?7:-7),y,{font:DK.MONO,size:8.5,weight:500,align:right?"left":"right",color:C["ink-2"]});}});
+    if(L.length>4)label(ctx,"+"+(L.length-4)+" more",cx,h-4,{font:DK.MONO,size:8,weight:400,color:C["ink-3"]});
     dot(ctx,cx,cy,1.6,C.ink);});
   {const st={f:0};scope(tiles[2].querySelector("canvas"),(ctx,w,h)=>{
     const m=state.tasks.filter(isWaiting).reduce((x,t)=>Math.max(x,waitDays(t)||0),0);st.f=mv?st.f+(Math.min(1,m/30)-st.f)*.05:Math.min(1,m/30);
     const cx=w/2,cy=h/2+10,R=Math.min(w/2,h/1.55)-6;dotArc(ctx,cx,cy,R,st.f,40,m>=30?C.bad:C["pen-4"]);
     label(ctx,`${Math.round(st.f*30)}${m>30?"+":""} d`,cx,cy+18,{font:DK.MONO,size:15,weight:600,color:C.ink});label(ctx,"OF 30 D",cx,cy+33,{size:7.5,spacing:2});});}
-  {const r=rng(11),M=[];for(let i=0;i<34;i++)M.push({x:r(),lane:Math.floor(r()*2),s:.4+r()*.6});
-    const pipe=pipelineData(),names=pipe.lanes.slice(0,2).map(l=>l.L+"x");
-    scope(tiles[3].querySelector("canvas"),(ctx,w,h,t,dt)=>{const xs=[w*.12,w*.5,w*.88],ys=names.length>1?[h*.32,h*.7]:[h*.5];
-      ys.forEach((y,li)=>{for(let x=xs[0];x<=xs[2];x+=6)dot(ctx,x,y,.8,C["ink-4"]);
-        xs.forEach((x,si)=>{const pen=[C["pen-2"],C["pen-4"],C["pen-3"]][si];ring(ctx,x,y,6,pen,.9);dot(ctx,x,y,2,pen);});
-        label(ctx,names[li]||"",xs[0]-18,y,{font:DK.MONO,size:8,weight:400,color:C["ink-3"]});});
-      if(pipe.lanes.length)M.forEach(p=>{if(mv)p.x+=p.s*dt*.00012;if(p.x>1)p.x=0;const li=Math.min(ys.length-1,p.lane),x=xs[0]+(xs[2]-xs[0])*p.x*.72;
-        dot(ctx,x,ys[li]+Math.sin(p.x*40)*1.2,1.4,x<xs[1]?C["pen-2"]:C["pen-4"],.25+.6*Math.sin(p.x*Math.PI));});
+  /* go-live: how many transports wait at each system of your two busiest landscapes; a dot travels on
+     toward the next system only where something is actually waiting to move */
+  {const pipe=pipelineData(),lanes=pipe.lanes.slice().sort((a,b)=>b.items.length-a.items.length).slice(0,2).sort((a,b)=>a.L.localeCompare(b.L)),tiers=pipe.tiers.slice(0,3);
+    scope(tiles[3].querySelector("canvas"),(ctx,w,h,t)=>{const xs=[w*.16,w*.52,w*.88],ys=lanes.length>1?[h*.3,h*.68]:[h*.48],pens=[C["pen-2"],C["pen-4"],C["pen-3"]];
+      if(!lanes.length){label(ctx,"no transports on open demands",w/2,h/2,{size:9,weight:400,color:C["ink-3"]});return;}
+      lanes.forEach((ln,li)=>{const y=ys[li];for(let x=xs[0];x<=xs[2];x+=6)dot(ctx,x,y,.8,C["ink-4"]);
+        label(ctx,ln.L,xs[0]-24,y,{font:DK.MONO,size:8.5,weight:500,color:C["ink-3"]});
+        tiers.forEach((tier,si)=>{const x=xs[si],pen=pens[si],its=ln.items.filter(it=>it.si===si),n=its.length;
+          ring(ctx,x,y,7,pen,n?.95:.4);if(n){dot(ctx,x,y,2.6,pen);label(ctx,String(n),x,y-15,{font:DK.MONO,size:9.5,weight:600,color:C.ink});}
+          if(mv&&si<tiers.length-1&&its.some(it=>it.rel&&!it.done)){const f=((t*.00025)+li*.4+si*.3)%1;dot(ctx,x+(xs[si+1]-x)*f,y,1.6,pen,.25+.6*Math.sin(f*Math.PI));}});});
       ["DEV","QA","PRD"].forEach((s,i)=>label(ctx,s,xs[i],h-5,{size:7.5,spacing:2}));});}
   /* transport pipeline */
-  scope(q("#ckPipe"),(ctx,w,h,t,dt,s)=>{const d=s.data,tiers=d.tiers,n=d.lanes.length;
+  const pipeRec=scope(q("#ckPipe"),(ctx,w,h,t,dt,s)=>{const d=s.data,tiers=d.tiers,n=d.lanes.length;s.hits=[];
     if(!n){label(ctx,"No transports on open demands yet — they appear here as they move toward Prod.",w/2,h/2,{size:11,weight:400,color:C["ink-3"]});return;}
     if(!s.P){s.P=[];const r=rng(21);for(let i=0;i<70*n;i++)s.P.push({u:r(),s:.35+r()*.8,j:r()-.5,lane:i%n});}
     const laneH=(h-8)/n,x0=w*.12,x1=w*.88,last=tiers.length-1,xs=tiers.map((_,i)=>x0+(x1-x0)*(i/Math.max(1,last))),pens=[C["pen-2"],C["pen-4"],C["pen-3"]];
@@ -5660,19 +5692,26 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
         if(si===last){const f=freezeFor(sys);let txt="",on=false;
           if(f){txt="FROZEN to "+f.to;on=true;}
           else{const up=state.playbook.filter(p=>p.kind==="freeze"&&p.from&&p.from>today&&(p.systems||[]).includes(sys)).map(p=>daysUntil(p.from)).sort((a,b)=>a-b)[0];if(up!=null&&up<=60)txt="freeze in "+up+" d";}
-          if(txt){for(let k=-3;k<=3;k++){ctx.globalAlpha=on?.6:.25;ctx.strokeStyle=C["pen-1"];ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(sx+18+k*3,y-13);ctx.lineTo(sx+24+k*3,y-19);ctx.stroke();}
-            label(ctx,txt,sx+20,y-27,{font:DK.MONO,size:8,weight:400,color:on?C["pen-1"]:C["ink-3"],align:"right"});}}
-        const parked=ln.items.filter(x=>x.si===si),show=parked.slice(0,7);
-        show.forEach((it,k)=>{const px=sx+(k-(show.length-1)/2)*11,pulse=mv?(Math.sin(t*.004+k+li*2)+1)/2:0;
-          if(!it.rel)ring(ctx,px,y,3.4,pen,.95,1.2);
-          else{dot(ctx,px,y,3.2,pen);if(!it.done&&si<last)ring(ctx,px,y,4+pulse*5,pen,.35*(1-pulse));}
-          label(ctx,String(it.tr.number||"TR").slice(-4),px,y-15-(k%2)*10,{font:DK.MONO,size:8,weight:400,color:C["ink-3"]});});
-        if(parked.length>show.length)label(ctx,"+"+(parked.length-show.length),sx+show.length*5.5+8,y,{font:DK.MONO,size:9,weight:600,color:C["ink-2"],align:"left"});});
+          if(txt){for(let k=-2;k<=2;k++){ctx.globalAlpha=on?.6:.25;ctx.strokeStyle=C["pen-1"];ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(sx+14+k*3,y+5);ctx.lineTo(sx+20+k*3,y-1);ctx.stroke();}
+            label(ctx,txt,sx,y+50,{font:DK.MONO,size:8,weight:400,color:on?C["pen-1"]:C["ink-3"]});}}
+        /* one bead per demand — bigger when more of its transports wait here; the label is the demand (nobody remembers
+           transport numbers), hovering lists its transports, a click opens them */
+        const parked=ln.items.filter(x=>x.si===si),gm=new Map();parked.forEach(it=>{if(!gm.has(it.t.id))gm.set(it.t.id,{t:it.t,items:[]});gm.get(it.t.id).items.push(it);});
+        const groups=[...gm.values()].sort((a,b)=>b.items.length-a.items.length||(a.t.demandId||"").localeCompare(b.t.demandId||"")),show=groups.slice(0,5),SP=Math.min(34,Math.max(18,(xs[1]-xs[0])/(show.length+1.5)));
+        show.forEach((g,k)=>{const px=sx+(k-(show.length-1)/2)*SP,nn=g.items.length,r=2.8+Math.min(3,nn-1)*.9,rel=g.items.filter(x=>x.rel).length,moving=g.items.some(x=>x.rel&&!x.done)&&si<last,pulse=mv?(Math.sin(t*.004+k+li*2)+1)/2:0;
+          if(!rel)ring(ctx,px,y,r+.4,pen,.95,1.2);else{dot(ctx,px,y,r,pen);if(rel<nn)ring(ctx,px,y,r+3,pen,.7,1);if(moving)ring(ctx,px,y,r+3+pulse*5,pen,.35*(1-pulse));}
+          label(ctx,(g.t.demandId||g.t.title.slice(0,9))+(nn>1?" ×"+nn:""),px,y-17-(k%2)*11,{font:DK.MONO,size:8.5,weight:500,color:C["ink-2"]});
+          s.hits.push({x:px,y:y-8,rx:Math.max(10,SP/2),ry:18,g,sys});});
+        if(groups.length>show.length)label(ctx,"+"+(groups.length-show.length),sx+(show.length/2)*SP+12,y,{font:DK.MONO,size:9,weight:600,color:C["ink-2"],align:"left"});});
       /* synced in from another landscape and not arrived yet: waiting at the lane's entrance */
       const arr=ln.items.filter(x=>x.si<0);
       if(arr.length){arr.slice(0,4).forEach((it,k)=>ring(ctx,xs[0]-28-k*9,y,3,it.rel?C["pen-2"]:C.watch,.9,1.1));
         label(ctx,"from "+[...new Set(arr.map(x=>x.from))].slice(0,2).join("/"),xs[0]-30,y+15,{font:DK.MONO,size:7.5,weight:400,color:C["ink-3"]});}});
   },{data:pipelineData()});
+  efHover(pipeRec,h=>{const t=h.g.t;return `<b>${esc(demandLabel(t))}</b>${t.demandId?` <span class="faint">${esc(t.title)}</span>`:""}<br><span class="faint">${h.g.items.length} transport${h.g.items.length>1?"s":""} at ${esc(h.sys)}</span>`
+      +h.g.items.map(it=>`<div class="mono" style="font-size:11px;margin-top:3px">${esc(it.tr.number||"(unnumbered)")} ${it.rel?"":"<span style='color:var(--watch)'>· not released</span>"}${it.done?" · ✓ there":it.target?" · → "+esc(it.target):""}${it.tr.desc?`<div class="faint" style="font-family:var(--sans)">${esc(it.tr.desc)}</div>`:""}</div>`).join("")+`<div class="faint" style="margin-top:4px">click to open its transports</div>`;},
+    h=>{view="demands";activeId=h.g.t.id;activeTab="transports";renderApp();});
+  q("#ckPipeU").onclick=()=>{if(pipeRec&&pipeRec.hv)return;goView(CK_TILES[3].view);};
   /* epic rings */
   host.querySelectorAll(".ck-ep").forEach(el=>{const e=epicById(el.dataset.e);if(!e)return;const r=epicRollup(e),f=r.ts.length?r.done/r.ts.length:0,st={v:mv?0:f};
     scope(el.querySelector("canvas"),(ctx,w,h,t)=>{st.v+=(f-st.v)*.04;dotRing(ctx,w/2,h/2,w/2-5,st.v,32,C["pen-5"],mv?t*.00008:0);
@@ -5692,7 +5731,7 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
       if(due.has(di)){dot(ctx,x,y,2.6,C["pen-2"],vis);continue;}
       if(nx.has(di)){ring(ctx,x,y,3,C["pen-4"],vis,1.2);continue;}
       dot(ctx,x,y,r>4?.8:1.1,C["ink-4"],(di<today?.5:1)*vis);}
-    [["pen-2","due"],["pen-4","recurring"],["pen-1","freeze"]].forEach(([p,l],i)=>{dot(ctx,w-156+i*54,h-5,2.2,C[p]);label(ctx,l,w-150+i*54,h-5,{size:8,weight:400,align:"left",color:C["ink-3"]});});});
+    [["pen-2","due"],["pen-4","next action",1],["pen-4","recurring"],["pen-1","freeze"]].forEach(([p,l,o],i)=>{const x=w-262+i*66;if(o)ring(ctx,x,h-5,3,C[p],1,1.2);else dot(ctx,x,h-5,2.2,C[p]);label(ctx,l,x+6,h-5,{size:8,weight:400,align:"left",color:C["ink-3"]});});});
 }
 
 /* ---------- theme + motion ----------
@@ -5730,7 +5769,7 @@ darkMQ.addEventListener("change",()=>{if(currentTheme()==="bench"){applyTheme("b
 const U=(v,u)=>`${v}<small>${u}</small>`;
 /* "03 Jul" this year, "03 Jul 25" otherwise — readouts stay short enough not to clip */
 const shortD=s=>{if(!s)return "—";const d=new Date(s+"T00:00:00");return d.toLocaleDateString("en-GB",d.getFullYear()===new Date().getFullYear()?{day:"2-digit",month:"short"}:{day:"2-digit",month:"short",year:"2-digit"});};
-function roHTML(items){return `<div class="bro">${items.filter(Boolean).map(x=>`<div class="bro-i ${x.cls||""}"${x.title?` title="${esc(x.title)}"`:""}><span class="k">${x.k}</span><span class="v">${x.v}</span></div>`).join("")}</div>`;}
+function roHTML(items,cls){return `<div class="bro ${cls||""}">${items.filter(Boolean).map(x=>`<div class="bro-i ${x.cls||""}"${x.title?` title="${esc(x.title)}"`:""}><span class="k">${x.k}</span><span class="v">${x.v}</span></div>`).join("")}</div>`;}
 function dotBarSVG(frac,n=12,pen="var(--ink)"){let s=`<svg class="dbar" width="${n*5}" height="6" aria-hidden="true">`;const lit=Math.round(Math.max(0,Math.min(1,frac||0))*n);
   for(let i=0;i<n;i++)s+=i<lit?`<circle cx="${i*5+2.5}" cy="3" r="2" style="fill:${pen}"/>`:`<circle cx="${i*5+2.5}" cy="3" r="1.1" style="fill:var(--ink-4)"/>`;return s+"</svg>";}
 /* a clock face of dots filling toward the next action */
@@ -5763,7 +5802,7 @@ function demandHeadBench(t,sub,lc){
       {k:"Rework",v:U(rw,rw===1?"cycle":"cycles"),cls:rw?"bad":""},
       roundCount(t)>1?{k:"Rounds",v:U(roundCount(t),(roundCount(t)-1)+" requirement change"+(roundCount(t)>2?"s":"")),title:"The requirement changed after delivery — never counted as rework"}:null,
       (()=>{const h=efSum(efFor(t.id)),e=+t.estimate||0;return h||e?{k:"Logged",v:U(efFh(h),e?"/ "+efFh(e)+" h":"h"),cls:e&&h>e?"bad":"",title:"Hours logged against this demand — Effort tab"}:null;})(),
-      isWaiting(t)?{k:"Waiting on",v:esc(t.waiting.on)+(waitDays(t)!=null?`<small>${waitDays(t)} d</small>`:""),cls:"warn"}:null])}
+      isWaiting(t)?{k:"Waiting on",v:esc(t.waiting.on)+(waitDays(t)!=null?`<small>${waitDays(t)} d</small>`:""),cls:"warn"}:null],"stack")}
     ${na?`<div class="bband ${nad<=0?"watch":""}"><canvas class="natick"></canvas><span class="k">Next action · ${nad<0?(-nad)+" d ago":nad===0?"today":"in "+nad+" d"}</span><span class="tx"><b>${esc(na.note||"(no note)")}</b> <span class="mono faint">${na.date}</span></span><button class="sm" id="na-done" title="Did it — note it in History and clear">✓ Done</button><button class="sm ghost" id="na-edit" title="Change date or text">✎</button></div>`:""}
     ${cl.length?(()=>{const x=cl[0],o=x.open[0],more=cl.reduce((n,y)=>n+y.open.length,0)-1;
       return `<div class="clashband"><canvas class="orbit"></canvas><span><span class="ck">Object clash</span> <b class="mono">${esc(x.o.name)}</b> is also in flight in <a class="cb-go" data-id="${o.t.id}">${esc(demandLabel(o.t))}</a> <span class="clw">— ${esc(clashWhere(o))}${more>0?` · +${more} more`:""}. Agree the import order.</span></span><button class="sm cb-obj">Objects ›</button></div>`;})():""}
@@ -5961,7 +6000,7 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
         :`<button class="sm" id="cxNaSet" style="width:100%">⏰ When should this come back up?</button>`}
       ${(()=>{const tr=nextActionTrail(t);return tr.length?`<div class="cx-natr"><div class="h">Done so far · ${tr.length}</div>${tr.slice(0,5).map(x=>`<div class="r"><span class="k">✓</span><span class="s" title="${esc(x.note)}">${esc(x.note)}</span><span class="d">${shortD(isoTs(x.ts))}</span></div>`).join("")}${tr.length>5?`<a class="cxl" data-tab="history">+ ${tr.length-5} earlier in History ›</a>`:""}</div>`:"";})()}</div>
     <div class="ck-unit cxs"><div class="ck-head"><h2>Facts</h2><a class="cxl" id="cxEdit">✎ edit</a></div><div class="kv">
-      <span class="k">System</span><span class="v mono">${t.system?esc(t.system)+" · "+(TIER_S[t.system.slice(-1)]||"")+(t.client?" · client "+esc(t.client):""):"—"}</span>
+      <span class="k">System</span><span class="v mono">${t.system?esc(t.system)+" · "+(TIER_S[t.system.slice(-1)]||"")+(t.client?" / "+esc(t.client):""):"—"}</span>
       ${ep?`<span class="k">Epic</span><span class="v"><a class="cxl ep" id="cxEpic">◆ ${esc(ep.code||ep.name)}${t.wave?" · "+esc(t.wave):""}</a></span>`:""}
       <span class="k">Requestor</span><span class="v">${esc(t.requestor)||"—"}</span>
       <span class="k">Built by</span><span class="v"><a class="cxl" id="cxBuild" title="Who's building it — someone in your team, or you">👷 ${buildersOf(t).length?esc(builderNames(t)):"you"}</a></span>
@@ -6046,16 +6085,21 @@ function journeyDraw(t){return (c,w,h,tm,dt,s)=>{const {dot,ring,label,C}=DK,mv=
   for(let x=28;x<=w-28;x+=6)dot(c,x,y,.8,C["ink-4"]);
   hs.forEach((e,i)=>{const a=Math.min(X(e.d),xMax),b=Math.min(i<hs.length-1?X(hs[i+1].d):(t.status==="closed"?X(e.d)+2:fin?Math.max(X(e.d)+2,X(fin)):xNow),xMax);if(b<=a)return;
     c.globalAlpha=.85;c.strokeStyle=pen(e.s);c.lineWidth=3;c.beginPath();c.moveTo(a,y);c.lineTo(b,y);c.stroke();});
+  const occ=[];
+  if(t.dueDate){const xd=X(t.dueDate);occ.push({x0:xd-12,x1:xd+12,y0:y-36,y1:y-24});}
+  if(xNow<=xMax)occ.push({x0:xNow-18,x1:xNow+18,y0:y+34,y1:y+46});
   hs.forEach((e,i)=>{if(e.s!=="bug")return;const prev=hs.slice(0,i).reverse().find(x=>x.s==="delivered");if(!prev)return;const a=X(prev.d),b=X(e.d);if(b>xMax)return;
     c.globalAlpha=.6;c.strokeStyle=C.bad;c.lineWidth=1.2;c.setLineDash([3,3]);c.beginPath();c.moveTo(b,y-4);c.quadraticCurveTo((a+b)/2,y-44,a,y-4);c.stroke();c.setLineDash([]);
-    label(c,"rework",(a+b)/2,y-30,{size:8,color:C.bad});});
+    label(c,"rework",(a+b)/2,y-30,{size:8,color:C.bad});occ.push({x0:(a+b)/2-18,x1:(a+b)/2+18,y0:y-36,y1:y-24});});
   changeEvents(t).forEach((ev,i)=>{const x=X(isoTs(ev.ts));if(x>xMax)return;c.globalAlpha=.75;c.strokeStyle=C["pen-5"];c.lineWidth=1.2;c.setLineDash([2,3]);c.beginPath();c.moveTo(x,y-40);c.lineTo(x,y+8);c.stroke();c.setLineDash([]);
     label(c,"REQUIREMENT CHANGED · ROUND "+(i+2),x+4,y-44,{size:7.5,color:C["pen-5"],align:"left"});});
-  let lastX=-99,flip=0;
+  const LANES=[[18,28],[-16,-26],[-42,-52],[44,54]];
   hs.forEach(e=>{const x=X(e.d);if(x>xMax)return;dot(c,x,y,4.2,C.paper);dot(c,x,y,3.4,pen(e.s));
-    flip=x-lastX<60?1-flip:0;lastX=x;const up=flip===1;
-    label(c,(STATUS[e.s]?STATUS[e.s].label.split(" /")[0]:e.s).toUpperCase(),x,y+(up?-16:18),{size:7.5,color:pen(e.s)});
-    label(c,shortD(e.d),x,y+(up?-26:28),{font:DK.MONO,size:8,weight:400});});
+    const st=(STATUS[e.s]?STATUS[e.s].label.split(" /")[0]:e.s).toUpperCase(),dt2=shortD(e.d),hw=Math.max(st.length*5.4,dt2.length*5.2)/2+3;
+    let ln=LANES.find(([a,b])=>{const y0=y+Math.min(a,b)-6,y1=y+Math.max(a,b)+6;return !occ.some(o=>x-hw<o.x1&&x+hw>o.x0&&y0<o.y1&&y1>o.y0);})||LANES[0];
+    occ.push({x0:x-hw,x1:x+hw,y0:y+Math.min(...ln)-6,y1:y+Math.max(...ln)+6});
+    label(c,st,x,y+ln[0],{size:7.5,color:pen(e.s)});
+    label(c,dt2,x,y+ln[1],{font:DK.MONO,size:8,weight:400});});
   t.transports.forEach((tr,k)=>tr.syncs.forEach(sy=>{if(!sy.date)return;const x=X(sy.date);if(x>xMax||x<28)return;const yy=h-16-(k%3)*7;
     c.globalAlpha=.35;c.strokeStyle=C.good;c.lineWidth=1;c.beginPath();c.moveTo(x,y+6);c.lineTo(x,yy);c.stroke();dot(c,x,yy,2.2,C.good);}));
   if(t.transports.some(tr=>tr.syncs.some(sy=>sy.date)))label(c,"TRANSPORTS LANDING",28,h-3,{size:7,align:"left"});
@@ -6456,7 +6500,7 @@ function efGKey(e){const g=efG();if(g==="activity")return e.activity;
 function efGMeta(k){const g=efG();if(k==="_non")return {l:"Not demand work",col:"ink-3"};if(k==="_ep")return {l:"◆ Epic-level work",col:"pen-5"};
   if(String(k).startsWith("j:")){const j=jobById(k.slice(2));return {l:j?"☐ "+j.title:"(deleted task)",sub:j?"task"+(j.askedBy?" · for "+j.askedBy:""):"",col:efPen(k)};}
   if(String(k).startsWith("e:")){const ep=epicById(k.slice(2));return {l:"◆ "+(ep?(ep.code||ep.name):"(deleted epic)"),sub:"epic-level work"+(ep&&ep.code?" · "+ep.name:""),col:efPen(k)};}
-  if(g==="demand"){const t=efTaskOf(k);return t?{l:demandLabel(t),sub:t.demandId?t.title:"",col:efPen(k)}:{l:"(deleted demand)",col:"ink-4"};}
+  if(g==="demand"){const t=efTaskOf(k);return t?{l:demandLabel(t),sub:t.demandId&&demandLabel(t)===t.demandId?t.title:"",col:efPen(k)}:{l:"(deleted demand)",col:"ink-4"};}
   if(g==="epic"){if(k==="_noe")return {l:"No epic",col:"pen-4"};const e=epicById(k);return {l:"◆ "+(e?(e.code||e.name):"epic"),sub:e&&e.code?e.name:"",col:efEpicPen(k)};}
   if(g==="activity")return {l:k,col:EF_ACTC[k]||"ink-3"};
   return k==="_nt"?{l:"No theme",col:"ink-2"}:{l:k,col:efThemePen(k)};}
@@ -6624,7 +6668,7 @@ function efRhythmHTML(A){const nm=["Mon","Tue","Wed","Thu","Fri"];
   const best=Math.max(...av.map(v=>v.d));
   return `<div class="ef-rh">${av.map((v,i)=>{const nd=Math.round(v.d*2),no=Math.round(v.o*2);let s=`<svg width="10" height="100" aria-hidden="true">`;
     for(let j=0;j<20;j++)s+=`<circle cx="5" cy="${97.5-j*5}" r="${j<nd+no?2.1:.9}" style="fill:var(--${j<nd?"pen-2":j<nd+no?"ink-3":"ink-4"})"/>`;
-    return `<div class="${v.d===best&&best>0?"mx":""}" title="${efFh(Math.round(v.d*10)/10)} h demand work · ${efFh(Math.round(v.o*10)/10)} h other">${s}<b>${efFh(Math.round(v.d*10)/10)}</b>${nm[i]}</div>`;}).join("")}</div>
+    return `<div class="${v.d===best&&best>0?"rh-best":""}" title="${efFh(Math.round(v.d*10)/10)} h demand work · ${efFh(Math.round(v.o*10)/10)} h other">${s}<b>${efFh(Math.round(v.d*10)/10)}</b>${nm[i]}</div>`;}).join("")}</div>
     <div class="ef-legend" style="justify-content:center"><span><span class="ef-pd" style="--pen:var(--pen-2)"></span>demand work (the number)</span><span><span class="ef-pd" style="--pen:var(--ink-3)"></span>meetings, admin, support, learning</span></div>`;}
 let efNoticeActs=[];
 function efNoticedHTML(A,total,dem,unl){efNoticeActs=[];const out=[],act=(l,fn)=>{efNoticeActs.push(fn);return `<button class="sm" data-act="${efNoticeActs.length-1}">${l}</button>`;},g=efG();
@@ -6834,9 +6878,9 @@ function renderReview(){const host=document.getElementById("detail");efHideTip()
   efHover(DK.scope(q("#rvMonths"),rvMonthsDraw),rvMonthsTip);}
 function rvTimeRows(S){if(!S.hours)return `<div class="faint" style="font-size:12px;line-height:1.55">Log hours (⏱ or T) and this shows where your time went — by theme and by activity.</div>`;
   const by=f=>{const m=new Map();S.ef.forEach(e=>{const k=f(e);m.set(k,(m.get(k)||0)+e.hours);});return [...m.entries()].sort((a,b)=>b[1]-a[1]);};
-  const th=by(e=>{const t=rvTask(e.taskId);return e.taskId?(t&&t.theme)||"No theme":e.epicId?"◆ Epic-level work":"Not demand work";}),ac=by(e=>e.activity),mx=Math.max(...th.map(x=>x[1]),...ac.map(x=>x[1]),1);
+  const th=by(e=>{const t=rvTask(e.taskId);return e.taskId?(t&&t.theme)||"No theme":e.epicId?"◆ Epic-level work":e.jobId?"Other tasks":"Not demand work";}),ac=by(e=>e.activity),mx=Math.max(...th.map(x=>x[1]),...ac.map(x=>x[1]),1);
   const row=(k,h,pen)=>`<div class="ef-brow"><span class="n"><span class="ef-pd" style="--pen:var(--${pen})"></span>${esc(k)}</span><span class="v">${efFh(Math.round(h))} h · ${efPct(h,S.hours)}%</span>${efBarDots(h,mx/30,30,pen)}</div>`;
-  return `<div class="ef-lb" style="margin-top:2px">By theme</div>${th.map(([k,h])=>row(k,h,k==="Not demand work"?"ink-3":k==="◆ Epic-level work"?"pen-5":efThemePen(k))).join("")}<div class="ef-lb" style="margin-top:12px">By activity</div>${ac.map(([k,h])=>row(k,h,EF_ACTC[k]||"ink-3")).join("")}`;}
+  return `<div class="ef-lb" style="margin-top:2px">By theme</div>${th.map(([k,h])=>row(k,h,k==="Not demand work"?"ink-3":k==="◆ Epic-level work"?"pen-5":k==="Other tasks"?"pen-7":efThemePen(k))).join("")}<div class="ef-lb" style="margin-top:12px">By activity</div>${ac.map(([k,h])=>row(k,h,EF_ACTC[k]||"ink-3")).join("")}`;}
 /* month by month: hours as a dot column, delivered demands as big dots beside it, wins as diamonds on top */
 function rvMonths(S){const out=[];let d=S.from.slice(0,7)+"-01";while(d<=S.to&&out.length<36){const m=d.slice(0,7),nx=efAdd(efAdd(d,32).slice(0,7)+"-01",0);
   out.push({m,d,fut:d>todayStr(),hours:efSum(S.ef.filter(e=>e.date.slice(0,7)===m)),del:S.del.filter(x=>x.d.slice(0,7)===m),wins:S.wins.filter(w=>w.date.slice(0,7)===m)});d=nx;}return out;}
@@ -7424,6 +7468,8 @@ async function runSelfTest(){
     openNextAction(j1,{note:"Sample next step"});const r0=document.getElementById("modalRoot");r0.querySelector("#na-note").value="Sample following step";r0.querySelector("#na-save").click();
     ok("Tasks: ✓ Done on a next action logs the step and sets the next",j1.log.some(x=>x.kind==="step"&&x.text==="Sample next step")&&j1.nextAction.note==="Sample following step",JSON.stringify(j1.nextAction));
     const m2=migrate(clone({version:29,tasks:[],jobs:[clone(j1)],efforts:[clone(e)]}));ok("Tasks: survive an upgrade with their hours",m2.jobs.length===1&&m2.jobs[0].log.length===j1.log.length&&m2.efforts[0].jobId==="st-job-1");}
+   {const m=state.tasks.filter(dvMatches({...dvBlank(),only:["due7"]}));ok("Today: the Overdue tile opens only late or due-soon demands",m.length>0&&m.every(x=>{const d=earliestOpenDue(x);return d&&daysUntil(d)<=7;})&&CK_TILES[1].view.only.includes("due7"));}
+   ok("History dates read like the rest of the app",/^\d\d [A-Z][a-z]{2}( \d{4})? · \d\d:\d\d$/.test(fmtTs(Date.now())),fmtTs(Date.now()));
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
