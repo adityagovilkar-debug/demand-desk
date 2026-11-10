@@ -268,7 +268,7 @@ const CK_TILES=[
   {no:"02",pen:"var(--pen-1)",st:"sweeping",nm:"Overdue & due soon",bl:"Radar — distance from the centre is days late; the inner ring is due within 7 days.",view:{group:"due",sort:"due",only:["due7"]}},
   {no:"03",pen:"var(--pen-4)",st:"waiting",nm:"Waiting on others",bl:"The longest open wait, against a 30-day follow-up rule.",view:{group:"none",sort:"waiting",dir:"desc",only:["waiting"]}},
   {no:"04",pen:"var(--pen-3)",st:"to prod",nm:"Go-live",bl:"Transports still on their way to the demand's go-live system.",view:{group:"system",sort:"due",only:["notprod"]}}];
-function cockpitHTML(){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>Math.max(m,-daysUntil(earliestOpenDue(t))),0),w=c.waiting[0];
+function cockpitHTML(mid=""){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>Math.max(m,-daysUntil(earliestOpenDue(t))),0),w=c.waiting[0];
   const foot=[`${c.active.length}<small>of ${state.tasks.length}</small>`,`${c.over.length}<small>late${c.over.length?" · worst "+worst+" d":""}</small>`,
     w?`${waitDays(w)||0}<small>d · ${esc(w.waiting.on)}</small>`:`0<small>nobody</small>`,`${c.short}<small>TRs short of go-live</small>`];
   const eps=state.epics.filter(e=>["active","onhold"].includes(e.status)).sort((a,b)=>(a.targetDate||"9999").localeCompare(b.targetDate||"9999")).slice(0,6);
@@ -280,7 +280,7 @@ function cockpitHTML(){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>Math.m
         <button class="ck-search" id="ckSearch"><span class="caret"></span>Find a demand, an object, a transport, a system…<kbd>Ctrl K</kbd></button>
         <div class="ck-acts"><button class="primary" id="ckNew">＋ New demand</button><button id="ckJ">Today's journal</button><button id="ckDbg">Debug session</button><button id="ckLog">⏱ Log time</button><button id="ckWin">🏆 Win</button><button id="ckWrap" title="This week: hours, missing days, wins and lessons">Week wrap-up</button><button id="ckWeek">Weekly summary</button><button id="ckHand">Handover pack</button></div></div>
       <div class="ck-clock"><div class="ck-lbl" style="text-align:right">local · offline · ${state.settings.autosave?"autosave on":"autosave off"}</div><div class="big"><canvas id="ckClockM" title="Local time"></canvas><small id="ckClock"></small></div></div></div>
-    <div class="ck-sech"><span class="ck-lbl">Pulse · read from your data file</span></div>
+    ${mid}<div class="ck-sech"><span class="ck-lbl">Pulse · read from your data file</span></div>
     <div class="ck-tiles">${CK_TILES.map((x,i)=>`<div class="ck-unit ck-tile" data-i="${i}" style="--pen:${x.pen}"><div class="top"><span class="no">${x.no}</span><span class="st"><i></i><span>${x.st}</span></span></div>
       <canvas></canvas><div class="nm">${x.nm}</div><div class="bl">${x.bl}</div><div class="ft"><span>${foot[i]}</span><span class="go">Open ›</span></div></div>`).join("")}</div>
     <div class="ck-grid">

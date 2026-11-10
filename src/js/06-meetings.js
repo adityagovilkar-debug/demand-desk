@@ -99,13 +99,14 @@ function drawMeetingActions(m){
       <span class="at">${esc(a.text)||"<span class='faint'>(click to write action)</span>"}</span>
       <input class="ow" value="${esc(a.owner)}" placeholder="Owner">
       <input type="date" class="du ${dc}" value="${a.due||""}" title="Due">
-      <span class="nact"><button class="ghost sm a-res" title="Outcome / resolution note (e.g. the answer you were waiting for)">📝</button><button class="ghost sm danger a-del">🗑</button></span>
+      <span class="nact">${a.done?"":`<button class="ghost sm a-job" title="Make it a Task — it keeps the link to this meeting">↗ Task</button>`}<button class="ghost sm a-res" title="Outcome / resolution note (e.g. the answer you were waiting for)">📝</button><button class="ghost sm danger a-del">🗑</button></span>
       ${a.resolution?`<span class="ares" title="Outcome — click to edit">↳ ${esc(a.resolution)}</span>`:""}`;
     row.querySelector(".chk").onclick=()=>{a.done=!a.done;touch(m);drawMeetingActions(m);renderMeetingSidebar();};
     const at=row.querySelector(".at");at.onclick=()=>editInline(at,a.text,v=>{a.text=v;touch(m);drawMeetingActions(m);});
     row.querySelector(".ow").onchange=e=>{a.owner=e.target.value;touch(m);};
     row.querySelector(".du").onchange=e=>{a.due=e.target.value;touch(m);drawMeetingActions(m);};
     row.querySelector(".a-del").onclick=()=>{m.actions.splice(i,1);touch(m);drawMeetingActions(m);renderMeetingSidebar();};
+    {const jb=row.querySelector(".a-job");if(jb)jb.onclick=()=>actionToJob(a,m);}
     const editRes=()=>{let ar=row.querySelector(".ares");if(!ar){ar=document.createElement("span");ar.className="ares";row.appendChild(ar);}
       editInline(ar,a.resolution||"",v=>{a.resolution=v;touch(m);drawMeetingActions(m);});};
     row.querySelector(".a-res").onclick=editRes;
@@ -141,9 +142,11 @@ function renderActionRollup(host){
       <span class="ow" style="flex:0 0 110px;color:var(--muted)">${esc(a.owner)||"<span class='faint'>—</span>"}</span>
       <span class="du ${dc}" style="flex:0 0 100px;font-family:var(--mono);font-size:12px">${a.due||"—"}${dc==="over"?" ⚠":""}</span>
       <span class="go" style="flex:0 0 170px;font-size:11px;color:var(--accent);cursor:pointer" title="Open meeting">👥 ${m.date}${m.team?" · "+esc(m.team):""}</span>
+      <button class="ghost sm a-job" title="Make it a Task — it keeps the link to the meeting">↗ Task</button>
       ${a.resolution?`<span class="ares" title="Outcome — click to edit">↳ ${esc(a.resolution)}</span>`:""}`;
     row.querySelector(".chk").onclick=()=>{a.done=true;touch(m);renderActionRollup(host);renderMeetingSidebar();};
     row.querySelector(".go").onclick=()=>{meetingRollup=false;activeMeetingId=m.id;renderApp();};
+    row.querySelector(".a-job").onclick=()=>actionToJob(a,m);
     const arEl=row.querySelector(".ares");if(arEl)arEl.onclick=()=>editInline(arEl,a.resolution||"",v=>{a.resolution=v;touch(m);renderActionRollup(host);});
     body.appendChild(row);});
 }

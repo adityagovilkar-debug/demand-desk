@@ -166,6 +166,21 @@ points** (from meetings), **My action items** (personal reminders),
 (open, untouched 14d+), **Debug sessions gone quiet** (active but untouched 14d+ —
 one click **✓ Resolved** or **⏸ Paused** right on the card), plus today's journal.
 Click any item to jump straight to it.
+- **Today's agenda** — the first thing under the greeting: one ordered list of what
+  the day asks of you, late items first — next steps due (demands and tasks), your
+  own meeting action points due, **follow-ups** on what you've waited on for 3+ days,
+  Journal to-dos due, and demands or tasks due. Each is done right there: **✓ Done**
+  / **Move** on a step, **✓ Done** / **↗ Task** on an action point, **Chased** /
+  **Answer in** on a follow-up (a chase is noted in History and the follow-up comes
+  back 3 days later; both have Undo). An action point counts as yours when its owner
+  is empty, "me" / "myself" / "I", or your Greeting name (⋯ menu). Ten rows, then
+  "＋ N more". Its foot shows the hours logged today and **☾ Close the day**.
+- **☾ Close the day** — a sheet with today's meetings, then every demand, task and
+  epic touched that day (with what you did — steps, status changes, notes) and an
+  hours box each, plus **Anything else** (meetings, admin, support, learning). The
+  bar adds it up against your working day; one **Log** button, with Undo; ‹ › for
+  an earlier day. A meeting's hours become its duration. The button turns solid
+  after 7.30 pm on a working day that isn't fully logged.
 - **🗓 Week wrap-up** — Friday to Sunday a card opens the page: hours this week
   against the working days so far (holidays and leave left out), any day with no
   log (＋ log / day off), what was delivered or closed, where most time went, and
@@ -315,11 +330,13 @@ Click any item to jump straight to it.
   import on every listed transport/ToC in one go.
 - **⏰ Next action** — "look at this again on…": a date plus what to do. Quick
   picks (tomorrow, next Monday, in 2 weeks…). It shows under the demand title and
-  on its card, and the demand comes back on **Today → Next actions due** on that
+  on its card, and the demand comes back on **Today's agenda** on that
   date. A demand parked with a future next action isn't counted as stale.
   - **A chain of steps** — **✓ Done** ticks the step off and asks *"and the next
     step?"* in the same box, dated the next working day (weekends, holidays and
     leave skipped). **Set next step** carries on; **Just done** stops there.
+    **Time it took** (optional — type `1.5` or tap ½ / 1 / 2 / 3 h) logs the hours
+    for today with the step as the note.
     Every finished step is noted in History, and the context rail lists them
     under the next action (**Done so far**).
 - **Delete safety** — deleting a subtask that has sub-subtasks or comments, a
@@ -674,6 +691,9 @@ and **action points** (text, owner, due date, done).
   the answer (e.g. "Confirmed: cutover on 15.08"). The note stays with the point
   after you close it — the question and its answer live together — shows in the
   rollup, and is searchable. Click the teal ↳ line to edit it.
+- **↗ Task** — turns an open action point into a Task (in the meeting and in the
+  rollup, and on Today's agenda): the task is linked to the meeting, and the point
+  is ticked off with "→ moved to Tasks".
 - **Duration — the meeting's time, logged once.** Give a meeting a duration
   (`45m`, `1.5h`) and it's logged in **Effort** for you, as *Meetings & admin*,
   against its linked demand (or epic; else the Meetings bucket) — the line under

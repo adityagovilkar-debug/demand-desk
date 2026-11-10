@@ -30,6 +30,7 @@ const efThemePen=th=>{const L=[...new Set(state.tasks.map(t=>t.theme).filter(Boo
 /* canvases redraw every frame: look names and colours up once per render */
 const efM=k=>{const m=EFA&&EFA.meta;let v=m&&m.get(k);if(!v){v=efGMeta(k);if(m)m.set(k,v);}return v;};
 const efSum=a=>a.reduce((s,e)=>s+e.hours,0);
+const anyEstimate=()=>state.tasks.some(t=>+t.estimate>0);   /* estimate panels stay out of the way until the first estimate exists */
 const efFh=h=>String(Math.round(h*100)/100);
 const efFor=id=>state.efforts.filter(e=>e.taskId===id);
 const efAdd=(d,n)=>{const x=new Date(d+"T00:00:00");x.setDate(x.getDate()+n);return isoD(x);};
@@ -245,7 +246,7 @@ function renderEffortTab(body,t){
   body.innerHTML=`<div class="efx ef-tab">
     <div class="ck-unit"><div class="ck-head"><h2>Log time on ${esc(t.demandId||"this demand")}</h2><span class="ck-meta">Ctrl+Enter logs · T from anywhere · 2 · 1.5 · 2h30 · 90m</span></div><div id="efQc"></div></div>
     <div class="ef-ins">
-      <div class="ck-unit ins"><canvas data-k="est" data-still="3000"></canvas><div style="min-width:0"><div class="k">Logged vs estimate</div><div class="v" id="efEstV">${efFh(tot)}<small>${est?"/ "+efFh(est)+" h":"h"}</small></div><div class="s ${est&&tot>est?"late":""}">${est?(tot>est?efFh(tot-est)+" h over":efFh(est-tot)+" h left"):"no estimate"} · <a href="#" class="ef-est">${est?"change":"set one"}</a></div></div></div>
+      <div class="ck-unit ins"><canvas data-k="est" data-still="3000"></canvas><div style="min-width:0"><div class="k">${est||anyEstimate()?"Logged vs estimate":"Logged"}</div><div class="v" id="efEstV">${efFh(tot)}<small>${est?"/ "+efFh(est)+" h":"h"}</small></div><div class="s ${est&&tot>est?"late":""}">${est?(tot>est?efFh(tot-est)+" h over":efFh(est-tot)+" h left"):anyEstimate()?"no estimate":`${es.length} entr${es.length===1?"y":"ies"}`} · <a href="#" class="ef-est">${est?"change":anyEstimate()?"set one":"add an estimate"}</a></div></div></div>
       <div class="ck-unit ins"><canvas data-k="days" data-still="3000"></canvas><div style="min-width:0"><div class="k">Days worked</div><div class="v">${days.size}<small>days</small></div><div class="s">${days.size?"avg "+efFh(Math.round(tot/days.size*10)/10)+" h on a day you touched it":"nothing logged yet"}</div></div></div>
       <div class="ck-unit ins"><canvas data-k="rw" data-still="3000"></canvas><div style="min-width:0"><div class="k">Rework</div><div class="v">${efFh(rw)}<small>h</small></div><div class="s ${rw?"late":""}">${rw?efPct(rw,tot)+"% — hours logged while in Bug":"none — never bounced"}</div></div></div>
       <div class="ck-unit ins"><canvas data-k="last" data-still="3000"></canvas><div style="min-width:0"><div class="k">Last worked</div><div class="v">${last?efWdd(last.date):"—"}</div><div class="s">${last?efFh(efSum(es.filter(e=>e.date===last.date)))+" h · "+esc(last.activity):"never"}</div></div></div></div>
@@ -393,8 +394,8 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
       <div class="ck-unit"><div class="ck-head"><h2>Where the hours went</h2><span class="ck-meta">${A.mode==="day"?`per day · a dot = ½ h · dashed = ${efFh(EF_DAY)} h`:A.mode==="week"?`per week · a dot = 1 h · dashed = ${efFh(EF_DAY*5)} h`:`per month · a dot = 4 h · dashed = ${efFh(EF_DAY*21)} h`} · click a column</span></div><canvas class="ef-wkc" id="efWk" data-still="2600"></canvas></div>
       <div class="ck-unit"><div class="ck-head"><h2>Activity mix</h2><span class="ck-meta">${efFh(total)} h</span></div><div class="ef-mixw"><canvas id="efMix" data-still="2000"></canvas><div>${efMixRows(A.R)}</div></div></div></div>
     <div class="ck-unit" id="efSheet"></div>
-    <div class="ef-g3">
-      <div class="ck-unit"><div class="ck-head"><h2>Estimate vs actual</h2><span class="ck-meta">whole life · demands in range</span></div>${efEstRows(A)}</div>
+    <div class="ef-g3${anyEstimate()?"":" two"}">
+      ${anyEstimate()?`<div class="ck-unit"><div class="ck-head"><h2>Estimate vs actual</h2><span class="ck-meta">whole life · demands in range</span></div>${efEstRows(A)}</div>`:""}
       <div class="ck-unit"><div class="ck-head"><h2>Rework cost</h2><span class="ck-meta">hours logged while a demand was in Bug</span></div>${efReworkHTML(A,dem)}</div>
       <div class="ck-unit"><div class="ck-head"><h2>Your week's rhythm</h2><span class="ck-meta">avg on a logged day</span></div>${efRhythmHTML(A)}</div></div></div>`;
   host.querySelector("#efNoticed").innerHTML=efNoticedHTML(A,total,dem,unl);

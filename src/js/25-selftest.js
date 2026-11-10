@@ -151,6 +151,39 @@ async function runSelfTest(){
    {const b=state.tasks.find(x=>x.id==="st-b"),R=document.getElementById("modalRoot");openTaskModal(b);R.querySelector("#m-status").value="progress";R.querySelector("#m-save").click();
     const asked=!!R.querySelector("#cbOk")&&b.status==="delivered";const c=R.querySelector("#cbCancel");if(c)c.click();R.innerHTML="";
     ok("Edit: moving a delivered demand back asks why",asked);}
+   {const t=state.tasks.find(x=>x.id==="st-a"),m=state.meetings.find(x=>x.id==="st-m1"),T0=todayStr();
+    m.actions.push({id:"st-act-me",text:"Sample action of mine",owner:"",done:false,due:T0,resolution:""},{id:"st-act-them",text:"Sample action of theirs",owner:"Sample owner",done:false,due:T0,resolution:""});
+    const ag=agendaItems(),has=(k,f)=>ag.some(i=>i.k===k&&f(i));
+    ok("Agenda: next steps, your action points, follow-ups and what's due — late first",
+      has("step",i=>i.what.includes("Chase the sample QA"))&&has("act",i=>i.what.includes("of mine"))&&!has("act",i=>i.what.includes("of theirs"))&&has("chase",i=>i.what.includes("QA team"))&&has("due",i=>i.date<T0)&&ag.every((x,i)=>!i||ag[i-1].date<=x.date),
+      ag.map(i=>i.k+":"+i.date).join(", "));
+    ag.find(i=>i.k==="chase"&&i.what.includes("QA team")).acts[0][1]();
+    ok("Agenda: a follow-up, once chased, waits three days (noted in History)",!chaseDue(t)&&lastChase(t)===T0&&!agendaItems().some(i=>i.k==="chase"&&i.what.includes("QA team")));
+    {const ub=[...document.querySelectorAll("#toast button")].find(x=>x.textContent==="Undo");if(ub)ub.click();}
+    ok("Agenda: Undo takes the chase back",chaseDue(t)&&lastChase(t)==="");
+    const a=m.actions.find(x=>x.id==="st-act-me"),j0=state.jobs.length;actionToJob(a,m);const j=state.jobs[0];
+    ok("A meeting action point becomes a Task, linked to the meeting",state.jobs.length===j0+1&&j.title==="Sample action of mine"&&j.meetingId==="st-m1"&&j.source==="meeting"&&a.done&&!agendaItems().some(i=>i.what.includes("of mine")));
+    view="today";renderApp();}
+   {const t=state.tasks.find(x=>x.id==="st-a"),R=document.getElementById("modalRoot"),n0=state.efforts.length;
+    t.nextAction={date:todayStr(),note:"Sample step to time"};nextActionDone(t);R.querySelector("#na-hrs").value="1.5";R.querySelector("#na-just").click();
+    const e=state.efforts[state.efforts.length-1],timed=state.efforts.length===n0+1&&e.taskId==="st-a"&&e.hours===1.5&&e.note==="Sample step to time"&&e.date===todayStr()&&!t.nextAction.date;
+    t.nextAction={date:todayStr(),note:"Sample untimed step"};nextActionDone(t);R.querySelector("#na-hrs").value="lots";R.querySelector("#na-just").click();
+    const held=!!R.querySelector("#na-hrs")&&t.nextAction.date===todayStr();R.querySelector("#na-hrs").value="";R.querySelector("#na-just").click();
+    ok("✓ Done logs the time it took, with the step as the note — and only a real number of hours",timed&&held&&state.efforts.length===n0+1&&!t.nextAction.date,`timed ${timed} · held ${held} · entries ${state.efforts.length-n0}`);R.innerHTML="";}
+   {const R=document.getElementById("modalRoot"),T0=todayStr(),day=()=>efSum(state.efforts.filter(e=>e.date===T0)),have=day();
+    const mt=normMeeting({id:"st-m-today",date:T0,title:"Sample meeting today",taskIds:[]});state.meetings.push(mt);
+    openCloseDay();const rows=[...R.querySelectorAll(".cd-row")],ra=rows.find(r=>r.textContent.includes("ST-1")),rm=rows.find(r=>r.textContent.includes("Sample meeting today")),re=R.querySelector(".cd-else");
+    const seen=!!ra&&!!rm&&!!re;let lbl="";
+    if(seen){ra.querySelector(".cd-h").value="2";rm.querySelector(".cd-h").value="0.5";re.querySelector(".cd-h").value="1";R.querySelectorAll(".cd-h").forEach(b=>b.dispatchEvent(new Event("input")));
+      lbl=R.querySelector("#cdLog").textContent;R.querySelector("#cdLog").click();}
+    const now=day();
+    ok("Close the day: an hours box per thing touched, meetings included, logged in one go",seen&&lbl==="Log 3.5 h"&&now===have+3.5&&mt.hours===0.5&&state.efforts.some(e=>e.meetingId==="st-m-today"),`rows ${seen} · ${lbl} · ${have} → ${now}`);
+    {const ub=[...document.querySelectorAll("#toast button")].find(x=>x.textContent==="Undo");if(ub)ub.click();}
+    ok("Close the day: Undo takes it all back",day()===have&&!state.efforts.some(e=>e.meetingId==="st-m-today")&&!mt.hours,`${day()} vs ${have}`);
+    state.meetings.splice(state.meetings.indexOf(mt),1);R.innerHTML="";}
+   {const est=state.tasks.map(t=>t.estimate),txt=()=>document.getElementById("detail").textContent;state.tasks.forEach(t=>t.estimate=0);view="effort";renderApp();const none=!txt().includes("Estimate vs actual")&&!anyEstimate();
+    state.tasks.forEach((t,i)=>t.estimate=est[i]);renderApp();const back=txt().includes("Estimate vs actual");view="today";renderApp();
+    ok("Estimate panels stay hidden until an estimate exists",none&&back,`hidden ${none} · back ${back}`);}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
@@ -159,7 +192,7 @@ async function runSelfTest(){
   const a=state.tasks.find(t=>t.id==="st-a");
   const pick=()=>{activeJobId="st-job-1";activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
   const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
-  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Days off",()=>openDaysOff()],
+  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Days off",()=>openDaysOff()],
     ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
     ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Settings menu",()=>openMenu()],["Close a task",()=>openJobClose(jobById("st-job-1"),"done")],["Log time on a task",()=>openLogTime({key:"j:st-job-1"})],["A closed task",()=>{view="jobs";activeJobId="st-job-2";renderApp();}],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
   const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;

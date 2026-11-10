@@ -29,7 +29,7 @@ function openComeback(t,v,done,cancel){const root=document.getElementById("modal
   const q=s=>root.querySelector(s),bg=q(".modal-bg"),close=()=>{root.innerHTML="";};
   const no=()=>{close();if(cancel)cancel();};bg.onclick=e=>{if(e.target===bg)no();};q("#cbCancel").onclick=no;
   const sync=()=>{root.querySelectorAll("[data-why]").forEach(b=>b.classList.toggle("on",b.dataset.why===st.why));root.querySelectorAll("[data-to]").forEach(b=>b.classList.toggle("on",b.dataset.to===st.to));
-    q("#cbMore").style.display=st.why==="defect"?"none":"";q("#cbEstW").style.display=q("#cbNoteW").style.display=st.why==="change"?"":"none";
+    q("#cbMore").style.display=st.why==="defect"?"none":"";q("#cbNoteW").style.display=st.why==="change"?"":"none";q("#cbEstW").style.display=st.why==="change"&&anyEstimate()?"":"none";
     q("#cbOk").textContent=st.why==="defect"?"Move to Bug / rework":st.why==="change"?`Start round ${n}`:`Move to ${STATUS[st.to].label}`;};
   root.querySelectorAll("[data-why]").forEach(b=>b.onclick=()=>{st.why=b.dataset.why;sync();});
   root.querySelectorAll("[data-to]").forEach(b=>b.onclick=()=>{st.to=b.dataset.to;sync();});

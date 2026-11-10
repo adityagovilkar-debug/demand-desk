@@ -1573,6 +1573,59 @@
     #printArea.specdoc{font-family:Georgia,"Times New Roman",serif;color:#000;padding:0;max-width:none}
     #printArea h1,#printArea h3{color:#000}
   }
+  /* ---------------- the daily loop: Today's agenda, Close the day, done → log the time ---------------- */
+  .agenda{margin-top:14px}
+  .dash>.agenda{margin:0 0 14px}
+  .ag-list{display:flex;flex-direction:column}
+  .ag-row{display:grid;grid-template-columns:62px 116px minmax(0,1.25fr) minmax(0,1fr) auto;gap:12px;align-items:center;min-height:38px;padding:5px 6px;border-bottom:1px dotted var(--rule-strong);cursor:pointer;font-size:13px;border-radius:2px}
+  .ag-row:hover{background:var(--paper-2)}
+  .ag-when{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);white-space:nowrap}
+  .ag-row.late .ag-when{color:var(--bad);font-weight:600}
+  .ag-k{display:flex;align-items:center;gap:7px;font-size:9px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--ink-2);white-space:nowrap}
+  .ag-k i{width:7px;height:7px;border-radius:50%;background:var(--pen);flex:none}
+  .ag-what{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+  .ag-sub{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin-left:4px}
+  .ag-of{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--ink-2)}
+  .ag-of b{font-weight:600;color:var(--ink)}
+  .ag-acts{display:flex;gap:5px;justify-content:flex-end;min-width:150px}
+  .ag-acts button{white-space:nowrap}
+  .ag-late{color:var(--bad)}
+  .ag-more{margin:7px 0 0 4px;align-self:flex-start}
+  .ag-empty{font-size:12.5px;color:var(--ink-3);padding:12px 4px}
+  .ag-foot{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--rule);font-size:12px;color:var(--ink-2)}
+  .ag-foot b{color:var(--ink)}
+  .ag-foot #agClose{margin-left:auto}
+  @media (max-width:1100px){.ag-row{grid-template-columns:58px minmax(0,1fr) auto}.ag-k,.ag-of{display:none}.ag-acts{min-width:0}}
+  /* Close the day */
+  .cd-modal{max-width:calc(100vw - 32px)}
+  .cd-modal h2{display:flex;align-items:baseline;gap:8px}
+  .cd-nav{margin-left:auto;display:flex;gap:4px}
+  .cd-lede{font-size:12px;margin:-6px 0 12px}
+  .cd-day{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);padding:9px 11px;border:1px solid var(--rule);border-radius:3px;margin-bottom:8px;background:var(--paper-2)}
+  .cd-day b{color:var(--ink)}
+  .cd-rows{max-height:54vh;overflow:auto;display:flex;flex-direction:column}
+  .cd-row{display:grid;grid-template-columns:8px minmax(0,1fr) 88px 150px 66px;gap:10px;align-items:center;padding:8px 2px;border-bottom:1px dotted var(--rule-strong)}
+  .cd-n{min-width:0;font-size:13px}
+  .cd-n b{font-weight:600}
+  .cd-did{font-size:11.5px;color:var(--ink-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cd-has{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-align:right}
+  .cd-row select{font-size:12px;padding:3px 6px;width:100%;min-width:0}
+  .cd-h{width:100%;text-align:right;font-size:13px;padding:4px 8px}
+  .cd-h.cd-bad{border-color:var(--bad);color:var(--bad)}
+  .cd-h:disabled{opacity:.45}
+  .cd-else{border-bottom:0}
+  .cd-none{font-size:12px;padding:8px 2px}
+  /* ✓ Done — the time it took */
+  .na-time{margin:-2px 0 14px}
+  .na-hrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .na-hrow input{width:120px}
+  .na-hrow .na-h.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .na-dsf{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-3);margin-left:6px}
+  .na-hrow input.na-bad{border-color:var(--bad)}
+  /* estimates: the Effort page's three-up row loses its estimate panel until one exists */
+  .efx .ef-g3.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  @media (max-width:1100px){.efx .ef-g3.two{grid-template-columns:1fr}}
+  .actitem .a-job{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -2412,8 +2465,6 @@ function renderToday(){
      if(seen.has(k))return;seen.add(k);pairs.push({t,o,x});})));
    card("Object clashes — in flight in two demands","⚠","alert",pairs.map(({t,o,x})=>({main:`<span class="mono">${esc(o.name)}</span>`,
      sub:`${esc(demandLabel(t))} ↔ ${esc(demandLabel(x.t))}`,go:goDemand(t.id,"objects")})));}
-  card("Next actions due","⏰","warn",tasks.filter(nextActionDue).sort((a,b)=>a.nextAction.date.localeCompare(b.nextAction.date))
-    .map(t=>({main:dlabel(t),sub:`${t.nextAction.note?esc(t.nextAction.note.length>38?t.nextAction.note.slice(0,37)+"…":t.nextAction.note)+" · ":""}${t.nextAction.date===todayStr()?"today":t.nextAction.date}`,go:goDemand(t.id)})));
   card("Bugs / Rework","🐞","alert",bugs.map(t=>({main:dlabel(t),sub:reworkCount(t)?`↻ ${reworkCount(t)}`:"",go:goDemand(t.id)})));
   card("Go-live: transports not at their destination","🚚","warn",golive.map(t=>{const g=golivePending(t);return {main:dlabel(t),sub:`${g.missing.length} TR(s) → ${g.target}`,go:goDemand(t.id,"transports")};}));
   card("Waiting on","⏳","warn",waiting.map(t=>({main:dlabel(t),sub:`${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+"d":""}`,go:goDemand(t.id)})));
@@ -2455,13 +2506,13 @@ function renderToday(){
   else html+=`<div class="dash-grid">`+cards.map((c,ci)=>{const exp=renderToday._exp&&renderToday._exp[c.title];const shown=exp?c.items:c.items.slice(0,8);
     return `<div class="dashcard ${c.tone}"><h3>${c.icon} ${c.title}<span class="cnt">${c.items.length}</span></h3>${shown.map((it,ii)=>`<div class="dashitem ${String(it.sub||"").replace(/<[^>]+>/g,"").length>26?"two":""}" data-c="${ci}" data-i="${ii}"><span class="di-main">${it.main}</span>${it.sub?`<span class="di-sub">${it.sub}</span>`:""}${it.acts?`<span class="di-acts">${it.acts.map((a,ai)=>`<button class="sm ghost" data-c="${ci}" data-i="${ii}" data-a="${ai}" title="${esc(a[2]||"")}">${a[0]}</button>`).join("")}</span>`:""}</div>`).join("")}${c.items.length>shown.length?`<div class="dashitem" data-more="${ci}"><span class="di-main" style="color:var(--accent)">＋ ${c.items.length-shown.length} more…</span></div>`:""}</div>`;}).join("")+`</div>`;
   html+=`<div class="dash-grid dg-row" style="margin-top:14px"><div class="dashcard"><h3>📓 Today's journal</h3>${(todayJ&&(todayJ.body||todayJ.title))?`<div style="font-size:13px;white-space:pre-wrap;max-height:120px;overflow:auto;line-height:1.5">${esc(((todayJ.title?todayJ.title+"\n":"")+todayJ.body)).slice(0,400)}</div><button class="sm" id="openJ" style="margin-top:8px">Open journal</button>`:`<div class="dash-empty">No entry for today yet.</div><button class="sm" id="openJ" style="margin-top:8px">＋ Start today's note</button>`}</div>${efTodayHTML()}</div>`;
-  const attn=cards.reduce((n,c)=>n+c.items.length,0),wrap=encWarnHTML()+wrapUpHTML();
+  const attn=cards.reduce((n,c)=>n+c.items.length,0),wrap=encWarnHTML()+wrapUpHTML(),ag=agendaItems();
   if(wrap&&!benchOn())html=wrap+html;
   host.innerHTML=benchOn()
-    ?`<div class="dash cockpit"><div class="ck-in">${cockpitHTML()}${wrap}<div class="ck-sech"><span class="ck-lbl">Needs attention · ${attn}</span></div>${html}</div></div>`
-    :`<div class="dash"><div class="dash-head"><h1>Today</h1><span class="faint">${new Date().toDateString()}</span></div>${html}</div>`;
+    ?`<div class="dash cockpit"><div class="ck-in">${cockpitHTML(agendaHTML(ag))}${wrap}<div class="ck-sech"><span class="ck-lbl">Needs attention · ${attn}</span></div>${html}</div></div>`
+    :`<div class="dash"><div class="dash-head"><h1>Today</h1><span class="faint">${new Date().toDateString()}</span></div>${agendaHTML(ag)}${html}</div>`;
   if(benchOn())mountCockpit(host);
-  efWireToday(host);
+  efWireToday(host);wireAgenda(host,ag);
   host.querySelectorAll(".dashitem[data-c]").forEach(el=>el.onclick=()=>cards[+el.dataset.c].items[+el.dataset.i].go());
   host.querySelectorAll(".di-acts button").forEach(b=>b.onclick=e=>{e.stopPropagation();cards[+b.dataset.c].items[+b.dataset.i].acts[+b.dataset.a][1]();});
   wireWrapUp(host);wireEncWarn(host);
@@ -3883,13 +3934,14 @@ function drawMeetingActions(m){
       <span class="at">${esc(a.text)||"<span class='faint'>(click to write action)</span>"}</span>
       <input class="ow" value="${esc(a.owner)}" placeholder="Owner">
       <input type="date" class="du ${dc}" value="${a.due||""}" title="Due">
-      <span class="nact"><button class="ghost sm a-res" title="Outcome / resolution note (e.g. the answer you were waiting for)">📝</button><button class="ghost sm danger a-del">🗑</button></span>
+      <span class="nact">${a.done?"":`<button class="ghost sm a-job" title="Make it a Task — it keeps the link to this meeting">↗ Task</button>`}<button class="ghost sm a-res" title="Outcome / resolution note (e.g. the answer you were waiting for)">📝</button><button class="ghost sm danger a-del">🗑</button></span>
       ${a.resolution?`<span class="ares" title="Outcome — click to edit">↳ ${esc(a.resolution)}</span>`:""}`;
     row.querySelector(".chk").onclick=()=>{a.done=!a.done;touch(m);drawMeetingActions(m);renderMeetingSidebar();};
     const at=row.querySelector(".at");at.onclick=()=>editInline(at,a.text,v=>{a.text=v;touch(m);drawMeetingActions(m);});
     row.querySelector(".ow").onchange=e=>{a.owner=e.target.value;touch(m);};
     row.querySelector(".du").onchange=e=>{a.due=e.target.value;touch(m);drawMeetingActions(m);};
     row.querySelector(".a-del").onclick=()=>{m.actions.splice(i,1);touch(m);drawMeetingActions(m);renderMeetingSidebar();};
+    {const jb=row.querySelector(".a-job");if(jb)jb.onclick=()=>actionToJob(a,m);}
     const editRes=()=>{let ar=row.querySelector(".ares");if(!ar){ar=document.createElement("span");ar.className="ares";row.appendChild(ar);}
       editInline(ar,a.resolution||"",v=>{a.resolution=v;touch(m);drawMeetingActions(m);});};
     row.querySelector(".a-res").onclick=editRes;
@@ -3925,9 +3977,11 @@ function renderActionRollup(host){
       <span class="ow" style="flex:0 0 110px;color:var(--muted)">${esc(a.owner)||"<span class='faint'>—</span>"}</span>
       <span class="du ${dc}" style="flex:0 0 100px;font-family:var(--mono);font-size:12px">${a.due||"—"}${dc==="over"?" ⚠":""}</span>
       <span class="go" style="flex:0 0 170px;font-size:11px;color:var(--accent);cursor:pointer" title="Open meeting">👥 ${m.date}${m.team?" · "+esc(m.team):""}</span>
+      <button class="ghost sm a-job" title="Make it a Task — it keeps the link to the meeting">↗ Task</button>
       ${a.resolution?`<span class="ares" title="Outcome — click to edit">↳ ${esc(a.resolution)}</span>`:""}`;
     row.querySelector(".chk").onclick=()=>{a.done=true;touch(m);renderActionRollup(host);renderMeetingSidebar();};
     row.querySelector(".go").onclick=()=>{meetingRollup=false;activeMeetingId=m.id;renderApp();};
+    row.querySelector(".a-job").onclick=()=>actionToJob(a,m);
     const arEl=row.querySelector(".ares");if(arEl)arEl.onclick=()=>editInline(arEl,a.resolution||"",v=>{a.resolution=v;touch(m);renderActionRollup(host);});
     body.appendChild(row);});
 }
@@ -5150,24 +5204,37 @@ function openNextAction(t,done){
   const quick=[["Next working day",nwd],...(nwd!==plus(1)?[["Tomorrow",plus(1)]]:[]),["In 3 days",plus(3)],["Next Monday",nextMon],["In 1 week",plus(7)],["In 2 weeks",plus(14)],["In a month",plus(30)]];
   const root=document.getElementById("modalRoot");
   root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:460px"><h2>${done?"✓ Done — and the next step?":"⏰ Next action"} — ${esc(demandLabel(t))}</h2>
-    ${done?`<div class="na-donestep"><span>✓</span><s>${esc(done.note||"(no note)")}</s></div>`:`<p class="faint" style="font-size:12px;margin-top:-8px">On this date the demand comes back up on <b>Today</b> — park it without forgetting it.</p>`}
+    ${done?`<div class="na-donestep"><span>✓</span><s>${esc(done.note||"(no note)")}</s></div><div class="field na-time efx"><label>Time it took <span class="faint" style="text-transform:none;letter-spacing:0;font-weight:400">· optional — logged in Effort for today</span></label><div class="na-hrow"><input id="na-hrs" class="mono" placeholder="e.g. 1.5 · 2h30" autocomplete="off">${[["½ h","0.5"],["1 h","1"],["2 h","2"],["3 h","3"]].map(([l,h])=>`<button class="sm na-h" data-h="${h}">${l}</button>`).join("")}<span class="na-dsf" id="na-dsf"></span></div></div>`:`<p class="faint" style="font-size:12px;margin-top:-8px">On this date the demand comes back up on <b>Today</b> — park it without forgetting it.</p>`}
     <div class="field"><label>${done?"Next step":"What to do"}</label><input id="na-note" value="${esc(n.note)}" placeholder="${done?"What comes after it — leave empty if nothing yet":"e.g. Chase QA for test results, check the TR reached H02"}"></div>
     <div class="field"><label>On</label><input type="date" id="na-date" value="${n.date||nwd}" style="width:170px"></div>
     <div class="chiprow">${quick.map(([l,d])=>`<button class="sm na-q" data-d="${d}" title="${d}">${l}</button>`).join("")}</div>
     <div class="modal-foot">${done?`<button id="na-just" class="ghost" style="margin-right:auto" title="Tick it off without a next step">Just done</button>`:n.date?`<button id="na-clear" class="ghost" style="margin-right:auto">Clear</button>`:""}<button id="na-cancel" class="ghost">Cancel</button><button id="na-save" class="primary">${done?"Set next step":"Set"}</button></div></div></div>`;
   const close=()=>root.innerHTML="";
-  const tick=()=>{if(!done)return;if(isJob(t))jobLog(t,"step",done.note||"(step)");else logTimeline(t,"note","","",`Next action done${done.note?": "+done.note:""}`);};
+  /* the time the step took — optional; 0 = none, -1 = not a number of hours (the dialog stays open) */
+  const hrs=()=>{const i=root.querySelector("#na-hrs");if(!i||!i.value.trim())return 0;const h=Math.round(efParseH(i.value)*4)/4;
+    if(!h||isNaN(h)||h>24){i.classList.add("na-bad");i.focus();toast("How long did it take? e.g. 1.5 · 2h30 · 90m — or leave it empty",true);return -1;}return h;};
+  let logged=0;
+  const tick=h=>{if(!done)return;if(isJob(t))jobLog(t,"step",done.note||"(step)");else logTimeline(t,"note","","",`Next action done${done.note?": "+done.note:""}`);
+    if(h>0){const key=isJob(t)?"j:"+t.id:t.id;state.efforts.push(normEffort({date:todayStr(),hours:h,taskId:isJob(t)?"":t.id,jobId:isJob(t)?t.id:"",activity:efGuessAct(key,todayStr()),note:done.note||""}));
+      setViewPref("ef.last",key);if(isJob(t)&&t.status==="open")t.status="progress";logged=h;efTimerUI();}};
+  const doneMsg=()=>"Done — noted in History"+(logged?` · ${efFh(logged)} h logged`:"");
   root.querySelectorAll(".na-q").forEach(b=>b.onclick=()=>{root.querySelector("#na-date").value=b.dataset.d;});
+  {const hi=root.querySelector("#na-hrs");if(hi){const have=efSum(state.efforts.filter(e=>e.date===todayStr()));
+    const sy=()=>{const v=efParseH(hi.value),add=isNaN(v)?0:Math.round(v*4)/4;hi.classList.toggle("na-bad",!!hi.value.trim()&&!add);
+      root.querySelectorAll(".na-h").forEach(b=>b.classList.toggle("on",+b.dataset.h===add));
+      root.querySelector("#na-dsf").innerHTML=`${efDayBar(have,add)}<span>${efFh(have)} h today${add?` <span class="ef-good">+ ${efFh(add)}</span>`:""} of ${efFh(EF_DAY)}</span>`;};
+    hi.oninput=sy;root.querySelectorAll(".na-h").forEach(b=>b.onclick=()=>{hi.value=+b.dataset.h===efParseH(hi.value)?"":b.dataset.h;sy();});sy();}}
   root.querySelector("#na-cancel").onclick=close;
   root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
   const clr=root.querySelector("#na-clear");if(clr)clr.onclick=()=>{t.nextAction={date:"",note:""};touch(t);close();renderApp();};
-  const just=()=>{tick();t.nextAction={date:"",note:""};touch(t);close();renderApp();toast("Done — noted in History");};
+  const just=()=>{const h=hrs();if(h<0)return;tick(h);t.nextAction={date:"",note:""};touch(t);close();renderApp();toast(doneMsg());};
   const jb=root.querySelector("#na-just");if(jb)jb.onclick=just;
   const save=()=>{const d=root.querySelector("#na-date").value,note=root.querySelector("#na-note").value.trim();
     if(done&&!note){just();return;}
     if(!d){toast("Pick a date",true);return;}
-    tick();t.nextAction={date:d,note};touch(t);close();renderApp();
-    toast((done?"Done — noted in History. ":"")+(d<=todayStr()?"Next step is due now — it's on Today":"Back on Today on "+d));};
+    const h=hrs();if(h<0)return;
+    tick(h);t.nextAction={date:d,note};touch(t);close();renderApp();
+    toast((done?doneMsg()+". ":"")+(d<=todayStr()?"Next step is due now — it's on Today":"Back on Today on "+d));};
   root.querySelector("#na-save").onclick=save;
   root.querySelectorAll("input").forEach(i=>i.onkeydown=e=>{if(e.key==="Enter")save();});
   root.querySelector("#na-note").focus();
@@ -5176,6 +5243,121 @@ function nextActionDone(t){const n=t.nextAction;if(!n||!n.date)return;openNextAc
 /* the steps already done, newest first — read back from History */
 function nextActionTrail(t){return (t.timeline||[]).filter(e=>e.type==="note"&&/^Next action done/.test(e.note||"")).map(e=>({ts:e.ts,note:(e.note||"").replace(/^Next action done:?\s*/,"")||"(no note)"})).sort((a,b)=>b.ts-a.ts);}
 
+/* ===================== THE DAILY LOOP =====================
+   Today's agenda: one ordered list of what the day asks of you — next steps due (demands and
+   tasks), your own meeting action points, follow-ups on what you're waiting for, Journal
+   to-dos and what's due — each done right where it shows. Close the day: an hours box for
+   every demand, task and meeting touched that day, against the working day. */
+const CHASE_EVERY=3;   /* days between follow-ups on something you're waiting for */
+const AG_KINDS={step:{l:"Next step",pen:"pen-2",o:0},act:{l:"Action point",pen:"pen-5",o:1},chase:{l:"Follow up",pen:"pen-4",o:2},todo:{l:"To-do",pen:"pen-6",o:3},due:{l:"Due",pen:"pen-1",o:4}};
+/* an action point is yours when it has no owner, says me / myself / I, or names you (the Greeting name in ⋯) */
+function actionIsMine(a){const o=String(a.owner||"").trim().toLowerCase(),n=viewPref("userName","").trim().toLowerCase();
+  return !o||["me","myself","i","self"].includes(o)||(!!n&&o.split(/[\s,/&+]+/).includes(n));}
+/* follow-ups are read back from History ("Chased …"), so nothing new is stored */
+function lastChase(x){const l=isJob(x)?x.log.filter(e=>/^Chased\b/.test(e.text)).map(e=>e.date):(x.timeline||[]).filter(e=>e.type==="note"&&/^Chased\b/.test(e.note||"")).map(e=>isoTs(e.ts));return l.sort().pop()||"";}
+function chaseDue(x){if(isJob(x)?!jobWaiting(x):!isWaiting(x))return false;
+  const from=[x.waiting.since||"",lastChase(x)].sort().pop();return !from||-daysUntil(from)>=CHASE_EVERY;}
+function agUnlog(x,txt){const a=isJob(x)?x.log:(x.timeline||[]),k=isJob(x)?"text":"note";for(let i=a.length-1;i>=0;i--)if(a[i][k]===txt){a.splice(i,1);break;}}
+function agNote(x,kind,txt){if(isJob(x))jobLog(x,kind,txt);else{logTimeline(x,"note","","",txt);touch(x);}}
+function agChased(x){const msg=`Chased ${x.waiting.on}`;agNote(x,"call",msg);renderApp();
+  efToastUndo(`${msg} — back on the agenda in ${CHASE_EVERY} days if nothing comes in`,()=>{agUnlog(x,msg);touch(x);renderApp();});}
+function agAnswerIn(x){const w={...x.waiting},msg=isJob(x)?`Answer in from ${w.on}`:`No longer waiting on ${w.on}`;x.waiting={on:"",since:""};agNote(x,"update",msg);renderApp();
+  efToastUndo(`No longer waiting on ${w.on}`,()=>{x.waiting=w;agUnlog(x,msg);touch(x);renderApp();});}
+/* a meeting action point of yours becomes a Task — linked to the meeting, the point ticked off */
+function actionToJob(a,m){a.done=true;a.resolution=a.resolution||"→ moved to Tasks";touch(m);
+  newJob({title:a.text||"(from a meeting)",due:a.due||"",source:"meeting",meetingId:m.id,received:m.date&&m.date<=todayStr()?m.date:todayStr()});
+  toast("Moved to Tasks — the action point is ticked off");}
+function agSubDue(t,d){let hit=null;(function w(a){a.forEach(s=>{if(!hit&&!s.done&&s.dueDate===d)hit=s;w(s.children||[]);});})(t.subtasks||[]);return hit;}
+function agendaItems(){const t0=todayStr(),out=[];
+  const of=x=>isJob(x)?`☐ ${esc(x.title)}`:`${x.demandId?`<b class="mono">${esc(x.demandId)}</b> `:""}${esc(x.title)}`;
+  const go=x=>()=>{if(isJob(x)){view="jobs";activeJobId=x.id;}else{view="demands";activeId=x.id;activeTab="work";}renderApp();};
+  const add=(k,date,what,x,acts,more)=>out.push({k,date,what,of:of(x),go:go(x),acts:acts||[],...(more||{})});
+  const steps=[["✓ Done",x=>nextActionDone(x),"Tick it off — then the step after it, and the time it took"],["Move",x=>openNextAction(x),"Not today — pick another day"]];
+  [...state.tasks.filter(nextActionDue),...state.jobs.filter(j=>jobOpen(j)&&j.nextAction.date&&j.nextAction.date<=t0)]
+    .forEach(x=>add("step",x.nextAction.date,esc(x.nextAction.note||"(next step)"),x,steps.map(([l,f,h])=>[l,()=>f(x),h])));
+  state.meetings.forEach(m=>m.actions.forEach(a=>{if(a.done||!a.due||a.due>t0||!actionIsMine(a))return;
+    out.push({k:"act",date:a.due,what:esc(a.text||"(no text)"),of:`👥 ${esc(m.title)}`,go:()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;renderApp();},
+      acts:[["✓ Done",()=>{a.done=true;touch(m);renderApp();efToastUndo("Action point ticked off",()=>{a.done=false;touch(m);renderApp();});},"Tick the action point off"],
+        ["↗ Task",()=>actionToJob(a,m),"Make it a Task — it keeps the link to the meeting"]]});}));
+  [...state.tasks,...state.jobs].filter(chaseDue).forEach(x=>{const n=isJob(x)?jobWaitDays(x):waitDays(x),lc=lastChase(x);
+    add("chase",t0,`Chase ${esc(x.waiting.on)}`,x,[["Chased",()=>agChased(x),`You chased them — it comes back in ${CHASE_EVERY} days`],["Answer in",()=>agAnswerIn(x),"Not waiting any more"]],
+      {sub:[n!=null?`waiting ${n} d`:"",lc&&lc>=(x.waiting.since||"")?`chased ${-daysUntil(lc)} d ago`:""].filter(Boolean).join(" · ")});});
+  state.todos.filter(x=>!x.done&&x.due&&x.due<=t0).forEach(x=>out.push({k:"todo",date:x.due,what:esc(x.text||"(no text)"),of:"📓 Journal",go:()=>{view="journal";journalTodos=true;renderApp();},
+    acts:[["✓ Done",()=>{x.done=true;x.doneAt=Date.now();markDirty();renderApp();efToastUndo("To-do ticked off",()=>{x.done=false;x.doneAt=null;markDirty();renderApp();});},"Tick it off"]]}));
+  state.tasks.forEach(x=>{const d=earliestOpenDue(x);if(!d||d>t0)return;const s=d===x.dueDate&&!["delivered","closed"].includes(x.status)?null:agSubDue(x,d);
+    add("due",d,s?`Subtask: ${esc(s.title)}`:d<t0?"Past its due date":"Due today",x);});
+  state.jobs.filter(j=>jobOpen(j)&&j.due&&j.due<=t0).forEach(x=>add("due",x.due,x.askedBy?`${esc(x.askedBy)} expects an answer`:"An answer is expected",x));
+  return out.sort((a,b)=>a.date.localeCompare(b.date)||AG_KINDS[a.k].o-AG_KINDS[b.k].o);}
+const AG_CAP=10;
+function agendaHTML(items){const t0=todayStr(),late=items.filter(i=>i.date<t0).length,shown=agendaHTML.all?items:items.slice(0,AG_CAP);
+  const have=efSum(state.efforts.filter(e=>e.date===t0)),evening=(()=>{const n=new Date();return n.getHours()*60+n.getMinutes()>=19*60+30;})()&&efWd(t0)&&!efOff(t0)&&have<EF_DAY&&viewPref("cd.done","")!==t0;
+  return `<div class="ck-unit agenda efx" id="agenda"><div class="ck-head"><h2>Today's agenda</h2><span class="ck-meta">${items.length?`${items.length} thing${items.length===1?"":"s"}${late?` · <b class="ag-late">${late} late</b>`:""} · `:""}next steps · your action points · follow-ups · due</span></div>
+    ${items.length?`<div class="ag-list">${shown.map((it,i)=>{const K=AG_KINDS[it.k],n=-daysUntil(it.date);return `<div class="ag-row${n>0?" late":""}" data-ag="${i}" title="Open it">
+      <span class="ag-when">${n>0?`${n} d late`:"today"}</span><span class="ag-k" style="--pen:var(--${K.pen})"><i></i>${K.l}</span>
+      <span class="ag-what">${it.what}${it.sub?` <span class="ag-sub">${it.sub}</span>`:""}</span><span class="ag-of">${it.of}</span>
+      <span class="ag-acts">${it.acts.map((a,ai)=>`<button class="sm${ai?" ghost":""}" data-ag="${i}" data-aa="${ai}" title="${esc(a[2]||"")}">${a[0]}</button>`).join("")}</span></div>`;}).join("")}
+      ${items.length>shown.length?`<button class="sm ghost ag-more" id="agMore">＋ ${items.length-shown.length} more</button>`:""}</div>`
+    :`<div class="ag-empty">✓ Nothing due today — no next steps, action points or follow-ups waiting on you.</div>`}
+    <div class="ag-foot">${efDayBar(have,0,Math.max(18,EF_DAY*2))}<span><b>${efFh(have)} h</b> of ${efFh(EF_DAY)} logged today</span><button class="sm${evening?" primary":""}" id="agClose" title="An hours box for everything you touched today">☾ Close the day</button></div></div>`;}
+function wireAgenda(host,items){const el=host.querySelector("#agenda");if(!el)return;
+  el.querySelectorAll(".ag-row").forEach(r=>r.onclick=()=>{const it=items[+r.dataset.ag];if(it&&it.go)it.go();});
+  el.querySelectorAll(".ag-acts button").forEach(b=>b.onclick=e=>{e.stopPropagation();items[+b.dataset.ag].acts[+b.dataset.aa][1]();});
+  const m=el.querySelector("#agMore");if(m)m.onclick=()=>{agendaHTML.all=true;renderToday();};
+  el.querySelector("#agClose").onclick=()=>openCloseDay();}
+
+/* ---------- Close the day ---------- */
+function dayTouched(d){const rows=[],logged=k=>efSum(state.efforts.filter(e=>e.date===d&&efKey(e)===k)),on=ts=>!!ts&&isoTs(ts)===d;
+  const said=e=>e.type==="status"?`→ ${(STATUS[e.to]||{label:e.to}).label}`:String(e.note||"").replace(/^Next action done:?\s*/,"✓ ");
+  state.tasks.forEach(t=>{const did=(t.timeline||[]).filter(e=>on(e.ts)&&(e.type==="status"||e.note)).map(said),has=logged(t.id);
+    if(did.length||has||on(t.updatedAt))rows.push({key:t.id,name:demandLabel(t),title:t.demandId&&demandLabel(t)===t.demandId?t.title:"",did,has,note:did.filter(s=>s.startsWith("✓ ")).map(s=>s.slice(2)).join("; ")});});
+  state.jobs.forEach(j=>{const es=j.log.filter(e=>e.date===d),did=es.map(e=>(e.kind==="step"?"✓ ":"")+e.text),has=logged("j:"+j.id);
+    if(did.length||has||on(j.updatedAt))rows.push({key:"j:"+j.id,name:"☐ "+j.title,title:"",did,has,note:es.filter(e=>e.kind==="step").map(e=>e.text).join("; ")});});
+  state.epics.forEach(e=>{const has=logged("e:"+e.id);if(has||on(e.updatedAt))rows.push({key:"e:"+e.id,name:"◆ "+(e.code||e.name),title:e.code?e.name:"",did:[],has,note:""});});
+  /* what you actually did something on (a step, a status, hours) first; merely edited after */
+  rows.sort((a,b)=>(b.did.length||b.has?1:0)-(a.did.length||a.has?1:0));
+  return {rows,mtgs:state.meetings.filter(m=>m.date===d)};}
+function openCloseDay(d){d=d&&d<=todayStr()?d:todayStr();const root=document.getElementById("modalRoot"),{rows,mtgs}=dayTouched(d),today=d===todayStr(),off=efOff(d);
+  root.innerHTML=`<div class="modal-bg"><div class="modal efx cd-modal" style="width:780px"><h2>☾ Close the day <span class="faint" style="font-weight:400">${efWdl(d)}</span>
+      <span class="cd-nav"><button class="sm ghost" id="cdPrev" title="The day before">‹</button><button class="sm ghost" id="cdNext" ${today?"disabled":""} title="The day after">›</button></span></h2>
+    <p class="faint cd-lede">Everything you touched ${today?"today":"that day"}, an hours box each — fill in what you remember, leave the rest empty.${off?` <b>${EF_OFF[off.kind].icon} ${esc(efOffTxt(off))}</b>`:""}</p>
+    <div class="cd-day" id="cdDay"></div>
+    <div class="cd-rows">
+      ${mtgs.map((m,i)=>{const e=state.efforts.find(x=>x.meetingId===m.id);return `<div class="cd-row" data-m="${i}"><span class="ef-pd" style="--pen:var(--ink-3)"></span><div class="cd-n"><b>👥 ${esc(m.title)}</b><div class="cd-did">meeting · its time goes to ${esc(efName(meetingEffortKey(m)))}</div></div>
+        <span class="cd-has">${e?efFh(e.hours)+" h logged":""}</span><span></span><input class="cd-h mono" placeholder="h" ${e?`disabled title="Logged from the meeting's duration — change it on the meeting"`:""} autocomplete="off"></div>`;}).join("")}
+      ${rows.map((r,i)=>`<div class="cd-row" data-r="${i}"><span class="ef-pd" style="--pen:var(--${efPen(r.key)})"></span><div class="cd-n"><b>${esc(r.name)}</b>${r.title?` <span class="faint">${esc(r.title)}</span>`:""}${r.did.length?`<div class="cd-did">${r.did.slice(0,4).map(esc).join(" · ")}${r.did.length>4?` · +${r.did.length-4}`:""}</div>`:""}</div>
+        <span class="cd-has">${r.has?efFh(r.has)+" h logged":""}</span>
+        <select class="cd-act" title="Activity">${efActList(r.key).map(a=>`<option ${a===efGuessAct(r.key,d)?"selected":""}>${esc(a)}</option>`).join("")}</select>
+        <input class="cd-h mono" placeholder="${r.has?"+ h":"h"}" autocomplete="off"></div>`).join("")}
+      <div class="cd-row cd-else"><span class="ef-pd" style="--pen:var(--ink-3)"></span><div class="cd-n"><b>Anything else</b><div class="cd-did">time that wasn't on a demand or task</div></div><span></span>
+        <select class="cd-b" title="Where the time went">${Object.entries(EF_BUCKETS).map(([k,b])=>`<option value="${k}">${esc(b.l)}</option>`).join("")}</select><input class="cd-h mono" placeholder="h" autocomplete="off"></div>
+    </div>
+    ${rows.length||mtgs.length?"":`<div class="cd-none faint">Nothing touched ${today?"today":"that day"} — log time against a demand with ⏱ Log time, or put it under Anything else.</div>`}
+    <div class="modal-foot"><button class="ghost sm" id="cdOff" style="margin-right:auto" title="Not working that day? Mark it as a holiday or leave">🏖 Day off…</button><button class="ghost" id="cdCancel">Cancel</button><button class="primary" id="cdLog">Log</button></div></div></div>`;
+  const q=s=>root.querySelector(s),bg=q(".modal-bg"),close=()=>{root.innerHTML="";},have=efSum(state.efforts.filter(e=>e.date===d));
+  const boxes=()=>[...root.querySelectorAll(".cd-h:not(:disabled)")];
+  const parse=b=>{const v=b.value.trim();if(!v)return 0;const h=Math.round(efParseH(v)*4)/4;return !h||isNaN(h)||h>24?NaN:h;};
+  const sync=()=>{let add=0,bad=0;boxes().forEach(b=>{const h=parse(b);b.classList.toggle("cd-bad",isNaN(h));if(isNaN(h))bad++;else add+=h;});
+    const tot=have+add,left=EF_DAY-tot;
+    q("#cdDay").innerHTML=`${efDayBar(have,add,Math.max(18,EF_DAY*2))}<span><b>${efFh(have)} h</b> logged${add?` <span class="ef-good">+ ${efFh(add)}</span> = <b>${efFh(tot)} h</b>`:""} of ${efFh(EF_DAY)}${off?"":left>0?` · <b>${efFh(left)} h</b> not accounted for`:left<0?` · ${efFh(-left)} h over`:" · a full day"}</span>`;
+    const lb=q("#cdLog");lb.textContent=bad?"Check the hours":add?`Log ${efFh(add)} h`:"Log";lb.disabled=!add||!!bad;};
+  const log=()=>{if(q("#cdLog").disabled)return;const made=[],mt=[],now=Date.now();
+    root.querySelectorAll(".cd-row").forEach(row=>{const b=row.querySelector(".cd-h");if(!b||b.disabled)return;const h=parse(b);if(!h||isNaN(h))return;
+      if(row.dataset.r!=null){const r=rows[+row.dataset.r],k=r.key,isJ=k.startsWith("j:"),isE=k.startsWith("e:");
+        const e=normEffort({date:d,hours:h,taskId:isJ||isE?"":k,jobId:isJ?k.slice(2):"",epicId:isE?k.slice(2):"",activity:row.querySelector(".cd-act").value,note:r.note});state.efforts.push(e);made.push(e);
+        const t=efTaskOf(k);if(t)t.updatedAt=now;if(isJ){const j=jobById(k.slice(2));if(j&&j.status==="open")j.status="progress";}}
+      else if(row.dataset.m!=null){const m=mtgs[+row.dataset.m];mt.push([m,m.hours]);m.hours=h;m.updatedAt=now;meetingEffortSync(m);}
+      else{const e=normEffort({date:d,hours:h,bucket:row.querySelector(".cd-b").value});state.efforts.push(e);made.push(e);}});
+    const n=made.length+mt.length;if(!n)return;
+    if(today)setViewPref("cd.done",d);markDirty();close();renderApp();efTimerUI();
+    const sum=efSum(made)+mt.reduce((s,[m])=>s+m.hours,0);
+    efToastUndo(`Logged ${efFh(sum)} h on ${n} thing${n===1?"":"s"} · ${efFh(efSum(state.efforts.filter(e=>e.date===d)))} of ${efFh(EF_DAY)} h ${today?"today":"on "+efWdl(d)}`,()=>{
+      made.forEach(e=>{const i=state.efforts.indexOf(e);if(i>=0)state.efforts.splice(i,1);});mt.forEach(([m,h0])=>{m.hours=h0;meetingEffortSync(m);});
+      if(today)setViewPref("cd.done","");markDirty();renderApp();efTimerUI();});};
+  boxes().forEach(b=>{b.oninput=sync;b.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();log();}};});
+  q("#cdLog").onclick=log;q("#cdCancel").onclick=close;bg.onclick=e=>{if(e.target===bg)close();};
+  q("#cdPrev").onclick=()=>openCloseDay(efAdd(d,-1));q("#cdNext").onclick=()=>openCloseDay(efAdd(d,1));
+  q("#cdOff").onclick=()=>openDaysOff({date:d});
+  sync();setTimeout(()=>{const b=boxes()[0];if(b)b.focus();},40);}
 /* ===================== TRANSPORT RUN SHEET ===================== */
 /* What Basis has to import into one system, in release order. A ToC stands in for the
    TRs bundled in it (imported once, where its first member sits in the order), customizing
@@ -5750,7 +5932,7 @@ const CK_TILES=[
   {no:"02",pen:"var(--pen-1)",st:"sweeping",nm:"Overdue & due soon",bl:"Radar — distance from the centre is days late; the inner ring is due within 7 days.",view:{group:"due",sort:"due",only:["due7"]}},
   {no:"03",pen:"var(--pen-4)",st:"waiting",nm:"Waiting on others",bl:"The longest open wait, against a 30-day follow-up rule.",view:{group:"none",sort:"waiting",dir:"desc",only:["waiting"]}},
   {no:"04",pen:"var(--pen-3)",st:"to prod",nm:"Go-live",bl:"Transports still on their way to the demand's go-live system.",view:{group:"system",sort:"due",only:["notprod"]}}];
-function cockpitHTML(){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>Math.max(m,-daysUntil(earliestOpenDue(t))),0),w=c.waiting[0];
+function cockpitHTML(mid=""){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>Math.max(m,-daysUntil(earliestOpenDue(t))),0),w=c.waiting[0];
   const foot=[`${c.active.length}<small>of ${state.tasks.length}</small>`,`${c.over.length}<small>late${c.over.length?" · worst "+worst+" d":""}</small>`,
     w?`${waitDays(w)||0}<small>d · ${esc(w.waiting.on)}</small>`:`0<small>nobody</small>`,`${c.short}<small>TRs short of go-live</small>`];
   const eps=state.epics.filter(e=>["active","onhold"].includes(e.status)).sort((a,b)=>(a.targetDate||"9999").localeCompare(b.targetDate||"9999")).slice(0,6);
@@ -5762,7 +5944,7 @@ function cockpitHTML(){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>Math.m
         <button class="ck-search" id="ckSearch"><span class="caret"></span>Find a demand, an object, a transport, a system…<kbd>Ctrl K</kbd></button>
         <div class="ck-acts"><button class="primary" id="ckNew">＋ New demand</button><button id="ckJ">Today's journal</button><button id="ckDbg">Debug session</button><button id="ckLog">⏱ Log time</button><button id="ckWin">🏆 Win</button><button id="ckWrap" title="This week: hours, missing days, wins and lessons">Week wrap-up</button><button id="ckWeek">Weekly summary</button><button id="ckHand">Handover pack</button></div></div>
       <div class="ck-clock"><div class="ck-lbl" style="text-align:right">local · offline · ${state.settings.autosave?"autosave on":"autosave off"}</div><div class="big"><canvas id="ckClockM" title="Local time"></canvas><small id="ckClock"></small></div></div></div>
-    <div class="ck-sech"><span class="ck-lbl">Pulse · read from your data file</span></div>
+    ${mid}<div class="ck-sech"><span class="ck-lbl">Pulse · read from your data file</span></div>
     <div class="ck-tiles">${CK_TILES.map((x,i)=>`<div class="ck-unit ck-tile" data-i="${i}" style="--pen:${x.pen}"><div class="top"><span class="no">${x.no}</span><span class="st"><i></i><span>${x.st}</span></span></div>
       <canvas></canvas><div class="nm">${x.nm}</div><div class="bl">${x.bl}</div><div class="ft"><span>${foot[i]}</span><span class="go">Open ›</span></div></div>`).join("")}</div>
     <div class="ck-grid">
@@ -6368,6 +6550,7 @@ const efThemePen=th=>{const L=[...new Set(state.tasks.map(t=>t.theme).filter(Boo
 /* canvases redraw every frame: look names and colours up once per render */
 const efM=k=>{const m=EFA&&EFA.meta;let v=m&&m.get(k);if(!v){v=efGMeta(k);if(m)m.set(k,v);}return v;};
 const efSum=a=>a.reduce((s,e)=>s+e.hours,0);
+const anyEstimate=()=>state.tasks.some(t=>+t.estimate>0);   /* estimate panels stay out of the way until the first estimate exists */
 const efFh=h=>String(Math.round(h*100)/100);
 const efFor=id=>state.efforts.filter(e=>e.taskId===id);
 const efAdd=(d,n)=>{const x=new Date(d+"T00:00:00");x.setDate(x.getDate()+n);return isoD(x);};
@@ -6583,7 +6766,7 @@ function renderEffortTab(body,t){
   body.innerHTML=`<div class="efx ef-tab">
     <div class="ck-unit"><div class="ck-head"><h2>Log time on ${esc(t.demandId||"this demand")}</h2><span class="ck-meta">Ctrl+Enter logs · T from anywhere · 2 · 1.5 · 2h30 · 90m</span></div><div id="efQc"></div></div>
     <div class="ef-ins">
-      <div class="ck-unit ins"><canvas data-k="est" data-still="3000"></canvas><div style="min-width:0"><div class="k">Logged vs estimate</div><div class="v" id="efEstV">${efFh(tot)}<small>${est?"/ "+efFh(est)+" h":"h"}</small></div><div class="s ${est&&tot>est?"late":""}">${est?(tot>est?efFh(tot-est)+" h over":efFh(est-tot)+" h left"):"no estimate"} · <a href="#" class="ef-est">${est?"change":"set one"}</a></div></div></div>
+      <div class="ck-unit ins"><canvas data-k="est" data-still="3000"></canvas><div style="min-width:0"><div class="k">${est||anyEstimate()?"Logged vs estimate":"Logged"}</div><div class="v" id="efEstV">${efFh(tot)}<small>${est?"/ "+efFh(est)+" h":"h"}</small></div><div class="s ${est&&tot>est?"late":""}">${est?(tot>est?efFh(tot-est)+" h over":efFh(est-tot)+" h left"):anyEstimate()?"no estimate":`${es.length} entr${es.length===1?"y":"ies"}`} · <a href="#" class="ef-est">${est?"change":anyEstimate()?"set one":"add an estimate"}</a></div></div></div>
       <div class="ck-unit ins"><canvas data-k="days" data-still="3000"></canvas><div style="min-width:0"><div class="k">Days worked</div><div class="v">${days.size}<small>days</small></div><div class="s">${days.size?"avg "+efFh(Math.round(tot/days.size*10)/10)+" h on a day you touched it":"nothing logged yet"}</div></div></div>
       <div class="ck-unit ins"><canvas data-k="rw" data-still="3000"></canvas><div style="min-width:0"><div class="k">Rework</div><div class="v">${efFh(rw)}<small>h</small></div><div class="s ${rw?"late":""}">${rw?efPct(rw,tot)+"% — hours logged while in Bug":"none — never bounced"}</div></div></div>
       <div class="ck-unit ins"><canvas data-k="last" data-still="3000"></canvas><div style="min-width:0"><div class="k">Last worked</div><div class="v">${last?efWdd(last.date):"—"}</div><div class="s">${last?efFh(efSum(es.filter(e=>e.date===last.date)))+" h · "+esc(last.activity):"never"}</div></div></div></div>
@@ -6731,8 +6914,8 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
       <div class="ck-unit"><div class="ck-head"><h2>Where the hours went</h2><span class="ck-meta">${A.mode==="day"?`per day · a dot = ½ h · dashed = ${efFh(EF_DAY)} h`:A.mode==="week"?`per week · a dot = 1 h · dashed = ${efFh(EF_DAY*5)} h`:`per month · a dot = 4 h · dashed = ${efFh(EF_DAY*21)} h`} · click a column</span></div><canvas class="ef-wkc" id="efWk" data-still="2600"></canvas></div>
       <div class="ck-unit"><div class="ck-head"><h2>Activity mix</h2><span class="ck-meta">${efFh(total)} h</span></div><div class="ef-mixw"><canvas id="efMix" data-still="2000"></canvas><div>${efMixRows(A.R)}</div></div></div></div>
     <div class="ck-unit" id="efSheet"></div>
-    <div class="ef-g3">
-      <div class="ck-unit"><div class="ck-head"><h2>Estimate vs actual</h2><span class="ck-meta">whole life · demands in range</span></div>${efEstRows(A)}</div>
+    <div class="ef-g3${anyEstimate()?"":" two"}">
+      ${anyEstimate()?`<div class="ck-unit"><div class="ck-head"><h2>Estimate vs actual</h2><span class="ck-meta">whole life · demands in range</span></div>${efEstRows(A)}</div>`:""}
       <div class="ck-unit"><div class="ck-head"><h2>Rework cost</h2><span class="ck-meta">hours logged while a demand was in Bug</span></div>${efReworkHTML(A,dem)}</div>
       <div class="ck-unit"><div class="ck-head"><h2>Your week's rhythm</h2><span class="ck-meta">avg on a logged day</span></div>${efRhythmHTML(A)}</div></div></div>`;
   host.querySelector("#efNoticed").innerHTML=efNoticedHTML(A,total,dem,unl);
@@ -7155,7 +7338,7 @@ function openComeback(t,v,done,cancel){const root=document.getElementById("modal
   const q=s=>root.querySelector(s),bg=q(".modal-bg"),close=()=>{root.innerHTML="";};
   const no=()=>{close();if(cancel)cancel();};bg.onclick=e=>{if(e.target===bg)no();};q("#cbCancel").onclick=no;
   const sync=()=>{root.querySelectorAll("[data-why]").forEach(b=>b.classList.toggle("on",b.dataset.why===st.why));root.querySelectorAll("[data-to]").forEach(b=>b.classList.toggle("on",b.dataset.to===st.to));
-    q("#cbMore").style.display=st.why==="defect"?"none":"";q("#cbEstW").style.display=q("#cbNoteW").style.display=st.why==="change"?"":"none";
+    q("#cbMore").style.display=st.why==="defect"?"none":"";q("#cbNoteW").style.display=st.why==="change"?"":"none";q("#cbEstW").style.display=st.why==="change"&&anyEstimate()?"":"none";
     q("#cbOk").textContent=st.why==="defect"?"Move to Bug / rework":st.why==="change"?`Start round ${n}`:`Move to ${STATUS[st.to].label}`;};
   root.querySelectorAll("[data-why]").forEach(b=>b.onclick=()=>{st.why=b.dataset.why;sync();});
   root.querySelectorAll("[data-to]").forEach(b=>b.onclick=()=>{st.to=b.dataset.to;sync();});
@@ -7691,6 +7874,39 @@ async function runSelfTest(){
    {const b=state.tasks.find(x=>x.id==="st-b"),R=document.getElementById("modalRoot");openTaskModal(b);R.querySelector("#m-status").value="progress";R.querySelector("#m-save").click();
     const asked=!!R.querySelector("#cbOk")&&b.status==="delivered";const c=R.querySelector("#cbCancel");if(c)c.click();R.innerHTML="";
     ok("Edit: moving a delivered demand back asks why",asked);}
+   {const t=state.tasks.find(x=>x.id==="st-a"),m=state.meetings.find(x=>x.id==="st-m1"),T0=todayStr();
+    m.actions.push({id:"st-act-me",text:"Sample action of mine",owner:"",done:false,due:T0,resolution:""},{id:"st-act-them",text:"Sample action of theirs",owner:"Sample owner",done:false,due:T0,resolution:""});
+    const ag=agendaItems(),has=(k,f)=>ag.some(i=>i.k===k&&f(i));
+    ok("Agenda: next steps, your action points, follow-ups and what's due — late first",
+      has("step",i=>i.what.includes("Chase the sample QA"))&&has("act",i=>i.what.includes("of mine"))&&!has("act",i=>i.what.includes("of theirs"))&&has("chase",i=>i.what.includes("QA team"))&&has("due",i=>i.date<T0)&&ag.every((x,i)=>!i||ag[i-1].date<=x.date),
+      ag.map(i=>i.k+":"+i.date).join(", "));
+    ag.find(i=>i.k==="chase"&&i.what.includes("QA team")).acts[0][1]();
+    ok("Agenda: a follow-up, once chased, waits three days (noted in History)",!chaseDue(t)&&lastChase(t)===T0&&!agendaItems().some(i=>i.k==="chase"&&i.what.includes("QA team")));
+    {const ub=[...document.querySelectorAll("#toast button")].find(x=>x.textContent==="Undo");if(ub)ub.click();}
+    ok("Agenda: Undo takes the chase back",chaseDue(t)&&lastChase(t)==="");
+    const a=m.actions.find(x=>x.id==="st-act-me"),j0=state.jobs.length;actionToJob(a,m);const j=state.jobs[0];
+    ok("A meeting action point becomes a Task, linked to the meeting",state.jobs.length===j0+1&&j.title==="Sample action of mine"&&j.meetingId==="st-m1"&&j.source==="meeting"&&a.done&&!agendaItems().some(i=>i.what.includes("of mine")));
+    view="today";renderApp();}
+   {const t=state.tasks.find(x=>x.id==="st-a"),R=document.getElementById("modalRoot"),n0=state.efforts.length;
+    t.nextAction={date:todayStr(),note:"Sample step to time"};nextActionDone(t);R.querySelector("#na-hrs").value="1.5";R.querySelector("#na-just").click();
+    const e=state.efforts[state.efforts.length-1],timed=state.efforts.length===n0+1&&e.taskId==="st-a"&&e.hours===1.5&&e.note==="Sample step to time"&&e.date===todayStr()&&!t.nextAction.date;
+    t.nextAction={date:todayStr(),note:"Sample untimed step"};nextActionDone(t);R.querySelector("#na-hrs").value="lots";R.querySelector("#na-just").click();
+    const held=!!R.querySelector("#na-hrs")&&t.nextAction.date===todayStr();R.querySelector("#na-hrs").value="";R.querySelector("#na-just").click();
+    ok("✓ Done logs the time it took, with the step as the note — and only a real number of hours",timed&&held&&state.efforts.length===n0+1&&!t.nextAction.date,`timed ${timed} · held ${held} · entries ${state.efforts.length-n0}`);R.innerHTML="";}
+   {const R=document.getElementById("modalRoot"),T0=todayStr(),day=()=>efSum(state.efforts.filter(e=>e.date===T0)),have=day();
+    const mt=normMeeting({id:"st-m-today",date:T0,title:"Sample meeting today",taskIds:[]});state.meetings.push(mt);
+    openCloseDay();const rows=[...R.querySelectorAll(".cd-row")],ra=rows.find(r=>r.textContent.includes("ST-1")),rm=rows.find(r=>r.textContent.includes("Sample meeting today")),re=R.querySelector(".cd-else");
+    const seen=!!ra&&!!rm&&!!re;let lbl="";
+    if(seen){ra.querySelector(".cd-h").value="2";rm.querySelector(".cd-h").value="0.5";re.querySelector(".cd-h").value="1";R.querySelectorAll(".cd-h").forEach(b=>b.dispatchEvent(new Event("input")));
+      lbl=R.querySelector("#cdLog").textContent;R.querySelector("#cdLog").click();}
+    const now=day();
+    ok("Close the day: an hours box per thing touched, meetings included, logged in one go",seen&&lbl==="Log 3.5 h"&&now===have+3.5&&mt.hours===0.5&&state.efforts.some(e=>e.meetingId==="st-m-today"),`rows ${seen} · ${lbl} · ${have} → ${now}`);
+    {const ub=[...document.querySelectorAll("#toast button")].find(x=>x.textContent==="Undo");if(ub)ub.click();}
+    ok("Close the day: Undo takes it all back",day()===have&&!state.efforts.some(e=>e.meetingId==="st-m-today")&&!mt.hours,`${day()} vs ${have}`);
+    state.meetings.splice(state.meetings.indexOf(mt),1);R.innerHTML="";}
+   {const est=state.tasks.map(t=>t.estimate),txt=()=>document.getElementById("detail").textContent;state.tasks.forEach(t=>t.estimate=0);view="effort";renderApp();const none=!txt().includes("Estimate vs actual")&&!anyEstimate();
+    state.tasks.forEach((t,i)=>t.estimate=est[i]);renderApp();const back=txt().includes("Estimate vs actual");view="today";renderApp();
+    ok("Estimate panels stay hidden until an estimate exists",none&&back,`hidden ${none} · back ${back}`);}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
@@ -7699,7 +7915,7 @@ async function runSelfTest(){
   const a=state.tasks.find(t=>t.id==="st-a");
   const pick=()=>{activeJobId="st-job-1";activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
   const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
-  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Days off",()=>openDaysOff()],
+  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Days off",()=>openDaysOff()],
     ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
     ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Settings menu",()=>openMenu()],["Close a task",()=>openJobClose(jobById("st-job-1"),"done")],["Log time on a task",()=>openLogTime({key:"j:st-job-1"})],["A closed task",()=>{view="jobs";activeJobId="st-job-2";renderApp();}],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
   const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;

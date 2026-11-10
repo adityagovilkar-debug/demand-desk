@@ -45,7 +45,7 @@ function agendaItems(){const t0=todayStr(),out=[];
   return out.sort((a,b)=>a.date.localeCompare(b.date)||AG_KINDS[a.k].o-AG_KINDS[b.k].o);}
 const AG_CAP=10;
 function agendaHTML(items){const t0=todayStr(),late=items.filter(i=>i.date<t0).length,shown=agendaHTML.all?items:items.slice(0,AG_CAP);
-  const have=efSum(state.efforts.filter(e=>e.date===t0)),evening=new Date().getHours()>=16&&efWd(t0)&&!efOff(t0)&&have<EF_DAY&&viewPref("cd.done","")!==t0;
+  const have=efSum(state.efforts.filter(e=>e.date===t0)),evening=(()=>{const n=new Date();return n.getHours()*60+n.getMinutes()>=19*60+30;})()&&efWd(t0)&&!efOff(t0)&&have<EF_DAY&&viewPref("cd.done","")!==t0;
   return `<div class="ck-unit agenda efx" id="agenda"><div class="ck-head"><h2>Today's agenda</h2><span class="ck-meta">${items.length?`${items.length} thing${items.length===1?"":"s"}${late?` · <b class="ag-late">${late} late</b>`:""} · `:""}next steps · your action points · follow-ups · due</span></div>
     ${items.length?`<div class="ag-list">${shown.map((it,i)=>{const K=AG_KINDS[it.k],n=-daysUntil(it.date);return `<div class="ag-row${n>0?" late":""}" data-ag="${i}" title="Open it">
       <span class="ag-when">${n>0?`${n} d late`:"today"}</span><span class="ag-k" style="--pen:var(--${K.pen})"><i></i>${K.l}</span>

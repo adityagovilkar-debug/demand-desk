@@ -1,0 +1,53 @@
+  /* ---------------- the daily loop: Today's agenda, Close the day, done → log the time ---------------- */
+  .agenda{margin-top:14px}
+  .dash>.agenda{margin:0 0 14px}
+  .ag-list{display:flex;flex-direction:column}
+  .ag-row{display:grid;grid-template-columns:62px 116px minmax(0,1.25fr) minmax(0,1fr) auto;gap:12px;align-items:center;min-height:38px;padding:5px 6px;border-bottom:1px dotted var(--rule-strong);cursor:pointer;font-size:13px;border-radius:2px}
+  .ag-row:hover{background:var(--paper-2)}
+  .ag-when{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);white-space:nowrap}
+  .ag-row.late .ag-when{color:var(--bad);font-weight:600}
+  .ag-k{display:flex;align-items:center;gap:7px;font-size:9px;letter-spacing:.16em;text-transform:uppercase;font-weight:600;color:var(--ink-2);white-space:nowrap}
+  .ag-k i{width:7px;height:7px;border-radius:50%;background:var(--pen);flex:none}
+  .ag-what{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+  .ag-sub{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin-left:4px}
+  .ag-of{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--ink-2)}
+  .ag-of b{font-weight:600;color:var(--ink)}
+  .ag-acts{display:flex;gap:5px;justify-content:flex-end;min-width:150px}
+  .ag-acts button{white-space:nowrap}
+  .ag-late{color:var(--bad)}
+  .ag-more{margin:7px 0 0 4px;align-self:flex-start}
+  .ag-empty{font-size:12.5px;color:var(--ink-3);padding:12px 4px}
+  .ag-foot{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--rule);font-size:12px;color:var(--ink-2)}
+  .ag-foot b{color:var(--ink)}
+  .ag-foot #agClose{margin-left:auto}
+  @media (max-width:1100px){.ag-row{grid-template-columns:58px minmax(0,1fr) auto}.ag-k,.ag-of{display:none}.ag-acts{min-width:0}}
+  /* Close the day */
+  .cd-modal{max-width:calc(100vw - 32px)}
+  .cd-modal h2{display:flex;align-items:baseline;gap:8px}
+  .cd-nav{margin-left:auto;display:flex;gap:4px}
+  .cd-lede{font-size:12px;margin:-6px 0 12px}
+  .cd-day{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);padding:9px 11px;border:1px solid var(--rule);border-radius:3px;margin-bottom:8px;background:var(--paper-2)}
+  .cd-day b{color:var(--ink)}
+  .cd-rows{max-height:54vh;overflow:auto;display:flex;flex-direction:column}
+  .cd-row{display:grid;grid-template-columns:8px minmax(0,1fr) 88px 150px 66px;gap:10px;align-items:center;padding:8px 2px;border-bottom:1px dotted var(--rule-strong)}
+  .cd-n{min-width:0;font-size:13px}
+  .cd-n b{font-weight:600}
+  .cd-did{font-size:11.5px;color:var(--ink-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .cd-has{font-family:var(--mono);font-size:11px;color:var(--ink-3);text-align:right}
+  .cd-row select{font-size:12px;padding:3px 6px;width:100%;min-width:0}
+  .cd-h{width:100%;text-align:right;font-size:13px;padding:4px 8px}
+  .cd-h.cd-bad{border-color:var(--bad);color:var(--bad)}
+  .cd-h:disabled{opacity:.45}
+  .cd-else{border-bottom:0}
+  .cd-none{font-size:12px;padding:8px 2px}
+  /* ✓ Done — the time it took */
+  .na-time{margin:-2px 0 14px}
+  .na-hrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .na-hrow input{width:120px}
+  .na-hrow .na-h.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .na-dsf{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-3);margin-left:6px}
+  .na-hrow input.na-bad{border-color:var(--bad)}
+  /* estimates: the Effort page's three-up row loses its estimate panel until one exists */
+  .efx .ef-g3.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  @media (max-width:1100px){.efx .ef-g3.two{grid-template-columns:1fr}}
+  .actitem .a-job{white-space:nowrap}

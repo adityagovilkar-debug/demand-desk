@@ -24,7 +24,19 @@ five years of use.
 - **The file is one 840 KB page** with about 500 functions, edited by exact-text patch
   scripts. It works, but each change is slower and riskier than it needs to be.
 
-## Decisions for you (they shape everything after)
+## Decisions (answered 11 Nov 2026)
+
+- **A — retire the classic themes: YES.** Bench (Paper / Backlit) becomes the only
+  look; the classic themes and their second copies of screens are removed. Done as
+  part of Phase 4 (one coherent look), which is easier with one look to design for.
+- **B — fold the Journal's to-dos into Tasks: YES.** Journal to-dos become one-line
+  tasks (title, due date, done) and the Journal's to-do list goes; one list for
+  things to do. Done with the Phase 4 clean-up, with a data upgrade that moves
+  every to-do across, nothing lost.
+- **C — split the source: YES** (already done in Phase 1).
+- **D — encryption: NO.** The file stays unencrypted; nothing changes.
+
+The original questions, for reference:
 
 A. **Retire the three classic themes?** Bench (Paper / Backlit) is the look in use.
    The classic themes mean most screens exist twice (two demand cards, two headers,
@@ -55,21 +67,21 @@ D. **Encryption.** If the file still holds passwords or secret references withou
 5. ✓ **Mockups folder tidied** — 5.2 MB → 0.3 MB; patches and the sample data kept.
 6. ✓ **"Why is it coming back?" from the ✎ Edit dialog too.**
 
-## Phase 2 — The daily loop (where most of your clicks go)
+## Phase 2 — The daily loop (where most of your clicks go) — DONE 11 Nov 2026
 
-7. **An agenda on Today** — one ordered list for the day, above the cards: next actions
+7. ✓ **An agenda on Today** — one ordered list for the day, above the cards: next actions
    due (demands and tasks), your own meeting action points, things due, follow-ups on
    what you're waiting for. **✓ Done** works right there and asks for the next step,
    so the next-action chain never needs the demand opened.
-8. **Done → log the time** — ticking a step done offers to log time for it, already
+8. ✓ **Done → log the time** — ticking a step done offers to log time for it, already
    filled in (what, today, the step as the note). Joins the two things done most
    often, and closes the gap between hours worked and hours logged.
-9. **Close the day** — one small sheet at the end of the day: the steps done, meetings
+9. ✓ **Close the day** — one small sheet at the end of the day: the steps done, meetings
    held and demands touched today, each with an hours box, and what's left of the
-   working day.
-10. **A meeting action point of yours becomes a Task in one click** (as Journal to-dos
+   working day. *(Turns solid after 7.30 pm while the day is short.)*
+10. ✓ **A meeting action point of yours becomes a Task in one click** (as Journal to-dos
     already do), keeping the link to the meeting.
-11. **Show a feature's furniture only once it's used** — estimate panels and "over its
+11. ✓ **Show a feature's furniture only once it's used** — estimate panels and "over its
     estimate" notices appear after the first estimate exists; the same for other
     optional parts that are empty.
 

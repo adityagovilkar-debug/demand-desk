@@ -72,8 +72,6 @@ function renderToday(){
      if(seen.has(k))return;seen.add(k);pairs.push({t,o,x});})));
    card("Object clashes — in flight in two demands","⚠","alert",pairs.map(({t,o,x})=>({main:`<span class="mono">${esc(o.name)}</span>`,
      sub:`${esc(demandLabel(t))} ↔ ${esc(demandLabel(x.t))}`,go:goDemand(t.id,"objects")})));}
-  card("Next actions due","⏰","warn",tasks.filter(nextActionDue).sort((a,b)=>a.nextAction.date.localeCompare(b.nextAction.date))
-    .map(t=>({main:dlabel(t),sub:`${t.nextAction.note?esc(t.nextAction.note.length>38?t.nextAction.note.slice(0,37)+"…":t.nextAction.note)+" · ":""}${t.nextAction.date===todayStr()?"today":t.nextAction.date}`,go:goDemand(t.id)})));
   card("Bugs / Rework","🐞","alert",bugs.map(t=>({main:dlabel(t),sub:reworkCount(t)?`↻ ${reworkCount(t)}`:"",go:goDemand(t.id)})));
   card("Go-live: transports not at their destination","🚚","warn",golive.map(t=>{const g=golivePending(t);return {main:dlabel(t),sub:`${g.missing.length} TR(s) → ${g.target}`,go:goDemand(t.id,"transports")};}));
   card("Waiting on","⏳","warn",waiting.map(t=>({main:dlabel(t),sub:`${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+"d":""}`,go:goDemand(t.id)})));
@@ -115,13 +113,13 @@ function renderToday(){
   else html+=`<div class="dash-grid">`+cards.map((c,ci)=>{const exp=renderToday._exp&&renderToday._exp[c.title];const shown=exp?c.items:c.items.slice(0,8);
     return `<div class="dashcard ${c.tone}"><h3>${c.icon} ${c.title}<span class="cnt">${c.items.length}</span></h3>${shown.map((it,ii)=>`<div class="dashitem ${String(it.sub||"").replace(/<[^>]+>/g,"").length>26?"two":""}" data-c="${ci}" data-i="${ii}"><span class="di-main">${it.main}</span>${it.sub?`<span class="di-sub">${it.sub}</span>`:""}${it.acts?`<span class="di-acts">${it.acts.map((a,ai)=>`<button class="sm ghost" data-c="${ci}" data-i="${ii}" data-a="${ai}" title="${esc(a[2]||"")}">${a[0]}</button>`).join("")}</span>`:""}</div>`).join("")}${c.items.length>shown.length?`<div class="dashitem" data-more="${ci}"><span class="di-main" style="color:var(--accent)">＋ ${c.items.length-shown.length} more…</span></div>`:""}</div>`;}).join("")+`</div>`;
   html+=`<div class="dash-grid dg-row" style="margin-top:14px"><div class="dashcard"><h3>📓 Today's journal</h3>${(todayJ&&(todayJ.body||todayJ.title))?`<div style="font-size:13px;white-space:pre-wrap;max-height:120px;overflow:auto;line-height:1.5">${esc(((todayJ.title?todayJ.title+"\n":"")+todayJ.body)).slice(0,400)}</div><button class="sm" id="openJ" style="margin-top:8px">Open journal</button>`:`<div class="dash-empty">No entry for today yet.</div><button class="sm" id="openJ" style="margin-top:8px">＋ Start today's note</button>`}</div>${efTodayHTML()}</div>`;
-  const attn=cards.reduce((n,c)=>n+c.items.length,0),wrap=encWarnHTML()+wrapUpHTML();
+  const attn=cards.reduce((n,c)=>n+c.items.length,0),wrap=encWarnHTML()+wrapUpHTML(),ag=agendaItems();
   if(wrap&&!benchOn())html=wrap+html;
   host.innerHTML=benchOn()
-    ?`<div class="dash cockpit"><div class="ck-in">${cockpitHTML()}${wrap}<div class="ck-sech"><span class="ck-lbl">Needs attention · ${attn}</span></div>${html}</div></div>`
-    :`<div class="dash"><div class="dash-head"><h1>Today</h1><span class="faint">${new Date().toDateString()}</span></div>${html}</div>`;
+    ?`<div class="dash cockpit"><div class="ck-in">${cockpitHTML(agendaHTML(ag))}${wrap}<div class="ck-sech"><span class="ck-lbl">Needs attention · ${attn}</span></div>${html}</div></div>`
+    :`<div class="dash"><div class="dash-head"><h1>Today</h1><span class="faint">${new Date().toDateString()}</span></div>${agendaHTML(ag)}${html}</div>`;
   if(benchOn())mountCockpit(host);
-  efWireToday(host);
+  efWireToday(host);wireAgenda(host,ag);
   host.querySelectorAll(".dashitem[data-c]").forEach(el=>el.onclick=()=>cards[+el.dataset.c].items[+el.dataset.i].go());
   host.querySelectorAll(".di-acts button").forEach(b=>b.onclick=e=>{e.stopPropagation();cards[+b.dataset.c].items[+b.dataset.i].acts[+b.dataset.a][1]();});
   wireWrapUp(host);wireEncWarn(host);
