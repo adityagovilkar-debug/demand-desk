@@ -1541,6 +1541,31 @@
   .rg-k{font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted,var(--ink-3));text-align:center}
   .rg-c.sys{margin:0;justify-content:center;font-size:11px;padding:1px 7px}
   .rg-no{text-align:center;color:var(--faint,var(--ink-4))}
+  /* Instrument v2 */
+  .vic{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:0;flex:none}
+  .vic.live{background:var(--good,#2a8a4a);animation:vbreathe 2.4s ease-in-out infinite}
+  .vic.stale{border:1.5px solid var(--watch,#c08a1e)}
+  .vic.nm{border:1px dashed var(--ink-3,#888)}
+  .vic.fault{background:var(--bad,#c0392b);box-shadow:0 0 0 3px color-mix(in srgb,var(--bad,#c0392b) 22%,transparent)}
+  @keyframes vbreathe{50%{opacity:.4}}
+  .ck-clock .big{display:flex;align-items:flex-end;justify-content:flex-end;gap:4px}
+  .ck-clock .big canvas{display:block;width:172px;height:42px}
+  .ck-clock .big small{margin-bottom:-2px}
+  :root[data-theme="bench"] .trroute{height:48px;width:300px}
+  .logo .mark i{transition:background .1s,opacity .1s}
+  .mxr{display:inline-block;vertical-align:-3px;margin-right:2px}
+  .ef-dcal{display:block;width:100%;height:124px}
+  .jb-rail{display:block;width:min(560px,100%);height:56px;margin:12px 0 0}
+  .jb-railnote{font-family:var(--mono);font-size:11px;color:var(--ink-3,var(--muted));margin:2px 0 0 4px}
+  .efx .ef-sg{position:relative;background:var(--paper)}
+  .efx .ef-sg .sgi{position:absolute;top:2px;bottom:2px;left:0;width:0;background:var(--ink);border-radius:2px;transition:transform .35s cubic-bezier(.2,.8,.2,1),width .35s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+  .efx .ef-sg button{position:relative;z-index:1;background:transparent;transition:color .2s}
+  .efx .ef-sg button:hover{background:transparent}
+  .efx .ef-sg button.on{color:var(--paper);background:var(--ink);box-shadow:none}
+  .efx .ef-sg.has-sgi button.on{background:transparent}
+  .efx .ef-sg .cap{position:relative;z-index:1}
+  button:active:not(:disabled){transform:scale(.97)}
+  @media (prefers-reduced-motion:reduce){.vic.live{animation:none}.efx .ef-sg .sgi{transition:none}}
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -1754,10 +1779,13 @@ function renderSaveState(){const el=document.getElementById("saveState");
   if(!el)return;
   const lock=state.settings.encryption?" 🔒":"";
   el.onclick=null;el.title="";
-  if(diskConflict){el.textContent="⚠ File changed on disk";el.className="savestate conflict";
-    el.title="Auto-save is paused so nothing gets overwritten — click to decide";el.onclick=()=>resolveDiskConflict();return;}
-  if(dirty){el.textContent=(fileHandle?"● Unsaved":"● Not saved")+lock;el.className="savestate dirty";}
-  else{el.textContent=(fileHandle?(lastSaveAuto?"✓ Auto-saved":"✓ Saved"):"")+lock;el.className="savestate saved";}}
+  /* an honest state light: what it is, why, and the fix (live · stale · not set up · fault) */
+  const st=(k,txt,why,cls)=>{el.innerHTML=`<i class="vic ${k}"></i>${esc(txt)}${lock}`;el.className="savestate "+cls;el.title=why;};
+  if(diskConflict){st("fault","File changed on disk","Something else changed your data file, so auto-save is paused and nothing gets overwritten. Click to decide which copy wins.","conflict");el.onclick=()=>resolveDiskConflict();return;}
+  if(dirty){if(fileHandle)st("stale","Unsaved",`Changes since the last save${state.settings.autosave?" — auto-save writes them within 30 s":""}. Ctrl+S saves now.`,"dirty");
+    else st("nm","Not saved","No data file chosen yet, so your changes live only in this browser's backup. Fix: 💾 Save and pick a file.","dirty");}
+  else if(fileHandle)st("live",lastSaveAuto?"Auto-saved":"Saved",`Everything is in ${fileHandle.name}.`,"saved");
+  else{el.innerHTML="";el.className="savestate saved";}}
 /* ---------- auto-save (writes to the connected file ~30s after the last change) ---------- */
 function scheduleAutoSave(){clearTimeout(autoSaveTimer);if(!state.settings.autosave||!supportsFS)return;autoSaveTimer=setTimeout(autoSaveNow,30000);autoSaveDue=Date.now()+30000;}
 async function autoSaveNow(){
@@ -2276,7 +2304,7 @@ function demandLabel(t){if(!t)return "";if(!t.demandId)return t.title;return dem
    TOP-LEVEL RENDER
    ============================================================ */
 function renderApp(){
-  EF_DAY=+state.settings.dayHours||8;renderNewerBar();
+  EF_DAY=+state.settings.dayHours||8;renderNewerBar();requestAnimationFrame(v2AfterRender);
   if(view!=="playbook")playTeam=false;
   noteContent();meetingsEffortCatchUp();
   document.querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
@@ -2630,7 +2658,9 @@ function renderJobDetail(){const j=activeJob(),host=document.getElementById("det
         <span>Came in by <select id="jb-src" style="width:130px">${Object.entries(JOB_SRC).map(([k,v])=>`<option value="${k}" ${k===j.source?"selected":""}>${v}</option>`).join("")}</select></span>
         <span>Received <input type="date" id="jb-rec" value="${j.received}" style="width:150px"></span>
         <span>Expected by <input type="date" id="jb-due" value="${j.due}" style="width:150px"></span>
-      </div></div>
+      </div><canvas class="jb-rail" title="From the ask to the answer"></canvas><div class="jb-railnote">${(()=>{const age=-daysUntil(j.received)+1,n=j.due?daysUntil(j.due):null,tm=jobTiming(j);
+        if(j.status==="done")return tm?`Reported back ${tm.txt}`:"Reported back";if(j.status==="dropped")return "Dropped";
+        return `Day ${age} · `+(n==null?"no date expected":n>0?`expected in ${n} d`:n===0?"expected today":`${-n} d past expected`);})()}</div></div>
       <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end"><span class="pill ${st.cls}" style="font-size:12px">${st.l}</span>
         <button class="sm" id="jb-logt" title="Log time against this task">⏱ Log time</button>
         ${jobOpen(j)?`<button class="sm primary" id="jb-close" title="Record what you reported back">✓ Close…</button>`:""}
@@ -2658,6 +2688,10 @@ function renderJobDetail(){const j=activeJob(),host=document.getElementById("det
     <div class="sec-title" style="margin-top:18px"><h3>Time</h3><div class="ln"></div><span class="faint" style="font-size:11px" id="jb-hrs"></span><button class="sm" id="jb-logt2">⏱ Log time</button></div>
     <div id="jb-time"></div>
   </div>`;
+  {const cv=host.querySelector(".jb-rail");if(cv){const fl=j.log.map(x=>x.date).sort()[0]||"";
+    const st=[{label:"Received",date:shortD(j.received)},{label:"Working",date:fl?shortD(fl):""},{label:j.status==="dropped"?"Dropped":"Reported",date:j.closedOn?shortD(j.closedOn):j.due?"by "+shortD(j.due):""}];
+    const cur=j.status==="done"||j.status==="dropped"?3:j.log.length||j.status==="progress"?1:0;
+    DK.scope(cv,(c,w,h,tm)=>{const C=efC(cv);V2.rail(c,C,34,w-40,h/2+3,st,cur,C["pen-7"],tm);});}}
   const q=s=>host.querySelector(s),side=()=>renderJobSidebar();
   q("#jb-title").onchange=e=>{j.title=e.target.value.trim()||"(untitled task)";touch(j);side();};
   q("#jb-asked").onchange=e=>{j.askedBy=e.target.value.trim();touch(j);side();};
@@ -5370,7 +5404,7 @@ function openMenu(){
     </div>
     <div style="display:flex;align-items:center;gap:10px;margin:8px 0;padding:9px 11px;border:1px solid var(--line2);border-radius:8px">
       <span style="flex:1;font-size:13px">⏱ Working day <span class="faint" style="font-size:11px">— a full day of logged hours (day bars, week sheet, wrap-up)</span></span>
-      <input type="number" id="mn-dayh" min="1" max="16" step="0.25" value="${state.settings.dayHours}" style="width:70px;padding:3px 6px"> h</div>
+      <canvas id="mn-dayk" title="Drag up or down, scroll, or use the arrow keys — 4 to 12 hours" style="width:92px;height:80px;flex:none"></canvas></div>
     <div style="display:flex;align-items:center;gap:10px;margin:8px 0;padding:9px 11px;border:1px solid var(--line2);border-radius:8px">
       <span style="flex:1;font-size:13px">🧩 Object types <span class="faint" style="font-size:11px">(${objTypes().length} in the Objects-tab dropdown)</span></span>
       <button class="sm" id="mn-objtypes">Edit…</button>
@@ -5399,8 +5433,9 @@ function openMenu(){
   root.querySelector("#mn-notes").onclick=()=>{close();openSearch("");};
   root.querySelector("#mn-imgdir").onclick=async()=>{imagesDir=null;imgDirSaved=null;if(await ensureImgDir(true)){close();openMenu();}};
   const mif=root.querySelector("#mn-imgforget");if(mif)mif.onclick=async()=>{await forgetImgDir();toast("Images folder forgotten (files untouched)");close();openMenu();};
-  root.querySelector("#mn-dayh").onchange=e=>{const v=Math.round(+e.target.value*4)/4;if(!(v>=1&&v<=16)){toast("A working day between 1 and 16 hours",true);e.target.value=state.settings.dayHours;return;}
-    state.settings.dayHours=v;markDirty();renderApp();toast(`Working day set to ${efFh(v)} h`);};
+  {const cv=root.querySelector("#mn-dayk"),lo=4,hi=12,get=()=>(Math.min(hi,Math.max(lo,state.settings.dayHours))-lo)/(hi-lo);let tmr=0;
+   DK.scope(cv,(c,w,h)=>{const C=efC(cv);V2.dotKnob(c,C,w/2,h/2+4,34,get(),C["pen-2"],{value:efFh(state.settings.dayHours),name:"hours"});});
+   V2.bindKnob(cv,get,f=>{const v=Math.round((lo+f*(hi-lo))*4)/4;if(v===state.settings.dayHours)return;state.settings.dayHours=v;clearTimeout(tmr);tmr=setTimeout(()=>{markDirty();renderApp();},400);},.25/(hi-lo));}
   root.querySelector("#mn-imgexp").onchange=e=>{const n=Math.max(0,parseInt(e.target.value||"0",10)||0);state.settings.imageExpiryDays=n;markDirty();};
   root.querySelector("#mn-objtypes").onclick=()=>{close();openObjTypes(()=>renderApp());};
   root.querySelector("#mn-week").onclick=()=>{close();openWeekly();};
@@ -5478,6 +5513,83 @@ const DK=(()=>{
   requestAnimationFrame(frame);
   return{TAU,C,readColors,dot,ring,dotArc,dotRing,label,rng,scope,fade,get MONO(){return MONO;}};
 })();
+/* ---------- Instrument v2 (the Field Guide picks) — ported from Bench's dots.js "V2" section.
+   Every piece carries a value or a state; every one resolves to its final frame when motion is off.
+   Colours are passed in (C), so the classic themes' fallbacks work too. ---------- */
+const V2=(()=>{const {dot,ring,label}=DK,TAU=Math.PI*2,cl=v=>v<0?0:v>1?1:v,still=()=>!motionOn();
+  /* matrix readout: a 5×7 dot font; unlit cells always drawn. ';' is a blank colon for blinking a clock */
+  const F={"0":["01110","10001","10011","10101","11001","10001","01110"],"1":["00100","01100","00100","00100","00100","00100","01110"],"2":["01110","10001","00001","00010","00100","01000","11111"],
+    "3":["11110","00001","00001","01110","00001","00001","11110"],"4":["00010","00110","01010","10010","11111","00010","00010"],"5":["11111","10000","11110","00001","00001","10001","01110"],
+    "6":["00110","01000","10000","11110","10001","10001","01110"],"7":["11111","00001","00010","00100","01000","01000","01000"],"8":["01110","10001","10001","01110","10001","10001","01110"],
+    "9":["01110","10001","10001","01111","00001","00010","01100"],":":["0","0","1","0","1","0","0"],";":["0","0","0","0","0","0","0"],".":["0","0","0","0","0","0","1"],
+    "-":["000","000","000","111","000","000","000"],"+":["000","000","010","111","010","000","000"]," ":["000","000","000","000","000","000","000"]};
+  const lay=new Map();
+  function matrixLayout(str){str=String(str);if(lay.has(str))return lay.get(str);let cols=0;const on=new Set();
+    for(const ch of str){const g=F[ch]||F[" "];for(let r=0;r<7;r++)for(let k=0;k<g[r].length;k++)if(g[r][k]==="1")on.add((cols+k)+","+r);cols+=g[0].length+1;}
+    const L={cols:Math.max(0,cols-1),on};if(lay.size>300)lay.clear();lay.set(str,L);return L;}
+  const matrixFit=(str,w,h)=>Math.min(w/Math.max(1,matrixLayout(str).cols),h/7);
+  const mxW=(str,h)=>Math.ceil(matrixLayout(str).cols*h/7);
+  function matrixText(c,C,str,x,y,cell,col){const L=matrixLayout(str),lit=cell*.4,off=Math.max(.6,cell*.11);
+    for(let k=0;k<L.cols;k++)for(let r=0;r<7;r++){const px=x+k*cell+cell/2,py=y+r*cell+cell/2;if(L.on.has(k+","+r))dot(c,px,py,lit,col);else dot(c,px,py,off,C["ink-4"]);}
+    return L.cols*cell;}
+  /* matrix wipe: the old value flips to the new in a diagonal wave (16 ms a cell), the wavefront in a pen */
+  function matrixWipe(c,C,from,to,x,y,cell,age,col,wave){const A=matrixLayout(from),B=matrixLayout(to),cols=Math.max(A.cols,B.cols),lit=cell*.4,off=Math.max(.6,cell*.11);if(still())age=1e9;
+    for(let k=0;k<cols;k++)for(let r=0;r<7;r++){const o0=A.on.has(k+","+r),o1=B.on.has(k+","+r),lp=cl((age-(k+r)*16)/220);let v=o1?1:0;
+      if(o0!==o1)v=lp<.5?(o0?1-2*lp:0):(o1?2*lp-1:0);const px=x+k*cell+cell/2,py=y+r*cell+cell/2,front=lp>0&&lp<1;
+      if(v>.02)dot(c,px,py,off+(lit-off)*v,front?wave:col);else dot(c,px,py,off,front?wave:C["ink-4"],front?.6:1);}}
+  /* leader callout: a label on a thin elbow line, like a technical drawing; flips left near the right edge */
+  function callout(c,C,px,py,text,ly,col,w){const up=ly<py,flip=px>w-130,ex=flip?px-10:px+10;
+    c.globalAlpha=.8;c.strokeStyle=col;c.lineWidth=.8;c.beginPath();c.moveTo(px,up?py-5:py+5);c.lineTo(px,ly);c.lineTo(ex,ly);c.stroke();
+    label(c,text,flip?ex-3:ex+3,ly,{font:DK.MONO,size:9.5,weight:500,color:C.ink,align:flip?"right":"left"});ring(c,px,py,4.5,col,.9);dot(c,px,py,1.8,col);}
+  /* dot calendar: weeks as columns (Mon on top); size + ink = the amount; 0 = ghost, null = not a working day; ring = today */
+  const M3=["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+  function dotCalendar(c,C,x0,y0,w,h,vals,col){const end=new Date(),tr=(end.getDay()+6)%7,weeks=Math.ceil((vals.length+6-tr)/7)||1,L=20,T=16,cell=Math.min((w-L)/weeks,(h-T)/7);
+    const start=new Date(end);start.setDate(end.getDate()-tr-7*(weeks-1));
+    for(let i=0;i<weeks;i++){const d=new Date(start);d.setDate(start.getDate()+7*i);if(d.getDate()<=7)label(c,M3[d.getMonth()],x0+L+i*cell,y0+6,{size:7.5,align:"left",spacing:1,color:C["ink-3"]});
+      for(let j=0;j<7;j++){const x=x0+L+i*cell+cell/2,y=y0+T+j*cell+cell/2,back=(weeks-1-i)*7+(tr-j),v=vals[vals.length-1-back];
+        if(back<0){dot(c,x,y,.55,C["ink-4"],.5);continue;}
+        if(v==null)ring(c,x,y,1.4,C["ink-4"]);else if(!v)dot(c,x,y,.8,C["ink-4"]);else dot(c,x,y,1+(cell*.38-1)*Math.sqrt(cl(v)),col,.35+.65*cl(v));
+        if(back===0)ring(c,x,y,cell*.48,C.ink,.9);}}
+    ["M","W","F"].forEach((t,k)=>label(c,t,x0+4,y0+T+k*2*cell+cell/2,{size:7.5,align:"left",color:C["ink-3"]}));}
+  /* rail timeline: solid = done, pen + slow pulse = now, hollow = ahead; date above, stage below */
+  function rail(c,C,x0,x1,y,st,cur,col,t){const n=st.length,X=i=>n<2?x0:x0+(x1-x0)*i/(n-1),xc=cur<0?x0-1:X(Math.min(cur,n-1));
+    for(let x=x0;x<=x1;x+=4)dot(c,x,y,x<=xc?1.1:.8,x<=xc?C.ink:C["ink-4"]);
+    st.forEach((s,i)=>{const x=X(i);
+      if(i<cur)dot(c,x,y,3.3,C.ink);
+      else if(i===cur){dot(c,x,y,3.8,col);if(!still()){const p=(t%1800)/1800;ring(c,x,y,4.5+p*10,col,(1-p)*.6);}}
+      else{dot(c,x,y,3.6,C.paper);ring(c,x,y,3.3,C["ink-3"]);}
+      label(c,String(s.label).toUpperCase(),x,y+20,{size:8,color:i===cur?C.ink:C["ink-3"],spacing:1.2});
+      if(s.date)label(c,s.date,x,y-18,{font:DK.MONO,size:9.5,weight:500,color:i<=cur?C["ink-2"]:C["ink-4"]});});}
+  /* knob: a dot gauge you turn by dragging, scrolling or the arrow keys */
+  function dotKnob(c,C,cx,cy,R,frac,col,{value="",name=""}={}){const n=27,a0=.78*Math.PI,sw=1.44*Math.PI,f=cl(frac);
+    for(let i=0;i<n;i++){const t=i/(n-1),a=a0+sw*t,x=cx+Math.cos(a)*R,y=cy+Math.sin(a)*R;if(t<=f+1e-6&&f>0)dot(c,x,y,1.6+.5*t,col,.45+.55*t/Math.max(f,.01));else dot(c,x,y,1.05,C["ink-4"]);}
+    ring(c,cx,cy,R-10,C["rule-strong"]);const a=a0+sw*f;dot(c,cx+Math.cos(a)*(R-15),cy+Math.sin(a)*(R-15),2,C.ink);
+    label(c,String(value),cx,cy-1,{font:DK.MONO,size:14,color:C.ink});if(name)label(c,String(name).toUpperCase(),cx,cy+13,{size:7,spacing:1.4,color:C["ink-3"]});}
+  function bindKnob(cv,get,set,step){let drag=null;cv.tabIndex=0;cv.style.touchAction="none";cv.style.cursor="ns-resize";
+    cv.addEventListener("pointerdown",e=>{drag={y:e.clientY,v:get()};cv.setPointerCapture(e.pointerId);});
+    cv.addEventListener("pointermove",e=>{if(drag)set(cl(drag.v+(drag.y-e.clientY)/140));});
+    cv.addEventListener("pointerup",()=>drag=null);
+    cv.addEventListener("wheel",e=>{e.preventDefault();set(cl(get()-Math.sign(e.deltaY)*step));},{passive:false});
+    cv.addEventListener("keydown",e=>{const d={ArrowUp:1,ArrowRight:1,ArrowDown:-1,ArrowLeft:-1}[e.key];if(!d)return;e.preventDefault();set(cl(get()+d*step));});}
+  /* decode: an ID arrives as glyphs that settle one character every 40 ms */
+  const G="#%&*+=-:/<>0123456789ABCDEFX";
+  function decode(el,text,ms=40){if(el._dec)cancelAnimationFrame(el._dec);if(still()){el.textContent=text;return;}const t0=performance.now();
+    const step=now=>{const k=Math.floor((now-t0)/ms);el.textContent=text.slice(0,k)+[...text.slice(k)].map(ch=>ch===" "?" ":G[(Math.random()*G.length)|0]).join("");
+      if(k>=text.length){el.textContent=text;el._dec=0;}else el._dec=requestAnimationFrame(step);};el._dec=requestAnimationFrame(step);}
+  /* segmented control: an ink indicator slides from the old choice to the new one (the page re-renders in between) */
+  const segPos={};
+  function segSlide(){document.querySelectorAll(".ef-sg[id]").forEach(sg=>{let ind=sg.querySelector(".sgi");if(!ind){ind=document.createElement("span");ind.className="sgi";sg.prepend(ind);sg.classList.add("has-sgi");}
+    const on=sg.querySelector("button.on");if(!on){ind.style.opacity="0";return;}ind.style.opacity="1";
+    const to={x:on.offsetLeft,w:on.offsetWidth},from=segPos[sg.id];segPos[sg.id]=to;
+    if(from&&!still()&&(from.x!==to.x||from.w!==to.w)){ind.style.transition="none";ind.style.width=from.w+"px";ind.style.transform=`translateX(${from.x}px)`;void ind.offsetWidth;ind.style.transition="";}
+    ind.style.width=to.w+"px";ind.style.transform=`translateX(${to.x}px)`;});}
+  return{matrixLayout,matrixFit,mxW,matrixText,matrixWipe,callout,dotCalendar,rail,dotKnob,bindKnob,decode,segSlide};})();
+/* after every render: slide the segmented controls; decode a demand's ID the first time it opens.
+   Effort and Review redraw themselves without renderApp, so new controls are also picked up as they appear. */
+let v2LastId=null,v2Mo=0;
+{const d=document.getElementById("detail");if(d)new MutationObserver(()=>{if(!v2Mo)v2Mo=requestAnimationFrame(()=>{v2Mo=0;V2.segSlide();});}).observe(d,{childList:true,subtree:true});}
+function v2AfterRender(){V2.segSlide();const el=document.querySelector(".bhead .bh-id");
+  if(el&&activeId&&v2LastId!==activeId){v2LastId=activeId;V2.decode(el,el.textContent);}}
 const benchOn=()=>document.documentElement.getAttribute("data-theme")==="bench";
 /* Motion: Settings choice, or follow Windows' "reduce animations" */
 const MOTION_KEY="demanddesk.motion",reducedMQ=matchMedia("(prefers-reduced-motion: reduce)");
@@ -5522,24 +5634,25 @@ function setDemandStatus(t,v,fromEl){if(v===t.status)return;
 
 /* where a transport has actually reached, drawn as its route Dev → QA → Prod */
 function trRouteDraw(t,tr){return (ctx,w,h,tm,dt,s)=>{const {dot,ring,label,C}=DK;
-  /* the route this transport has to travel: its own destinations after the origin
-     (H03 → H43 → H42 → H41), or by default Dev → QA → Prod of its own landscape */
+  /* v2 rail: the route as stations — solid = reached, pen + slow pulse = waiting for its next import,
+     hollow = still ahead; the date it arrived above, the system below. Its own destinations after the
+     origin (H03 → H43 → H42 → H41), or by default Dev → QA → Prod of its own landscape. */
   const own=trDest(t,tr),L=landscapeOf(tr.system);if(!L)return;
   const S=own.length?[tr.system,...own.filter(x=>x!==tr.system)]:routeTiers().map(d=>L+d);
-  const R=reachedSystems(t,tr),has=x=>x===tr.system||R.has(x),T=new Set(trTargets(t,tr));
+  const when={};effectiveSyncs(t,tr).forEach(x=>{if(x.date&&(!when[x.system]||x.date<when[x.system]))when[x.system]=x.date;});
+  const R=reachedSystems(t,tr),has=x=>x===tr.system||R.has(x),T=new Set(trTargets(t,tr)),mv=motionOn();
   const penOf=x=>({"3":C["pen-2"],"2":C["pen-4"],"1":C["pen-3"]})[String(x).slice(-1)]||C["pen-5"];
-  let idx=0;S.forEach((x,i)=>{if(has(x))idx=i;});
-  const n=S.length,xs=S.map((_,i)=>12+(w-24)*(i/Math.max(1,n-1))),y=11,mv=motionOn();
-  const grow=mv?Math.min(1,(performance.now()-s.born)/700):1,g=1-Math.pow(1-grow,3);
-  for(let x=xs[0];x<=xs[n-1];x+=5)dot(ctx,x,y,.7,C["ink-4"]);
-  if(idx>0){ctx.globalAlpha=.6;ctx.strokeStyle=penOf(S[idx]);ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(xs[0],y);ctx.lineTo(xs[0]+(xs[idx]-xs[0])*g,y);ctx.stroke();}
-  S.forEach((x,i)=>{const on=has(x),pen=penOf(x);
-    if(on)dot(ctx,xs[i],y,3.1,pen);else ring(ctx,xs[i],y,2.7,C["ink-4"],1);
-    if(T.has(x))ring(ctx,xs[i],y,6.5,on?pen:C["ink-3"],.55);
-    label(ctx,x,xs[i],h-1,{font:DK.MONO,size:8,weight:on?600:400,color:on?C["ink-2"]:C["ink-3"],base:"bottom"});});
-  const nx=S.findIndex((x,i)=>i>0&&!has(x));
-  if(tr.released&&nx>0&&mv){const u=((tm*.00055+hashAngle(tr.id))%1),x=xs[nx-1]+(xs[nx]-xs[nx-1])*u;dot(ctx,x,y,1.8,penOf(S[nx]),.85*Math.sin(u*Math.PI));}
-  if(!tr.released)ring(ctx,xs[0],y,6+(mv?Math.sin(tm*.005)*1.5:0),C.watch,.65);};}
+  const n=S.length,X=i=>16+(w-32)*(i/Math.max(1,n-1)),y=h/2;
+  const nx=S.findIndex(x=>!has(x)),cur=!tr.released?0:nx<0?n:nx,xc=X(Math.min(n-1,Math.max(0,cur>=n?n-1:cur-1)));
+  for(let x=X(0);x<=X(n-1);x+=4)dot(ctx,x,y,x<=xc&&cur>0?1.1:.8,x<=xc&&cur>0?C["ink-2"]:C["ink-4"]);
+  S.forEach((x,i)=>{const px=X(i),on=has(x),now=i===cur,pen=now&&!tr.released?C.watch:penOf(x);
+    if(now){dot(ctx,px,y,3.8,pen);if(mv){const p=(tm%1800)/1800;ring(ctx,px,y,4.5+p*10,pen,(1-p)*.6);}}
+    else if(on)dot(ctx,px,y,3.3,penOf(x));
+    else{dot(ctx,px,y,3.6,C.paper);ring(ctx,px,y,3.3,C["ink-3"]);}
+    if(T.has(x))ring(ctx,px,y,7,on?penOf(x):C["ink-3"],.5);
+    if(i>0&&when[x])label(ctx,shortD(when[x]),px,y-15,{font:DK.MONO,size:8.5,weight:500,color:C["ink-2"]});
+    label(ctx,x,px,y+16,{font:DK.MONO,size:8.5,weight:on||now?600:400,color:now?C.ink:on?C["ink-2"]:C["ink-3"]});});
+  if(!tr.released)label(ctx,"NOT RELEASED",Math.max(2,X(0)-10),y-15,{size:7,spacing:1.2,color:C.watch,align:"left"});};}
 /* two demands, one object: two dots circling the same point */
 function drawOrbit(ctx,w,h,t){const {dot,ring,C}=DK,cx=w/2,cy=h/2,tt=motionOn()?t*.0024:0;ring(ctx,cx,cy,5,C.bad,.9);dot(ctx,cx,cy,1.6,C.bad);
   const r=9+Math.sin(tt*.7)*2.5;[0,Math.PI].forEach((o,i)=>{const a=tt+o;dot(ctx,cx+Math.cos(a)*r*1.9,cy+Math.sin(a)*r*.9,2.3,i?C["pen-4"]:C["pen-2"]);});}
@@ -5547,15 +5660,20 @@ function drawOrbit(ctx,w,h,t){const {dot,ring,C}=DK,cx=w/2,cy=h/2,tt=motionOn()?
 /* ---------- title bar: animated wordmark + clock · icon rail · status bar ---------- */
 {const m=document.getElementById("mark");if(m)for(let i=0;i<9;i++)m.appendChild(document.createElement("i"));}
 let markBusy=false;
-setInterval(()=>{if(markBusy||!benchOn()||!motionOn()||document.hidden)return;const m=[...document.querySelectorAll("#mark i")];if(!m.length)return;
-  m.forEach(x=>x.classList.remove("on"));const k=Math.floor(Math.random()*9);m[k].classList.add("on");m[(k+4)%9].classList.add("on");m[4].classList.add("on");},900);
-function markSaved(){const m=[...document.querySelectorAll("#mark i")];if(!m.length||!benchOn())return;markBusy=true;let k=0;
-  const iv=setInterval(()=>{k++;m.forEach((x,i)=>x.classList.toggle("on",i<k));if(k>=9){clearInterval(iv);setTimeout(()=>{markBusy=false;},400);}},motionOn()?40:0);}
+/* v2 "Working": the wordmark holds still while nothing is happening and traces a snake path (120 ms a step)
+   only while something real is in progress — a save, reading the notes folder */
+let markWork=0,markUntil=0,markStep=0;const MARK_PATH=[0,1,2,5,4,3,6,7,8];
+setInterval(()=>{const m=[...document.querySelectorAll("#mark i")];if(!m.length)return;
+  if((markWork>0||Date.now()<markUntil)&&benchOn()&&motionOn()&&!document.hidden){markStep=(markStep+1)%9;
+    m.forEach((x,i)=>{const age=(markStep-MARK_PATH.indexOf(i)+9)%9;x.classList.toggle("on",age<4);x.style.opacity=age<4?String(1-age*.22):"";});}
+  else if(markStep!==-1){markStep=-1;m.forEach((x,i)=>{x.style.opacity="";x.classList.toggle("on",i===0||i===4||i===8);});}},120);
+function markWorking(on){markWork=Math.max(0,markWork+(on?1:-1));if(on)markUntil=Math.max(markUntil,Date.now()+700);}
+function markSaved(){markUntil=Date.now()+900;}
 function greetText(){const h=new Date().getHours(),n=viewPref("userName","").trim();
   return (h<5?"Up late":h<12?"Good morning":h<17?"Good afternoon":"Good evening")+(n?", "+n:"")+".";}
 setInterval(()=>{const d=new Date(),hc=document.getElementById("hclock");
   if(hc)hc.textContent=`${p2(d.getHours())}:${p2(d.getMinutes())}:${p2(d.getSeconds())}`;
-  const bc=document.getElementById("ckClock");if(bc)bc.innerHTML=`${p2(d.getHours())}:${p2(d.getMinutes())}<small>:${p2(d.getSeconds())}</small>`;
+  const bc=document.getElementById("ckClock");if(bc)bc.textContent=":"+p2(d.getSeconds());
   const g=document.getElementById("ckGreet");if(g)g.textContent=greetText();
   updateSb();},1000);
 function syncRail(){const r=document.getElementById("rail");if(!r)return;
@@ -5619,7 +5737,7 @@ function cockpitHTML(){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>Math.m
         <div class="ck-sub"><a class="ck-sl" data-sl="0"><b>${c.active.length}</b> active</a> &nbsp;·&nbsp; <a class="ck-sl" data-sl="1"><b class="${c.over.length?"bad":""}">${c.over.length}</b> overdue</a> &nbsp;·&nbsp; <a class="ck-sl" data-sl="2"><b class="${c.clash?"bad":""}">${c.clash}</b> object clash${c.clash===1?"":"es"}</a> &nbsp;·&nbsp; <a class="ck-sl" data-sl="3"><b>${c.short}</b> transport${c.short===1?"":"s"} short of go-live</a></div>
         <button class="ck-search" id="ckSearch"><span class="caret"></span>Find a demand, an object, a transport, a system…<kbd>Ctrl K</kbd></button>
         <div class="ck-acts"><button class="primary" id="ckNew">＋ New demand</button><button id="ckJ">Today's journal</button><button id="ckDbg">Debug session</button><button id="ckLog">⏱ Log time</button><button id="ckWin">🏆 Win</button><button id="ckWrap" title="This week: hours, missing days, wins and lessons">Week wrap-up</button><button id="ckWeek">Weekly summary</button><button id="ckHand">Handover pack</button></div></div>
-      <div class="ck-clock"><div class="ck-lbl" style="text-align:right">local · offline · ${state.settings.autosave?"autosave on":"autosave off"}</div><div class="big" id="ckClock"></div></div></div>
+      <div class="ck-clock"><div class="ck-lbl" style="text-align:right">local · offline · ${state.settings.autosave?"autosave on":"autosave off"}</div><div class="big"><canvas id="ckClockM" title="Local time"></canvas><small id="ckClock"></small></div></div></div>
     <div class="ck-sech"><span class="ck-lbl">Pulse · read from your data file</span></div>
     <div class="ck-tiles">${CK_TILES.map((x,i)=>`<div class="ck-unit ck-tile" data-i="${i}" style="--pen:${x.pen}"><div class="top"><span class="no">${x.no}</span><span class="st"><i></i><span>${x.st}</span></span></div>
       <canvas></canvas><div class="nm">${x.nm}</div><div class="bl">${x.bl}</div><div class="ft"><span>${foot[i]}</span><span class="go">Open ›</span></div></div>`).join("")}</div>
@@ -5642,8 +5760,12 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
   {const SL=[CK_TILES[0].view,{group:"none",sort:"due",only:["overdue"]},{group:"none",sort:"clash",dir:"desc",only:["clash"]},CK_TILES[3].view];
    host.querySelectorAll(".ck-sl").forEach(a=>a.onclick=()=>goView(SL[+a.dataset.sl]));}
   host.querySelectorAll(".ck-ep").forEach(el=>el.onclick=()=>{view="epics";activeEpicId=el.dataset.e;epicTab="overview";renderApp();});
-  const bc=q("#ckClock");if(bc){const d=new Date();bc.innerHTML=`${p2(d.getHours())}:${p2(d.getMinutes())}<small>:${p2(d.getSeconds())}</small>`;}
+  const bc=q("#ckClock");if(bc){const d=new Date();bc.textContent=":"+p2(d.getSeconds());}
   const mv=motionOn(),today=todayStr();
+  /* the clock as a matrix readout — the one per screen; the colon blinks, a new minute wipes in */
+  {const cv=q("#ckClockM");if(cv)scope(cv,(ctx,w,h,t,dt,s)=>{const d=new Date(),hm=p2(d.getHours())+":"+p2(d.getMinutes()),str=mv&&d.getSeconds()%2?hm.replace(":",";"):hm;
+    if(s.hm!==hm){s.from=s.hm||hm;s.hm=hm;s.t0=t;}const cell=V2.matrixFit("88:88",w,h),x=w-V2.matrixLayout(str).cols*cell;
+    if(s.from!==hm&&t-s.t0<900)V2.matrixWipe(ctx,C,s.from,hm,x,0,cell,t-s.t0,C.ink,C["pen-2"]);else V2.matrixText(ctx,C,str,x,0,cell,C.ink);});}
   /* hero: a flow field, one stream colour per status, denser where more demands sit */
   {const N=mv?520:0,P=[],r=rng(7);
     const ws=(()=>{const k={open:0,progress:0,bug:0,delivered:0};state.tasks.forEach(t=>{if(k[t.status]!=null)k[t.status]++;});
@@ -5813,7 +5935,7 @@ function demandHeadBench(t,sub,lc){
   const cl=taskClashes(t).filter(x=>x.open.length),rw=reworkCount(t),nClash=openClashCount(t);
   return `<div class="detail-head bhead" style="--pen:${STATUS_PEN[t.status]}">
     <div class="bh-top"><div class="bh-l">
-        <div class="bh-no">${esc(t.demandId||"no demand id")}${ep?` · <a class="ep-go" title="Open the epic">◆ ${esc(ep.code||ep.name)}</a>`:""}${t.wave?` · ${esc(t.wave)}`:""}</div>
+        <div class="bh-no"><span class="bh-id">${esc(t.demandId||"no demand id")}</span>${ep?` · <a class="ep-go" title="Open the epic">◆ ${esc(ep.code||ep.name)}</a>`:""}${t.wave?` · ${esc(t.wave)}`:""}</div>
         <h1>${esc(t.title)}</h1>
         <div class="bh-sub">${esc(t.type)}${t.requestor?` · asked by ${esc(t.requestor)}`:""}${buildersOf(t).length?` · 👷 built by ${esc(builderNames(t))}`:""}${t.project?` · ▦ ${esc(t.project)}`:""}${t.theme?` · ${esc(t.theme)}`:""}</div></div>
       <div class="bh-acts">${statusSegHTML(t)}
@@ -6441,6 +6563,7 @@ function renderEffortTab(body,t){
       <div class="ck-unit ins"><canvas data-k="days"></canvas><div style="min-width:0"><div class="k">Days worked</div><div class="v">${days.size}<small>days</small></div><div class="s">${days.size?"avg "+efFh(Math.round(tot/days.size*10)/10)+" h on a day you touched it":"nothing logged yet"}</div></div></div>
       <div class="ck-unit ins"><canvas data-k="rw"></canvas><div style="min-width:0"><div class="k">Rework</div><div class="v">${efFh(rw)}<small>h</small></div><div class="s ${rw?"late":""}">${rw?efPct(rw,tot)+"% — hours logged while in Bug":"none — never bounced"}</div></div></div>
       <div class="ck-unit ins"><canvas data-k="last"></canvas><div style="min-width:0"><div class="k">Last worked</div><div class="v">${last?efWdd(last.date):"—"}</div><div class="s">${last?efFh(efSum(es.filter(e=>e.date===last.date)))+" h · "+esc(last.activity):"never"}</div></div></div></div>
+    ${es.length?`<div class="ck-unit"><div class="ck-head"><h2>Days on it</h2><span class="ck-meta">a column per week · size = hours that day · ring = today · hollow = holiday or leave</span></div><canvas class="ef-dcal"></canvas></div>`:""}
     ${es.length?`<div class="ck-unit"><div class="ck-head"><h2>Effort over its life</h2><span class="ck-meta">status above · a dot = ½ h, coloured by activity · line = running total${est?" against the estimate":""} · click a day</span></div>
       <canvas class="ef-life"></canvas>
       <div class="ef-legend">${EF_DEMAND_ACTS.filter(a=>es.some(e=>e.activity===a)).map(a=>`<span><span class="ef-pd" style="--pen:var(--${EF_ACTC[a]})"></span>${a}</span>`).join("")}${est?`<span style="margin-left:auto"><span style="width:14px;border-top:1px dashed var(--ink-3)"></span>estimate</span>`:""}</div></div>`:""}
@@ -6458,6 +6581,10 @@ function renderEffortTab(body,t){
     i.onkeydown=e=>{if(e.key==="Enter")ok();if(e.key==="Escape"){e.stopPropagation();done=true;renderDetail();}};i.onblur=ok;};}
   efRenderLog(body.querySelector("#efLog"),t,es);
   const frac={est:est?tot/est:0,days:(()=>{const a=es.length?es[0].date:todayStr();let n=0;for(let d=a;d<=(last?last.date:a);d=efAdd(d,1))if(efWd(d))n++;return days.size/Math.max(1,n);})(),rw:tot?rw/tot:0,last:last?1-Math.min(1,since/14):0};
+  {const cv=body.querySelector(".ef-dcal");if(cv){const by=new Map();es.forEach(e=>by.set(e.date,(by.get(e.date)||0)+e.hours));const vals=[];
+    for(let i=52*7-1;i>=0;i--){const d=efAdd(todayStr(),-i);vals.push(efOff(d)?null:(by.get(d)||0)/EF_DAY);}
+    /* as many weeks as fit at a readable dot size, up to a year */
+    DK.scope(cv,(c,w,h,tm,dt,s)=>{const C=efC(cv),wk=Math.max(8,Math.min(52,Math.floor((w-20)/15)));V2.dotCalendar(c,C,0,0,w,h,vals.slice(-wk*7),C[efPen(t.id)]||C.ink);});}}
   body.querySelectorAll(".ef-ins canvas").forEach(cv=>{const k=cv.dataset.k,f=frac[k],sv={v:motionOn()?0:f};
     DK.scope(cv,(c,w,h)=>{const C=efC(cv);sv.v+=(f-sv.v)*.06;
       if(k==="est")efArc(c,w/2,h/2+4,w/2-5,Math.min(1,sv.v),24,est&&tot>est?C.bad:C.good,C);
@@ -6510,6 +6637,9 @@ function efLifeDraw(t,es){const hist=statusHistory(t),H=hist.map(x=>[daysUntil(x
       efLabel(c,`EST ${efFh(est)} h`,w-Rr+8,ye,{size:8,align:"left"});}
     if(p>=1){let yt=yC(total);if(ye!=null&&Math.abs(yt-ye)<13)yt=ye+(yt<ye?-13:13);efLabel(c,`${efFh(total)} h`,w-Rr+8,yt,{mono:true,size:11,align:"left",color:est&&total>est?C.bad:C.ink});}
     for(let o=Math.ceil(a);o<=b;o++){const d=efAdd(todayStr(),o);if(d.endsWith("-01")){const x=X(o);efLabel(c,efFmt(d,{month:"short"}).toUpperCase(),x,h-8,{size:7.5});c.globalAlpha=.6;c.fillStyle=C["ink-4"];c.fillRect(x,y0+3,1,7);}}
+    /* plotter trace: while the running total draws itself, a pen head rides it on a dotted carriage line */
+    if(p<1&&offs.length){let cm=0;offs.forEach(o=>{if(X(o)<=xMax)cm+=efSum(by.get(o));});const hy=yC(cm);
+      for(let yy=top-8;yy<y0;yy+=4)efDot(c,xMax,yy,.6,C["ink-3"],.7);efDot(c,xMax,hy,2.4,C["ink-2"]);efRing(c,xMax,hy,5.5,C["ink-2"],.35);}
     if(a<=0&&b>=0){const x=X(0);if(x<=xMax){c.globalAlpha=.5;c.strokeStyle=C.ink;c.lineWidth=1;c.setLineDash([2,3]);c.beginPath();c.moveTo(x,top-10);c.lineTo(x,y0+4);c.stroke();c.setLineDash([]);efLabel(c,"TODAY",x,top-16,{size:7.5,color:C.ink});}}};}
 
 /* =================== the Effort workspace =================== */
@@ -6543,6 +6673,7 @@ function efAgg(){const RG=efRange(),rg=RG.rg,a=RG.a,b=RG.b,E=state.efforts.map(e
   B.forEach(bk=>{bk.by=new Map();bk.tot=0;R.forEach(e=>{if(e.off>=bk.a&&e.off<=bk.b){const k=efGKey(e);bk.by.set(k,(bk.by.get(k)||0)+e.hours);bk.tot+=e.hours;}});});
   const first=E.length?Math.min(...E.map(e=>e.off)):1;
   EFA={E,R,tot,keys,day,B,dayMode,mode,a,b,RG,cal0,first,rg,meta:new Map()};return EFA;}
+let efMxPrev=null;
 function renderEffortWS(){const host=document.getElementById("detail");efHideTip();
   if(!state.efforts.length){host.innerHTML=`<div class="efx ef-ws"><div class="ef-wsh"><div><div class="ef-l1">⏱ Effort</div><h1>Where your hours go</h1></div></div>
     <div class="ck-unit ef-empty"><div class="ck-head"><h2>Nothing logged yet</h2></div>
@@ -6563,7 +6694,7 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
         ${rg==="cu"?`<span class="ef-row"><input type="date" id="efCuF" value="${A.RG.from}" style="width:150px"><span class="faint">–</span><input type="date" id="efCuT" value="${A.RG.to}" style="width:150px"></span>`:""}
         <div class="ef-sg" id="efGp"><span class="cap">Group by</span>${Object.entries(EF_GROUPS).map(([k,v])=>`<button data-k="${k}" class="${k===g?"on":""}">${v}</button>`).join("")}</div>
         <button class="sm" id="efOffB" title="Public holidays and leave — days that never count as missing a log">🏖 Days off</button><button class="sm" id="efCsv" title="Every entry ever logged, as a spreadsheet">⬇ CSV</button><button class="sm primary" id="efLogB">⏱ Log time</button></div></div>
-    ${roHTML([{k:"Logged",v:efFh(total)+`<small>h</small>`+(prev?`<small class="${delta>=0?"ef-good":"ef-bad"}">${delta>=0?"▲":"▼"} ${Math.abs(delta)}% vs previous</small>`:"")},
+    ${roHTML([{k:"Logged",v:`<canvas class="mxr" id="efMxR" data-v="${efFh(Math.round(total))}" style="width:${V2.mxW(efFh(Math.round(total)),22)}px;height:22px" title="${efFh(total)} h"></canvas>`+`<small>h</small>`+(prev?`<small class="${delta>=0?"ef-good":"ef-bad"}">${delta>=0?"▲":"▼"} ${Math.abs(delta)}% vs previous</small>`:"")},
       {k:"Per worked day",v:U(efFh(Math.round(total/Math.max(1,worked)*10)/10),"h")},
       {k:"Days logged",v:U(worked,"/ "+wdays.length+" working")},
       {k:"Demand work",v:U(efPct(dem,total),"% · "+nDem+" demand"+(nDem===1?"":"s"))},
@@ -6571,7 +6702,7 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
       {k:"Days with no log",v:String(unl.length),cls:unl.length?"bad":""}])}
     <div class="ck-unit"><div class="ck-head"><h2>Noticed</h2><span class="ck-meta">worked out from your log</span></div><div id="efNoticed"></div></div>
     <div class="ef-lgrow"><span class="ef-lb" style="margin:0">${EF_GROUPS[g]}s · click to focus${g==="demand"?" · double-click to open":""}</span>${A.keys.map(k=>{const m=efGMeta(k);return `<button class="ef-lgi ${efFocus===k?"on":efFocus?"off":""}" data-k="${esc(k)}" style="--pen:var(--${m.col})" title="${esc(m.sub||"")}"><span class="ef-pd"></span>${esc(m.l)}<b>${efFh(A.tot.get(k))}</b></button>`;}).join("")}</div>
-    <div class="ck-unit"><div class="ck-head"><h2>26 weeks in dots</h2><span class="ck-meta">a pie per day · size = hours · slices = where they went · red ring = a working day with no log · shaded = the range · click a day</span></div><canvas class="ef-cal" id="efCal"></canvas></div>
+    <div class="ck-unit"><div class="ck-head"><h2>26 weeks in dots</h2><span class="ck-meta">a dial per day · a dot = ½ h, a full ring = your working day · colours = where the hours went · red dots = a working day with no log · dotted rule = the range · click a day</span></div><canvas class="ef-cal" id="efCal"></canvas></div>
     <div class="ef-gw">
       <div class="ck-unit"><div class="ck-head"><h2>Where the hours went</h2><span class="ck-meta">${A.mode==="day"?`per day · a dot = ½ h · dashed = ${efFh(EF_DAY)} h`:A.mode==="week"?`per week · a dot = 1 h · dashed = ${efFh(EF_DAY*5)} h`:`per month · a dot = 4 h · dashed = ${efFh(EF_DAY*21)} h`} · click a column</span></div><canvas class="ef-wkc" id="efWk"></canvas></div>
       <div class="ck-unit"><div class="ck-head"><h2>Activity mix</h2><span class="ck-meta">${efFh(total)} h</span></div><div class="ef-mixw"><canvas id="efMix"></canvas><div>${efMixRows(A.R)}</div></div></div></div>
@@ -6582,6 +6713,9 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
       <div class="ck-unit"><div class="ck-head"><h2>Your week's rhythm</h2><span class="ck-meta">avg on a logged day</span></div>${efRhythmHTML(A)}</div></div></div>`;
   host.querySelector("#efNoticed").innerHTML=efNoticedHTML(A,total,dem,unl);
   const openDemand=id=>{view="demands";activeId=id;activeTab="effort";renderApp();};
+  /* the headline as a matrix readout; switching the range wipes the old number into the new one */
+  {const cv=host.querySelector("#efMxR");if(cv){const to=cv.dataset.v,from=efMxPrev||to;efMxPrev=to;
+    DK.scope(cv,(c,w,h,tm,dt,s)=>{const C=efC(cv),cell=h/7,age=performance.now()-s.born;if(from!==to&&age<900)V2.matrixWipe(c,C,from,to,0,0,cell,age,C.ink,C["pen-2"]);else V2.matrixText(c,C,to,0,0,cell,C.ink);});}}
   host.querySelectorAll("#efRg button").forEach(b=>b.onclick=()=>{if(b.dataset.k==="cu"&&!viewPref("ef.from","")){setViewPref("ef.from",A.RG.from);setViewPref("ef.to",A.RG.to);}setViewPref("ef.range",b.dataset.k);efFocus=null;renderEffortWS();});
   {const mp=host.querySelector("#efMoP");if(mp){const cur=()=>viewPref("ef.month",todayStr().slice(0,7));mp.onclick=()=>{setViewPref("ef.month",efMonthShift(cur(),-1));renderEffortWS();};host.querySelector("#efMoN").onclick=()=>{setViewPref("ef.month",efMonthShift(cur(),1));renderEffortWS();};}
    const cf=host.querySelector("#efCuF");if(cf){const ch=()=>{const f=cf.value,t=host.querySelector("#efCuT").value;if(f&&t&&f<=t){setViewPref("ef.from",f);setViewPref("ef.to",t);renderEffortWS();}};cf.onchange=ch;host.querySelector("#efCuT").onchange=ch;}}
@@ -6597,28 +6731,33 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
   efRenderSheet();}
 /* calendar: 26 weeks × 7 days, a pie per day */
 function efCalDraw(c,w,h,tm,dt,s){const A=EFA,C=efC(s.cv),p=efEase(efProg(s,1200)),L=30,top=20,cw=(w-L-6)/26,ch=(h-top-4)/7,cell=Math.min(cw,ch);s.hits=[];
-  /* shade the weeks the range covers */
-  {const col=o=>L+Math.floor((o-A.cal0)/7)*cw,lo=Math.max(A.a,A.cal0),hi=Math.min(A.b,A.cal0+26*7-1);
-   if(hi>=lo){const xr=col(lo),xe=col(hi)+cw;c.globalAlpha=1;c.fillStyle=C["paper-2"];c.fillRect(xr,top-4,Math.min(w-6,xe)-xr,h-top);
-     c.globalAlpha=.6;c.strokeStyle=C["rule-strong"];c.lineWidth=1;c.beginPath();c.moveTo(xr+.5,top-4);c.lineTo(xr+.5,h);c.stroke();}}
+  /* Instrument v2: each day is a dial of dots — one dot per half hour round the ring, a full ring = your working
+     day, lit clockwise from 12 in the colours of where the time went (what the pie's slices were). Unlit dots are
+     the rest of the day; hours past a full day spill into an inner ring. The range is a dotted rule over its weeks
+     with full ink inside it; days outside it are drawn faint. */
+  const inR=o=>o>=A.a&&o<=A.b,col=o=>L+Math.floor((o-A.cal0)/7)*cw,lo=Math.max(A.a,A.cal0),hi=Math.min(A.b,A.cal0+26*7-1);
+  if(hi>=lo){const xr=col(lo)+3,xe=Math.min(w-6,col(hi)+cw)-3;for(let x=xr;x<=xe;x+=4)efDot(c,x,top-7,.75,C["ink-2"],.85);efDot(c,xr,top-7,1.5,C["ink-2"]);efDot(c,xe,top-7,1.5,C["ink-2"]);}
   ["MON","","WED","","FRI","",""].forEach((d,i)=>d&&efLabel(c,d,L-8,top+i*ch+ch/2,{size:7,align:"right"}));
   const ix=k=>{const i=A.keys.indexOf(k);return i<0?99:i;};let lastM=-1;
+  const N=Math.max(8,Math.round(EF_DAY*2)),R=Math.max(4,cell*.34),rL=Math.max(.9,Math.min(2,R*DK.TAU/N*.36)),rU=Math.max(.45,rL*.45),N2=Math.max(6,Math.round(N*.62));
+  const ringAt=(x,y,r,n,lit,fade,hov)=>{for(let i=0;i<n;i++){const a=-Math.PI/2+i/n*DK.TAU,px=x+Math.cos(a)*r,py=y+Math.sin(a)*r,k=lit[i];
+    if(k)efDot(c,px,py,rL*(hov?1.2:1),C[efM(k).col]||C["ink-3"],(efFocus&&efFocus!==k?.12:.95)*fade);else efDot(c,px,py,rU,C["ink-4"],fade);}};
   for(let wk=0;wk<26;wk++){const m0=A.cal0+wk*7,dm=new Date(efOffD(m0)+"T00:00:00").getMonth();
     if(dm!==lastM){lastM=dm;efLabel(c,efFmt(efOffD(m0),{month:"short"}).toUpperCase(),L+wk*cw+2,7,{size:7.5,align:"left"});}
     if(wk/26>p)continue;
-    for(let r=0;r<7;r++){const off=m0+r,x=L+wk*cw+cw/2,y=top+r*ch+ch/2,dstr=efOffD(off),we=r>=5;
-      if(off>0){const fo=efOff(dstr);if(fo){c.globalAlpha=.55;c.fillStyle=C[EF_OFF[fo.kind].pen];c.fillRect(x-5,y-.8,10,1.6);}s.hits.push({x,y,rx:cw/2,ry:ch/2,off,kind:"fut"});continue;}
+    for(let r=0;r<7;r++){const off=m0+r,x=L+wk*cw+cw/2,y=top+r*ch+ch/2,dstr=efOffD(off),we=r>=5,fade=inR(off)?1:.32;
+      if(off>0){const fo=efOff(dstr);if(fo)efRing(c,x,y,Math.max(2,R*.42),C[EF_OFF[fo.kind].pen],.6,1.2);else efDot(c,x,y,.6,C["ink-4"],.5);s.hits.push({x,y,rx:cw/2,ry:ch/2,off,kind:"fut"});continue;}
       const d=A.day.get(off),hov=s.hv&&s.hv.off===off;let kind="day";
       const fo=efOff(dstr);
-      if(fo&&!(d&&d.tot)){c.globalAlpha=.9;c.fillStyle=C[EF_OFF[fo.kind].pen];c.fillRect(x-5,y-.8,10,1.6);kind="leave";}
-      else if(d&&d.tot){const rad=Math.max(2.2,Math.sqrt(Math.min(d.tot,10)/9)*cell*.44)*(hov?1.14:1);let a0=-Math.PI/2;
-        [...d.by.entries()].sort((u,v)=>ix(u[0])-ix(v[0])).forEach(([k,v])=>{const a1=a0+v/d.tot*DK.TAU;
-          c.globalAlpha=efFocus&&efFocus!==k?.1:.92;c.fillStyle=C[efM(k).col]||C["ink-3"];c.beginPath();c.moveTo(x,y);c.arc(x,y,rad,a0,a1);c.closePath();c.fill();
-          if(d.by.size>1){c.globalAlpha=1;c.strokeStyle=C.paper;c.lineWidth=.9;c.stroke();}a0=a1;});}
-      else if(!we&&off<0&&off>=A.first){efRing(c,x,y,Math.max(2.5,cell*.2),C.bad,.85,1.2);kind="none";}
-      else{efDot(c,x,y,.9,C["ink-4"]);kind=we?"we":"quiet";}
-      if(off===0)efRing(c,x,y,cell*.46,C.ink,.6);
-      if(hov&&kind!=="day")efRing(c,x,y,cell*.4,C["ink-2"],.6);
+      if(fo&&!(d&&d.tot)){efRing(c,x,y,Math.max(2,R*.42),C[EF_OFF[fo.kind].pen],.9*fade,1.3);kind="leave";}
+      else if(d&&d.tot){const seq=[];[...d.by.entries()].sort((u,v)=>ix(u[0])-ix(v[0])).forEach(([k,v])=>{for(let j=0;j<Math.round(v*2);j++)seq.push(k);});
+        if(!seq.length)seq.push([...d.by.keys()][0]);
+        ringAt(x,y,R*(hov?1.08:1),N,seq.slice(0,N),fade,hov);
+        if(seq.length>N)ringAt(x,y,R*.56,N2,seq.slice(N,N+N2),fade,hov);}
+      else if(!we&&off<0&&off>=A.first){for(let i=0;i<N;i++){const a=-Math.PI/2+i/N*DK.TAU;efDot(c,x+Math.cos(a)*R,y+Math.sin(a)*R,rU*1.25,C.bad,.75*fade);}kind="none";}
+      else{efDot(c,x,y,.8,C["ink-4"],fade);kind=we?"we":"quiet";}
+      if(off===0)efRing(c,x,y,R+4,C.ink,.6);
+      if(hov&&kind!=="day")efRing(c,x,y,R+2,C["ink-2"],.6);
       s.hits.push({x,y,rx:cw/2,ry:ch/2,off,kind});}}}
 function efCalTip(hit){const d=efOffD(hit.off);
   const fo=efOff(d),ot=fo?` · ${EF_OFF[fo.kind].icon} ${esc(efOffTxt(fo))}`:"";
@@ -6632,6 +6771,7 @@ function efWkDraw(c,w,h,tm,dt,s){const A=EFA,C=efC(s.cv),B=A.B,n=B.length,L=32,t
   const m=cw>=200?6:cw>=90?4:cw>=44?2:1,maxH=Math.max(tgt*1.12,...B.map(b=>b.tot)),rows=Math.ceil(maxH/u/m),pitch=Math.min(14,(y0-top)/rows),hp=Math.min(pitch,cw*.8/m),r=Math.min(pitch,hp)*.4;
   const yT=y0-(tgt/u/m)*pitch;c.globalAlpha=.7;c.strokeStyle=C["ink-3"];c.setLineDash([4,4]);c.lineWidth=1;c.beginPath();c.moveTo(L,yT);c.lineTo(w-8,yT);c.stroke();c.setLineDash([]);efLabel(c,`${tgt} h`,L-6,yT,{size:7.5,align:"right"});
   const el=motionOn()?performance.now()-s.born:1e9,every=Math.ceil(n/10);
+  const tops=[];
   B.forEach((bk,i)=>{const xc=L+cw*i+cw/2,x0=xc-(m-1)*hp/2,hov=s.hv&&s.hv.b===bk,pb=efEase((el-i*28)/800);
     if(hov){c.globalAlpha=1;c.fillStyle=C["paper-2"];c.fillRect(L+cw*i+1,top-6,cw-2,y0-top+10);}
     const seq=[];A.keys.forEach(k=>{const v=(bk.by.get(k)||0)/u,full=Math.floor(v+1e-9);for(let j=0;j<full;j++)seq.push({k,half:false});if(v-full>=.5-1e-9)seq.push({k,half:true});});
@@ -6639,8 +6779,14 @@ function efWkDraw(c,w,h,tm,dt,s){const A=EFA,C=efC(s.cv),B=A.B,n=B.length,L=32,t
     seq.forEach((d,j)=>{if(j>=shown)return;const x=x0+(j%m)*hp,y=y0-pitch/2-Math.floor(j/m)*pitch;efDot(c,x,y,d.half?r*.6:r,C[efM(d.k).col]||C["ink-3"],efFocus&&efFocus!==d.k?.13:.92);});
     if(!bk.tot&&bk.a<=0)efDot(c,xc,y0-pitch/2,1,C["ink-4"]);
     if(i%every===0||A.dayMode)efLabel(c,bk.l,xc,h-9,{size:7.5,color:bk.a<=0&&bk.b>=0?C.ink:C["ink-3"]});
-    if(n<=13&&bk.tot&&pb>=1)efLabel(c,efFh(bk.tot),xc,y0-pitch*Math.ceil(seq.length/m)-8,{mono:true,size:9,weight:500,color:C["ink-2"]});
-    s.hits.push({x:xc,y:(top+y0)/2,rx:cw/2,ry:(y0-top)/2+8,b:bk});});}
+    tops[i]={x:xc,y:y0-pitch/2-Math.max(0,Math.ceil(seq.length/m)-1)*pitch,tot:bk.tot,pb,now:bk.a<=0&&bk.b>=0};
+    s.hits.push({x:xc,y:(top+y0)/2,rx:cw/2,ry:(y0-top)/2+8,b:bk});});
+  /* label the two points that matter — the peak and now — on leader lines */
+  if(tops.length&&tops.every(x=>x.pb>=1)){const pk=tops.reduce((a,b)=>b.tot>a.tot?b:a,tops[0]),nw=tops.find(x=>x.now),unit=A.mode==="day"?"today":A.mode==="week"?"this week":"this month";
+    /* a label sits above every column it would cross */
+    const lyFor=o=>{const flip=o.x>w-130,a0=flip?o.x-140:o.x,a1=flip?o.x:o.x+140;let y=o.y-16;tops.forEach(q=>{if(q!==o&&q.tot&&q.x>=a0&&q.x<=a1)y=Math.min(y,q.y-12);});return Math.max(10,y);};
+    let pl=null;if(pk.tot){pl=lyFor(pk);V2.callout(c,C,pk.x,pk.y,`${efFh(pk.tot)} h · ${pk===nw?unit+" · peak":"peak"}`,pl,C["ink-2"],w);}
+    if(nw&&nw!==pk&&nw.tot){let nl=lyFor(nw);if(pl!=null&&Math.abs(nl-pl)<14&&Math.abs(nw.x-pk.x)<180)nl=Math.max(10,pl-14);V2.callout(c,C,nw.x,nw.y,`${efFh(nw.tot)} h · ${unit}`,nl,C["pen-2"],w);}}}
 function efWkTip(hit){const bk=hit.b,title=EFA.mode==="day"?efWdl(efOffD(bk.a)):EFA.mode==="month"?efFmt(bk.m+"-01",{month:"long",year:"numeric"}):`Week of ${efSh(efOffD(bk.a))}`;if(!bk.tot)return `<b>${title}</b><div class="hint">nothing logged</div>`;
   return `<b>${title}</b> · ${efFh(bk.tot)} h`+[...bk.by.entries()].sort((a,b)=>b[1]-a[1]).slice(0,8).map(([k,v])=>{const m=efM(k);return `<div class="r" style="--pen:var(--${m.col})"><i></i><span>${esc(m.l)}${m.sub?` <span class="faint">${esc(m.sub)}</span>`:""}</span><span>${efFh(v)}</span></div>`;}).join("")+`<div class="hint">${EFA.mode==="day"?"click for the day":EFA.mode==="month"?"click to see this month":"click to open this week in the sheet"}</div>`;}
 /* activity mix: one ring of dots */
@@ -7498,6 +7644,9 @@ async function runSelfTest(){
    ok("History dates read like the rest of the app",/^\d\d [A-Z][a-z]{2}( \d{4})? · \d\d:\d\d$/.test(fmtTs(Date.now())),fmtTs(Date.now()));
    {const many=["H03","H02","H01","H43"].map(x=>({system:x,date:T})),g=reachGridHTML(many,"via ToC X");
     ok("Transports: a ToC moved to many systems shows as a compact grid",!!g&&g.includes("4 systems")&&g.includes("rg-no")&&reachGridHTML(many.slice(0,3),"x")===null);}
+   ok("Instrument v2: matrix readout lays out a number",V2.matrixLayout("12:34").cols===25&&V2.mxW("88",21)===33,V2.matrixLayout("12:34").cols);
+   {const d0=dirty;dirty=true;renderSaveState();const nm=!!document.querySelector("#saveState .vic.nm");dirty=d0;renderSaveState();ok("Instrument v2: the save light shows its state",nm);}
+   ok("Instrument v2: no milestone stamps",!document.querySelector(".vstamp")&&typeof demandStamp==="undefined");
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
@@ -7508,7 +7657,7 @@ async function runSelfTest(){
   const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
   const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Days off",()=>openDaysOff()],
     ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
-    ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Close a task",()=>openJobClose(jobById("st-job-1"),"done")],["Log time on a task",()=>openLogTime({key:"j:st-job-1"})],["A closed task",()=>{view="jobs";activeJobId="st-job-2";renderApp();}],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
+    ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Settings menu",()=>openMenu()],["Close a task",()=>openJobClose(jobById("st-job-1"),"done")],["Log time on a task",()=>openLogTime({key:"j:st-job-1"})],["A closed task",()=>{view="jobs";activeJobId="st-job-2";renderApp();}],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
   const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;
   for(const th of themes){applyTheme(th);lastTind=null;const L=THEME_OPTS[th],fails0=R.filter(r=>r.pass===false).length;
     for(const v of views){prog(`screens — ${L} · ${++n}/${total}`);await step(`${L} · ${v}`,()=>{pick();if(v==="team"){view="playbook";renderApp();playTeam=true;activePlayId=null;}else view=v;renderApp();});}

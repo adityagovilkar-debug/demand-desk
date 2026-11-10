@@ -10,7 +10,16 @@ or **Chrome** for the best file experience). Nothing to install.
 
 ## Appearance
 **Bench is the default look** — the Instrument aesthetic from the Bench utility
-cockpit, in **Paper** (light) and **Backlit** (dark). Choose any theme under
+cockpit, in **Paper** (light) and **Backlit** (dark), with the **Instrument v2**
+pieces where they carry a value or a state: the save state as a status light
+(live · not written yet · no file chosen · file changed on disk — hover for the cause
+and the fix), a wordmark that only moves while something is working, a dot-matrix
+clock on Today and a dot-matrix *Hours logged* on Effort (a new value wipes in), a
+transport's route as a rail (reached stations with their dates, the next import
+pulsing), a task's rail from the ask to the answer, leader callouts on the peak and
+this week in *Where the hours went*, a *Days on it* dot calendar on a demand's
+Effort tab, sliding segmented controls, and a demand's ID that settles in as you
+open it. Choose any theme under
 **⋯ → Settings → Appearance**:
 
 | Family | Options |
@@ -382,8 +391,8 @@ Log what you worked on, and see where your time goes.
   `1:15`), an activity (Analysis · Build · Testing · Debug / fix · Transport & Basis ·
   Documentation) and what you did. A bar shows how full that day already is
   ("3.5 h logged + 2 = 5.5 h of 8"). `Ctrl+Enter` logs.
-- **Your working day** — ⋯ menu → *⏱ Working day* (default 8 h, quarter hours
-  allowed): the full-day mark for the day bars, the dashed line in *Where the hours
+- **Your working day** — ⋯ menu → *⏱ Working day*, a dot knob you drag up or down,
+  scroll or arrow-key (4–12 h in quarter hours, default 8 h): the full-day mark for the day bars, the dashed line in *Where the hours
   went*, missing-hours hints and the week wrap-up.
 - **Not every hour is a demand** — Meetings, Admin & email, Support & small asks and
   Learning are buckets of their own, so a whole day adds up.
@@ -410,9 +419,11 @@ Log what you worked on, and see where your time goes.
   group by demand · epic · activity · theme; click a legend chip to focus on one.
   - **Noticed** — plain sentences: who took most of your time, demands over
     estimate, rework, working days with no log (with a *Fill* button).
-  - **26 weeks in dots** — a pie per day (size = hours, slices = where they went);
-    a red ring is a working day with no log; a coloured dash is a holiday or
-    leave. Click a day for its **day ledger** (edit entries, log more, mark it as
+  - **26 weeks in dots** — a dial of dots per day: a dot = ½ h round the ring and
+    a full ring = your working day, lit in the colours of where the hours went
+    (unlit dots are the rest of the day; overtime spills into an inner ring). Red
+    dots = a working day with no log; a small hollow ring = a holiday or leave; a
+    dotted rule marks the selected range (days outside it are faint). Click a day for its **day ledger** (edit entries, log more, mark it as
     a holiday or leave).
   - **Where the hours went** (dot columns per week or day), **activity mix**,
     **week sheet** (demands × Mon–Sun; click an empty cell to log it;
