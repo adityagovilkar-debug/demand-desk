@@ -1,0 +1,199 @@
+  /* ================= INSTRUMENT WHITE — structural refinements =================
+     Colour alone doesn't make the aesthetic; this is the geometry and typography
+     that read as an instrument: near-square edges, hairlines, corner registration
+     tics, silkscreen micro-labels, tabular mono figures, outlined pills.
+     Every rule is scoped under the theme attribute, so dark/light are untouched
+     and no render logic changes. ============================================== */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) body{font-size:13.5px;letter-spacing:.005em}
+
+  /* Engineering dot-grid paper (§4). Even across the whole viewport rather than
+     masked to a fade — it reads as blueprint field, and every panel then sits on
+     it as a sheet of paper. Kept faint enough to be near-subliminal. */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) #app::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:radial-gradient(circle at 1px 1px,var(--grid-dot) 1px,transparent 0);
+    background-size:22px 22px;opacity:.55}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) header,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) main{position:relative;z-index:1}
+  /* The grid only shows through if the big surfaces stop painting white over it.
+     Panels/cards keep their fill, so they read as paper laid on the blueprint. */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) main,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) aside,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) section.detail,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .detail-body,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .listwrap,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .side-tools,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .dash{background:transparent}
+
+  /* near-square geometry; depth from hairlines only — no shadows, no glow */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) button,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) input,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) select,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) textarea,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .pill,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .chip,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .sys,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .lc-badge,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .expbadge,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .kindtag,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .toctag{border-radius:2px}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .tcard,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .trcard,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .modal,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .imgcard,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .actitem,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .cmt,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .finding,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .nrow,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .readybar,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .resume-box,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .pinbox,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .tbl-wrap,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .getting-started,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .picklist,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .gsearch,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .toast{border-radius:3px;box-shadow:none}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .modal,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .gsearch,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .toast{box-shadow:0 2px 10px rgba(18,20,26,.07)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .lightbox img{box-shadow:none;border:1px solid var(--rule-strong)}
+
+  /* registration tics — the detail that reads "instrument", not "web card".
+     Panels only; list rows at this density would be noise. */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .trcard,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .modal,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .resume-box,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .pinbox,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .readybar,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .getting-started,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .imgcard{position:relative}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard::before,  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard::after,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .trcard::before,    :root:is([data-theme="instrument"],[data-theme="bench"]) .trcard::after,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .modal::before,     :root:is([data-theme="instrument"],[data-theme="bench"]) .modal::after,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .resume-box::before,:root:is([data-theme="instrument"],[data-theme="bench"]) .resume-box::after,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .pinbox::before,    :root:is([data-theme="instrument"],[data-theme="bench"]) .pinbox::after,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .readybar::before,  :root:is([data-theme="instrument"],[data-theme="bench"]) .readybar::after,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .getting-started::before,:root:is([data-theme="instrument"],[data-theme="bench"]) .getting-started::after,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .imgcard::before,   :root:is([data-theme="instrument"],[data-theme="bench"]) .imgcard::after{
+    content:"";position:absolute;width:7px;height:7px;border:solid var(--rule-strong);pointer-events:none}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard::before,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .trcard::before,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .modal::before,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .resume-box::before,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .pinbox::before,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .readybar::before,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .getting-started::before,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .imgcard::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard::after,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .trcard::after,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .modal::after,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .resume-box::after,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .pinbox::after,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .readybar::after,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .getting-started::after,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .imgcard::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
+
+  /* silkscreen micro-labels — DIN face, uppercase, wide tracking, quiet ink (§3) */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) label,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .sec-title h3,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard h3,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .stat,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) th,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .tab,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .pill,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .cover,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .kindtag,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .toctag,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .expbadge,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .gsr .k{font-family:var(--label)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) label{font-size:8.5px;letter-spacing:.17em;color:var(--ink-3)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .sec-title h3,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard h3{font-size:9.5px;letter-spacing:.22em;font-weight:600;color:var(--muted)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .stat{border-radius:2px;background:transparent}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .stats{gap:1px;background:var(--line);border:1px solid var(--line);padding:1px}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .stat{border:none;background:var(--panel);font-size:8.5px;
+    letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);padding:7px 2px}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) header .logo{font-family:var(--mono);font-size:11px;letter-spacing:.3em}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) header .logo .dot{box-shadow:none;width:7px;height:7px;border-radius:50%}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) header{background:var(--panel)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) aside{background:transparent;border-right:1px solid var(--line)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .detail-head{border-bottom:1px solid var(--line)}
+
+  /* nav + tabs as instrument controls */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .nav{background:transparent;border-color:transparent;padding:0;gap:1px}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .navbtn{font-family:var(--label);font-size:10px;letter-spacing:.15em;
+    text-transform:uppercase;border-radius:2px;border:1px solid transparent;padding:5px 9px}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .navbtn.active{background:transparent;color:var(--txt);border-color:var(--rule-strong)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .wavehead,:root:is([data-theme="instrument"],[data-theme="bench"]) .storymonth,:root:is([data-theme="instrument"],[data-theme="bench"]) .storyrow .sk{font-family:var(--label);letter-spacing:.16em}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .storyrow.src-log{background:transparent;box-shadow:inset 2px 0 0 var(--accent2)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .eghead{font-family:var(--label);letter-spacing:.06em;background:var(--bg2)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .eghead:hover{background:var(--panel2)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .tab{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .tab .count{font-family:var(--mono);font-variant-numeric:tabular-nums;
+    background:transparent;border:1px solid var(--rule-strong);border-radius:2px}
+
+  /* every figure mono + tabular — non-tabular digits jitter as values change (§3) */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .stat b,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .due,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .demand,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .dh-demand,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .di-sub,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .fts,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .cmt-meta,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .lc-badge{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  /* numbers are mono, prose is not — a blanket td rule widens text columns and
+     forces titles to wrap. The numeric cells already carry .mono / .due. */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .mono,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) input[type="date"],
+  :root:is([data-theme="instrument"],[data-theme="bench"]) table td.mono{font-variant-numeric:tabular-nums}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .stat b{letter-spacing:-.01em;font-weight:600;font-size:17px}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .dh-demand{letter-spacing:.06em}
+
+  /* pills: outlined silkscreen, never filled lozenges */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .pill,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .lc-badge,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .expbadge,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .kindtag,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .toctag,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .cover{background:transparent;font-size:9px;letter-spacing:.11em;
+    text-transform:uppercase;font-weight:600;padding:1px 6px}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .statchip{font-family:var(--label);border-radius:2px;font-size:9.5px;
+    letter-spacing:.12em;text-transform:uppercase}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .statchip.on{background:transparent;font-weight:700}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .sys{background:transparent;letter-spacing:.06em}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .sys .d{letter-spacing:.12em}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .chip{background:transparent}
+
+  /* status edge on list cards stays the only heavy colour — it is the value */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .tcard{border-left-width:2px}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .tcard.active{background:var(--panel2)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .tcard.s-closed{opacity:.55}
+
+  /* tinted boxes lose their fills; the coloured left edge carries the meaning */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .resume-box,
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .pinbox{border-left-width:2px}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .cover.yes{border-color:var(--green-line)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .cover.no{border-color:var(--amber-line)}
+  /* unknown/absent is outlined, never a fourth status fill (§7) */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .nothumb{border-style:dashed;color:var(--ink-3)}
+
+  /* first-run panel reads as a legend/key on the blueprint, not a welcome banner */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .getting-started h1{font-family:var(--label);font-size:13px;
+    font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--txt)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .gs-lede{font-size:11.5px;color:var(--ink-3)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .gs-list dt{font-family:var(--label);font-size:10px;font-weight:600;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--accent);min-width:96px}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .gs-list dd{font-size:11.5px;color:var(--ink-3);line-height:1.55}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .gs-list dt:not(:first-of-type),
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .gs-list dd:not(:first-of-type){border-top-style:dotted;border-top-color:var(--rule-strong)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .gs-tip{font-size:10.5px;letter-spacing:.03em;color:var(--ink-3)}
+
+  /* dotted row separators, as on plotter paper */
+  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashitem{border-bottom-style:dotted;border-bottom-color:var(--rule-strong)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) th{font-size:8.5px;letter-spacing:.15em;color:var(--ink-3)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) td{border-bottom-style:dotted;border-bottom-color:var(--rule-strong)}
+  :root:is([data-theme="instrument"],[data-theme="bench"]) ::-webkit-scrollbar-thumb{border-radius:2px;background:var(--rule-strong)}
+
+

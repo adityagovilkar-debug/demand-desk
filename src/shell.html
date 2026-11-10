@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demand Desk — ABAP Work Tracker</title>
+<style>
+/*@@CSS@@*/
+</style>
+</head>
+<body>
+<script>(function(){var e=document.documentElement;try{var t=localStorage.getItem("demanddesk.theme");if(!localStorage.getItem("demanddesk.themeV2")||!t)t="bench";
+  if(t.indexOf("bench")===0){e.setAttribute("data-theme","bench");e.setAttribute("data-mode",t==="bench-backlit"||(t==="bench"&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light");}
+  else if(t==="light"||t==="instrument")e.setAttribute("data-theme",t);
+  var m=localStorage.getItem("demanddesk.motion");if(m==="off"||(m!=="full"&&matchMedia("(prefers-reduced-motion: reduce)").matches))e.classList.add("nomotion");}
+  catch(x){e.setAttribute("data-theme","bench");e.setAttribute("data-mode","light");}})();</script>
+<div id="app">
+  <header>
+    <div class="logo"><span class="dot"></span><span class="mark" id="mark"></span><span class="wmt">DEMAND&nbsp;DESK</span><em class="wme">abap work tracker</em></div>
+    <div class="nav">
+      <button class="navbtn" data-view="today">Today</button>
+      <button class="navbtn" data-view="demands">Demands</button>
+      <button class="navbtn" data-view="jobs">Tasks</button>
+      <button class="navbtn" data-view="epics">Epics</button>
+      <button class="navbtn" data-view="debug">Debug</button>
+      <button class="navbtn" data-view="journal">Journal</button>
+      <button class="navbtn" data-view="meetings">Meetings</button>
+      <button class="navbtn" data-view="effort">Effort</button>
+      <button class="navbtn" data-view="review">Review</button>
+      <button class="navbtn" data-view="month">Month</button>
+      <button class="navbtn" data-view="playbook">Playbook</button>
+      <button class="navbtn" data-view="vault">🔒 Vault</button>
+    </div>
+    <div class="hsearch">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="globalSearch" placeholder="Search demands, objects, transports, systems (H42…), meetings…" autocomplete="off">
+      <div id="gsearchResults" class="gsearch hide"></div>
+    </div>
+    <div class="spacer"></div>
+    <span class="faint" id="fileLabel" style="font-size:12px"></span>
+    <div class="filebar">
+      <span class="savestate" id="saveState"></span>
+      <button id="btnReconnect" class="hide" title="Re-link the file remembered from last time">🔌 Reconnect</button>
+      <button id="btnLog" title="Log time (T)">⏱ Log time</button>
+      <button id="btnWinTop" class="ghost" title="Note a win (W)">🏆</button>
+      <button id="btnOpen" title="Open a .json data file">📂 Open</button>
+      <button id="btnSave" class="primary" title="Save to file (Ctrl+S)">💾 Save</button>
+      <span class="hclock" id="hclock"></span>
+      <button id="btnTheme" class="ghost" title="Light / dark">☀</button>
+      <button id="btnMenu" class="ghost" title="More">⋯</button>
+    </div>
+  </header>
+  <nav class="rail" id="rail" aria-label="Workspaces">
+    <div class="ind" id="railInd"></div>
+    <button class="rb" data-view="today" style="--pen:var(--ink)"><svg viewBox="0 0 18 18"><rect x="2.5" y="2.5" width="5" height="5"/><rect x="10.5" y="2.5" width="5" height="5"/><rect x="2.5" y="10.5" width="5" height="5"/><rect x="10.5" y="10.5" width="5" height="5"/></svg><span class="pd"></span><span class="tip">Today</span></button>
+    <div class="sep"></div>
+    <button class="rb" data-view="demands" style="--pen:var(--pen-2)"><svg viewBox="0 0 18 18"><path d="M3 4.5h12M3 9h12M3 13.5h7"/><circle cx="14" cy="13.5" r="1.4"/></svg><span class="pd"></span><span class="cnt" id="rcDemands"></span><span class="tip">Demands</span></button>
+    <button class="rb" data-view="jobs" style="--pen:var(--pen-7)"><svg viewBox="0 0 18 18"><rect x="2.5" y="2.5" width="13" height="13" rx="1.5"/><path d="M5.5 9.2l2.3 2.3 4.7-5"/></svg><span class="pd"></span><span class="cnt" id="rcJobs"></span><span class="tip">Tasks · not demands</span></button>
+    <button class="rb" data-view="epics" style="--pen:var(--pen-5)"><svg viewBox="0 0 18 18"><path d="M9 2.5l6.5 6.5L9 15.5 2.5 9z"/><path d="M9 6v6"/></svg><span class="pd"></span><span class="tip">Epics</span></button>
+    <button class="rb" data-view="debug" style="--pen:var(--pen-1)"><svg viewBox="0 0 18 18"><rect x="5" y="5" width="8" height="10" rx="4"/><path d="M9 5V3M5 9H2.5M15.5 9H13M5.5 13l-2 1.5M12.5 13l2 1.5"/></svg><span class="pd"></span><span class="tip">Debug</span></button>
+    <button class="rb" data-view="journal" style="--pen:var(--pen-3)"><svg viewBox="0 0 18 18"><path d="M4 2.5h9a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4z"/><path d="M7 6.5h4M7 9.5h4"/></svg><span class="pd"></span><span class="cnt" id="rcJournal"></span><span class="tip">Journal · to-dos</span></button>
+    <button class="rb" data-view="meetings" style="--pen:var(--pen-4)"><svg viewBox="0 0 18 18"><circle cx="6.5" cy="7" r="2.3"/><circle cx="12.5" cy="7.5" r="1.8"/><path d="M2.5 15c.6-2.4 2.2-3.6 4-3.6s3.4 1.2 4 3.6M11 11.8c1.6-.3 3.4.6 4.4 3.2"/></svg><span class="pd"></span><span class="cnt" id="rcMeetings"></span><span class="tip">Meetings · open actions</span></button>
+    <button class="rb" data-view="effort" style="--pen:var(--pen-2)"><svg viewBox="0 0 18 18"><circle cx="9" cy="10" r="5.8"/><path d="M9 7v3.2l2.2 1.4M7.3 2.5h3.4M9 2.5v1.7"/></svg><span class="pd"></span><span class="tip">Effort · hours logged</span></button>
+    <button class="rb" data-view="review" style="--pen:var(--pen-4)"><svg viewBox="0 0 18 18"><path d="M5.5 2.5h7v4.2a3.5 3.5 0 0 1-7 0z"/><path d="M5.5 4H3v1.2A2.6 2.6 0 0 0 5.7 7.8M12.5 4H15v1.2a2.6 2.6 0 0 1-2.7 2.6M9 10.2v2.8M6.5 15.5h5M7.5 13h3"/></svg><span class="pd"></span><span class="tip">Review · year &amp; wins</span></button>
+    <button class="rb" data-view="month" style="--pen:var(--pen-6)"><svg viewBox="0 0 18 18"><rect x="2.5" y="3.5" width="13" height="12" rx="1"/><path d="M2.5 7h13M6 2v3M12 2v3M5.5 10h1M8.5 10h1M11.5 10h1M5.5 12.5h1M8.5 12.5h1"/></svg><span class="pd"></span><span class="tip">Browse by month</span></button>
+    <button class="rb" data-view="playbook" style="--pen:var(--pen-6)"><svg viewBox="0 0 18 18"><path d="M3 3.5h5v11H3zM10 3.5h5v11h-5z"/><path d="M5.5 6.5v5"/></svg><span class="pd"></span><span class="tip">Playbook</span></button>
+    <div class="sep"></div>
+    <div class="grow"></div>
+    <button class="rb" data-view="vault" style="--pen:var(--ink-2)"><svg viewBox="0 0 18 18"><rect x="3.5" y="7.5" width="11" height="8"/><path d="M6 7.5V5.5a3 3 0 0 1 6 0v2"/><circle cx="9" cy="11.5" r="1"/></svg><span class="pd"></span><span class="tip">Vault</span></button>
+    <button class="rb" id="railMenu" style="--pen:var(--ink-3)"><svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="2.3"/><path d="M9 2v2M9 14v2M2 9h2M14 9h2M4 4l1.4 1.4M12.6 12.6L14 14M4 14l1.4-1.4M12.6 5.4L14 4"/></svg><span class="pd"></span><span class="tip">Settings · data &amp; backup</span></button>
+  </nav>
+  <div id="peerWarn" class="peerwarn hide"></div>
+
+  <main>
+    <aside id="side"></aside>
+    <section class="detail" id="detail"></section>
+    <aside class="cxr" id="cxr" aria-label="Demand context"></aside>
+  </main>
+  <footer class="sb" id="sb"><span><span class="led" style="background:var(--good)"></span>local-only · no network</span><span id="sbFile"></span><span id="sbAuto"></span><span id="sbCount"></span><span id="sbEffort" title="Open Effort"></span><span class="r" id="sbRight"></span></footer>
+</div>
+
+<div id="modalRoot"></div>
+<div id="printArea"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/*@@JS@@*/
+</script>
+</body>
+</html>
