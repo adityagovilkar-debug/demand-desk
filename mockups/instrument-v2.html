@@ -1548,11 +1548,6 @@
   .vic.nm{border:1px dashed var(--ink-3,#888)}
   .vic.fault{background:var(--bad,#c0392b);box-shadow:0 0 0 3px color-mix(in srgb,var(--bad,#c0392b) 22%,transparent)}
   @keyframes vbreathe{50%{opacity:.4}}
-  .vstamp{display:inline-block;transform:rotate(-6deg);border:1.5px solid var(--pen);color:var(--pen);padding:3px 7px 2px;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;border-radius:2px;outline:1px solid var(--pen);outline-offset:2px;background:var(--paper,var(--panel));white-space:nowrap}
-  .vstamp.in{animation:vstampin .45s cubic-bezier(.2,.8,.2,1) both}
-  @keyframes vstampin{0%{opacity:0;transform:rotate(-6deg) scale(1.6)}60%{opacity:1;transform:rotate(-6deg) scale(.96)}100%{transform:rotate(-6deg) scale(1)}}
-  .bhead{position:relative}
-  .bhead>.vstamp{position:absolute;top:22px;right:26px}
   .ck-clock .big{display:flex;align-items:flex-end;justify-content:flex-end;gap:4px}
   .ck-clock .big canvas{display:block;width:172px;height:42px}
   .ck-clock .big small{margin-bottom:-2px}
@@ -1570,7 +1565,7 @@
   .efx .ef-sg.has-sgi button.on{background:transparent}
   .efx .ef-sg .cap{position:relative;z-index:1}
   button:active:not(:disabled){transform:scale(.97)}
-  @media (prefers-reduced-motion:reduce){.vic.live,.vstamp.in{animation:none}.efx .ef-sg .sgi{transition:none}}
+  @media (prefers-reduced-motion:reduce){.vic.live{animation:none}.efx .ef-sg .sgi{transition:none}}
   #printArea{display:none}
   @media print{
     #app,#modalRoot,#toast{display:none!important}
@@ -2666,7 +2661,7 @@ function renderJobDetail(){const j=activeJob(),host=document.getElementById("det
       </div><canvas class="jb-rail" title="From the ask to the answer"></canvas><div class="jb-railnote">${(()=>{const age=-daysUntil(j.received)+1,n=j.due?daysUntil(j.due):null,tm=jobTiming(j);
         if(j.status==="done")return tm?`Reported back ${tm.txt}`:"Reported back";if(j.status==="dropped")return "Dropped";
         return `Day ${age} · `+(n==null?"no date expected":n>0?`expected in ${n} d`:n===0?"expected today":`${-n} d past expected`);})()}</div></div>
-      <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">${j.status==="done"?(()=>{const tm=jobTiming(j);return vStamp(tm?`REPORTED · ${tm.n>0?tm.n+" D EARLY":tm.n===0?"ON THE DAY":-tm.n+" D LATE"}`:"REPORTED",tm&&!tm.ok?"var(--bad,var(--red))":"var(--good,var(--green))",j.updatedAt&&Date.now()-j.updatedAt<6000);})():`<span class="pill ${st.cls}" style="font-size:12px">${st.l}</span>`}
+      <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end"><span class="pill ${st.cls}" style="font-size:12px">${st.l}</span>
         <button class="sm" id="jb-logt" title="Log time against this task">⏱ Log time</button>
         ${jobOpen(j)?`<button class="sm primary" id="jb-close" title="Record what you reported back">✓ Close…</button>`:""}
         <button class="sm danger" id="jb-del">🗑 Delete</button></div></div>
@@ -5595,11 +5590,6 @@ let v2LastId=null,v2Mo=0;
 {const d=document.getElementById("detail");if(d)new MutationObserver(()=>{if(!v2Mo)v2Mo=requestAnimationFrame(()=>{v2Mo=0;V2.segSlide();});}).observe(d,{childList:true,subtree:true});}
 function v2AfterRender(){V2.segSlide();const el=document.querySelector(".bhead .bh-id");
   if(el&&activeId&&v2LastId!==activeId){v2LastId=activeId;V2.decode(el,el.textContent);}}
-/* the ink stamp — only for real milestones: a demand delivered or closed, a task reported back */
-function vStamp(text,pen,fresh){return `<span class="vstamp ${fresh?"in":""}" style="--pen:${pen}">${esc(text)}</span>`;}
-function demandStamp(t){if(!["delivered","closed"].includes(t.status))return "";
-  const ev=(t.timeline||[]).filter(e=>e.type==="status"&&e.to===t.status).sort((a,b)=>b.ts-a.ts)[0];
-  return vStamp(`${t.status==="closed"?"CLOSED":"DELIVERED"}${ev?" · "+shortD(isoTs(ev.ts)).toUpperCase():""}`,t.status==="closed"?"var(--ink-2,var(--muted))":"var(--good,var(--green))",ev&&Date.now()-ev.ts<6000);}
 const benchOn=()=>document.documentElement.getAttribute("data-theme")==="bench";
 /* Motion: Settings choice, or follow Windows' "reduce animations" */
 const MOTION_KEY="demanddesk.motion",reducedMQ=matchMedia("(prefers-reduced-motion: reduce)");
@@ -5943,7 +5933,7 @@ function demandHeadBench(t,sub,lc){
   const age=Math.max(0,Math.floor(((fin?new Date(fin+"T00:00:00").getTime():Date.now())-(t.receivedDate?new Date(t.receivedDate+"T00:00:00").getTime():t.createdAt))/864e5));
   const na=t.nextAction&&t.nextAction.date&&t.status!=="closed"?t.nextAction:null,nad=na?daysUntil(na.date):0;
   const cl=taskClashes(t).filter(x=>x.open.length),rw=reworkCount(t),nClash=openClashCount(t);
-  return `<div class="detail-head bhead" style="--pen:${STATUS_PEN[t.status]}">${demandStamp(t)}
+  return `<div class="detail-head bhead" style="--pen:${STATUS_PEN[t.status]}">
     <div class="bh-top"><div class="bh-l">
         <div class="bh-no"><span class="bh-id">${esc(t.demandId||"no demand id")}</span>${ep?` · <a class="ep-go" title="Open the epic">◆ ${esc(ep.code||ep.name)}</a>`:""}${t.wave?` · ${esc(t.wave)}`:""}</div>
         <h1>${esc(t.title)}</h1>
@@ -6712,7 +6702,7 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
       {k:"Days with no log",v:String(unl.length),cls:unl.length?"bad":""}])}
     <div class="ck-unit"><div class="ck-head"><h2>Noticed</h2><span class="ck-meta">worked out from your log</span></div><div id="efNoticed"></div></div>
     <div class="ef-lgrow"><span class="ef-lb" style="margin:0">${EF_GROUPS[g]}s · click to focus${g==="demand"?" · double-click to open":""}</span>${A.keys.map(k=>{const m=efGMeta(k);return `<button class="ef-lgi ${efFocus===k?"on":efFocus?"off":""}" data-k="${esc(k)}" style="--pen:var(--${m.col})" title="${esc(m.sub||"")}"><span class="ef-pd"></span>${esc(m.l)}<b>${efFh(A.tot.get(k))}</b></button>`;}).join("")}</div>
-    <div class="ck-unit"><div class="ck-head"><h2>26 weeks in dots</h2><span class="ck-meta">a pie per day · size = hours · slices = where they went · red ring = a working day with no log · shaded = the range · click a day</span></div><canvas class="ef-cal" id="efCal"></canvas></div>
+    <div class="ck-unit"><div class="ck-head"><h2>26 weeks in dots</h2><span class="ck-meta">a dial per day · a dot = ½ h, a full ring = your working day · colours = where the hours went · red dots = a working day with no log · dotted rule = the range · click a day</span></div><canvas class="ef-cal" id="efCal"></canvas></div>
     <div class="ef-gw">
       <div class="ck-unit"><div class="ck-head"><h2>Where the hours went</h2><span class="ck-meta">${A.mode==="day"?`per day · a dot = ½ h · dashed = ${efFh(EF_DAY)} h`:A.mode==="week"?`per week · a dot = 1 h · dashed = ${efFh(EF_DAY*5)} h`:`per month · a dot = 4 h · dashed = ${efFh(EF_DAY*21)} h`} · click a column</span></div><canvas class="ef-wkc" id="efWk"></canvas></div>
       <div class="ck-unit"><div class="ck-head"><h2>Activity mix</h2><span class="ck-meta">${efFh(total)} h</span></div><div class="ef-mixw"><canvas id="efMix"></canvas><div>${efMixRows(A.R)}</div></div></div></div>
@@ -6741,28 +6731,33 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
   efRenderSheet();}
 /* calendar: 26 weeks × 7 days, a pie per day */
 function efCalDraw(c,w,h,tm,dt,s){const A=EFA,C=efC(s.cv),p=efEase(efProg(s,1200)),L=30,top=20,cw=(w-L-6)/26,ch=(h-top-4)/7,cell=Math.min(cw,ch);s.hits=[];
-  /* shade the weeks the range covers */
-  {const col=o=>L+Math.floor((o-A.cal0)/7)*cw,lo=Math.max(A.a,A.cal0),hi=Math.min(A.b,A.cal0+26*7-1);
-   if(hi>=lo){const xr=col(lo),xe=col(hi)+cw;c.globalAlpha=1;c.fillStyle=C["paper-2"];c.fillRect(xr,top-4,Math.min(w-6,xe)-xr,h-top);
-     c.globalAlpha=.6;c.strokeStyle=C["rule-strong"];c.lineWidth=1;c.beginPath();c.moveTo(xr+.5,top-4);c.lineTo(xr+.5,h);c.stroke();}}
+  /* Instrument v2: each day is a dial of dots — one dot per half hour round the ring, a full ring = your working
+     day, lit clockwise from 12 in the colours of where the time went (what the pie's slices were). Unlit dots are
+     the rest of the day; hours past a full day spill into an inner ring. The range is a dotted rule over its weeks
+     with full ink inside it; days outside it are drawn faint. */
+  const inR=o=>o>=A.a&&o<=A.b,col=o=>L+Math.floor((o-A.cal0)/7)*cw,lo=Math.max(A.a,A.cal0),hi=Math.min(A.b,A.cal0+26*7-1);
+  if(hi>=lo){const xr=col(lo)+3,xe=Math.min(w-6,col(hi)+cw)-3;for(let x=xr;x<=xe;x+=4)efDot(c,x,top-7,.75,C["ink-2"],.85);efDot(c,xr,top-7,1.5,C["ink-2"]);efDot(c,xe,top-7,1.5,C["ink-2"]);}
   ["MON","","WED","","FRI","",""].forEach((d,i)=>d&&efLabel(c,d,L-8,top+i*ch+ch/2,{size:7,align:"right"}));
   const ix=k=>{const i=A.keys.indexOf(k);return i<0?99:i;};let lastM=-1;
+  const N=Math.max(8,Math.round(EF_DAY*2)),R=Math.max(4,cell*.34),rL=Math.max(.9,Math.min(2,R*DK.TAU/N*.36)),rU=Math.max(.45,rL*.45),N2=Math.max(6,Math.round(N*.62));
+  const ringAt=(x,y,r,n,lit,fade,hov)=>{for(let i=0;i<n;i++){const a=-Math.PI/2+i/n*DK.TAU,px=x+Math.cos(a)*r,py=y+Math.sin(a)*r,k=lit[i];
+    if(k)efDot(c,px,py,rL*(hov?1.2:1),C[efM(k).col]||C["ink-3"],(efFocus&&efFocus!==k?.12:.95)*fade);else efDot(c,px,py,rU,C["ink-4"],fade);}};
   for(let wk=0;wk<26;wk++){const m0=A.cal0+wk*7,dm=new Date(efOffD(m0)+"T00:00:00").getMonth();
     if(dm!==lastM){lastM=dm;efLabel(c,efFmt(efOffD(m0),{month:"short"}).toUpperCase(),L+wk*cw+2,7,{size:7.5,align:"left"});}
     if(wk/26>p)continue;
-    for(let r=0;r<7;r++){const off=m0+r,x=L+wk*cw+cw/2,y=top+r*ch+ch/2,dstr=efOffD(off),we=r>=5;
-      if(off>0){const fo=efOff(dstr);if(fo){c.globalAlpha=.55;c.fillStyle=C[EF_OFF[fo.kind].pen];c.fillRect(x-5,y-.8,10,1.6);}s.hits.push({x,y,rx:cw/2,ry:ch/2,off,kind:"fut"});continue;}
+    for(let r=0;r<7;r++){const off=m0+r,x=L+wk*cw+cw/2,y=top+r*ch+ch/2,dstr=efOffD(off),we=r>=5,fade=inR(off)?1:.32;
+      if(off>0){const fo=efOff(dstr);if(fo)efRing(c,x,y,Math.max(2,R*.42),C[EF_OFF[fo.kind].pen],.6,1.2);else efDot(c,x,y,.6,C["ink-4"],.5);s.hits.push({x,y,rx:cw/2,ry:ch/2,off,kind:"fut"});continue;}
       const d=A.day.get(off),hov=s.hv&&s.hv.off===off;let kind="day";
       const fo=efOff(dstr);
-      if(fo&&!(d&&d.tot)){c.globalAlpha=.9;c.fillStyle=C[EF_OFF[fo.kind].pen];c.fillRect(x-5,y-.8,10,1.6);kind="leave";}
-      else if(d&&d.tot){const rad=Math.max(2.2,Math.sqrt(Math.min(d.tot,10)/9)*cell*.44)*(hov?1.14:1);let a0=-Math.PI/2;
-        [...d.by.entries()].sort((u,v)=>ix(u[0])-ix(v[0])).forEach(([k,v])=>{const a1=a0+v/d.tot*DK.TAU;
-          c.globalAlpha=efFocus&&efFocus!==k?.1:.92;c.fillStyle=C[efM(k).col]||C["ink-3"];c.beginPath();c.moveTo(x,y);c.arc(x,y,rad,a0,a1);c.closePath();c.fill();
-          if(d.by.size>1){c.globalAlpha=1;c.strokeStyle=C.paper;c.lineWidth=.9;c.stroke();}a0=a1;});}
-      else if(!we&&off<0&&off>=A.first){efRing(c,x,y,Math.max(2.5,cell*.2),C.bad,.85,1.2);kind="none";}
-      else{efDot(c,x,y,.9,C["ink-4"]);kind=we?"we":"quiet";}
-      if(off===0)efRing(c,x,y,cell*.46,C.ink,.6);
-      if(hov&&kind!=="day")efRing(c,x,y,cell*.4,C["ink-2"],.6);
+      if(fo&&!(d&&d.tot)){efRing(c,x,y,Math.max(2,R*.42),C[EF_OFF[fo.kind].pen],.9*fade,1.3);kind="leave";}
+      else if(d&&d.tot){const seq=[];[...d.by.entries()].sort((u,v)=>ix(u[0])-ix(v[0])).forEach(([k,v])=>{for(let j=0;j<Math.round(v*2);j++)seq.push(k);});
+        if(!seq.length)seq.push([...d.by.keys()][0]);
+        ringAt(x,y,R*(hov?1.08:1),N,seq.slice(0,N),fade,hov);
+        if(seq.length>N)ringAt(x,y,R*.56,N2,seq.slice(N,N+N2),fade,hov);}
+      else if(!we&&off<0&&off>=A.first){for(let i=0;i<N;i++){const a=-Math.PI/2+i/N*DK.TAU;efDot(c,x+Math.cos(a)*R,y+Math.sin(a)*R,rU*1.25,C.bad,.75*fade);}kind="none";}
+      else{efDot(c,x,y,.8,C["ink-4"],fade);kind=we?"we":"quiet";}
+      if(off===0)efRing(c,x,y,R+4,C.ink,.6);
+      if(hov&&kind!=="day")efRing(c,x,y,R+2,C["ink-2"],.6);
       s.hits.push({x,y,rx:cw/2,ry:ch/2,off,kind});}}}
 function efCalTip(hit){const d=efOffD(hit.off);
   const fo=efOff(d),ot=fo?` · ${EF_OFF[fo.kind].icon} ${esc(efOffTxt(fo))}`:"";
@@ -7929,11 +7924,12 @@ const MOCK_NOTES=[
  ["Title bar · the wordmark","The 3×3 dots used to twinkle at random. Now they hold still, and trace a snake path only while something is actually working — a save, reading your notes folder. (Show me plays a save.)",()=>{markSaved();}],
  ["Today · matrix clock","The headline clock is a 5×7 dot-matrix readout: the colon blinks, and each new minute wipes in as a diagonal wave. The one matrix on the screen.",()=>{view="today";renderApp();}],
  ["Transport card · rail timeline","The route line becomes a rail: solid stations it has reached (with the date it arrived above), the next import pulsing in that system's colour, hollow stations still ahead. An unreleased transport pulses amber at its origin.",()=>{view="demands";activeId="m2";activeTab="transports";trOpen.clear();state.tasks.find(t=>t.id==="m2").transports.forEach(x=>trOpen.add(x.id));renderApp();}],
- ["Demand · the ID decodes, milestones get a stamp","Opening a demand, its ID settles in from random glyphs (40 ms a character). A delivered or closed demand carries an ink stamp — ‘DELIVERED · 17 OCT’ — the only place stamps appear, so they keep meaning something. (Show me opens a delivered one.)",()=>{view="demands";activeId="m5";activeTab="overview";renderApp();}],
+ ["Demand · the ID decodes","Opening a demand, its ticket ID settles in from random glyphs (40 ms a character).",()=>{v2LastId=null;view="demands";activeId="m5";activeTab="overview";renderApp();}],
  ["Effort · matrix headline + sliding controls","Hours logged is the page's matrix readout; switching the range wipes the old number into the new one. Range and Group-by are segmented controls whose ink indicator slides to your choice (also Review's period). Try switching.",()=>{view="effort";renderApp();}],
+ ["Effort · 26 weeks in dots, without pies","Each day is now a dial of dots instead of a filled pie: one dot per half hour round the ring and a full ring = your working day, lit in the colours of where the time went (the old slices). Unlit dots show what was left of the day; overtime spills into an inner ring. Red dots = a working day with no log, a small hollow ring = holiday or leave, a dotted rule over the range (days outside it faint) instead of the shaded block. Hover and click a day as before.",()=>{view="effort";renderApp();setTimeout(()=>{const u=document.getElementById("efCal");if(u)u.scrollIntoView({block:"center"});},300);}],
  ["Effort · leader callouts","‘Where the hours went’ no longer prints a number over every column: the peak and this week get labels on thin leader lines, like a technical drawing.",()=>{view="effort";renderApp();setTimeout(()=>{const u=document.getElementById("efWk");if(u)u.scrollIntoView({block:"center"});},300);}],
  ["Demand Effort tab · dot calendar + plotter","‘Days on it’: the last 26 weeks as a dot calendar — size and ink = hours that day, a ring on today, hollow = holiday or leave. The running-total line now draws itself with a pen head on a dotted carriage line.",()=>{view="demands";activeId="m1";activeTab="effort";renderApp();}],
- ["Tasks · rail + stamp","A task shows a rail from the ask to the answer — Received → Working → Reported (‘by 30 Oct’ ahead of you) — with ‘Day 4 · expected in 1 d’ under it. A task reported back gets a stamp: ‘REPORTED · 1 D EARLY’.",()=>{view="jobs";activeJobId="j1";renderApp();}],
+ ["Tasks · rail","A task shows a rail from the ask to the answer — Received → Working → Reported (‘by 30 Oct’ ahead of you) — with ‘Day 4 · expected in 1 d’ under it.",()=>{view="jobs";activeJobId="j1";renderApp();}],
  ["Settings · working-day knob","The working-day hours (⋯ menu) is a dot knob: drag up or down, scroll, or use the arrow keys.",()=>{openMenu();setTimeout(()=>{const k=document.getElementById("mn-dayk");if(k)k.scrollIntoView({block:"center"});},200);}]];
 function mockPanel(){const p=document.createElement("div");p.id="mockPanel";let open=true;
   const draw=()=>{p.className=open?"":"min";p.innerHTML=`<div class="mk-h"><b>MOCKUP · Instrument v2</b><button class="sm ghost" id="mkT">${open?"Hide":"Show notes"}</button></div>

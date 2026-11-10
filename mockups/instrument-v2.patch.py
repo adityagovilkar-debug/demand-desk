@@ -91,12 +91,7 @@ const V2=(()=>{const {dot,ring,label}=DK,TAU=Math.PI*2,cl=v=>v<0?0:v>1?1:v,still
 let v2LastId=null,v2Mo=0;
 {const d=document.getElementById("detail");if(d)new MutationObserver(()=>{if(!v2Mo)v2Mo=requestAnimationFrame(()=>{v2Mo=0;V2.segSlide();});}).observe(d,{childList:true,subtree:true});}
 function v2AfterRender(){V2.segSlide();const el=document.querySelector(".bhead .bh-id");
-  if(el&&activeId&&v2LastId!==activeId){v2LastId=activeId;V2.decode(el,el.textContent);}}
-/* the ink stamp — only for real milestones: a demand delivered or closed, a task reported back */
-function vStamp(text,pen,fresh){return `<span class="vstamp ${fresh?"in":""}" style="--pen:${pen}">${esc(text)}</span>`;}
-function demandStamp(t){if(!["delivered","closed"].includes(t.status))return "";
-  const ev=(t.timeline||[]).filter(e=>e.type==="status"&&e.to===t.status).sort((a,b)=>b.ts-a.ts)[0];
-  return vStamp(`${t.status==="closed"?"CLOSED":"DELIVERED"}${ev?" · "+shortD(isoTs(ev.ts)).toUpperCase():""}`,t.status==="closed"?"var(--ink-2,var(--muted))":"var(--good,var(--green))",ev&&Date.now()-ev.ts<6000);}''')
+  if(el&&activeId&&v2LastId!==activeId){v2LastId=activeId;V2.decode(el,el.textContent);}}''')
 
 rep('''function renderApp(){
   EF_DAY=+state.settings.dayHours||8;renderNewerBar();''', '''function renderApp(){
@@ -166,9 +161,8 @@ s = s[:start] + r'''function trRouteDraw(t,tr){return (ctx,w,h,tm,dt,s)=>{const 
   if(!tr.released)label(ctx,"NOT RELEASED",Math.max(2,X(0)-10),y-15,{size:7,spacing:1.2,color:C.watch,align:"left"});};}
 ''' + s[end:]
 
-# ---------------------------------------------------------------- 5. demand header: ID decodes, milestones get a stamp
+# ---------------------------------------------------------------- 5. demand header: the ID decodes
 rep('''        <div class="bh-no">${esc(t.demandId||"no demand id")}${ep?''', '''        <div class="bh-no"><span class="bh-id">${esc(t.demandId||"no demand id")}</span>${ep?''')
-rep('''  return `<div class="detail-head bhead" style="--pen:${STATUS_PEN[t.status]}">''', '''  return `<div class="detail-head bhead" style="--pen:${STATUS_PEN[t.status]}">${demandStamp(t)}''')
 
 # ---------------------------------------------------------------- 6. Effort: matrix headline, callouts, sliding segments
 rep('''    ${roHTML([{k:"Logged",v:efFh(total)+`<small>h</small>`+''', '''    ${roHTML([{k:"Logged",v:`<canvas class="mxr" id="efMxR" data-v="${efFh(Math.round(total))}" style="width:${V2.mxW(efFh(Math.round(total)),22)}px;height:22px" title="${efFh(total)} h"></canvas>`+`<small>h</small>`+''')
@@ -207,7 +201,7 @@ rep('''c.fillRect(x,y0+3,1,7);}}''', '''c.fillRect(x,y0+3,1,7);}}
     if(p<1&&offs.length){let cm=0;offs.forEach(o=>{if(X(o)<=xMax)cm+=efSum(by.get(o));});const hy=yC(cm);
       for(let yy=top-8;yy<y0;yy+=4)efDot(c,xMax,yy,.6,C["ink-3"],.7);efDot(c,xMax,hy,2.4,C["ink-2"]);efRing(c,xMax,hy,5.5,C["ink-2"],.35);}''')
 
-# ---------------------------------------------------------------- 8. Tasks: a rail from the ask to the answer, and a stamp
+# ---------------------------------------------------------------- 8. Tasks: a rail from the ask to the answer
 rep('''        <span>Expected by <input type="date" id="jb-due" value="${j.due}" style="width:150px"></span>
       </div></div>''', '''        <span>Expected by <input type="date" id="jb-due" value="${j.due}" style="width:150px"></span>
       </div><canvas class="jb-rail" title="From the ask to the answer"></canvas><div class="jb-railnote">${(()=>{const age=-daysUntil(j.received)+1,n=j.due?daysUntil(j.due):null,tm=jobTiming(j);
@@ -218,10 +212,6 @@ rep('''  const q=s=>host.querySelector(s),side=()=>renderJobSidebar();''', '''  
     const cur=j.status==="done"||j.status==="dropped"?3:j.log.length||j.status==="progress"?1:0;
     DK.scope(cv,(c,w,h,tm)=>{const C=efC(cv);V2.rail(c,C,34,w-40,h/2+3,st,cur,C["pen-7"],tm);});}}
   const q=s=>host.querySelector(s),side=()=>renderJobSidebar();''')
-rep('''      <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end"><span class="pill ${st.cls}" style="font-size:12px">${st.l}</span>
-        <button class="sm" id="jb-logt"''', '''      <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">${j.status==="done"?(()=>{const tm=jobTiming(j);return vStamp(tm?`REPORTED · ${tm.n>0?tm.n+" D EARLY":tm.n===0?"ON THE DAY":-tm.n+" D LATE"}`:"REPORTED",tm&&!tm.ok?"var(--bad,var(--red))":"var(--good,var(--green))",j.updatedAt&&Date.now()-j.updatedAt<6000);})():`<span class="pill ${st.cls}" style="font-size:12px">${st.l}</span>`}
-        <button class="sm" id="jb-logt"''')
-
 # ---------------------------------------------------------------- 9. settings: the working day is a knob
 rep('''      <input type="number" id="mn-dayh" min="1" max="16" step="0.25" value="${state.settings.dayHours}" style="width:70px;padding:3px 6px"> h</div>''',
     '''      <canvas id="mn-dayk" title="Drag up or down, scroll, or use the arrow keys — 4 to 12 hours" style="width:92px;height:80px;flex:none"></canvas></div>''')
@@ -232,6 +222,42 @@ s = s[:a] + '''  {const cv=root.querySelector("#mn-dayk"),lo=4,hi=12,get=()=>(Ma
    V2.bindKnob(cv,get,f=>{const v=Math.round((lo+f*(hi-lo))*4)/4;if(v===state.settings.dayHours)return;state.settings.dayHours=v;clearTimeout(tmr);tmr=setTimeout(()=>{markDirty();renderApp();},400);},.25/(hi-lo));}
 ''' + s[b:]
 
+# ---------------------------------------------------------------- 10. 26 weeks in dots: a dial of dots per day, not a pie
+a = s.index("function efCalDraw(c,w,h,tm,dt,s){")
+b = s.index("function efCalTip(hit){")
+s = s[:a] + r"""function efCalDraw(c,w,h,tm,dt,s){const A=EFA,C=efC(s.cv),p=efEase(efProg(s,1200)),L=30,top=20,cw=(w-L-6)/26,ch=(h-top-4)/7,cell=Math.min(cw,ch);s.hits=[];
+  /* Instrument v2: each day is a dial of dots — one dot per half hour round the ring, a full ring = your working
+     day, lit clockwise from 12 in the colours of where the time went (what the pie's slices were). Unlit dots are
+     the rest of the day; hours past a full day spill into an inner ring. The range is a dotted rule over its weeks
+     with full ink inside it; days outside it are drawn faint. */
+  const inR=o=>o>=A.a&&o<=A.b,col=o=>L+Math.floor((o-A.cal0)/7)*cw,lo=Math.max(A.a,A.cal0),hi=Math.min(A.b,A.cal0+26*7-1);
+  if(hi>=lo){const xr=col(lo)+3,xe=Math.min(w-6,col(hi)+cw)-3;for(let x=xr;x<=xe;x+=4)efDot(c,x,top-7,.75,C["ink-2"],.85);efDot(c,xr,top-7,1.5,C["ink-2"]);efDot(c,xe,top-7,1.5,C["ink-2"]);}
+  ["MON","","WED","","FRI","",""].forEach((d,i)=>d&&efLabel(c,d,L-8,top+i*ch+ch/2,{size:7,align:"right"}));
+  const ix=k=>{const i=A.keys.indexOf(k);return i<0?99:i;};let lastM=-1;
+  const N=Math.max(8,Math.round(EF_DAY*2)),R=Math.max(4,cell*.34),rL=Math.max(.9,Math.min(2,R*DK.TAU/N*.36)),rU=Math.max(.45,rL*.45),N2=Math.max(6,Math.round(N*.62));
+  const ringAt=(x,y,r,n,lit,fade,hov)=>{for(let i=0;i<n;i++){const a=-Math.PI/2+i/n*DK.TAU,px=x+Math.cos(a)*r,py=y+Math.sin(a)*r,k=lit[i];
+    if(k)efDot(c,px,py,rL*(hov?1.2:1),C[efM(k).col]||C["ink-3"],(efFocus&&efFocus!==k?.12:.95)*fade);else efDot(c,px,py,rU,C["ink-4"],fade);}};
+  for(let wk=0;wk<26;wk++){const m0=A.cal0+wk*7,dm=new Date(efOffD(m0)+"T00:00:00").getMonth();
+    if(dm!==lastM){lastM=dm;efLabel(c,efFmt(efOffD(m0),{month:"short"}).toUpperCase(),L+wk*cw+2,7,{size:7.5,align:"left"});}
+    if(wk/26>p)continue;
+    for(let r=0;r<7;r++){const off=m0+r,x=L+wk*cw+cw/2,y=top+r*ch+ch/2,dstr=efOffD(off),we=r>=5,fade=inR(off)?1:.32;
+      if(off>0){const fo=efOff(dstr);if(fo)efRing(c,x,y,Math.max(2,R*.42),C[EF_OFF[fo.kind].pen],.6,1.2);else efDot(c,x,y,.6,C["ink-4"],.5);s.hits.push({x,y,rx:cw/2,ry:ch/2,off,kind:"fut"});continue;}
+      const d=A.day.get(off),hov=s.hv&&s.hv.off===off;let kind="day";
+      const fo=efOff(dstr);
+      if(fo&&!(d&&d.tot)){efRing(c,x,y,Math.max(2,R*.42),C[EF_OFF[fo.kind].pen],.9*fade,1.3);kind="leave";}
+      else if(d&&d.tot){const seq=[];[...d.by.entries()].sort((u,v)=>ix(u[0])-ix(v[0])).forEach(([k,v])=>{for(let j=0;j<Math.round(v*2);j++)seq.push(k);});
+        if(!seq.length)seq.push([...d.by.keys()][0]);
+        ringAt(x,y,R*(hov?1.08:1),N,seq.slice(0,N),fade,hov);
+        if(seq.length>N)ringAt(x,y,R*.56,N2,seq.slice(N,N+N2),fade,hov);}
+      else if(!we&&off<0&&off>=A.first){for(let i=0;i<N;i++){const a=-Math.PI/2+i/N*DK.TAU;efDot(c,x+Math.cos(a)*R,y+Math.sin(a)*R,rU*1.25,C.bad,.75*fade);}kind="none";}
+      else{efDot(c,x,y,.8,C["ink-4"],fade);kind=we?"we":"quiet";}
+      if(off===0)efRing(c,x,y,R+4,C.ink,.6);
+      if(hov&&kind!=="day")efRing(c,x,y,R+2,C["ink-2"],.6);
+      s.hits.push({x,y,rx:cw/2,ry:ch/2,off,kind});}}}
+""" + s[b:]
+s = s.replace("a pie per day · size = hours · slices = where they went · red ring = a working day with no log · shaded = the range · click a day",
+              "a dial per day · a dot = ½ h, a full ring = your working day · colours = where the hours went · red dots = a working day with no log · dotted rule = the range · click a day", 1)
+
 # ---------------------------------------------------------------- CSS
 rep('''  #printArea{display:none}''', '''  /* Instrument v2 */
   .vic{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:0;flex:none}
@@ -240,11 +266,6 @@ rep('''  #printArea{display:none}''', '''  /* Instrument v2 */
   .vic.nm{border:1px dashed var(--ink-3,#888)}
   .vic.fault{background:var(--bad,#c0392b);box-shadow:0 0 0 3px color-mix(in srgb,var(--bad,#c0392b) 22%,transparent)}
   @keyframes vbreathe{50%{opacity:.4}}
-  .vstamp{display:inline-block;transform:rotate(-6deg);border:1.5px solid var(--pen);color:var(--pen);padding:3px 7px 2px;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;border-radius:2px;outline:1px solid var(--pen);outline-offset:2px;background:var(--paper,var(--panel));white-space:nowrap}
-  .vstamp.in{animation:vstampin .45s cubic-bezier(.2,.8,.2,1) both}
-  @keyframes vstampin{0%{opacity:0;transform:rotate(-6deg) scale(1.6)}60%{opacity:1;transform:rotate(-6deg) scale(.96)}100%{transform:rotate(-6deg) scale(1)}}
-  .bhead{position:relative}
-  .bhead>.vstamp{position:absolute;top:22px;right:26px}
   .ck-clock .big{display:flex;align-items:flex-end;justify-content:flex-end;gap:4px}
   .ck-clock .big canvas{display:block;width:172px;height:42px}
   .ck-clock .big small{margin-bottom:-2px}
@@ -262,7 +283,7 @@ rep('''  #printArea{display:none}''', '''  /* Instrument v2 */
   .efx .ef-sg.has-sgi button.on{background:transparent}
   .efx .ef-sg .cap{position:relative;z-index:1}
   button:active:not(:disabled){transform:scale(.97)}
-  @media (prefers-reduced-motion:reduce){.vic.live,.vstamp.in{animation:none}.efx .ef-sg .sgi{transition:none}}
+  @media (prefers-reduced-motion:reduce){.vic.live{animation:none}.efx .ef-sg .sgi{transition:none}}
   #printArea{display:none}''')
 
 open(P, "w", encoding="utf-8").write(s)
