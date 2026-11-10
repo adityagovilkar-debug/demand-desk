@@ -123,7 +123,7 @@ function renderEpicOverviewBench(body,e,r){
   const story=epicStory(e),waves=waveOrder(r.ts),open=e.deps.filter(x=>!x.done).sort((a,b)=>(depFollowDue(e,b)?1:0)-(depFollowDue(e,a)?1:0)||(a.since||"9999").localeCompare(b.since||"9999"));
   const doneN=e.deps.length-open.length,today=todayStr();
   const depRow=x=>{const last=x.lastCheck||x.since,ago=last?Math.max(0,-daysUntil(last)):null,due=depFollowDue(e,x),snz=x.snoozeUntil&&x.snoozeUntil>today;
-    return `<div class="dep2 ${due?"due":""}" data-id="${x.id}"><canvas data-f="${ago==null?0:ago/e.followDays}" data-due="${due?1:0}" data-ago="${ago==null?"":ago}"></canvas>
+    return `<div class="dep2 ${due?"due":""}" data-id="${x.id}"><canvas data-still="3000" data-f="${ago==null?0:ago/e.followDays}" data-due="${due?1:0}" data-ago="${ago==null?"":ago}"></canvas>
       <div class="dep2-t"><div class="dn">${esc(x.team||"(which team?)")}</div><div class="dw">${esc(x.what||"")}</div>
         <div class="dm">${[x.since?`waiting ${Math.max(0,-daysUntil(x.since))} d`:"",ago!=null?`last contact ${ago} d ago`:"never chased",x.expected?`expected ${x.expected}`:""].filter(Boolean).join(" · ")}${due?` · <b>${esc(due)}</b>`:""}${snz?` · 💤 until ${x.snoozeUntil}`:""}</div></div>
       <div class="dep2-a"><button class="sm d2-check" title="You chased them — log it in the story">📞 Checked in</button><span><button class="sm ghost d2-snooze" title="Don't nudge me about this until later">💤</button><button class="sm ghost d2-done" title="They delivered">✓</button></span></div></div>`;};
@@ -148,7 +148,7 @@ function renderEpicOverviewBench(body,e,r){
     row.querySelector(".d2-snooze").onclick=()=>depSnooze(e,x);
     row.querySelector(".d2-done").onclick=()=>depDelivered(e,x);
     const cv=row.querySelector("canvas"),f=+cv.dataset.f,due=cv.dataset.due==="1",ago=cv.dataset.ago,st={v:motionOn()?0:Math.min(1,f)};
-    DK.scope(cv,(ctx,w,h)=>{st.v+=(Math.min(1,f)-st.v)*.06;DK.dotArc(ctx,w/2,h/2+5,Math.min(w/2,h/1.45)-4,st.v,26,due?DK.C.bad:DK.C.watch,1.8);
+    DK.scope(cv,(ctx,w,h,tm,dt)=>{st.v+=(Math.min(1,f)-st.v)*DK.ease(dt,.06);DK.dotArc(ctx,w/2,h/2+5,Math.min(w/2,h/1.45)-4,st.v,26,due?DK.C.bad:DK.C.watch,1.8);
       DK.label(ctx,ago===""?"—":ago+"d",w/2,h/2+13,{font:DK.MONO,size:9,weight:600,color:due?DK.C.bad:DK.C.ink});});});
   body.querySelectorAll(".dem2").forEach(row=>row.onclick=()=>goEpicDemand(row.dataset.id));
   const q=s=>body.querySelector(s);

@@ -131,6 +131,26 @@ async function runSelfTest(){
    ok("Instrument v2: matrix readout lays out a number",V2.matrixLayout("12:34").cols===25&&V2.mxW("88",21)===33,V2.matrixLayout("12:34").cols);
    {const d0=dirty;dirty=true;renderSaveState();const nm=!!document.querySelector("#saveState .vic.nm");dirty=d0;renderSaveState();ok("Instrument v2: the save light shows its state",nm);}
    ok("Instrument v2: no milestone stamps",!document.querySelector(".vstamp")&&typeof demandStamp==="undefined");
+   /* behaviour, not only "it opens" */
+   {const env=JSON.parse(await encryptStateStr("st-pass")),dec=await decryptEnvelope(env,"st-pass"),same=JSON.stringify(dec)===JSON.stringify(state);
+    const loads=isValidState(migrate(JSON.parse(JSON.stringify(dec))));dataNewer=0;let wrong=false;try{await decryptEnvelope(env,"not-it");}catch(e){wrong=true;}
+    ok("Encryption: the file round-trips with the master password, and only with it",same&&loads&&wrong&&!JSON.stringify(env).includes("Sample report gets a filter"),`same ${same} · loads ${loads} · wrong password refused ${wrong}`);}
+   {const fh0=fileHandle,fs0=fileSig;let lm=1000;fileHandle={name:"st.json",getFile:async()=>({lastModified:lm,size:10})};await noteFileSig();const same=await diskChanged();lm=2000;const moved=await diskChanged();
+    fileHandle=fh0;fileSig=fs0;ok("Disk guard: a data file changed by something else is noticed",!same&&!!moved);}
+   ok("Backup: the newer of the two browser copies is used",pickBackup({raw:"A",at:1},{raw:"B",at:2})==="B"&&pickBackup({raw:"A",at:5},{raw:null,at:0})==="A"&&pickBackup({raw:"A",at:0},{raw:"B",at:0})==="A"&&pickBackup({raw:null,at:0},{raw:"B",at:0})==="B");
+   {const e=state.efforts[0],n=state.efforts.length;efDelete(e);const gone=state.efforts.length===n-1;const ub=[...document.querySelectorAll("#toast button")].find(x=>x.textContent==="Undo");if(ub)ub.click();
+    ok("Undo: a deleted time entry comes back",gone&&!!ub&&state.efforts.length===n&&state.efforts.includes(e));}
+   {const t=state.tasks.find(x=>x.id==="st-c"),R=document.getElementById("modalRoot");
+    openNextAction(t);R.querySelector("#na-note").value="Self-test step";R.querySelector("#na-date").value="2030-01-08";R.querySelector("#na-save").click();
+    const na=t.nextAction.note==="Self-test step"&&t.nextAction.date==="2030-01-08";
+    const n0=state.efforts.length;openLogTime({key:"st-c",date:todayStr()});const hi=R.querySelector('[data-f="hours"]');hi.value="1.5";hi.dispatchEvent(new Event("input"));R.querySelector('[data-f="log"]').click();
+    const lg=state.efforts.length===n0+1&&state.efforts[state.efforts.length-1].hours===1.5;
+    const t0=state.tasks.length;openTaskModal(null);R.querySelector("#m-title").value="Self-test demand";R.querySelector("#m-save").click();
+    const nd=state.tasks.length===t0+1&&state.tasks.some(x=>x.title==="Self-test demand");
+    R.innerHTML="";ok("Dialogs: next action, log time and new demand do what they say",na&&lg&&nd,`next ${na} · log ${lg} · new ${nd}`);}
+   {const b=state.tasks.find(x=>x.id==="st-b"),R=document.getElementById("modalRoot");openTaskModal(b);R.querySelector("#m-status").value="progress";R.querySelector("#m-save").click();
+    const asked=!!R.querySelector("#cbOk")&&b.status==="delivered";const c=R.querySelector("#cbCancel");if(c)c.click();R.innerHTML="";
+    ok("Edit: moving a delivered demand back asks why",asked);}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");

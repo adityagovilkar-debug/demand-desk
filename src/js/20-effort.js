@@ -130,10 +130,10 @@ function efTipEl(){let t=document.getElementById("efTip");if(!t){t=document.crea
 function efShowTip(html,x,y){const t=efTipEl();t.innerHTML=html;t.classList.add("on");const w=t.offsetWidth,h=t.offsetHeight;t.style.left=Math.max(6,Math.min(innerWidth-w-10,x+14))+"px";t.style.top=(y+h+20>innerHeight?y-h-10:y+14)+"px";}
 function efHideTip(){const t=document.getElementById("efTip");if(t)t.classList.remove("on");}
 function efHover(rec,html,click){if(!rec)return;rec.hits=[];rec.hv=null;const cv=rec.cv;
-  cv.addEventListener("mousemove",ev=>{const b=cv.getBoundingClientRect(),x=ev.clientX-b.left,y=ev.clientY-b.top;let hit=null;
+  cv.addEventListener("mousemove",ev=>{rec.dirty=true;const b=cv.getBoundingClientRect(),x=ev.clientX-b.left,y=ev.clientY-b.top;let hit=null;
     for(const h of rec.hits||[])if(Math.abs(x-h.x)<=h.rx&&Math.abs(y-h.y)<=h.ry){hit=h;break;}
     rec.hv=hit;if(!hit){efHideTip();cv.style.cursor="";return;}cv.style.cursor=click?"pointer":"";efShowTip(html(hit),ev.clientX,ev.clientY);});
-  cv.addEventListener("mouseleave",()=>{rec.hv=null;efHideTip();});
+  cv.addEventListener("mouseleave",()=>{rec.hv=null;rec.dirty=true;efHideTip();});
   if(click)cv.addEventListener("click",()=>{if(rec.hv){efHideTip();click(rec.hv);}});}
 function efToastUndo(msg,fn){toast(msg);const t=document.getElementById("toast"),b=document.createElement("button");b.className="sm";b.textContent="Undo";b.style.marginLeft="10px";
   b.onclick=()=>{t.className="toast";fn();};t.appendChild(b);t.classList.add("ef-undo");clearTimeout(toast._t);toast._t=setTimeout(()=>t.className="toast",5200);}
@@ -245,13 +245,13 @@ function renderEffortTab(body,t){
   body.innerHTML=`<div class="efx ef-tab">
     <div class="ck-unit"><div class="ck-head"><h2>Log time on ${esc(t.demandId||"this demand")}</h2><span class="ck-meta">Ctrl+Enter logs · T from anywhere · 2 · 1.5 · 2h30 · 90m</span></div><div id="efQc"></div></div>
     <div class="ef-ins">
-      <div class="ck-unit ins"><canvas data-k="est"></canvas><div style="min-width:0"><div class="k">Logged vs estimate</div><div class="v" id="efEstV">${efFh(tot)}<small>${est?"/ "+efFh(est)+" h":"h"}</small></div><div class="s ${est&&tot>est?"late":""}">${est?(tot>est?efFh(tot-est)+" h over":efFh(est-tot)+" h left"):"no estimate"} · <a href="#" class="ef-est">${est?"change":"set one"}</a></div></div></div>
-      <div class="ck-unit ins"><canvas data-k="days"></canvas><div style="min-width:0"><div class="k">Days worked</div><div class="v">${days.size}<small>days</small></div><div class="s">${days.size?"avg "+efFh(Math.round(tot/days.size*10)/10)+" h on a day you touched it":"nothing logged yet"}</div></div></div>
-      <div class="ck-unit ins"><canvas data-k="rw"></canvas><div style="min-width:0"><div class="k">Rework</div><div class="v">${efFh(rw)}<small>h</small></div><div class="s ${rw?"late":""}">${rw?efPct(rw,tot)+"% — hours logged while in Bug":"none — never bounced"}</div></div></div>
-      <div class="ck-unit ins"><canvas data-k="last"></canvas><div style="min-width:0"><div class="k">Last worked</div><div class="v">${last?efWdd(last.date):"—"}</div><div class="s">${last?efFh(efSum(es.filter(e=>e.date===last.date)))+" h · "+esc(last.activity):"never"}</div></div></div></div>
-    ${es.length?`<div class="ck-unit"><div class="ck-head"><h2>Days on it</h2><span class="ck-meta">a column per week · size = hours that day · ring = today · hollow = holiday or leave</span></div><canvas class="ef-dcal"></canvas></div>`:""}
+      <div class="ck-unit ins"><canvas data-k="est" data-still="3000"></canvas><div style="min-width:0"><div class="k">Logged vs estimate</div><div class="v" id="efEstV">${efFh(tot)}<small>${est?"/ "+efFh(est)+" h":"h"}</small></div><div class="s ${est&&tot>est?"late":""}">${est?(tot>est?efFh(tot-est)+" h over":efFh(est-tot)+" h left"):"no estimate"} · <a href="#" class="ef-est">${est?"change":"set one"}</a></div></div></div>
+      <div class="ck-unit ins"><canvas data-k="days" data-still="3000"></canvas><div style="min-width:0"><div class="k">Days worked</div><div class="v">${days.size}<small>days</small></div><div class="s">${days.size?"avg "+efFh(Math.round(tot/days.size*10)/10)+" h on a day you touched it":"nothing logged yet"}</div></div></div>
+      <div class="ck-unit ins"><canvas data-k="rw" data-still="3000"></canvas><div style="min-width:0"><div class="k">Rework</div><div class="v">${efFh(rw)}<small>h</small></div><div class="s ${rw?"late":""}">${rw?efPct(rw,tot)+"% — hours logged while in Bug":"none — never bounced"}</div></div></div>
+      <div class="ck-unit ins"><canvas data-k="last" data-still="3000"></canvas><div style="min-width:0"><div class="k">Last worked</div><div class="v">${last?efWdd(last.date):"—"}</div><div class="s">${last?efFh(efSum(es.filter(e=>e.date===last.date)))+" h · "+esc(last.activity):"never"}</div></div></div></div>
+    ${es.length?`<div class="ck-unit"><div class="ck-head"><h2>Days on it</h2><span class="ck-meta">a column per week · size = hours that day · ring = today · hollow = holiday or leave</span></div><canvas class="ef-dcal" data-still="0"></canvas></div>`:""}
     ${es.length?`<div class="ck-unit"><div class="ck-head"><h2>Effort over its life</h2><span class="ck-meta">status above · a dot = ½ h, coloured by activity · line = running total${est?" against the estimate":""} · click a day</span></div>
-      <canvas class="ef-life"></canvas>
+      <canvas class="ef-life" data-still="1700"></canvas>
       <div class="ef-legend">${EF_DEMAND_ACTS.filter(a=>es.some(e=>e.activity===a)).map(a=>`<span><span class="ef-pd" style="--pen:var(--${EF_ACTC[a]})"></span>${a}</span>`).join("")}${est?`<span style="margin-left:auto"><span style="width:14px;border-top:1px dashed var(--ink-3)"></span>estimate</span>`:""}</div></div>`:""}
     <div class="ef-gw">
       <div class="ck-unit"><div class="ck-head"><h2>Log</h2><span class="ck-meta">${es.length} entr${es.length===1?"y":"ies"} · by week · hover to edit</span></div><div id="efLog"></div></div>
@@ -272,7 +272,7 @@ function renderEffortTab(body,t){
     /* as many weeks as fit at a readable dot size, up to a year */
     DK.scope(cv,(c,w,h,tm,dt,s)=>{const C=efC(cv),wk=Math.max(8,Math.min(52,Math.floor((w-20)/15)));V2.dotCalendar(c,C,0,0,w,h,vals.slice(-wk*7),C[efPen(t.id)]||C.ink);});}}
   body.querySelectorAll(".ef-ins canvas").forEach(cv=>{const k=cv.dataset.k,f=frac[k],sv={v:motionOn()?0:f};
-    DK.scope(cv,(c,w,h)=>{const C=efC(cv);sv.v+=(f-sv.v)*.06;
+    DK.scope(cv,(c,w,h,tm,dt)=>{const C=efC(cv);sv.v+=(f-sv.v)*DK.ease(dt,.06);
       if(k==="est")efArc(c,w/2,h/2+4,w/2-5,Math.min(1,sv.v),24,est&&tot>est?C.bad:C.good,C);
       else if(k==="last")efArc(c,w/2,h/2+4,w/2-5,sv.v,22,since<=3?C.good:since<=10?C.watch:C["ink-3"],C);
       else efRingDots(c,w/2,h/2,w/2-5,sv.v,30,k==="rw"?C.bad:C["pen-2"],C);});});
@@ -380,7 +380,7 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
         ${rg==="cu"?`<span class="ef-row"><input type="date" id="efCuF" value="${A.RG.from}" style="width:150px"><span class="faint">–</span><input type="date" id="efCuT" value="${A.RG.to}" style="width:150px"></span>`:""}
         <div class="ef-sg" id="efGp"><span class="cap">Group by</span>${Object.entries(EF_GROUPS).map(([k,v])=>`<button data-k="${k}" class="${k===g?"on":""}">${v}</button>`).join("")}</div>
         <button class="sm" id="efOffB" title="Public holidays and leave — days that never count as missing a log">🏖 Days off</button><button class="sm" id="efCsv" title="Every entry ever logged, as a spreadsheet">⬇ CSV</button><button class="sm primary" id="efLogB">⏱ Log time</button></div></div>
-    ${roHTML([{k:"Logged",v:`<canvas class="mxr" id="efMxR" data-v="${efFh(Math.round(total))}" style="width:${V2.mxW(efFh(Math.round(total)),22)}px;height:22px" title="${efFh(total)} h"></canvas>`+`<small>h</small>`+(prev?`<small class="${delta>=0?"ef-good":"ef-bad"}">${delta>=0?"▲":"▼"} ${Math.abs(delta)}% vs previous</small>`:"")},
+    ${roHTML([{k:"Logged",v:`<canvas class="mxr" id="efMxR" data-still="1000" data-v="${efFh(Math.round(total))}" style="width:${V2.mxW(efFh(Math.round(total)),22)}px;height:22px" title="${efFh(total)} h"></canvas>`+`<small>h</small>`+(prev?`<small class="${delta>=0?"ef-good":"ef-bad"}">${delta>=0?"▲":"▼"} ${Math.abs(delta)}% vs previous</small>`:"")},
       {k:"Per worked day",v:U(efFh(Math.round(total/Math.max(1,worked)*10)/10),"h")},
       {k:"Days logged",v:U(worked,"/ "+wdays.length+" working")},
       {k:"Demand work",v:U(efPct(dem,total),"% · "+nDem+" demand"+(nDem===1?"":"s"))},
@@ -388,10 +388,10 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
       {k:"Days with no log",v:String(unl.length),cls:unl.length?"bad":""}])}
     <div class="ck-unit"><div class="ck-head"><h2>Noticed</h2><span class="ck-meta">worked out from your log</span></div><div id="efNoticed"></div></div>
     <div class="ef-lgrow"><span class="ef-lb" style="margin:0">${EF_GROUPS[g]}s · click to focus${g==="demand"?" · double-click to open":""}</span>${A.keys.map(k=>{const m=efGMeta(k);return `<button class="ef-lgi ${efFocus===k?"on":efFocus?"off":""}" data-k="${esc(k)}" style="--pen:var(--${m.col})" title="${esc(m.sub||"")}"><span class="ef-pd"></span>${esc(m.l)}<b>${efFh(A.tot.get(k))}</b></button>`;}).join("")}</div>
-    <div class="ck-unit"><div class="ck-head"><h2>26 weeks in dots</h2><span class="ck-meta">a dial per day · a dot = ½ h, a full ring = your working day · colours = where the hours went · red dots = a working day with no log · dotted rule = the range · click a day</span></div><canvas class="ef-cal" id="efCal"></canvas></div>
+    <div class="ck-unit"><div class="ck-head"><h2>26 weeks in dots</h2><span class="ck-meta">a dial per day · a dot = ½ h, a full ring = your working day · colours = where the hours went · red dots = a working day with no log · dotted rule = the range · click a day</span></div><canvas class="ef-cal" id="efCal" data-still="1400"></canvas></div>
     <div class="ef-gw">
-      <div class="ck-unit"><div class="ck-head"><h2>Where the hours went</h2><span class="ck-meta">${A.mode==="day"?`per day · a dot = ½ h · dashed = ${efFh(EF_DAY)} h`:A.mode==="week"?`per week · a dot = 1 h · dashed = ${efFh(EF_DAY*5)} h`:`per month · a dot = 4 h · dashed = ${efFh(EF_DAY*21)} h`} · click a column</span></div><canvas class="ef-wkc" id="efWk"></canvas></div>
-      <div class="ck-unit"><div class="ck-head"><h2>Activity mix</h2><span class="ck-meta">${efFh(total)} h</span></div><div class="ef-mixw"><canvas id="efMix"></canvas><div>${efMixRows(A.R)}</div></div></div></div>
+      <div class="ck-unit"><div class="ck-head"><h2>Where the hours went</h2><span class="ck-meta">${A.mode==="day"?`per day · a dot = ½ h · dashed = ${efFh(EF_DAY)} h`:A.mode==="week"?`per week · a dot = 1 h · dashed = ${efFh(EF_DAY*5)} h`:`per month · a dot = 4 h · dashed = ${efFh(EF_DAY*21)} h`} · click a column</span></div><canvas class="ef-wkc" id="efWk" data-still="2600"></canvas></div>
+      <div class="ck-unit"><div class="ck-head"><h2>Activity mix</h2><span class="ck-meta">${efFh(total)} h</span></div><div class="ef-mixw"><canvas id="efMix" data-still="2000"></canvas><div>${efMixRows(A.R)}</div></div></div></div>
     <div class="ck-unit" id="efSheet"></div>
     <div class="ef-g3">
       <div class="ck-unit"><div class="ck-head"><h2>Estimate vs actual</h2><span class="ck-meta">whole life · demands in range</span></div>${efEstRows(A)}</div>
@@ -407,7 +407,7 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
    const cf=host.querySelector("#efCuF");if(cf){const ch=()=>{const f=cf.value,t=host.querySelector("#efCuT").value;if(f&&t&&f<=t){setViewPref("ef.from",f);setViewPref("ef.to",t);renderEffortWS();}};cf.onchange=ch;host.querySelector("#efCuT").onchange=ch;}}
   host.querySelectorAll("#efGp button").forEach(b=>b.onclick=()=>{setViewPref("ef.group",b.dataset.k);efFocus=null;renderEffortWS();});
   host.querySelector("#efLogB").onclick=()=>openLogTime();host.querySelector("#efOffB").onclick=()=>openDaysOff();host.querySelector("#efCsv").onclick=efCSV;
-  host.querySelectorAll(".ef-lgi").forEach(b=>{b.onclick=()=>{efFocus=efFocus===b.dataset.k?null:b.dataset.k;host.querySelectorAll(".ef-lgi").forEach(x=>{x.classList.toggle("on",x.dataset.k===efFocus);x.classList.toggle("off",!!efFocus&&x.dataset.k!==efFocus);});};
+  host.querySelectorAll(".ef-lgi").forEach(b=>{b.onclick=()=>{efFocus=efFocus===b.dataset.k?null:b.dataset.k;DK.wake();host.querySelectorAll(".ef-lgi").forEach(x=>{x.classList.toggle("on",x.dataset.k===efFocus);x.classList.toggle("off",!!efFocus&&x.dataset.k!==efFocus);});};
     b.ondblclick=()=>{if(efG()==="demand"&&efTaskOf(b.dataset.k))openDemand(b.dataset.k);};});
   host.querySelectorAll(".ef-erow[data-id]").forEach(r=>r.onclick=()=>openDemand(r.dataset.id));
   host.querySelectorAll("#efNoticed [data-act]").forEach(b=>b.onclick=()=>efNoticeActs[+b.dataset.act]());

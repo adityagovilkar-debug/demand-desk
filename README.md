@@ -8,6 +8,12 @@ rights, fully offline, portable.**
 Double-click `DemandDesk.html`. It opens in your default browser (use **Edge**
 or **Chrome** for the best file experience). Nothing to install.
 
+**For changes to the app** (not needed to use it): the source lives in `src/` — the
+page shell, the styles in `src/css/` and the code in `src/js/`, one file per area.
+`python build.py` assembles them into the single `DemandDesk.html`;
+`python build.py --check` confirms the built file matches the source. Edit `src/`,
+never the built file.
+
 ## Appearance
 **Bench is the default look** — the Instrument aesthetic from the Bench utility
 cockpit, in **Paper** (light) and **Backlit** (dark), with the **Instrument v2**
@@ -175,7 +181,11 @@ Click any item to jump straight to it.
   never read or written. It upgrades old-format data and checks no text is lost and
   a second upgrade changes nothing; checks the numbers the app shows (rework, rounds,
   hours, review totals, transports and ToCs, clashes, shared ticket IDs, meeting
-  time…); then opens every page, demand tab, epic tab and dialog in all six themes.
+  time…); checks behaviour — the file round-trips with a master password (and not
+  without it), a data file changed by something else is noticed, the newer browser
+  backup wins, Undo brings a deleted entry back, the main dialogs do what they say,
+  and moving a delivered demand back from ✎ Edit asks why; then opens every page,
+  demand tab, epic tab and dialog in all six themes.
   A green or red report lists anything that broke (**⧉ Copy report** to send it on).
   Takes about 15 seconds — run it after every update, on the work laptop too.
 - **Newer-data guard** — every data file records the format version that wrote it.
@@ -190,8 +200,10 @@ Click any item to jump straight to it.
   work.
 - **Local backup store** — uses **IndexedDB** when available (large, sturdier),
   automatically **falling back to localStorage** if IndexedDB is blocked (e.g. on
-  a locked-down machine). Either way it's just a safety mirror; the `.json` file
-  you Save is the source of truth. The ⋯ menu shows which store is in use.
+  a locked-down machine). It's written about a second after you stop changing
+  things, and at once when the window is hidden or closed; each copy is
+  time-stamped and the newer one is used. Either way it's just a safety mirror; the
+  `.json` file you Save is the source of truth. The ⋯ menu shows which store is in use.
 - **Remember my file (🔌 Reconnect)** — when supported, the app remembers the
   `.json` you last used. On the next launch a **🔌 Reconnect** button appears in
   the header; one click (and a one-time browser "Allow") re-links it so Ctrl+S

@@ -80,7 +80,7 @@ function renderEpicEffort(body,e){const all=epicEfforts(e).sort((a,b)=>a.date.lo
       {k:"Rework",v:U(efFh(rwH),"h"),cls:rwH?"bad":"",title:"Hours logged while a demand was in Bug"},
       {k:"Changed requirements",v:U(efFh(chH),"h"),title:"Hours in round 2 or later — not rework"}])}
     <div class="ck-unit"><div class="ck-head"><h2>Log time on the epic itself</h2><span class="ck-meta">calls, planning, chasing other teams — work that belongs to no single demand</span></div><div id="epQc"></div></div>
-    <div class="ck-unit"><div class="ck-head"><h2>Month by month</h2><span class="ck-meta">the epic's whole life · coloured by demand · ◆ epic-level · click a month</span></div><canvas class="ep-months" id="epMonths"></canvas></div>
+    <div class="ck-unit"><div class="ck-head"><h2>Month by month</h2><span class="ck-meta">the epic's whole life · coloured by demand · ◆ epic-level · click a month</span></div><canvas class="ep-months" id="epMonths" data-still="1600"></canvas></div>
     <div class="ef-gw">
       <div class="ef-stack">
         <div class="ck-unit"><div class="ck-head"><h2>By demand</h2><span class="ck-meta">${esc(P.l)}${idle?` · ${idle} demand${idle===1?"":"s"} with no hours`:""}</span></div>

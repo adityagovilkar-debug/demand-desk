@@ -26,7 +26,8 @@ document.addEventListener("keydown",e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();gs.focus();}
   if(e.altKey&&!e.ctrlKey&&!e.metaKey&&e.key.toLowerCase()==="n"){e.preventDefault();view="demands";renderApp();openTaskModal(null);}
 });
-window.addEventListener("beforeunload",e=>{flushEdits();if(dirty){e.preventDefault();e.returnValue="";}});
+window.addEventListener("beforeunload",e=>{flushEdits();flushBackup();if(dirty){e.preventDefault();e.returnValue="";}});
+document.addEventListener("visibilitychange",()=>{if(document.hidden)flushBackup();});
 
 /* ---------- never lose half-typed text ----------
    Fields commit on "change", which only fires when you leave the field. Text typed but

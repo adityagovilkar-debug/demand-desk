@@ -999,10 +999,12 @@ function openTaskModal(existing){
   root.querySelector("#m-save").onclick=()=>{const g=id=>root.querySelector(id).value;
     const won=g("#m-wait").trim();let wsince=g("#m-waitsince");if(won&&!wsince)wsince=todayStr();if(!won)wsince="";
     const data={demandId:g("#m-demand").trim(),type:g("#m-type"),title:g("#m-title").trim()||"(untitled)",requestor:g("#m-req").trim(),epicId:g("#m-epic"),wave:g("#m-wave").trim(),system:g("#m-sys"),client:g("#m-client"),project:g("#m-proj").trim(),theme:g("#m-theme").trim(),waiting:{on:won,since:wsince},receivedDate:g("#m-rec"),dueDate:g("#m-due"),status:g("#m-status"),description:g("#m-desc")};
+    /* a delivered or closed demand moving back: save the rest, then ask why, as the status buttons do */
+    const back=existing&&needsComeback(existing,data.status)?data.status:null;if(back)data.status=existing.status;
     if(existing){if(existing.status!==data.status)logTimeline(existing,"status",existing.status,data.status);Object.assign(existing,data);setBuilders(existing,bsel);touch(existing);}
     else{const nt={id:uid(),...data,builders:[...new Set(bsel)],goliveTarget:"",nextAction:{date:"",note:""},notes:"",timeline:[],subtasks:[],objects:[],transports:[],tocs:[],comments:[],reference:[],createdAt:Date.now(),updatedAt:Date.now()};
       logTimeline(nt,"status","",data.status);state.tasks.push(nt);activeId=nt.id;markDirty();}
-    close();renderApp();};
+    close();renderApp();if(back)openComeback(existing,back,()=>renderApp(),()=>renderApp());};
 }
 function clientsUsedFor(sysId){return [...new Set(state.tasks.filter(t=>t.system===sysId&&t.client).map(t=>t.client))].sort();}
 function distinctVals(field){return [...new Set(state.tasks.map(t=>t[field]).filter(Boolean))].sort();}

@@ -29,19 +29,31 @@ const DK=(()=>{
     if((m=col.match(/^#([0-9a-f]{3})$/i)))col="#"+m[1].split("").map(x=>x+x).join("");
     if((m=col.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i)))return `rgba(${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)},${a})`;
     if((m=col.match(/^rgba?\(([^)]+)\)/)))return `rgba(${m[1].split(",").slice(0,3).join(",")},${a})`;return col;}
-  function scope(cv,draw,opts={}){if(!cv)return null;const s={cv,draw,ctx:cv.getContext("2d"),w:0,h:0,keep:!!opts.keep,dead:false,born:performance.now(),data:opts.data};scopes.push(s);return s;}
-  let last=performance.now();
-  function frame(t){const dt=Math.min(64,t-last);last=t;const dpr=window.devicePixelRatio||1;
+  /* A chart whose drawing settles says so with data-still="ms" on its canvas (or opts.still): once that long
+     after it appears it is left as drawn, and redrawn only on a resize, a theme change, or wake() — the
+     pointer moving over it, a focus change. Canvases without it keep animating. */
+  function scope(cv,draw,opts={}){if(!cv)return null;const st=opts.still!=null?opts.still:cv.dataset.still!=null?+cv.dataset.still:null;
+    const s={cv,draw,ctx:cv.getContext("2d"),w:0,h:0,keep:!!opts.keep,dead:false,born:performance.now(),data:opts.data,still:st,dirty:false};scopes.push(s);return s;}
+  /* the share of the way to move this frame, for an easing tuned at 60 fps: frame-rate independent */
+  const ease=(dt,k)=>1-Math.pow(1-k,(dt||16.7)/16.7);
+  function wake(cv){scopes.forEach(s=>{if(!cv||s.cv===cv)s.dirty=true;});}
+  /* one loop, capped like Bench: 30 frames a second while the window has focus, 10 behind other windows,
+     none while hidden; animations run on elapsed time, so a lower rate only looks calmer */
+  let last=performance.now(),lastDraw=0;
+  function frame(t){requestAnimationFrame(frame);
+    if(document.hidden){last=t;return;}
+    if(t-lastDraw<(document.hasFocus()?1000/30-2:1000/10-2))return;lastDraw=t;
+    const dt=Math.min(120,t-last);last=t;const dpr=window.devicePixelRatio||1;
     for(let i=scopes.length-1;i>=0;i--){const s=scopes[i];
       if(s.dead||!s.cv.isConnected){scopes.splice(i,1);continue;}
       if(s.cv.offsetParent===null)continue;
       const w=s.cv.clientWidth,h=s.cv.clientHeight;if(!w||!h)continue;
       if(w!==s.w||h!==s.h){s.w=w;s.h=h;s.cv.width=Math.round(w*dpr);s.cv.height=Math.round(h*dpr);s.fresh=true;}
+      if(s.still!=null&&t-s.born>s.still+100&&!s.fresh&&!s.dirty)continue;
       s.ctx.setTransform(dpr,0,0,dpr,0,0);if(!s.keep)s.ctx.clearRect(0,0,w,h);s.ctx.globalAlpha=1;
-      try{s.draw(s.ctx,w,h,t,dt,s);}catch(e){console.error(e);s.dead=true;}s.fresh=false;}
-    requestAnimationFrame(frame);}
+      try{s.draw(s.ctx,w,h,t,dt,s);}catch(e){console.error(e);s.dead=true;}s.fresh=false;s.dirty=false;}}
   requestAnimationFrame(frame);
-  return{TAU,C,readColors,dot,ring,dotArc,dotRing,label,rng,scope,fade,get MONO(){return MONO;}};
+  return{TAU,C,readColors,dot,ring,dotArc,dotRing,label,rng,scope,wake,ease,fade,get MONO(){return MONO;},get scopes(){return scopes;}};
 })();
 /* ---------- Instrument v2 (the Field Guide picks) — ported from Bench's dots.js "V2" section.
    Every piece carries a value or a state; every one resolves to its final frame when motion is off.
@@ -278,7 +290,7 @@ function cockpitHTML(){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>Math.m
       <div class="ck-unit"><div class="ck-head"><h2>Epics</h2><span class="ck-meta">${eps.length} active</span></div>
         ${eps.length?eps.map(e=>{const r=epicRollup(e),fu=epicFollowUps(e).length;return `<div class="ck-ep" data-e="${e.id}"><canvas></canvas><div style="min-width:0"><div class="ec">◆ ${esc(e.code||"EPIC")} · ${e.role==="contributor"?"contributor":"lead"}</div><div class="en">${esc(e.name)}</div>
           <div class="es">${r.done}/${r.ts.length} demands done${e.targetDate?" · target "+e.targetDate:""}${fu?` · <b>${fu} follow-up${fu>1?"s":""} due</b>`:""}</div></div></div>`;}).join(""):`<div class="ck-empty">No active epics.</div>`}</div>
-      <div class="ck-unit"><div class="ck-head"><h2>Next 10 weeks</h2><span class="ck-meta">freezes · recurring · due · next actions</span></div><canvas id="ckCal" style="width:100%;height:158px;display:block"></canvas></div>
+      <div class="ck-unit"><div class="ck-head"><h2>Next 10 weeks</h2><span class="ck-meta">freezes · recurring · due · next actions</span></div><canvas id="ckCal" data-still="1700" style="width:100%;height:158px;display:block"></canvas></div>
     </div>`;}
 function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU}=DK;
   const q=s=>host.querySelector(s),goView=v=>{dvSet(v);view="demands";renderApp();};
@@ -314,9 +326,9 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
       ctx.globalAlpha=.35;ctx.fillStyle=g;ctx.fillRect(0,0,fw,h);},{keep:true});}
   /* tiles */
   const tiles=host.querySelectorAll(".ck-tile");tiles.forEach(el=>el.onclick=()=>goView(CK_TILES[+el.dataset.i].view));
-  {const st={v:mv?0:1};scope(tiles[0].querySelector("canvas"),(ctx,w,h,t)=>{
+  {const st={v:mv?0:1};scope(tiles[0].querySelector("canvas"),(ctx,w,h,t,dt)=>{
     const segs=["bug","progress","open","delivered"].map(s=>[s,state.tasks.filter(x=>x.status===s).length]),tot=Math.max(1,segs.reduce((n,x)=>n+x[1],0));
-    st.v+=(1-st.v)*.05;const n=72,R=Math.min(w,h)/2-8,cx=w/2+18,cy=h/2,spin=mv?t*.00004:0;
+    st.v+=(1-st.v)*DK.ease(dt,.05);const n=72,R=Math.min(w,h)/2-8,cx=w/2+18,cy=h/2,spin=mv?t*.00004:0;
     for(let i=0;i<n;i++){const f=i/n,a=-Math.PI/2+f*TAU+spin;let pen=null,run=0;for(const [s,k] of segs){run+=k/tot;if(f<run){pen=STATUS_CK[s];break;}}
       const x=cx+Math.cos(a)*R,y=cy+Math.sin(a)*R;if(pen&&f<st.v&&state.tasks.length)dot(ctx,x,y,2,C[pen],.9);else dot(ctx,x,y,1.05,C["ink-4"]);}
     label(ctx,String(state.tasks.filter(x=>["open","progress","bug"].includes(x.status)).length),cx,cy-5,{font:DK.MONO,size:24,weight:600,color:C.ink});
@@ -337,8 +349,8 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
       if(i<4){const right=Math.cos(a)>=0;label(ctx,o.tk.demandId||o.tk.title.slice(0,8),x+(right?7:-7),y,{font:DK.MONO,size:8.5,weight:500,align:right?"left":"right",color:C["ink-2"]});}});
     if(L.length>4)label(ctx,"+"+(L.length-4)+" more",cx,h-4,{font:DK.MONO,size:8,weight:400,color:C["ink-3"]});
     dot(ctx,cx,cy,1.6,C.ink);});
-  {const st={f:0};scope(tiles[2].querySelector("canvas"),(ctx,w,h)=>{
-    const m=state.tasks.filter(isWaiting).reduce((x,t)=>Math.max(x,waitDays(t)||0),0);st.f=mv?st.f+(Math.min(1,m/30)-st.f)*.05:Math.min(1,m/30);
+  {const st={f:0};scope(tiles[2].querySelector("canvas"),(ctx,w,h,t,dt)=>{
+    const m=state.tasks.filter(isWaiting).reduce((x,t)=>Math.max(x,waitDays(t)||0),0);st.f=mv?st.f+(Math.min(1,m/30)-st.f)*DK.ease(dt,.05):Math.min(1,m/30);
     const cx=w/2,cy=h/2+10,R=Math.min(w/2,h/1.55)-6;dotArc(ctx,cx,cy,R,st.f,40,m>=30?C.bad:C["pen-4"]);
     label(ctx,`${Math.round(st.f*30)}${m>30?"+":""} d`,cx,cy+18,{font:DK.MONO,size:15,weight:600,color:C.ink});label(ctx,"OF 30 D",cx,cy+33,{size:7.5,spacing:2});});}
   /* go-live: how many transports wait at each system of your two busiest landscapes; a dot travels on
@@ -392,7 +404,7 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
   q("#ckPipeU").onclick=()=>{if(pipeRec&&pipeRec.hv)return;goView(CK_TILES[3].view);};
   /* epic rings */
   host.querySelectorAll(".ck-ep").forEach(el=>{const e=epicById(el.dataset.e);if(!e)return;const r=epicRollup(e),f=r.ts.length?r.done/r.ts.length:0,st={v:mv?0:f};
-    scope(el.querySelector("canvas"),(ctx,w,h,t)=>{st.v+=(f-st.v)*.04;dotRing(ctx,w/2,h/2,w/2-5,st.v,32,C["pen-5"],mv?t*.00008:0);
+    scope(el.querySelector("canvas"),(ctx,w,h,t,dt)=>{st.v+=(f-st.v)*DK.ease(dt,.04);dotRing(ctx,w/2,h/2,w/2-5,st.v,32,C["pen-5"],mv?t*.00008:0);
       label(ctx,Math.round(st.v*100)+"%",w/2,h/2,{font:DK.MONO,size:10,color:C.ink});});});
   /* 10-week calendar: freezes, recurring duties, due dates, next actions */
   scope(q("#ckCal"),(ctx,w,h,t,dt,s)=>{const W=10,cw=(w-40)/W,ch=(h-30)/7,start=new Date(today+"T00:00:00");start.setDate(start.getDate()-((start.getDay()+6)%7));

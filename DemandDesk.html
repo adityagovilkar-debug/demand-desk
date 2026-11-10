@@ -1863,21 +1863,31 @@ async function initStore(){
   }catch(e){}}
 }
 
-/* ---------- backup (writes localStorage always + IndexedDB when available) ---------- */
-let encBackupTimer=null;
-function persistBackup(str){
-  try{localStorage.setItem(LS_KEY,str);localStorage.setItem(LS_HANDLE_HINT,"1");}catch(e){/* e.g. 5MB quota full — IndexedDB still covers it */}
-  if(useIdb){idbSet("backup",str).catch(()=>{});idbSet("hadfile","1").catch(()=>{});}
+/* ---------- browser backup ----------
+   Written about a second after changes stop (not on every change), to IndexedDB when the browser has it,
+   else to localStorage. When the window hides or closes it is written at once — and to localStorage too,
+   because that write can't be cut short. Each copy carries the time it was taken, and loading uses the
+   newer of the two. */
+let backupTimer=null;
+const LS_AT=LS_KEY+".at";
+function persistBackup(str,closing){const at=Date.now();
+  if(!useIdb||closing){try{localStorage.setItem(LS_KEY,str);localStorage.setItem(LS_AT,String(at));}catch(e){/* e.g. 5MB quota full — IndexedDB still covers it */}}
+  try{localStorage.setItem(LS_HANDLE_HINT,"1");}catch(e){}
+  if(useIdb){idbSet("backup",str).catch(()=>{});idbSet("backupAt",at).catch(()=>{});idbSet("hadfile","1").catch(()=>{});}
 }
-function backupLocal(){
+async function backupNow(closing){clearTimeout(backupTimer);backupTimer=null;
   if(!safeToPersist())return; /* never let a corrupt/emptied state clobber the good backup */
-  if(isEncrypted()){clearTimeout(encBackupTimer);encBackupTimer=setTimeout(async()=>{if(!safeToPersist())return;try{persistBackup(await encryptStateStr(masterPassword));}catch(e){}},1000);return;}
-  persistBackup(JSON.stringify(state));
-}
+  try{persistBackup(isEncrypted()?await encryptStateStr(masterPassword):JSON.stringify(state),closing);}catch(e){}}
+function backupLocal(){if(!safeToPersist())return;clearTimeout(backupTimer);backupTimer=setTimeout(()=>backupNow(false),1000);}
+/* the window is going away or out of sight: don't leave a pending backup behind */
+function flushBackup(){if(backupTimer)backupNow(true);}
+/* the newer of the two browser copies ({raw, at}); with no times, IndexedDB's as before */
+function pickBackup(idb,ls){if(idb.raw==null)return ls.raw;if(ls.raw==null)return idb.raw;return (+ls.at||0)>(+idb.at||0)?ls.raw:idb.raw;}
 async function loadBackup(){
-  let raw=null;
-  if(useIdb){try{const v=await idbGet("backup");if(v!=null)raw=v;}catch(e){}}
-  if(raw==null){try{raw=localStorage.getItem(LS_KEY);}catch(e){}}
+  const idb={raw:null,at:0},ls={raw:null,at:0};
+  if(useIdb){try{const v=await idbGet("backup");if(v!=null){idb.raw=v;idb.at=+(await idbGet("backupAt"))||0;}}catch(e){}}
+  try{ls.raw=localStorage.getItem(LS_KEY);ls.at=+localStorage.getItem(LS_AT)||0;}catch(e){}
+  const raw=pickBackup(idb,ls);
   if(raw==null)return false;
   try{const p=JSON.parse(raw);if(p&&p._encrypted){pendingEncrypted=p;return "encrypted";}
     if(!p||typeof p!=="object"||!Array.isArray(p.tasks))throw new Error("not Demand Desk data");
@@ -3759,10 +3769,12 @@ function openTaskModal(existing){
   root.querySelector("#m-save").onclick=()=>{const g=id=>root.querySelector(id).value;
     const won=g("#m-wait").trim();let wsince=g("#m-waitsince");if(won&&!wsince)wsince=todayStr();if(!won)wsince="";
     const data={demandId:g("#m-demand").trim(),type:g("#m-type"),title:g("#m-title").trim()||"(untitled)",requestor:g("#m-req").trim(),epicId:g("#m-epic"),wave:g("#m-wave").trim(),system:g("#m-sys"),client:g("#m-client"),project:g("#m-proj").trim(),theme:g("#m-theme").trim(),waiting:{on:won,since:wsince},receivedDate:g("#m-rec"),dueDate:g("#m-due"),status:g("#m-status"),description:g("#m-desc")};
+    /* a delivered or closed demand moving back: save the rest, then ask why, as the status buttons do */
+    const back=existing&&needsComeback(existing,data.status)?data.status:null;if(back)data.status=existing.status;
     if(existing){if(existing.status!==data.status)logTimeline(existing,"status",existing.status,data.status);Object.assign(existing,data);setBuilders(existing,bsel);touch(existing);}
     else{const nt={id:uid(),...data,builders:[...new Set(bsel)],goliveTarget:"",nextAction:{date:"",note:""},notes:"",timeline:[],subtasks:[],objects:[],transports:[],tocs:[],comments:[],reference:[],createdAt:Date.now(),updatedAt:Date.now()};
       logTimeline(nt,"status","",data.status);state.tasks.push(nt);activeId=nt.id;markDirty();}
-    close();renderApp();};
+    close();renderApp();if(back)openComeback(existing,back,()=>renderApp(),()=>renderApp());};
 }
 function clientsUsedFor(sysId){return [...new Set(state.tasks.filter(t=>t.system===sysId&&t.client).map(t=>t.client))].sort();}
 function distinctVals(field){return [...new Set(state.tasks.map(t=>t[field]).filter(Boolean))].sort();}
@@ -5499,19 +5511,31 @@ const DK=(()=>{
     if((m=col.match(/^#([0-9a-f]{3})$/i)))col="#"+m[1].split("").map(x=>x+x).join("");
     if((m=col.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i)))return `rgba(${parseInt(m[1],16)},${parseInt(m[2],16)},${parseInt(m[3],16)},${a})`;
     if((m=col.match(/^rgba?\(([^)]+)\)/)))return `rgba(${m[1].split(",").slice(0,3).join(",")},${a})`;return col;}
-  function scope(cv,draw,opts={}){if(!cv)return null;const s={cv,draw,ctx:cv.getContext("2d"),w:0,h:0,keep:!!opts.keep,dead:false,born:performance.now(),data:opts.data};scopes.push(s);return s;}
-  let last=performance.now();
-  function frame(t){const dt=Math.min(64,t-last);last=t;const dpr=window.devicePixelRatio||1;
+  /* A chart whose drawing settles says so with data-still="ms" on its canvas (or opts.still): once that long
+     after it appears it is left as drawn, and redrawn only on a resize, a theme change, or wake() — the
+     pointer moving over it, a focus change. Canvases without it keep animating. */
+  function scope(cv,draw,opts={}){if(!cv)return null;const st=opts.still!=null?opts.still:cv.dataset.still!=null?+cv.dataset.still:null;
+    const s={cv,draw,ctx:cv.getContext("2d"),w:0,h:0,keep:!!opts.keep,dead:false,born:performance.now(),data:opts.data,still:st,dirty:false};scopes.push(s);return s;}
+  /* the share of the way to move this frame, for an easing tuned at 60 fps: frame-rate independent */
+  const ease=(dt,k)=>1-Math.pow(1-k,(dt||16.7)/16.7);
+  function wake(cv){scopes.forEach(s=>{if(!cv||s.cv===cv)s.dirty=true;});}
+  /* one loop, capped like Bench: 30 frames a second while the window has focus, 10 behind other windows,
+     none while hidden; animations run on elapsed time, so a lower rate only looks calmer */
+  let last=performance.now(),lastDraw=0;
+  function frame(t){requestAnimationFrame(frame);
+    if(document.hidden){last=t;return;}
+    if(t-lastDraw<(document.hasFocus()?1000/30-2:1000/10-2))return;lastDraw=t;
+    const dt=Math.min(120,t-last);last=t;const dpr=window.devicePixelRatio||1;
     for(let i=scopes.length-1;i>=0;i--){const s=scopes[i];
       if(s.dead||!s.cv.isConnected){scopes.splice(i,1);continue;}
       if(s.cv.offsetParent===null)continue;
       const w=s.cv.clientWidth,h=s.cv.clientHeight;if(!w||!h)continue;
       if(w!==s.w||h!==s.h){s.w=w;s.h=h;s.cv.width=Math.round(w*dpr);s.cv.height=Math.round(h*dpr);s.fresh=true;}
+      if(s.still!=null&&t-s.born>s.still+100&&!s.fresh&&!s.dirty)continue;
       s.ctx.setTransform(dpr,0,0,dpr,0,0);if(!s.keep)s.ctx.clearRect(0,0,w,h);s.ctx.globalAlpha=1;
-      try{s.draw(s.ctx,w,h,t,dt,s);}catch(e){console.error(e);s.dead=true;}s.fresh=false;}
-    requestAnimationFrame(frame);}
+      try{s.draw(s.ctx,w,h,t,dt,s);}catch(e){console.error(e);s.dead=true;}s.fresh=false;s.dirty=false;}}
   requestAnimationFrame(frame);
-  return{TAU,C,readColors,dot,ring,dotArc,dotRing,label,rng,scope,fade,get MONO(){return MONO;}};
+  return{TAU,C,readColors,dot,ring,dotArc,dotRing,label,rng,scope,wake,ease,fade,get MONO(){return MONO;},get scopes(){return scopes;}};
 })();
 /* ---------- Instrument v2 (the Field Guide picks) — ported from Bench's dots.js "V2" section.
    Every piece carries a value or a state; every one resolves to its final frame when motion is off.
@@ -5748,7 +5772,7 @@ function cockpitHTML(){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>Math.m
       <div class="ck-unit"><div class="ck-head"><h2>Epics</h2><span class="ck-meta">${eps.length} active</span></div>
         ${eps.length?eps.map(e=>{const r=epicRollup(e),fu=epicFollowUps(e).length;return `<div class="ck-ep" data-e="${e.id}"><canvas></canvas><div style="min-width:0"><div class="ec">◆ ${esc(e.code||"EPIC")} · ${e.role==="contributor"?"contributor":"lead"}</div><div class="en">${esc(e.name)}</div>
           <div class="es">${r.done}/${r.ts.length} demands done${e.targetDate?" · target "+e.targetDate:""}${fu?` · <b>${fu} follow-up${fu>1?"s":""} due</b>`:""}</div></div></div>`;}).join(""):`<div class="ck-empty">No active epics.</div>`}</div>
-      <div class="ck-unit"><div class="ck-head"><h2>Next 10 weeks</h2><span class="ck-meta">freezes · recurring · due · next actions</span></div><canvas id="ckCal" style="width:100%;height:158px;display:block"></canvas></div>
+      <div class="ck-unit"><div class="ck-head"><h2>Next 10 weeks</h2><span class="ck-meta">freezes · recurring · due · next actions</span></div><canvas id="ckCal" data-still="1700" style="width:100%;height:158px;display:block"></canvas></div>
     </div>`;}
 function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU}=DK;
   const q=s=>host.querySelector(s),goView=v=>{dvSet(v);view="demands";renderApp();};
@@ -5784,9 +5808,9 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
       ctx.globalAlpha=.35;ctx.fillStyle=g;ctx.fillRect(0,0,fw,h);},{keep:true});}
   /* tiles */
   const tiles=host.querySelectorAll(".ck-tile");tiles.forEach(el=>el.onclick=()=>goView(CK_TILES[+el.dataset.i].view));
-  {const st={v:mv?0:1};scope(tiles[0].querySelector("canvas"),(ctx,w,h,t)=>{
+  {const st={v:mv?0:1};scope(tiles[0].querySelector("canvas"),(ctx,w,h,t,dt)=>{
     const segs=["bug","progress","open","delivered"].map(s=>[s,state.tasks.filter(x=>x.status===s).length]),tot=Math.max(1,segs.reduce((n,x)=>n+x[1],0));
-    st.v+=(1-st.v)*.05;const n=72,R=Math.min(w,h)/2-8,cx=w/2+18,cy=h/2,spin=mv?t*.00004:0;
+    st.v+=(1-st.v)*DK.ease(dt,.05);const n=72,R=Math.min(w,h)/2-8,cx=w/2+18,cy=h/2,spin=mv?t*.00004:0;
     for(let i=0;i<n;i++){const f=i/n,a=-Math.PI/2+f*TAU+spin;let pen=null,run=0;for(const [s,k] of segs){run+=k/tot;if(f<run){pen=STATUS_CK[s];break;}}
       const x=cx+Math.cos(a)*R,y=cy+Math.sin(a)*R;if(pen&&f<st.v&&state.tasks.length)dot(ctx,x,y,2,C[pen],.9);else dot(ctx,x,y,1.05,C["ink-4"]);}
     label(ctx,String(state.tasks.filter(x=>["open","progress","bug"].includes(x.status)).length),cx,cy-5,{font:DK.MONO,size:24,weight:600,color:C.ink});
@@ -5807,8 +5831,8 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
       if(i<4){const right=Math.cos(a)>=0;label(ctx,o.tk.demandId||o.tk.title.slice(0,8),x+(right?7:-7),y,{font:DK.MONO,size:8.5,weight:500,align:right?"left":"right",color:C["ink-2"]});}});
     if(L.length>4)label(ctx,"+"+(L.length-4)+" more",cx,h-4,{font:DK.MONO,size:8,weight:400,color:C["ink-3"]});
     dot(ctx,cx,cy,1.6,C.ink);});
-  {const st={f:0};scope(tiles[2].querySelector("canvas"),(ctx,w,h)=>{
-    const m=state.tasks.filter(isWaiting).reduce((x,t)=>Math.max(x,waitDays(t)||0),0);st.f=mv?st.f+(Math.min(1,m/30)-st.f)*.05:Math.min(1,m/30);
+  {const st={f:0};scope(tiles[2].querySelector("canvas"),(ctx,w,h,t,dt)=>{
+    const m=state.tasks.filter(isWaiting).reduce((x,t)=>Math.max(x,waitDays(t)||0),0);st.f=mv?st.f+(Math.min(1,m/30)-st.f)*DK.ease(dt,.05):Math.min(1,m/30);
     const cx=w/2,cy=h/2+10,R=Math.min(w/2,h/1.55)-6;dotArc(ctx,cx,cy,R,st.f,40,m>=30?C.bad:C["pen-4"]);
     label(ctx,`${Math.round(st.f*30)}${m>30?"+":""} d`,cx,cy+18,{font:DK.MONO,size:15,weight:600,color:C.ink});label(ctx,"OF 30 D",cx,cy+33,{size:7.5,spacing:2});});}
   /* go-live: how many transports wait at each system of your two busiest landscapes; a dot travels on
@@ -5862,7 +5886,7 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
   q("#ckPipeU").onclick=()=>{if(pipeRec&&pipeRec.hv)return;goView(CK_TILES[3].view);};
   /* epic rings */
   host.querySelectorAll(".ck-ep").forEach(el=>{const e=epicById(el.dataset.e);if(!e)return;const r=epicRollup(e),f=r.ts.length?r.done/r.ts.length:0,st={v:mv?0:f};
-    scope(el.querySelector("canvas"),(ctx,w,h,t)=>{st.v+=(f-st.v)*.04;dotRing(ctx,w/2,h/2,w/2-5,st.v,32,C["pen-5"],mv?t*.00008:0);
+    scope(el.querySelector("canvas"),(ctx,w,h,t,dt)=>{st.v+=(f-st.v)*DK.ease(dt,.04);dotRing(ctx,w/2,h/2,w/2-5,st.v,32,C["pen-5"],mv?t*.00008:0);
       label(ctx,Math.round(st.v*100)+"%",w/2,h/2,{font:DK.MONO,size:10,color:C.ink});});});
   /* 10-week calendar: freezes, recurring duties, due dates, next actions */
   scope(q("#ckCal"),(ctx,w,h,t,dt,s)=>{const W=10,cw=(w-40)/W,ch=(h-30)/7,start=new Date(today+"T00:00:00");start.setDate(start.getDate()-((start.getDay()+6)%7));
@@ -6034,7 +6058,7 @@ function renderEpicOverviewBench(body,e,r){
   const story=epicStory(e),waves=waveOrder(r.ts),open=e.deps.filter(x=>!x.done).sort((a,b)=>(depFollowDue(e,b)?1:0)-(depFollowDue(e,a)?1:0)||(a.since||"9999").localeCompare(b.since||"9999"));
   const doneN=e.deps.length-open.length,today=todayStr();
   const depRow=x=>{const last=x.lastCheck||x.since,ago=last?Math.max(0,-daysUntil(last)):null,due=depFollowDue(e,x),snz=x.snoozeUntil&&x.snoozeUntil>today;
-    return `<div class="dep2 ${due?"due":""}" data-id="${x.id}"><canvas data-f="${ago==null?0:ago/e.followDays}" data-due="${due?1:0}" data-ago="${ago==null?"":ago}"></canvas>
+    return `<div class="dep2 ${due?"due":""}" data-id="${x.id}"><canvas data-still="3000" data-f="${ago==null?0:ago/e.followDays}" data-due="${due?1:0}" data-ago="${ago==null?"":ago}"></canvas>
       <div class="dep2-t"><div class="dn">${esc(x.team||"(which team?)")}</div><div class="dw">${esc(x.what||"")}</div>
         <div class="dm">${[x.since?`waiting ${Math.max(0,-daysUntil(x.since))} d`:"",ago!=null?`last contact ${ago} d ago`:"never chased",x.expected?`expected ${x.expected}`:""].filter(Boolean).join(" · ")}${due?` · <b>${esc(due)}</b>`:""}${snz?` · 💤 until ${x.snoozeUntil}`:""}</div></div>
       <div class="dep2-a"><button class="sm d2-check" title="You chased them — log it in the story">📞 Checked in</button><span><button class="sm ghost d2-snooze" title="Don't nudge me about this until later">💤</button><button class="sm ghost d2-done" title="They delivered">✓</button></span></div></div>`;};
@@ -6059,7 +6083,7 @@ function renderEpicOverviewBench(body,e,r){
     row.querySelector(".d2-snooze").onclick=()=>depSnooze(e,x);
     row.querySelector(".d2-done").onclick=()=>depDelivered(e,x);
     const cv=row.querySelector("canvas"),f=+cv.dataset.f,due=cv.dataset.due==="1",ago=cv.dataset.ago,st={v:motionOn()?0:Math.min(1,f)};
-    DK.scope(cv,(ctx,w,h)=>{st.v+=(Math.min(1,f)-st.v)*.06;DK.dotArc(ctx,w/2,h/2+5,Math.min(w/2,h/1.45)-4,st.v,26,due?DK.C.bad:DK.C.watch,1.8);
+    DK.scope(cv,(ctx,w,h,tm,dt)=>{st.v+=(Math.min(1,f)-st.v)*DK.ease(dt,.06);DK.dotArc(ctx,w/2,h/2+5,Math.min(w/2,h/1.45)-4,st.v,26,due?DK.C.bad:DK.C.watch,1.8);
       DK.label(ctx,ago===""?"—":ago+"d",w/2,h/2+13,{font:DK.MONO,size:9,weight:600,color:due?DK.C.bad:DK.C.ink});});});
   body.querySelectorAll(".dem2").forEach(row=>row.onclick=()=>goEpicDemand(row.dataset.id));
   const q=s=>body.querySelector(s);
@@ -6202,11 +6226,11 @@ function renderOverview(body,t){
       <div class="field"><label>Where it stands · working notes</label><textarea id="fNotes" placeholder="Running notes, blockers, who asked, decisions…">${esc(t.notes)}</textarea></div></div>
     <div id="n-links" style="margin:-4px 0 12px">${linkChips((t.description||"")+" "+(t.notes||""))}</div>
     <div class="ov4">
-      <div class="ck-unit ins" data-tab="work"><canvas data-k="subs" data-f="${sd.n?sd.done/sd.n:0}"></canvas><div><div class="k">Subtasks</div><div class="v">${sd.done}<small>/ ${sd.n}</small></div><div class="s ${overdueSubs?"late":""}">${sd.n?(overdueSubs?overdueSubs+" overdue":"on track"):"none yet"}</div></div></div>
-      <div class="ck-unit ins" data-tab="transports"><canvas data-k="trs" data-f="${t.transports.length?nComp/t.transports.length:0}"></canvas><div><div class="k">Transports</div><div class="v">${nComp}<small>/ ${t.transports.length} complete</small></div><div class="s">${t.transports.filter(x=>!x.released).length} not released</div></div></div>
-      <div class="ck-unit ins" data-tab="objects"><canvas data-k="obj" data-f="${t.objects.length?clashN/t.objects.length:0}"></canvas><div><div class="k">Objects</div><div class="v">${t.objects.length}<small>logged</small></div><div class="s ${clashN?"late":""}">${clashN?clashN+" in a clash":"no clashes"}</div></div></div>
-      <div class="ck-unit ins" data-tab="history"><canvas data-k="age" data-f="${avg?Math.min(1,age/(avg*2)):0}"></canvas><div><div class="k">${fin?"Took":"Age"}</div><div class="v">${age}<small>d${avg!=null?" · avg lead "+avg:""}</small></div><div class="s ${avg!=null&&age>avg&&!["delivered","closed"].includes(t.status)?"soon":""}">${avg==null?"no delivered demands yet":age>avg?"longer than your usual":"within your usual"}</div></div></div>
-      ${(()=>{const h=efSum(efFor(t.id)),e=+t.estimate||0;return `<div class="ck-unit ins" data-tab="effort"><canvas data-k="eff" data-f="${e?Math.min(1,h/e):0}" data-over="${e&&h>e?1:0}"></canvas><div><div class="k">Effort</div><div class="v">${efFh(h)}<small>${e?"/ "+efFh(e)+" h":"h logged"}</small></div><div class="s ${e&&h>e?"late":""}">${e?(h>e?efFh(h-e)+" h over estimate":efFh(e-h)+" h left"):h?"no estimate yet":"nothing logged yet"}</div></div></div>`;})()}</div>
+      <div class="ck-unit ins" data-tab="work"><canvas data-k="subs" data-still="3000" data-f="${sd.n?sd.done/sd.n:0}"></canvas><div><div class="k">Subtasks</div><div class="v">${sd.done}<small>/ ${sd.n}</small></div><div class="s ${overdueSubs?"late":""}">${sd.n?(overdueSubs?overdueSubs+" overdue":"on track"):"none yet"}</div></div></div>
+      <div class="ck-unit ins" data-tab="transports"><canvas data-k="trs" data-still="3000" data-f="${t.transports.length?nComp/t.transports.length:0}"></canvas><div><div class="k">Transports</div><div class="v">${nComp}<small>/ ${t.transports.length} complete</small></div><div class="s">${t.transports.filter(x=>!x.released).length} not released</div></div></div>
+      <div class="ck-unit ins" data-tab="objects"><canvas data-k="obj" data-still="3000" data-f="${t.objects.length?clashN/t.objects.length:0}"></canvas><div><div class="k">Objects</div><div class="v">${t.objects.length}<small>logged</small></div><div class="s ${clashN?"late":""}">${clashN?clashN+" in a clash":"no clashes"}</div></div></div>
+      <div class="ck-unit ins" data-tab="history"><canvas data-k="age" data-still="3000" data-f="${avg?Math.min(1,age/(avg*2)):0}"></canvas><div><div class="k">${fin?"Took":"Age"}</div><div class="v">${age}<small>d${avg!=null?" · avg lead "+avg:""}</small></div><div class="s ${avg!=null&&age>avg&&!["delivered","closed"].includes(t.status)?"soon":""}">${avg==null?"no delivered demands yet":age>avg?"longer than your usual":"within your usual"}</div></div></div>
+      ${(()=>{const h=efSum(efFor(t.id)),e=+t.estimate||0;return `<div class="ck-unit ins" data-tab="effort"><canvas data-k="eff" data-still="3000" data-f="${e?Math.min(1,h/e):0}" data-over="${e&&h>e?1:0}"></canvas><div><div class="k">Effort</div><div class="v">${efFh(h)}<small>${e?"/ "+efFh(e)+" h":"h logged"}</small></div><div class="s ${e&&h>e?"late":""}">${e?(h>e?efFh(h-e)+" h over estimate":efFh(e-h)+" h left"):h?"no estimate yet":"nothing logged yet"}</div></div></div>`;})()}</div>
     <div class="bsec"><div class="sec-title"><h3>Latest</h3><div class="ln"></div><span class="faint" style="font-size:10.5px">status · notes · comments · transport moves</span></div>
       ${feed.map(f=>`<div class="fe" style="--pen:${f.pen}"><span class="d">${shortD(isoTs(f.ts))}</span><i></i><span>${f.h}</span></div>`).join("")||`<div class="bempty">Nothing yet.</div>`}
       <div class="compose"><textarea id="ovCmt" rows="1" placeholder="Add a comment… (Ctrl+Enter)"></textarea><button class="sm primary" id="ovPost">Post</button></div></div>
@@ -6218,7 +6242,7 @@ function renderOverview(body,t){
   body.querySelector("#ovPost").onclick=post;body.querySelector("#ovCmt").onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")post();};
   body.querySelectorAll(".ins[data-tab]").forEach(u=>u.onclick=()=>{activeTab=u.dataset.tab;renderDetail();enterPulse("detail");});
   body.querySelectorAll(".ins canvas").forEach(cv=>{const f=+cv.dataset.f,k=cv.dataset.k,st={v:motionOn()?0:f};
-    DK.scope(cv,(c,w,h)=>{const {C}=DK;st.v+=(f-st.v)*.05;const col=k==="obj"?(f>0?C.bad:C["pen-2"]):k==="age"?(f>.5?C.watch:C.good):k==="eff"?(+cv.dataset.over?C.bad:C.good):k==="trs"?C.good:C["pen-2"];
+    DK.scope(cv,(c,w,h,tm,dt)=>{const {C}=DK;st.v+=(f-st.v)*DK.ease(dt,.05);const col=k==="obj"?(f>0?C.bad:C["pen-2"]):k==="age"?(f>.5?C.watch:C.good):k==="eff"?(+cv.dataset.over?C.bad:C.good):k==="trs"?C.good:C["pen-2"];
       if(k==="age"||k==="eff")DK.dotArc(c,w/2,h/2+4,w/2-5,st.v,22,col,1.8);else DK.dotRing(c,w/2,h/2,w/2-5,st.v,30,col);});});
   renderLessons(body.querySelector("#lsHost"),t);
   DK.scope(body.querySelector(".jcv"),journeyDraw(t));}
@@ -6444,10 +6468,10 @@ function efTipEl(){let t=document.getElementById("efTip");if(!t){t=document.crea
 function efShowTip(html,x,y){const t=efTipEl();t.innerHTML=html;t.classList.add("on");const w=t.offsetWidth,h=t.offsetHeight;t.style.left=Math.max(6,Math.min(innerWidth-w-10,x+14))+"px";t.style.top=(y+h+20>innerHeight?y-h-10:y+14)+"px";}
 function efHideTip(){const t=document.getElementById("efTip");if(t)t.classList.remove("on");}
 function efHover(rec,html,click){if(!rec)return;rec.hits=[];rec.hv=null;const cv=rec.cv;
-  cv.addEventListener("mousemove",ev=>{const b=cv.getBoundingClientRect(),x=ev.clientX-b.left,y=ev.clientY-b.top;let hit=null;
+  cv.addEventListener("mousemove",ev=>{rec.dirty=true;const b=cv.getBoundingClientRect(),x=ev.clientX-b.left,y=ev.clientY-b.top;let hit=null;
     for(const h of rec.hits||[])if(Math.abs(x-h.x)<=h.rx&&Math.abs(y-h.y)<=h.ry){hit=h;break;}
     rec.hv=hit;if(!hit){efHideTip();cv.style.cursor="";return;}cv.style.cursor=click?"pointer":"";efShowTip(html(hit),ev.clientX,ev.clientY);});
-  cv.addEventListener("mouseleave",()=>{rec.hv=null;efHideTip();});
+  cv.addEventListener("mouseleave",()=>{rec.hv=null;rec.dirty=true;efHideTip();});
   if(click)cv.addEventListener("click",()=>{if(rec.hv){efHideTip();click(rec.hv);}});}
 function efToastUndo(msg,fn){toast(msg);const t=document.getElementById("toast"),b=document.createElement("button");b.className="sm";b.textContent="Undo";b.style.marginLeft="10px";
   b.onclick=()=>{t.className="toast";fn();};t.appendChild(b);t.classList.add("ef-undo");clearTimeout(toast._t);toast._t=setTimeout(()=>t.className="toast",5200);}
@@ -6559,13 +6583,13 @@ function renderEffortTab(body,t){
   body.innerHTML=`<div class="efx ef-tab">
     <div class="ck-unit"><div class="ck-head"><h2>Log time on ${esc(t.demandId||"this demand")}</h2><span class="ck-meta">Ctrl+Enter logs · T from anywhere · 2 · 1.5 · 2h30 · 90m</span></div><div id="efQc"></div></div>
     <div class="ef-ins">
-      <div class="ck-unit ins"><canvas data-k="est"></canvas><div style="min-width:0"><div class="k">Logged vs estimate</div><div class="v" id="efEstV">${efFh(tot)}<small>${est?"/ "+efFh(est)+" h":"h"}</small></div><div class="s ${est&&tot>est?"late":""}">${est?(tot>est?efFh(tot-est)+" h over":efFh(est-tot)+" h left"):"no estimate"} · <a href="#" class="ef-est">${est?"change":"set one"}</a></div></div></div>
-      <div class="ck-unit ins"><canvas data-k="days"></canvas><div style="min-width:0"><div class="k">Days worked</div><div class="v">${days.size}<small>days</small></div><div class="s">${days.size?"avg "+efFh(Math.round(tot/days.size*10)/10)+" h on a day you touched it":"nothing logged yet"}</div></div></div>
-      <div class="ck-unit ins"><canvas data-k="rw"></canvas><div style="min-width:0"><div class="k">Rework</div><div class="v">${efFh(rw)}<small>h</small></div><div class="s ${rw?"late":""}">${rw?efPct(rw,tot)+"% — hours logged while in Bug":"none — never bounced"}</div></div></div>
-      <div class="ck-unit ins"><canvas data-k="last"></canvas><div style="min-width:0"><div class="k">Last worked</div><div class="v">${last?efWdd(last.date):"—"}</div><div class="s">${last?efFh(efSum(es.filter(e=>e.date===last.date)))+" h · "+esc(last.activity):"never"}</div></div></div></div>
-    ${es.length?`<div class="ck-unit"><div class="ck-head"><h2>Days on it</h2><span class="ck-meta">a column per week · size = hours that day · ring = today · hollow = holiday or leave</span></div><canvas class="ef-dcal"></canvas></div>`:""}
+      <div class="ck-unit ins"><canvas data-k="est" data-still="3000"></canvas><div style="min-width:0"><div class="k">Logged vs estimate</div><div class="v" id="efEstV">${efFh(tot)}<small>${est?"/ "+efFh(est)+" h":"h"}</small></div><div class="s ${est&&tot>est?"late":""}">${est?(tot>est?efFh(tot-est)+" h over":efFh(est-tot)+" h left"):"no estimate"} · <a href="#" class="ef-est">${est?"change":"set one"}</a></div></div></div>
+      <div class="ck-unit ins"><canvas data-k="days" data-still="3000"></canvas><div style="min-width:0"><div class="k">Days worked</div><div class="v">${days.size}<small>days</small></div><div class="s">${days.size?"avg "+efFh(Math.round(tot/days.size*10)/10)+" h on a day you touched it":"nothing logged yet"}</div></div></div>
+      <div class="ck-unit ins"><canvas data-k="rw" data-still="3000"></canvas><div style="min-width:0"><div class="k">Rework</div><div class="v">${efFh(rw)}<small>h</small></div><div class="s ${rw?"late":""}">${rw?efPct(rw,tot)+"% — hours logged while in Bug":"none — never bounced"}</div></div></div>
+      <div class="ck-unit ins"><canvas data-k="last" data-still="3000"></canvas><div style="min-width:0"><div class="k">Last worked</div><div class="v">${last?efWdd(last.date):"—"}</div><div class="s">${last?efFh(efSum(es.filter(e=>e.date===last.date)))+" h · "+esc(last.activity):"never"}</div></div></div></div>
+    ${es.length?`<div class="ck-unit"><div class="ck-head"><h2>Days on it</h2><span class="ck-meta">a column per week · size = hours that day · ring = today · hollow = holiday or leave</span></div><canvas class="ef-dcal" data-still="0"></canvas></div>`:""}
     ${es.length?`<div class="ck-unit"><div class="ck-head"><h2>Effort over its life</h2><span class="ck-meta">status above · a dot = ½ h, coloured by activity · line = running total${est?" against the estimate":""} · click a day</span></div>
-      <canvas class="ef-life"></canvas>
+      <canvas class="ef-life" data-still="1700"></canvas>
       <div class="ef-legend">${EF_DEMAND_ACTS.filter(a=>es.some(e=>e.activity===a)).map(a=>`<span><span class="ef-pd" style="--pen:var(--${EF_ACTC[a]})"></span>${a}</span>`).join("")}${est?`<span style="margin-left:auto"><span style="width:14px;border-top:1px dashed var(--ink-3)"></span>estimate</span>`:""}</div></div>`:""}
     <div class="ef-gw">
       <div class="ck-unit"><div class="ck-head"><h2>Log</h2><span class="ck-meta">${es.length} entr${es.length===1?"y":"ies"} · by week · hover to edit</span></div><div id="efLog"></div></div>
@@ -6586,7 +6610,7 @@ function renderEffortTab(body,t){
     /* as many weeks as fit at a readable dot size, up to a year */
     DK.scope(cv,(c,w,h,tm,dt,s)=>{const C=efC(cv),wk=Math.max(8,Math.min(52,Math.floor((w-20)/15)));V2.dotCalendar(c,C,0,0,w,h,vals.slice(-wk*7),C[efPen(t.id)]||C.ink);});}}
   body.querySelectorAll(".ef-ins canvas").forEach(cv=>{const k=cv.dataset.k,f=frac[k],sv={v:motionOn()?0:f};
-    DK.scope(cv,(c,w,h)=>{const C=efC(cv);sv.v+=(f-sv.v)*.06;
+    DK.scope(cv,(c,w,h,tm,dt)=>{const C=efC(cv);sv.v+=(f-sv.v)*DK.ease(dt,.06);
       if(k==="est")efArc(c,w/2,h/2+4,w/2-5,Math.min(1,sv.v),24,est&&tot>est?C.bad:C.good,C);
       else if(k==="last")efArc(c,w/2,h/2+4,w/2-5,sv.v,22,since<=3?C.good:since<=10?C.watch:C["ink-3"],C);
       else efRingDots(c,w/2,h/2,w/2-5,sv.v,30,k==="rw"?C.bad:C["pen-2"],C);});});
@@ -6694,7 +6718,7 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
         ${rg==="cu"?`<span class="ef-row"><input type="date" id="efCuF" value="${A.RG.from}" style="width:150px"><span class="faint">–</span><input type="date" id="efCuT" value="${A.RG.to}" style="width:150px"></span>`:""}
         <div class="ef-sg" id="efGp"><span class="cap">Group by</span>${Object.entries(EF_GROUPS).map(([k,v])=>`<button data-k="${k}" class="${k===g?"on":""}">${v}</button>`).join("")}</div>
         <button class="sm" id="efOffB" title="Public holidays and leave — days that never count as missing a log">🏖 Days off</button><button class="sm" id="efCsv" title="Every entry ever logged, as a spreadsheet">⬇ CSV</button><button class="sm primary" id="efLogB">⏱ Log time</button></div></div>
-    ${roHTML([{k:"Logged",v:`<canvas class="mxr" id="efMxR" data-v="${efFh(Math.round(total))}" style="width:${V2.mxW(efFh(Math.round(total)),22)}px;height:22px" title="${efFh(total)} h"></canvas>`+`<small>h</small>`+(prev?`<small class="${delta>=0?"ef-good":"ef-bad"}">${delta>=0?"▲":"▼"} ${Math.abs(delta)}% vs previous</small>`:"")},
+    ${roHTML([{k:"Logged",v:`<canvas class="mxr" id="efMxR" data-still="1000" data-v="${efFh(Math.round(total))}" style="width:${V2.mxW(efFh(Math.round(total)),22)}px;height:22px" title="${efFh(total)} h"></canvas>`+`<small>h</small>`+(prev?`<small class="${delta>=0?"ef-good":"ef-bad"}">${delta>=0?"▲":"▼"} ${Math.abs(delta)}% vs previous</small>`:"")},
       {k:"Per worked day",v:U(efFh(Math.round(total/Math.max(1,worked)*10)/10),"h")},
       {k:"Days logged",v:U(worked,"/ "+wdays.length+" working")},
       {k:"Demand work",v:U(efPct(dem,total),"% · "+nDem+" demand"+(nDem===1?"":"s"))},
@@ -6702,10 +6726,10 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
       {k:"Days with no log",v:String(unl.length),cls:unl.length?"bad":""}])}
     <div class="ck-unit"><div class="ck-head"><h2>Noticed</h2><span class="ck-meta">worked out from your log</span></div><div id="efNoticed"></div></div>
     <div class="ef-lgrow"><span class="ef-lb" style="margin:0">${EF_GROUPS[g]}s · click to focus${g==="demand"?" · double-click to open":""}</span>${A.keys.map(k=>{const m=efGMeta(k);return `<button class="ef-lgi ${efFocus===k?"on":efFocus?"off":""}" data-k="${esc(k)}" style="--pen:var(--${m.col})" title="${esc(m.sub||"")}"><span class="ef-pd"></span>${esc(m.l)}<b>${efFh(A.tot.get(k))}</b></button>`;}).join("")}</div>
-    <div class="ck-unit"><div class="ck-head"><h2>26 weeks in dots</h2><span class="ck-meta">a dial per day · a dot = ½ h, a full ring = your working day · colours = where the hours went · red dots = a working day with no log · dotted rule = the range · click a day</span></div><canvas class="ef-cal" id="efCal"></canvas></div>
+    <div class="ck-unit"><div class="ck-head"><h2>26 weeks in dots</h2><span class="ck-meta">a dial per day · a dot = ½ h, a full ring = your working day · colours = where the hours went · red dots = a working day with no log · dotted rule = the range · click a day</span></div><canvas class="ef-cal" id="efCal" data-still="1400"></canvas></div>
     <div class="ef-gw">
-      <div class="ck-unit"><div class="ck-head"><h2>Where the hours went</h2><span class="ck-meta">${A.mode==="day"?`per day · a dot = ½ h · dashed = ${efFh(EF_DAY)} h`:A.mode==="week"?`per week · a dot = 1 h · dashed = ${efFh(EF_DAY*5)} h`:`per month · a dot = 4 h · dashed = ${efFh(EF_DAY*21)} h`} · click a column</span></div><canvas class="ef-wkc" id="efWk"></canvas></div>
-      <div class="ck-unit"><div class="ck-head"><h2>Activity mix</h2><span class="ck-meta">${efFh(total)} h</span></div><div class="ef-mixw"><canvas id="efMix"></canvas><div>${efMixRows(A.R)}</div></div></div></div>
+      <div class="ck-unit"><div class="ck-head"><h2>Where the hours went</h2><span class="ck-meta">${A.mode==="day"?`per day · a dot = ½ h · dashed = ${efFh(EF_DAY)} h`:A.mode==="week"?`per week · a dot = 1 h · dashed = ${efFh(EF_DAY*5)} h`:`per month · a dot = 4 h · dashed = ${efFh(EF_DAY*21)} h`} · click a column</span></div><canvas class="ef-wkc" id="efWk" data-still="2600"></canvas></div>
+      <div class="ck-unit"><div class="ck-head"><h2>Activity mix</h2><span class="ck-meta">${efFh(total)} h</span></div><div class="ef-mixw"><canvas id="efMix" data-still="2000"></canvas><div>${efMixRows(A.R)}</div></div></div></div>
     <div class="ck-unit" id="efSheet"></div>
     <div class="ef-g3">
       <div class="ck-unit"><div class="ck-head"><h2>Estimate vs actual</h2><span class="ck-meta">whole life · demands in range</span></div>${efEstRows(A)}</div>
@@ -6721,7 +6745,7 @@ function renderEffortWS(){const host=document.getElementById("detail");efHideTip
    const cf=host.querySelector("#efCuF");if(cf){const ch=()=>{const f=cf.value,t=host.querySelector("#efCuT").value;if(f&&t&&f<=t){setViewPref("ef.from",f);setViewPref("ef.to",t);renderEffortWS();}};cf.onchange=ch;host.querySelector("#efCuT").onchange=ch;}}
   host.querySelectorAll("#efGp button").forEach(b=>b.onclick=()=>{setViewPref("ef.group",b.dataset.k);efFocus=null;renderEffortWS();});
   host.querySelector("#efLogB").onclick=()=>openLogTime();host.querySelector("#efOffB").onclick=()=>openDaysOff();host.querySelector("#efCsv").onclick=efCSV;
-  host.querySelectorAll(".ef-lgi").forEach(b=>{b.onclick=()=>{efFocus=efFocus===b.dataset.k?null:b.dataset.k;host.querySelectorAll(".ef-lgi").forEach(x=>{x.classList.toggle("on",x.dataset.k===efFocus);x.classList.toggle("off",!!efFocus&&x.dataset.k!==efFocus);});};
+  host.querySelectorAll(".ef-lgi").forEach(b=>{b.onclick=()=>{efFocus=efFocus===b.dataset.k?null:b.dataset.k;DK.wake();host.querySelectorAll(".ef-lgi").forEach(x=>{x.classList.toggle("on",x.dataset.k===efFocus);x.classList.toggle("off",!!efFocus&&x.dataset.k!==efFocus);});};
     b.ondblclick=()=>{if(efG()==="demand"&&efTaskOf(b.dataset.k))openDemand(b.dataset.k);};});
   host.querySelectorAll(".ef-erow[data-id]").forEach(r=>r.onclick=()=>openDemand(r.dataset.id));
   host.querySelectorAll("#efNoticed [data-act]").forEach(b=>b.onclick=()=>efNoticeActs[+b.dataset.act]());
@@ -7018,7 +7042,7 @@ function renderReview(){const host=document.getElementById("detail");efHideTip()
       <div class="ef-foot" style="margin-top:8px"><span class="faint" style="font-size:11px">The draft only uses what's in this file. Make it yours before you send it.</span><button class="sm" id="rvDraft">✍ Draft one from my data</button></div></div>
     <div class="ef-gw">
       <div class="ef-stack">
-        <div class="ck-unit"><div class="ck-head"><h2>Month by month</h2><span class="ck-meta">● delivered · ▮ hours logged · ◆ wins</span></div><canvas class="rv-months" id="rvMonths"></canvas></div>
+        <div class="ck-unit"><div class="ck-head"><h2>Month by month</h2><span class="ck-meta">● delivered · ▮ hours logged · ◆ wins</span></div><canvas class="rv-months" id="rvMonths" data-still="2000"></canvas></div>
         <div class="ck-unit"><div class="ck-head"><h2>Delivered</h2><span class="ck-meta">${S.del.length} · ★ to feature a demand in Highlights</span></div>
           ${S.del.length?S.del.map(({t,d,r})=>{const h=efSum(efFor(t.id));return `<div class="rv-row ${hl.has(t.id)?"hl":""}" data-id="${t.id}"><button class="rv-star ${t.star?"on":""}" data-star="${t.id}" title="${t.star?"Featured — click to stop featuring":"Feature this in Highlights"}">★</button><span class="mono">${esc(t.demandId||"—")}</span><a href="#" class="t" data-go="${t.id}">${esc(t.title)}</a><span class="mono faint">${efSh(d)}</span><span class="mono">${h?efFh(Math.round(h))+" h":""}</span><span class="fl">${r>1?`<span class="ef-tag" style="--pen:var(--pen-5)">round ${r}</span>`:""}${reworkCount(t)?`<span class="ef-tag" style="--pen:var(--bad)">↻</span>`:""}${t.dueDate&&d>t.dueDate?`<span class="ef-tag" style="--pen:var(--watch)">late</span>`:""}</span></div>`;}).join(""):`<div class="faint" style="font-size:12px">Nothing delivered in this period yet.</div>`}</div>
       </div>
@@ -7182,7 +7206,7 @@ function renderEpicEffort(body,e){const all=epicEfforts(e).sort((a,b)=>a.date.lo
       {k:"Rework",v:U(efFh(rwH),"h"),cls:rwH?"bad":"",title:"Hours logged while a demand was in Bug"},
       {k:"Changed requirements",v:U(efFh(chH),"h"),title:"Hours in round 2 or later — not rework"}])}
     <div class="ck-unit"><div class="ck-head"><h2>Log time on the epic itself</h2><span class="ck-meta">calls, planning, chasing other teams — work that belongs to no single demand</span></div><div id="epQc"></div></div>
-    <div class="ck-unit"><div class="ck-head"><h2>Month by month</h2><span class="ck-meta">the epic's whole life · coloured by demand · ◆ epic-level · click a month</span></div><canvas class="ep-months" id="epMonths"></canvas></div>
+    <div class="ck-unit"><div class="ck-head"><h2>Month by month</h2><span class="ck-meta">the epic's whole life · coloured by demand · ◆ epic-level · click a month</span></div><canvas class="ep-months" id="epMonths" data-still="1600"></canvas></div>
     <div class="ef-gw">
       <div class="ef-stack">
         <div class="ck-unit"><div class="ck-head"><h2>By demand</h2><span class="ck-meta">${esc(P.l)}${idle?` · ${idle} demand${idle===1?"":"s"} with no hours`:""}</span></div>
@@ -7647,6 +7671,26 @@ async function runSelfTest(){
    ok("Instrument v2: matrix readout lays out a number",V2.matrixLayout("12:34").cols===25&&V2.mxW("88",21)===33,V2.matrixLayout("12:34").cols);
    {const d0=dirty;dirty=true;renderSaveState();const nm=!!document.querySelector("#saveState .vic.nm");dirty=d0;renderSaveState();ok("Instrument v2: the save light shows its state",nm);}
    ok("Instrument v2: no milestone stamps",!document.querySelector(".vstamp")&&typeof demandStamp==="undefined");
+   /* behaviour, not only "it opens" */
+   {const env=JSON.parse(await encryptStateStr("st-pass")),dec=await decryptEnvelope(env,"st-pass"),same=JSON.stringify(dec)===JSON.stringify(state);
+    const loads=isValidState(migrate(JSON.parse(JSON.stringify(dec))));dataNewer=0;let wrong=false;try{await decryptEnvelope(env,"not-it");}catch(e){wrong=true;}
+    ok("Encryption: the file round-trips with the master password, and only with it",same&&loads&&wrong&&!JSON.stringify(env).includes("Sample report gets a filter"),`same ${same} · loads ${loads} · wrong password refused ${wrong}`);}
+   {const fh0=fileHandle,fs0=fileSig;let lm=1000;fileHandle={name:"st.json",getFile:async()=>({lastModified:lm,size:10})};await noteFileSig();const same=await diskChanged();lm=2000;const moved=await diskChanged();
+    fileHandle=fh0;fileSig=fs0;ok("Disk guard: a data file changed by something else is noticed",!same&&!!moved);}
+   ok("Backup: the newer of the two browser copies is used",pickBackup({raw:"A",at:1},{raw:"B",at:2})==="B"&&pickBackup({raw:"A",at:5},{raw:null,at:0})==="A"&&pickBackup({raw:"A",at:0},{raw:"B",at:0})==="A"&&pickBackup({raw:null,at:0},{raw:"B",at:0})==="B");
+   {const e=state.efforts[0],n=state.efforts.length;efDelete(e);const gone=state.efforts.length===n-1;const ub=[...document.querySelectorAll("#toast button")].find(x=>x.textContent==="Undo");if(ub)ub.click();
+    ok("Undo: a deleted time entry comes back",gone&&!!ub&&state.efforts.length===n&&state.efforts.includes(e));}
+   {const t=state.tasks.find(x=>x.id==="st-c"),R=document.getElementById("modalRoot");
+    openNextAction(t);R.querySelector("#na-note").value="Self-test step";R.querySelector("#na-date").value="2030-01-08";R.querySelector("#na-save").click();
+    const na=t.nextAction.note==="Self-test step"&&t.nextAction.date==="2030-01-08";
+    const n0=state.efforts.length;openLogTime({key:"st-c",date:todayStr()});const hi=R.querySelector('[data-f="hours"]');hi.value="1.5";hi.dispatchEvent(new Event("input"));R.querySelector('[data-f="log"]').click();
+    const lg=state.efforts.length===n0+1&&state.efforts[state.efforts.length-1].hours===1.5;
+    const t0=state.tasks.length;openTaskModal(null);R.querySelector("#m-title").value="Self-test demand";R.querySelector("#m-save").click();
+    const nd=state.tasks.length===t0+1&&state.tasks.some(x=>x.title==="Self-test demand");
+    R.innerHTML="";ok("Dialogs: next action, log time and new demand do what they say",na&&lg&&nd,`next ${na} · log ${lg} · new ${nd}`);}
+   {const b=state.tasks.find(x=>x.id==="st-b"),R=document.getElementById("modalRoot");openTaskModal(b);R.querySelector("#m-status").value="progress";R.querySelector("#m-save").click();
+    const asked=!!R.querySelector("#cbOk")&&b.status==="delivered";const c=R.querySelector("#cbCancel");if(c)c.click();R.innerHTML="";
+    ok("Edit: moving a delivered demand back asks why",asked);}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
@@ -7716,7 +7760,8 @@ document.addEventListener("keydown",e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();gs.focus();}
   if(e.altKey&&!e.ctrlKey&&!e.metaKey&&e.key.toLowerCase()==="n"){e.preventDefault();view="demands";renderApp();openTaskModal(null);}
 });
-window.addEventListener("beforeunload",e=>{flushEdits();if(dirty){e.preventDefault();e.returnValue="";}});
+window.addEventListener("beforeunload",e=>{flushEdits();flushBackup();if(dirty){e.preventDefault();e.returnValue="";}});
+document.addEventListener("visibilitychange",()=>{if(document.hidden)flushBackup();});
 
 /* ---------- never lose half-typed text ----------
    Fields commit on "change", which only fires when you leave the field. Text typed but

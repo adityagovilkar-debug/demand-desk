@@ -39,20 +39,21 @@ C. **Split the source on my side?** I'd keep the code in separate files and asse
 D. **Encryption.** If the file still holds passwords or secret references without a
    master password, turn it on. I'd also stop the reminder from being snoozed forever.
 
-## Phase 1 — Foundations (no visible change)
+## Phase 1 — Foundations (no visible change) — DONE 10 Nov 2026
 
-1. **Source in modules, one HTML out** (decision C).
-2. **A calmer animation loop** — the same scheduler Bench uses: 30 frames a second
-   while the window has focus, 10 behind other windows, none when hidden; charts that
-   don't move are drawn once.
-3. **Backup after a short pause** instead of on every keystroke-level change, and one
-   backup store instead of two when the better one is available.
-4. **Self-test covers behaviour, not only "it opens"** — saving and reopening with a
-   master password, the changed-on-disk conflict, undo, and each dialog's main action.
-5. **Tidy the mockups folder** — each mockup is a full copy of the app. Once applied,
-   keep only the small patch file.
-6. **"Why is it coming back?" from the ✎ Edit dialog too** — today only the status
-   buttons, the board and the dropdown ask.
+1. ✓ **Source in modules, one HTML out** — `src/` (shell, 8 style files, 26 code files)
+   and `build.py`; the first build was byte-identical to the old file.
+2. ✓ **A calmer animation loop** — 30 frames a second with focus, 10 behind other
+   windows, none when hidden; charts that settle are left alone until the pointer,
+   a resize or a theme change needs them. Idle cost on Effort fell from ~0.57 s to
+   ~0.02 s of script per 5 s; on Today from ~0.43 s to ~0.10 s.
+3. ✓ **Backup after a short pause** — about a second after changes stop, one store,
+   flushed at once when the window hides or closes, the newer copy used on load.
+4. ✓ **Self-test covers behaviour** — six new checks (348 in all): encryption
+   round-trip, the changed-on-disk guard, the newer backup winning, Undo, the main
+   dialogs, and ✎ Edit asking why.
+5. ✓ **Mockups folder tidied** — 5.2 MB → 0.3 MB; patches and the sample data kept.
+6. ✓ **"Why is it coming back?" from the ✎ Edit dialog too.**
 
 ## Phase 2 — The daily loop (where most of your clicks go)
 

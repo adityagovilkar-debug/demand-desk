@@ -210,21 +210,31 @@ async function initStore(){
   }catch(e){}}
 }
 
-/* ---------- backup (writes localStorage always + IndexedDB when available) ---------- */
-let encBackupTimer=null;
-function persistBackup(str){
-  try{localStorage.setItem(LS_KEY,str);localStorage.setItem(LS_HANDLE_HINT,"1");}catch(e){/* e.g. 5MB quota full — IndexedDB still covers it */}
-  if(useIdb){idbSet("backup",str).catch(()=>{});idbSet("hadfile","1").catch(()=>{});}
+/* ---------- browser backup ----------
+   Written about a second after changes stop (not on every change), to IndexedDB when the browser has it,
+   else to localStorage. When the window hides or closes it is written at once — and to localStorage too,
+   because that write can't be cut short. Each copy carries the time it was taken, and loading uses the
+   newer of the two. */
+let backupTimer=null;
+const LS_AT=LS_KEY+".at";
+function persistBackup(str,closing){const at=Date.now();
+  if(!useIdb||closing){try{localStorage.setItem(LS_KEY,str);localStorage.setItem(LS_AT,String(at));}catch(e){/* e.g. 5MB quota full — IndexedDB still covers it */}}
+  try{localStorage.setItem(LS_HANDLE_HINT,"1");}catch(e){}
+  if(useIdb){idbSet("backup",str).catch(()=>{});idbSet("backupAt",at).catch(()=>{});idbSet("hadfile","1").catch(()=>{});}
 }
-function backupLocal(){
+async function backupNow(closing){clearTimeout(backupTimer);backupTimer=null;
   if(!safeToPersist())return; /* never let a corrupt/emptied state clobber the good backup */
-  if(isEncrypted()){clearTimeout(encBackupTimer);encBackupTimer=setTimeout(async()=>{if(!safeToPersist())return;try{persistBackup(await encryptStateStr(masterPassword));}catch(e){}},1000);return;}
-  persistBackup(JSON.stringify(state));
-}
+  try{persistBackup(isEncrypted()?await encryptStateStr(masterPassword):JSON.stringify(state),closing);}catch(e){}}
+function backupLocal(){if(!safeToPersist())return;clearTimeout(backupTimer);backupTimer=setTimeout(()=>backupNow(false),1000);}
+/* the window is going away or out of sight: don't leave a pending backup behind */
+function flushBackup(){if(backupTimer)backupNow(true);}
+/* the newer of the two browser copies ({raw, at}); with no times, IndexedDB's as before */
+function pickBackup(idb,ls){if(idb.raw==null)return ls.raw;if(ls.raw==null)return idb.raw;return (+ls.at||0)>(+idb.at||0)?ls.raw:idb.raw;}
 async function loadBackup(){
-  let raw=null;
-  if(useIdb){try{const v=await idbGet("backup");if(v!=null)raw=v;}catch(e){}}
-  if(raw==null){try{raw=localStorage.getItem(LS_KEY);}catch(e){}}
+  const idb={raw:null,at:0},ls={raw:null,at:0};
+  if(useIdb){try{const v=await idbGet("backup");if(v!=null){idb.raw=v;idb.at=+(await idbGet("backupAt"))||0;}}catch(e){}}
+  try{ls.raw=localStorage.getItem(LS_KEY);ls.at=+localStorage.getItem(LS_AT)||0;}catch(e){}
+  const raw=pickBackup(idb,ls);
   if(raw==null)return false;
   try{const p=JSON.parse(raw);if(p&&p._encrypted){pendingEncrypted=p;return "encrypted";}
     if(!p||typeof p!=="object"||!Array.isArray(p.tasks))throw new Error("not Demand Desk data");
