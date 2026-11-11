@@ -85,19 +85,19 @@ D. **Encryption.** If the file still holds passwords or secret references withou
     estimate" notices appear after the first estimate exists; the same for other
     optional parts that are empty.
 
-## Phase 3 — Transports and tickets (the core of the work)
+## Phase 3 — Transports and tickets (the core of the work) — DONE 11 Nov 2026
 
-12. **A transport board** — one table of every transport still on its way, across all
+12. ✓ **A transport board** — one table of every transport still on its way, across all
     demands: number, demand, where it is, where it goes next, released or not, how
     long it has sat there. Filter by system or landscape; record an import for several
     at once. Today this is spread over the pipeline and each demand's tab.
-13. **Move a ToC along a whole route in one go** — pick a route and one date.
-14. **Unreleased for too long** — a transport that has stayed unreleased past a number
+13. ✓ **Move a ToC along a whole route in one go** — pick a route and one date.
+14. ✓ **Unreleased for too long** — a transport that has stayed unreleased past a number
     of days shows on Today.
-15. **Tickets as a light level above demands** — when several demands share a ticket
+15. ✓ **Tickets as a light level above demands** — when several demands share a ticket
     ID: group the list by ticket, and show a strip on each demand with its siblings,
     their status, and the ticket's combined hours and transports.
-16. **Handed-on demands going quiet** — a demand built by someone in your team with no
+16. ✓ **Handed-on demands going quiet** — a demand built by someone in your team with no
     update for a week shows on Today with a one-click "checked in" note.
 
 ## Phase 4 — One coherent look (mockup first)

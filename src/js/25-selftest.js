@@ -184,15 +184,36 @@ async function runSelfTest(){
    {const est=state.tasks.map(t=>t.estimate),txt=()=>document.getElementById("detail").textContent;state.tasks.forEach(t=>t.estimate=0);view="effort";renderApp();const none=!txt().includes("Estimate vs actual")&&!anyEstimate();
     state.tasks.forEach((t,i)=>t.estimate=est[i]);renderApp();const back=txt().includes("Estimate vs actual");view="today";renderApp();
     ok("Estimate panels stay hidden until an estimate exists",none&&back,`hidden ${none} · back ${back}`);}
+   {const a=state.tasks.find(x=>x.id==="st-a"),a1=a.transports.find(x=>x.id==="st-tr-a1"),a2=a.transports.find(x=>x.id==="st-tr-a2"),rows=trBoardRows();
+    const r1=rows.find(r=>r.tr===a1),r2=rows.find(r=>r.tr===a2);
+    ok("Transport board: where each transport is and where it goes next",r1&&r1.at==="H42"&&r1.next==="H41"&&r2&&r2.at==="H03"&&r2.next==="H02"&&!r2.tr.released,JSON.stringify(r1&&[r1.at,r1.next])+" "+JSON.stringify(r2&&[r2.at,r2.next]));
+    view="transports";renderApp();const row=[...document.querySelectorAll(".tb-row")].find(x=>x.dataset.key==="st-a|st-tr-a2");if(row)row.querySelector(".tb-ck").click();
+    const sy=document.getElementById("tbSys");if(sy){sy.value="H02";sy.dispatchEvent(new Event("change"));const rb=document.getElementById("tbRec");if(rb)rb.click();}
+    const rec=a2.syncs.some(x=>x.system==="H02"&&x.date===todayStr())&&a2.released&&a2.releasedOn===todayStr();
+    {const ub=[...document.querySelectorAll("#toast button")].find(x=>x.textContent==="Undo");if(ub)ub.click();}
+    ok("Transport board: an import recorded for the selected transports, with Undo",rec&&!a2.syncs.some(x=>x.system==="H02")&&!a2.released,`recorded ${rec} · after undo ${JSON.stringify(a2.syncs)} ${a2.released}`);
+    const toc=a.tocs[0],R=document.getElementById("modalRoot");openTocRoute(a,toc);const picked=[...R.querySelectorAll(".tr-rs input:checked:not(:disabled)")].map(i=>i.value);R.querySelector("#trRGo").click();
+    const moved=["H43","H41"].every(x=>toc.syncs.some(y=>y.system===x&&y.date===todayStr()));
+    {const ub=[...document.querySelectorAll("#toast button")].find(x=>x.textContent==="Undo");if(ub)ub.click();}
+    ok("A ToC moves along a whole route in one go (what's there already left out), with Undo",eq(picked,["H43","H41"])&&moved&&toc.syncs.length===1,`picked ${picked} · moved ${moved} · left ${toc.syncs.length}`);R.innerHTML="";
+    a2.addedOn=efAdd(todayStr(),-9);let it=agendaItems().find(i=>i.k==="release"&&i.what.includes("H03K900002"));const shown=!!it;if(it)it.acts[0][1]();
+    ok("Today: a transport unreleased too long comes up, and Released clears it",shown&&a2.released&&a2.releasedOn===todayStr()&&!agendaItems().some(i=>i.k==="release"&&i.what.includes("H03K900002")));
+    a2.released=false;a2.releasedOn="";a2.addedOn=todayStr();
+    const c=state.tasks.find(x=>x.id==="st-c");c.nextAction={date:"",note:""};c.updatedAt=Date.now()-10*864e5;it=agendaItems().find(i=>i.k==="check"&&i.what.includes("Sample Builder"));const quiet=!!it;if(it)it.acts[0][1]();
+    ok("Today: a demand handed to your team that went quiet comes up; Checked in notes it",quiet&&(c.timeline||[]).some(e=>/^Checked in with Sample Builder/.test(e.note||""))&&!agendaItems().some(i=>i.k==="check"&&i.what.includes("Sample Builder")));
+    ok("Tickets: demands sharing a ticket ID see each other, and group together",eq(ticketSiblings(c).map(x=>x.id),["st-d"])&&ticketBandHTML(c).includes("Ticket ST-3 · 2 demands")&&dvGroupOf(c,"ticket").k==="ST-3"&&dvGroupOf(a,"ticket").k==="__single");
+    const m=migrate(clone(stOldFixture())),tr0=m.tasks[0].transports[0];
+    ok("Upgrade: transports get the day they were added, the unreleased reminder a default",/^\d{4}-\d\d-\d\d$/.test(tr0.addedOn)&&tr0.releasedOn===""&&m.settings.unreleasedDays===5,JSON.stringify([tr0.addedOn,tr0.releasedOn,m.settings.unreleasedDays]));
+    view="today";renderApp();}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
-  const views=["today","demands","jobs","epics","debug","journal","meetings","playbook","team","vault","effort","review","month","search"];
+  const views=["today","demands","jobs","epics","debug","journal","meetings","playbook","team","vault","effort","review","month","search","transports"];
   const tabs=["overview","work","objects","transports","effort","history","reference","calls","images"],etabs=["overview","story","details","deps","subtasks","effort"];
   const a=state.tasks.find(t=>t.id==="st-a");
   const pick=()=>{activeJobId="st-job-1";activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
   const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
-  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Days off",()=>openDaysOff()],
+  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
     ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
     ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Settings menu",()=>openMenu()],["Close a task",()=>openJobClose(jobById("st-job-1"),"done")],["Log time on a task",()=>openLogTime({key:"j:st-job-1"})],["A closed task",()=>{view="jobs";activeJobId="st-job-2";renderApp();}],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
   const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;

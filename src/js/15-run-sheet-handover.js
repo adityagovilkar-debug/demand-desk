@@ -86,7 +86,7 @@ function openRunSheet(tasks,label,defTarget){
     const mk=root.querySelector("#rs-mark");if(mk)mk.onclick=()=>{
       const v=prompt(`Basis imported all ${d.todo.length} item(s) into ${target}? Date of the import (YYYY-MM-DD):`,todayStr());if(v===null)return;
       const dt=v.trim();if(!/^\d{4}-\d{2}-\d{2}$/.test(dt)){toast("Use the YYYY-MM-DD format",true);return;}
-      const touched=new Set();d.todo.forEach(r=>{(r.toc||r.tr).syncs.push({system:target,date:dt});if(!r.toc)syncReleases(r.tr,target);touched.add(r.t);});
+      const touched=new Set();d.todo.forEach(r=>{(r.toc||r.tr).syncs.push({system:target,date:dt});if(!r.toc)syncReleases(r.tr,target,dt);touched.add(r.t);});
       touched.forEach(t=>touch(t));draw();toast(`Recorded ${d.todo.length} import(s) into ${target} on ${dt}`);};
   };
   draw();

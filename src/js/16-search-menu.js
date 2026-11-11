@@ -47,6 +47,9 @@ function openMenu(){
       <span style="flex:1;font-size:13px">⏱ Working day <span class="faint" style="font-size:11px">— a full day of logged hours (day bars, week sheet, wrap-up)</span></span>
       <canvas id="mn-dayk" title="Drag up or down, scroll, or use the arrow keys — 4 to 12 hours" style="width:92px;height:80px;flex:none"></canvas></div>
     <div style="display:flex;align-items:center;gap:10px;margin:8px 0;padding:9px 11px;border:1px solid var(--line2);border-radius:8px">
+      <span style="flex:1;font-size:13px">⇢ Unreleased transports <span class="faint" style="font-size:11px">— after this many days, one that isn't released comes up on Today</span></span>
+      <input type="number" id="mn-unrel" min="1" max="60" value="${state.settings.unreleasedDays||5}" style="width:64px;padding:3px 6px"><span class="faint" style="font-size:12px">days</span></div>
+    <div style="display:flex;align-items:center;gap:10px;margin:8px 0;padding:9px 11px;border:1px solid var(--line2);border-radius:8px">
       <span style="flex:1;font-size:13px">🧩 Object types <span class="faint" style="font-size:11px">(${objTypes().length} in the Objects-tab dropdown)</span></span>
       <button class="sm" id="mn-objtypes">Edit…</button>
     </div>
@@ -77,6 +80,7 @@ function openMenu(){
   {const cv=root.querySelector("#mn-dayk"),lo=4,hi=12,get=()=>(Math.min(hi,Math.max(lo,state.settings.dayHours))-lo)/(hi-lo);let tmr=0;
    DK.scope(cv,(c,w,h)=>{const C=efC(cv);V2.dotKnob(c,C,w/2,h/2+4,34,get(),C["pen-2"],{value:efFh(state.settings.dayHours),name:"hours"});});
    V2.bindKnob(cv,get,f=>{const v=Math.round((lo+f*(hi-lo))*4)/4;if(v===state.settings.dayHours)return;state.settings.dayHours=v;clearTimeout(tmr);tmr=setTimeout(()=>{markDirty();renderApp();},400);},.25/(hi-lo));}
+  root.querySelector("#mn-unrel").onchange=e=>{state.settings.unreleasedDays=Math.min(60,Math.max(1,parseInt(e.target.value||"5",10)||5));e.target.value=state.settings.unreleasedDays;markDirty();};
   root.querySelector("#mn-imgexp").onchange=e=>{const n=Math.max(0,parseInt(e.target.value||"0",10)||0);state.settings.imageExpiryDays=n;markDirty();};
   root.querySelector("#mn-objtypes").onclick=()=>{close();openObjTypes(()=>renderApp());};
   root.querySelector("#mn-week").onclick=()=>{close();openWeekly();};

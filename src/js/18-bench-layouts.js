@@ -43,6 +43,7 @@ function demandHeadBench(t,sub,lc){
     ${na?`<div class="bband ${nad<=0?"watch":""}"><canvas class="natick"></canvas><span class="k">Next action · ${nad<0?(-nad)+" d ago":nad===0?"today":"in "+nad+" d"}</span><span class="tx"><b>${esc(na.note||"(no note)")}</b> <span class="mono faint">${na.date}</span></span><button class="sm" id="na-done" title="Did it — note it in History and clear">✓ Done</button><button class="sm ghost" id="na-edit" title="Change date or text">✎</button></div>`:""}
     ${cl.length?(()=>{const x=cl[0],o=x.open[0],more=cl.reduce((n,y)=>n+y.open.length,0)-1;
       return `<div class="clashband"><canvas class="orbit"></canvas><span><span class="ck">Object clash</span> <b class="mono">${esc(x.o.name)}</b> is also in flight in <a class="cb-go" data-id="${o.t.id}">${esc(demandLabel(o.t))}</a> <span class="clw">— ${esc(clashWhere(o))}${more>0?` · +${more} more`:""}. Agree the import order.</span></span><button class="sm cb-obj">Objects ›</button></div>`;})():""}
+    ${ticketBandHTML(t)}
     <div class="tabs">
       <button class="tab ${activeTab==="overview"?"active":""}" data-tab="overview" title="1">Overview</button>
       <button class="tab ${activeTab==="work"?"active":""}" data-tab="work" title="2">Work<span class="count">${sub.n}</span></button>

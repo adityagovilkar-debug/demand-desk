@@ -175,6 +175,10 @@ Click any item to jump straight to it.
   back 3 days later; both have Undo). An action point counts as yours when its owner
   is empty, "me" / "myself" / "I", or your Greeting name (⋯ menu). Ten rows, then
   "＋ N more". Its foot shows the hours logged today and **☾ Close the day**.
+  Two more kinds come from your transports and your team: **Release** — a transport
+  left unreleased past the days set in the ⋯ menu (**Released** clears it) — and
+  **Check in** — a demand built by someone in your team with no update for a week
+  (**Checked in** notes it in History; a future next action on the demand keeps it off).
 - **☾ Close the day** — a sheet with today's meetings, then every demand, task and
   epic touched that day (with what you did — steps, status changes, notes) and an
   hours box each, plus **Anything else** (meetings, admin, support, learning). The
@@ -394,6 +398,11 @@ Click any item to jump straight to it.
   everywhere that shows only the ID (effort charts and legends, clash warnings,
   search, readiness, dialogs) shows *ID · start of the title* instead, so they never
   look alike.
+  - **The ticket band** — on each of them, a band under the title lists the other
+    demands under that ticket with their status (click to open one), and the whole
+    ticket's hours and transports (how many reached their destinations).
+  - **Group by → Ticket** in the demand list puts each shared ticket in a block with
+    its combined hours and transports; one-demand tickets sit together at the end.
 
 ### When the requirement changes (rounds)
 - Moving a **Delivered** or **Closed** demand backwards (status buttons, the board, the
@@ -638,7 +647,7 @@ above).
 3. **⚙ View** — one panel for everything else, applied live as you click:
    - **Group by:** no grouping, epic, epic wave, status, system, project, theme,
      requestor, demand type, due date (overdue / within 7 days / within 30 days /
-     later / none) or next action.
+     later / none), next action, built by or ticket.
    - **Sort by:** due date, next action, received, last updated, age, time waiting,
      status, object clashes, demand ID or title — ascending or descending. Demands
      with no value (no due date, not waiting…) always go last.
@@ -667,6 +676,28 @@ applies inside every group.
 
 The view, saved views and collapsed groups are remembered per browser and are
 **not** stored in your data file.
+
+### Transports — every one on its way (⇢ in the rail, or **Transports**)
+One page for every transport of an open demand that hasn't reached all its
+destinations, grouped by its **next stop** (Dev first, then QA, then Prod). Each row:
+the number and text (a *via ToC* tag when it moves with a Transport of Copies), the
+demand, its route (filled = reached, ringed = next, outline = still ahead), released or
+not — and for how many days — and how long it has sat where it is. Filter by
+landscape, **not released only**, or text; **show complete** adds the ones already at
+their destinations. Click a row to open the demand's Transports tab. The Transport
+pipeline on Today opens this page.
+- **Record an import for several at once** — tick transports (or a whole group with
+  the box by its title) and a bar asks *Record an import into [system] on [date]*.
+  Transports not routed through that system are left out; one inside a ToC records it
+  on the ToC, once. Undo puts it all back.
+- **📋 run sheet** on each group — the usual import request for Basis, for that system.
+- **⇢ Move along a route…** on a ToC card — pick the route (e.g. H43 → H42 → H41) and
+  one date; every system on it is recorded in one go (ones already reached are left
+  alone), and the transports bundled in it follow.
+- **Unreleased too long** — a transport not released after 5 days (⋯ menu →
+  *Unreleased transports*) comes up on Today's agenda; **Released** clears it. Each
+  transport keeps the day it was added and the day it was released (transports made
+  before v47 count from the day the app was upgraded).
 
 ### System landscape
 Sync targets are picked from your landscape grid, generated from `H0`–`H6` ×

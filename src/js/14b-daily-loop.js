@@ -4,7 +4,7 @@
    to-dos and what's due — each done right where it shows. Close the day: an hours box for
    every demand, task and meeting touched that day, against the working day. */
 const CHASE_EVERY=3;   /* days between follow-ups on something you're waiting for */
-const AG_KINDS={step:{l:"Next step",pen:"pen-2",o:0},act:{l:"Action point",pen:"pen-5",o:1},chase:{l:"Follow up",pen:"pen-4",o:2},todo:{l:"To-do",pen:"pen-6",o:3},due:{l:"Due",pen:"pen-1",o:4}};
+const AG_KINDS={step:{l:"Next step",pen:"pen-2",o:0},act:{l:"Action point",pen:"pen-5",o:1},chase:{l:"Follow up",pen:"pen-4",o:2},todo:{l:"To-do",pen:"pen-6",o:3},release:{l:"Release",pen:"pen-1",o:3.5},check:{l:"Check in",pen:"pen-7",o:3.6},due:{l:"Due",pen:"pen-1",o:4}};
 /* an action point is yours when it has no owner, says me / myself / I, or names you (the Greeting name in ⋯) */
 function actionIsMine(a){const o=String(a.owner||"").trim().toLowerCase(),n=viewPref("userName","").trim().toLowerCase();
   return !o||["me","myself","i","self"].includes(o)||(!!n&&o.split(/[\s,/&+]+/).includes(n));}
@@ -42,11 +42,12 @@ function agendaItems(){const t0=todayStr(),out=[];
   state.tasks.forEach(x=>{const d=earliestOpenDue(x);if(!d||d>t0)return;const s=d===x.dueDate&&!["delivered","closed"].includes(x.status)?null:agSubDue(x,d);
     add("due",d,s?`Subtask: ${esc(s.title)}`:d<t0?"Past its due date":"Due today",x);});
   state.jobs.filter(j=>jobOpen(j)&&j.due&&j.due<=t0).forEach(x=>add("due",x.due,x.askedBy?`${esc(x.askedBy)} expects an answer`:"An answer is expected",x));
+  out.push(...agendaTransportItems(t0));
   return out.sort((a,b)=>a.date.localeCompare(b.date)||AG_KINDS[a.k].o-AG_KINDS[b.k].o);}
 const AG_CAP=10;
 function agendaHTML(items){const t0=todayStr(),late=items.filter(i=>i.date<t0).length,shown=agendaHTML.all?items:items.slice(0,AG_CAP);
   const have=efSum(state.efforts.filter(e=>e.date===t0)),evening=(()=>{const n=new Date();return n.getHours()*60+n.getMinutes()>=19*60+30;})()&&efWd(t0)&&!efOff(t0)&&have<EF_DAY&&viewPref("cd.done","")!==t0;
-  return `<div class="ck-unit agenda efx" id="agenda"><div class="ck-head"><h2>Today's agenda</h2><span class="ck-meta">${items.length?`${items.length} thing${items.length===1?"":"s"}${late?` · <b class="ag-late">${late} late</b>`:""} · `:""}next steps · your action points · follow-ups · due</span></div>
+  return `<div class="ck-unit agenda efx" id="agenda"><div class="ck-head"><h2>Today's agenda</h2><span class="ck-meta">${items.length?`${items.length} thing${items.length===1?"":"s"}${late?` · <b class="ag-late">${late} late</b>`:""} · `:""}next steps · action points · follow-ups · transports · due</span></div>
     ${items.length?`<div class="ag-list">${shown.map((it,i)=>{const K=AG_KINDS[it.k],n=-daysUntil(it.date);return `<div class="ag-row${n>0?" late":""}" data-ag="${i}" title="Open it">
       <span class="ag-when">${n>0?`${n} d late`:"today"}</span><span class="ag-k" style="--pen:var(--${K.pen})"><i></i>${K.l}</span>
       <span class="ag-what">${it.what}${it.sub?` <span class="ag-sub">${it.sub}</span>`:""}</span><span class="ag-of">${it.of}</span>

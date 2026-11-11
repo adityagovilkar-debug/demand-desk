@@ -7,7 +7,7 @@ function renderApp(){
   noteContent();meetingsEffortCatchUp();
   document.querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
   document.querySelector("main").classList.toggle("wide",view==="today"&&benchOn()&&contentCount()>0);
-  document.querySelector("main").classList.toggle("effortv",["effort","review","search","month"].includes(view));
+  document.querySelector("main").classList.toggle("effortv",["effort","review","search","month","transports"].includes(view));
   {const k=[view,activeId,activeEpicId,activeMeetingId,activeJournalId,activeDebugId,activePlayId,meetingRollup,journalTodos,document.documentElement.getAttribute("data-theme")].join("|");
    if(k!==renderApp._key){renderApp._key=k;enterPulse("all");const dr=document.getElementById("efDrw");if(dr)dr.classList.remove("on");}}
   if(view==="today"){renderToday();}
@@ -22,6 +22,7 @@ function renderApp(){
   else if(view==="review"){renderReview();}
   else if(view==="search"){renderSearchPage();}
   else if(view==="month"){renderMonth();}
+  else if(view==="transports"){renderTrBoard();}
   else{renderVault();}
   renderSaveState();syncRail();updateSb();syncDemandsLayout();efTimerUI();
 }

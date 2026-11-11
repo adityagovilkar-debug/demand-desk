@@ -31,7 +31,7 @@ const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod 
 /* The data format this copy understands. Bump it whenever a change adds or reshapes saved data —
    an older copy then refuses to save a file written by a newer one, instead of dropping fields
    it doesn't know about. */
-const DATA_VERSION=30;
+const DATA_VERSION=31;
 let dataNewer=0;   /* the version of a loaded file that's newer than this copy (0 = fine) */
 const SELFTEST=/[?&]selftest\b/.test(location.search);   /* sandbox: nothing is read from or written to your data */
 function newerMsg(){return `This data was saved by a newer Demand Desk (data version ${dataNewer}); this copy understands up to ${DATA_VERSION}. Saving is switched off so nothing gets dropped — open the file with the newest DemandDesk.html.`;}
@@ -307,6 +307,8 @@ function migrate(d){
   d.settings.imageExpiryDays=(typeof d.settings.imageExpiryDays==="number")?d.settings.imageExpiryDays:90;
   /* v28: the length of your working day — the full-day mark for hours logged */
   d.settings.dayHours=(+d.settings.dayHours>=1&&+d.settings.dayHours<=16)?Math.round(+d.settings.dayHours*4)/4:8;
+  /* v31: days a transport may stay unreleased before it comes up on Today */
+  d.settings.unreleasedDays=(+d.settings.unreleasedDays>=1&&+d.settings.unreleasedDays<=60)?Math.round(+d.settings.unreleasedDays):5;
   d.images=(d.images||[]).map(normImage);
   d.playbook=(d.playbook||[]).map(normPlay);
   /* hours logged (v22): demand rows keep their taskId even if the demand is later removed from another copy */
@@ -334,7 +336,9 @@ function migrate(d){
       syncs:(tr.syncs||[]).map(s=>({system:s.system||"",date:s.date||""})), tocId:tr.tocId||"", toc:tr.toc||"",
       objectIds:(tr.objectIds||[]).slice(),
       dest:(tr.dest||[]).map(x=>String(x).trim()).filter(Boolean),
-      notes:(tr.notes||"")+(tr.syncedTo?` [legacy synced-to: ${tr.syncedTo}]`:"")
+      notes:(tr.notes||"")+(tr.syncedTo?` [legacy synced-to: ${tr.syncedTo}]`:""),
+      /* v31: the day it was added (older transports count from the upgrade) and the day it was released */
+      addedOn:/^\d{4}-\d\d-\d\d$/.test(tr.addedOn||"")?tr.addedOn:todayStr(),releasedOn:tr.released&&/^\d{4}-\d\d-\d\d$/.test(tr.releasedOn||"")?tr.releasedOn:""
     }));
     /* v27: the origin is never a destination of its own transport, and a transport whose
        own syncs reached another system must have been released */
@@ -446,7 +450,7 @@ function effectiveSyncs(t,tr){
 }
 /* a transport that has reached another system has been released — never leave it "not released"
    (ToC moves don't count: a ToC carries the objects while the transport itself stays open) */
-function syncReleases(tr,sys){if(!tr||tr.released||!sys||sys===tr.system)return false;tr.released=true;return true;}
+function syncReleases(tr,sys,date){if(!tr||tr.released||!sys||sys===tr.system)return false;tr.released=true;tr.releasedOn=tr.releasedOn||date||todayStr();return true;}
 /* Transport descriptions often follow one naming pattern ending in initials + a running number
    ("… : AB12"). Suggest the next: this demand's last such description (else the newest one elsewhere,
    with that demand's ticket ID and text swapped for this one's), numbered one past the highest in use.

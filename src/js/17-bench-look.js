@@ -284,7 +284,7 @@ function cockpitHTML(mid=""){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>
     <div class="ck-tiles">${CK_TILES.map((x,i)=>`<div class="ck-unit ck-tile" data-i="${i}" style="--pen:${x.pen}"><div class="top"><span class="no">${x.no}</span><span class="st"><i></i><span>${x.st}</span></span></div>
       <canvas></canvas><div class="nm">${x.nm}</div><div class="bl">${x.bl}</div><div class="ft"><span>${foot[i]}</span><span class="go">Open ›</span></div></div>`).join("")}</div>
     <div class="ck-grid">
-      <div class="ck-unit go" id="ckPipeU" style="--pen:var(--pen-3)" title="Open the go-live view of your demands"><div class="ck-head"><h2>Transport pipeline</h2><span class="ck-meta">${c.total} transports · ${c.short} short of go-live · ${c.unrel} not released</span></div>
+      <div class="ck-unit go" id="ckPipeU" style="--pen:var(--pen-3)" title="Open the transport board"><div class="ck-head"><h2>Transport pipeline</h2><span class="ck-meta">${c.total} transports · ${c.short} short of go-live · ${c.unrel} not released</span></div>
         <canvas id="ckPipe" style="width:100%;height:${lanesN*104+8}px;display:block"></canvas>
         <div class="ck-note"><span class="ring"></span><span>Each bead is a <b>demand</b>, sitting at the furthest system its transports have reached (<b>×3</b> = three of them there) — hover to see the transports, click to open them. A <b>hollow ring</b> isn't released yet, a <b>pulse</b> is waiting for its next import. Prod shows a coming change freeze.</span></div></div>
       <div class="ck-unit"><div class="ck-head"><h2>Epics</h2><span class="ck-meta">${eps.length} active</span></div>
@@ -401,7 +401,7 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
   efHover(pipeRec,h=>{const t=h.g.t;return `<b>${esc(demandLabel(t))}</b>${t.demandId?` <span class="faint">${esc(t.title)}</span>`:""}<br><span class="faint">${h.g.items.length} transport${h.g.items.length>1?"s":""} at ${esc(h.sys)}</span>`
       +h.g.items.map(it=>`<div class="mono" style="font-size:11px;margin-top:3px">${esc(it.tr.number||"(unnumbered)")} ${it.rel?"":"<span style='color:var(--watch)'>· not released</span>"}${it.done?" · ✓ there":it.target?" · → "+esc(it.target):""}${it.tr.desc?`<div class="faint" style="font-family:var(--sans)">${esc(it.tr.desc)}</div>`:""}</div>`).join("")+`<div class="faint" style="margin-top:4px">click to open its transports</div>`;},
     h=>{view="demands";activeId=h.g.t.id;activeTab="transports";renderApp();});
-  q("#ckPipeU").onclick=()=>{if(pipeRec&&pipeRec.hv)return;goView(CK_TILES[3].view);};
+  q("#ckPipeU").onclick=()=>{if(pipeRec&&pipeRec.hv)return;view="transports";renderApp();};
   /* epic rings */
   host.querySelectorAll(".ck-ep").forEach(el=>{const e=epicById(el.dataset.e);if(!e)return;const r=epicRollup(e),f=r.ts.length?r.done/r.ts.length:0,st={v:mv?0:f};
     scope(el.querySelector("canvas"),(ctx,w,h,t,dt)=>{st.v+=(f-st.v)*DK.ease(dt,.04);dotRing(ctx,w/2,h/2,w/2-5,st.v,32,C["pen-5"],mv?t*.00008:0);

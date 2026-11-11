@@ -4,7 +4,7 @@
    and "only …" toggles. It's edited in the ⚙ View panel, summed up as removable chips
    above the list, and can be saved as named one-click views. Per viewer (localStorage),
    never in the data file. */
-const DV_GROUPS={none:"No grouping",epic:"Epic",wave:"Epic wave",status:"Status",system:"System",project:"Project",theme:"Theme",requestor:"Requestor",type:"Demand type",due:"Due date",next:"Next action",builder:"Built by"};
+const DV_GROUPS={none:"No grouping",epic:"Epic",wave:"Epic wave",status:"Status",system:"System",project:"Project",theme:"Theme",requestor:"Requestor",type:"Demand type",due:"Due date",next:"Next action",builder:"Built by",ticket:"Ticket"};
 const DV_SORTS={due:{label:"Due date",dir:"asc"},next:{label:"Next action",dir:"asc"},received:{label:"Received",dir:"desc"},updated:{label:"Last updated",dir:"desc"},
   age:{label:"Age",dir:"desc"},waiting:{label:"Time waiting",dir:"desc"},status:{label:"Status",dir:"asc"},clash:{label:"Object clashes",dir:"desc"},
   demand:{label:"Demand ID",dir:"asc"},title:{label:"Title",dir:"asc"}};
@@ -108,6 +108,9 @@ function dvGroupOf(t,g){
         :n<=30?{k:"month",label:"Due within 30 days",rank:2}:{k:"later",label:"Due later",rank:3};}
     case "builder":{const b=buildersOf(t);if(!b.length)return{k:"",label:`<span class="faint">👷 You</span>`,rank:9};
       return{k:b.map(p=>p.id).sort().join("|"),label:`👷 <b>${esc(b.map(p=>p.name).join(", "))}</b>`,rank:0,sl:b.map(p=>p.name).join(", ")};}
+    case "ticket":{if(!t.demandId)return none("No ticket ID");const n=demandIdCounts().get(t.demandId)||0;
+      if(n<2)return{k:"__single",label:`<span class="faint">One demand per ticket</span>`,rank:5};const r=ticketRollup(t.demandId);
+      return{k:t.demandId,label:`🎫 <b class="mono">${esc(t.demandId)}</b> · ${n} demands <span class="faint">· ${efFh(Math.round(r.h*10)/10)} h · ${r.there}/${r.trs} TRs there</span>`,rank:0,sl:t.demandId};}
     case "next":{const n=t.nextAction;if(!n||!n.date||t.status==="closed")return{k:"none",label:`<span class="faint">No next action</span>`,rank:3};
       return n.date<=todayStr()?{k:"due",label:`<span style="color:var(--amber)">⏰ Next action due</span>`,rank:0}
         :daysUntil(n.date)<=7?{k:"week",label:"⏰ Within 7 days",rank:1}:{k:"later",label:"⏰ Later",rank:2};}
@@ -351,6 +354,7 @@ function renderDetail(){
   {const ds=host.querySelector("#dh-status");if(ds)ds.onchange=ev=>setDemandStatus(t,ev.target.value,ds);
    host.querySelectorAll("#dh-seg button").forEach(b=>b.onclick=()=>setDemandStatus(t,b.dataset.s,b));
    const cg=host.querySelector(".cb-go");if(cg)cg.onclick=()=>{activeId=cg.dataset.id;activeTab="objects";renderApp();};
+   host.querySelectorAll(".tk-go").forEach(a=>a.onclick=()=>{activeId=a.dataset.id;activeTab="overview";renderApp();});
    const co=host.querySelector(".cb-obj");if(co)co.onclick=()=>{activeTab="objects";renderDetail();enterPulse("detail");};
    const ob=host.querySelector(".clashband canvas");if(ob&&benchOn())DK.scope(ob,drawOrbit);
    const nt=host.querySelector(".natick");if(nt)DK.scope(nt,drawTick);}
@@ -570,7 +574,7 @@ function renderTransports(body,t){
     <div id="tocList"></div>`;
   body.querySelector("#expTr").onclick=exportTransportsCSV;
   body.querySelector("#runSheet").onclick=()=>openRunSheet([t],`${t.demandId?t.demandId+" — ":""}${t.title}`,goliveTargetFor(t));
-  body.querySelector("#addTr").onclick=()=>{const sg=trDescSuggest(t);if(sg)toast("Description suggested from your naming pattern — edit it if it's not right");t.transports.push({id:uid(),number:"",desc:sg,system:t.system||state.settings.defaultSystem,released:false,kind:"workbench",client:"",syncs:[],tocId:"",toc:"",objectIds:[],dest:[],notes:""});touch(t);renderTransports(body,t);renderDetail();};
+  body.querySelector("#addTr").onclick=()=>{const sg=trDescSuggest(t);if(sg)toast("Description suggested from your naming pattern — edit it if it's not right");t.transports.push({id:uid(),number:"",desc:sg,system:t.system||state.settings.defaultSystem,released:false,kind:"workbench",client:"",syncs:[],tocId:"",toc:"",objectIds:[],dest:[],notes:"",addedOn:todayStr(),releasedOn:""});touch(t);renderTransports(body,t);renderDetail();};
   body.querySelector("#addToc").onclick=()=>{(t.tocs=t.tocs||[]).push(normToc({system:state.settings.defaultSystem}));touch(t);renderTransports(body,t);};
   drawReadiness();drawTrs();drawTocs();
 
@@ -649,7 +653,7 @@ function renderTransports(body,t){
       q(".kind").onchange=e=>{tr.kind=e.target.value;if(tr.kind!=="customizing")tr.client="";touch(t);drawTrs();drawReadiness();};
       q(".org").onchange=e=>{tr.system=e.target.value;if(tr.client&&!clientsForSystem(tr.system).includes(tr.client))tr.client="";touch(t);drawTrs();drawReadiness();};
       const cliSel=q(".cli");if(cliSel)cliSel.onchange=e=>{tr.client=e.target.value;touch(t);drawTrs();drawReadiness();};
-      q(".rel").onchange=e=>{tr.released=e.target.checked;touch(t);};
+      q(".rel").onchange=e=>{tr.released=e.target.checked;tr.releasedOn=tr.released?(tr.releasedOn||todayStr()):"";touch(t);};
       q(".notes").onchange=e=>{tr.notes=e.target.value;touch(t);};
       q(".tocsel").onchange=e=>{tr.tocId=e.target.value;touch(t);drawTrs();drawReadiness();};
       {const b=q(".tocone");if(b)b.onclick=()=>{const n=prompt(`ToC number for ${tr.number||"this transport"}:`,"");if(n===null)return;
@@ -703,7 +707,7 @@ function renderTransports(body,t){
           <button class="ghost sm danger cdel">🗑</button>
         </div>
         <div style="display:flex;gap:14px;flex-wrap:wrap">
-          <div style="flex:1;min-width:260px"><label>ToC moved to systems</label><div class="csyncs"></div><button class="sm caddsync" style="margin-top:4px">＋ Add sync target</button></div>
+          <div style="flex:1;min-width:260px"><label>ToC moved to systems</label><div class="csyncs"></div><button class="sm caddsync" style="margin-top:4px">＋ Add sync target</button> <button class="sm croute" style="margin-top:4px" title="Every system on a route, with one date">⇢ Move along a route…</button></div>
           <div style="flex:0 0 230px"><label>Bundled TRs</label><div class="faint mono" style="font-size:12px">${members.map(m=>esc(m.number||"(unnumbered)")).join(", ")||"—"}</div><label style="margin-top:10px">Notes</label><input class="cnotes" value="${esc(c.notes)}"></div>
         </div>`;
       const q=s=>card.querySelector(s);
@@ -726,6 +730,7 @@ function renderTransports(body,t){
           b.title=open?"Back to the grid":"Change dates, add or remove systems";b.onclick=()=>{if(open)tocEdit.delete(c.id);else tocEdit.add(c.id);drawCs();};sh.appendChild(b);}
       };
       q(".caddsync").onclick=()=>{c.syncs.push({system:"",date:todayStr()});touch(t);drawCs();};
+      q(".croute").onclick=()=>openTocRoute(t,c);
       drawCs();
       host.appendChild(card);
     });

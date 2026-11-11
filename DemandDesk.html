@@ -1626,6 +1626,53 @@
   .efx .ef-g3.two{grid-template-columns:repeat(2,minmax(0,1fr))}
   @media (max-width:1100px){.efx .ef-g3.two{grid-template-columns:1fr}}
   .actitem .a-job{white-space:nowrap}
+  /* ---------------- transport board, ToC route move, ticket band ---------------- */
+  .tb .tb-f{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .tb .tb-f .ef-lb{margin:0}
+  .tb-tg{display:flex;align-items:center;gap:6px;margin:0;font-size:12px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink-2)}
+  .tb-tg input{width:auto;margin:0}
+  .tb-tg:first-of-type{margin-left:auto}
+  .tb-g{margin-top:14px}
+  .tb-g .ck-head h2{display:flex;align-items:center;gap:8px}
+  .tb-gck{display:flex;margin:0}.tb-gck input{width:auto;margin:0}
+  .tb-tl{font-weight:400;letter-spacing:.08em;text-transform:none;font-size:11px}
+  .tb-fz{color:var(--pen-7);font-weight:600;letter-spacing:.06em;text-transform:none;font-size:11px}
+  .tb-g .ck-meta a{color:var(--ink-2)}
+  .tb-row{display:grid;grid-template-columns:18px minmax(0,1.15fr) minmax(0,1fr) minmax(0,1.3fr) 128px 86px;gap:12px;align-items:center;padding:7px 6px;border-bottom:1px dotted var(--rule-strong);cursor:pointer;font-size:12.5px;border-radius:2px}
+  .tb-row:last-child{border-bottom:0}
+  .tb-row:hover{background:var(--paper-2)}
+  .tb-row.sel{background:color-mix(in srgb,var(--pen-2) 9%,transparent)}
+  .tb-row .tb-ck{width:auto;margin:0}
+  .tb-tr{min-width:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px}
+  .tb-tr b{font-weight:600;color:var(--ink)}
+  .tb-ds{flex-basis:100%;font-size:11.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tb-tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:var(--ink-2);border:1px solid var(--rule-strong);border-radius:2px;padding:0 4px}
+  .tb-dm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)}
+  .tb-dm b{color:var(--ink);font-weight:600}
+  .tb-route{display:flex;align-items:center;min-width:0;overflow:hidden}
+  .tb-route i{flex:1 1 14px;min-width:8px;max-width:30px;border-top:1px dotted var(--ink-4);margin:0 3px}
+  .tb-route i.on{border-top:1.5px solid var(--ink-2)}
+  .tb-st{font-family:var(--mono);font-size:10.5px;padding:1px 5px;border-radius:9px;border:1px solid var(--rule-strong);color:var(--ink-3);white-space:nowrap}
+  .tb-st.on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .tb-st.nx{border-color:var(--pen-2);color:var(--pen-2);font-weight:600;box-shadow:0 0 0 2px color-mix(in srgb,var(--pen-2) 18%,transparent)}
+  .tb-rel{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);white-space:nowrap}
+  .tb-rel.warn{color:var(--watch)}
+  .tb-rel.bad{color:var(--bad);font-weight:600}
+  .tb-sat{font-family:var(--mono);font-size:11px;text-align:right;white-space:nowrap}
+  .tb-bulk{position:sticky;bottom:10px;display:none;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;padding:10px 14px;background:var(--paper);border:1.5px solid var(--ink);border-radius:3px;box-shadow:0 6px 24px rgba(0,0,0,.18);font-size:12.5px;z-index:5}
+  .tb-bulk.on{display:flex}
+  .tb-bulk select,.tb-bulk input{width:auto}
+  .tb-bn{font-size:11.5px}
+  @media (max-width:1250px){.tb-row{grid-template-columns:18px minmax(0,1fr) minmax(0,.9fr) minmax(0,1.2fr) 108px}.tb-sat{display:none}}
+  .tr-rsys{display:flex;flex-direction:column;gap:6px}
+  .tr-rs{display:flex;align-items:center;gap:8px;margin:0;font-size:13px;text-transform:none;letter-spacing:0;font-weight:500}
+  .tr-rs input{width:auto;margin:0}
+  .tr-rs.done{opacity:.6}
+  .tkband .tx{display:flex;flex-wrap:wrap;gap:4px 14px}
+  .tkband .tk-go{cursor:pointer;color:var(--ink);text-decoration:none}
+  .tkband .tk-go:hover{text-decoration:underline}
+  .tkband .tk-go .pill{font-size:9.5px;padding:0 5px;margin-right:3px}
+  .tkband .tk-sum{margin-left:auto;font-size:11px;color:var(--ink-2);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -1640,6 +1687,7 @@
     <div class="nav">
       <button class="navbtn" data-view="today">Today</button>
       <button class="navbtn" data-view="demands">Demands</button>
+      <button class="navbtn" data-view="transports">Transports</button>
       <button class="navbtn" data-view="jobs">Tasks</button>
       <button class="navbtn" data-view="epics">Epics</button>
       <button class="navbtn" data-view="debug">Debug</button>
@@ -1675,6 +1723,7 @@
     <button class="rb" data-view="today" style="--pen:var(--ink)"><svg viewBox="0 0 18 18"><rect x="2.5" y="2.5" width="5" height="5"/><rect x="10.5" y="2.5" width="5" height="5"/><rect x="2.5" y="10.5" width="5" height="5"/><rect x="10.5" y="10.5" width="5" height="5"/></svg><span class="pd"></span><span class="tip">Today</span></button>
     <div class="sep"></div>
     <button class="rb" data-view="demands" style="--pen:var(--pen-2)"><svg viewBox="0 0 18 18"><path d="M3 4.5h12M3 9h12M3 13.5h7"/><circle cx="14" cy="13.5" r="1.4"/></svg><span class="pd"></span><span class="cnt" id="rcDemands"></span><span class="tip">Demands</span></button>
+    <button class="rb" data-view="transports" style="--pen:var(--pen-3)"><svg viewBox="0 0 18 18"><circle cx="4" cy="13.5" r="1.7"/><circle cx="14" cy="4.5" r="1.7"/><path d="M5.7 13.5H11a2.5 2.5 0 0 0 0-5H7a2.5 2.5 0 0 1 0-5h5.3"/></svg><span class="pd"></span><span class="tip">Transports · every one on its way</span></button>
     <button class="rb" data-view="jobs" style="--pen:var(--pen-7)"><svg viewBox="0 0 18 18"><rect x="2.5" y="2.5" width="13" height="13" rx="1.5"/><path d="M5.5 9.2l2.3 2.3 4.7-5"/></svg><span class="pd"></span><span class="cnt" id="rcJobs"></span><span class="tip">Tasks · not demands</span></button>
     <button class="rb" data-view="epics" style="--pen:var(--pen-5)"><svg viewBox="0 0 18 18"><path d="M9 2.5l6.5 6.5L9 15.5 2.5 9z"/><path d="M9 6v6"/></svg><span class="pd"></span><span class="tip">Epics</span></button>
     <button class="rb" data-view="debug" style="--pen:var(--pen-1)"><svg viewBox="0 0 18 18"><rect x="5" y="5" width="8" height="10" rx="4"/><path d="M9 5V3M5 9H2.5M15.5 9H13M5.5 13l-2 1.5M12.5 13l2 1.5"/></svg><span class="pd"></span><span class="tip">Debug</span></button>
@@ -1737,7 +1786,7 @@ const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod 
 /* The data format this copy understands. Bump it whenever a change adds or reshapes saved data —
    an older copy then refuses to save a file written by a newer one, instead of dropping fields
    it doesn't know about. */
-const DATA_VERSION=30;
+const DATA_VERSION=31;
 let dataNewer=0;   /* the version of a loaded file that's newer than this copy (0 = fine) */
 const SELFTEST=/[?&]selftest\b/.test(location.search);   /* sandbox: nothing is read from or written to your data */
 function newerMsg(){return `This data was saved by a newer Demand Desk (data version ${dataNewer}); this copy understands up to ${DATA_VERSION}. Saving is switched off so nothing gets dropped — open the file with the newest DemandDesk.html.`;}
@@ -2013,6 +2062,8 @@ function migrate(d){
   d.settings.imageExpiryDays=(typeof d.settings.imageExpiryDays==="number")?d.settings.imageExpiryDays:90;
   /* v28: the length of your working day — the full-day mark for hours logged */
   d.settings.dayHours=(+d.settings.dayHours>=1&&+d.settings.dayHours<=16)?Math.round(+d.settings.dayHours*4)/4:8;
+  /* v31: days a transport may stay unreleased before it comes up on Today */
+  d.settings.unreleasedDays=(+d.settings.unreleasedDays>=1&&+d.settings.unreleasedDays<=60)?Math.round(+d.settings.unreleasedDays):5;
   d.images=(d.images||[]).map(normImage);
   d.playbook=(d.playbook||[]).map(normPlay);
   /* hours logged (v22): demand rows keep their taskId even if the demand is later removed from another copy */
@@ -2040,7 +2091,9 @@ function migrate(d){
       syncs:(tr.syncs||[]).map(s=>({system:s.system||"",date:s.date||""})), tocId:tr.tocId||"", toc:tr.toc||"",
       objectIds:(tr.objectIds||[]).slice(),
       dest:(tr.dest||[]).map(x=>String(x).trim()).filter(Boolean),
-      notes:(tr.notes||"")+(tr.syncedTo?` [legacy synced-to: ${tr.syncedTo}]`:"")
+      notes:(tr.notes||"")+(tr.syncedTo?` [legacy synced-to: ${tr.syncedTo}]`:""),
+      /* v31: the day it was added (older transports count from the upgrade) and the day it was released */
+      addedOn:/^\d{4}-\d\d-\d\d$/.test(tr.addedOn||"")?tr.addedOn:todayStr(),releasedOn:tr.released&&/^\d{4}-\d\d-\d\d$/.test(tr.releasedOn||"")?tr.releasedOn:""
     }));
     /* v27: the origin is never a destination of its own transport, and a transport whose
        own syncs reached another system must have been released */
@@ -2152,7 +2205,7 @@ function effectiveSyncs(t,tr){
 }
 /* a transport that has reached another system has been released — never leave it "not released"
    (ToC moves don't count: a ToC carries the objects while the transport itself stays open) */
-function syncReleases(tr,sys){if(!tr||tr.released||!sys||sys===tr.system)return false;tr.released=true;return true;}
+function syncReleases(tr,sys,date){if(!tr||tr.released||!sys||sys===tr.system)return false;tr.released=true;tr.releasedOn=tr.releasedOn||date||todayStr();return true;}
 /* Transport descriptions often follow one naming pattern ending in initials + a running number
    ("… : AB12"). Suggest the next: this demand's last such description (else the newest one elsewhere,
    with that demand's ticket ID and text swapped for this one's), numbered one past the highest in use.
@@ -2372,7 +2425,7 @@ function renderApp(){
   noteContent();meetingsEffortCatchUp();
   document.querySelectorAll(".navbtn").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
   document.querySelector("main").classList.toggle("wide",view==="today"&&benchOn()&&contentCount()>0);
-  document.querySelector("main").classList.toggle("effortv",["effort","review","search","month"].includes(view));
+  document.querySelector("main").classList.toggle("effortv",["effort","review","search","month","transports"].includes(view));
   {const k=[view,activeId,activeEpicId,activeMeetingId,activeJournalId,activeDebugId,activePlayId,meetingRollup,journalTodos,document.documentElement.getAttribute("data-theme")].join("|");
    if(k!==renderApp._key){renderApp._key=k;enterPulse("all");const dr=document.getElementById("efDrw");if(dr)dr.classList.remove("on");}}
   if(view==="today"){renderToday();}
@@ -2387,6 +2440,7 @@ function renderApp(){
   else if(view==="review"){renderReview();}
   else if(view==="search"){renderSearchPage();}
   else if(view==="month"){renderMonth();}
+  else if(view==="transports"){renderTrBoard();}
   else{renderVault();}
   renderSaveState();syncRail();updateSb();syncDemandsLayout();efTimerUI();
 }
@@ -2825,7 +2879,7 @@ function openJobClose(j,status){const root=document.getElementById("modalRoot"),
    and "only …" toggles. It's edited in the ⚙ View panel, summed up as removable chips
    above the list, and can be saved as named one-click views. Per viewer (localStorage),
    never in the data file. */
-const DV_GROUPS={none:"No grouping",epic:"Epic",wave:"Epic wave",status:"Status",system:"System",project:"Project",theme:"Theme",requestor:"Requestor",type:"Demand type",due:"Due date",next:"Next action",builder:"Built by"};
+const DV_GROUPS={none:"No grouping",epic:"Epic",wave:"Epic wave",status:"Status",system:"System",project:"Project",theme:"Theme",requestor:"Requestor",type:"Demand type",due:"Due date",next:"Next action",builder:"Built by",ticket:"Ticket"};
 const DV_SORTS={due:{label:"Due date",dir:"asc"},next:{label:"Next action",dir:"asc"},received:{label:"Received",dir:"desc"},updated:{label:"Last updated",dir:"desc"},
   age:{label:"Age",dir:"desc"},waiting:{label:"Time waiting",dir:"desc"},status:{label:"Status",dir:"asc"},clash:{label:"Object clashes",dir:"desc"},
   demand:{label:"Demand ID",dir:"asc"},title:{label:"Title",dir:"asc"}};
@@ -2929,6 +2983,9 @@ function dvGroupOf(t,g){
         :n<=30?{k:"month",label:"Due within 30 days",rank:2}:{k:"later",label:"Due later",rank:3};}
     case "builder":{const b=buildersOf(t);if(!b.length)return{k:"",label:`<span class="faint">👷 You</span>`,rank:9};
       return{k:b.map(p=>p.id).sort().join("|"),label:`👷 <b>${esc(b.map(p=>p.name).join(", "))}</b>`,rank:0,sl:b.map(p=>p.name).join(", ")};}
+    case "ticket":{if(!t.demandId)return none("No ticket ID");const n=demandIdCounts().get(t.demandId)||0;
+      if(n<2)return{k:"__single",label:`<span class="faint">One demand per ticket</span>`,rank:5};const r=ticketRollup(t.demandId);
+      return{k:t.demandId,label:`🎫 <b class="mono">${esc(t.demandId)}</b> · ${n} demands <span class="faint">· ${efFh(Math.round(r.h*10)/10)} h · ${r.there}/${r.trs} TRs there</span>`,rank:0,sl:t.demandId};}
     case "next":{const n=t.nextAction;if(!n||!n.date||t.status==="closed")return{k:"none",label:`<span class="faint">No next action</span>`,rank:3};
       return n.date<=todayStr()?{k:"due",label:`<span style="color:var(--amber)">⏰ Next action due</span>`,rank:0}
         :daysUntil(n.date)<=7?{k:"week",label:"⏰ Within 7 days",rank:1}:{k:"later",label:"⏰ Later",rank:2};}
@@ -3172,6 +3229,7 @@ function renderDetail(){
   {const ds=host.querySelector("#dh-status");if(ds)ds.onchange=ev=>setDemandStatus(t,ev.target.value,ds);
    host.querySelectorAll("#dh-seg button").forEach(b=>b.onclick=()=>setDemandStatus(t,b.dataset.s,b));
    const cg=host.querySelector(".cb-go");if(cg)cg.onclick=()=>{activeId=cg.dataset.id;activeTab="objects";renderApp();};
+   host.querySelectorAll(".tk-go").forEach(a=>a.onclick=()=>{activeId=a.dataset.id;activeTab="overview";renderApp();});
    const co=host.querySelector(".cb-obj");if(co)co.onclick=()=>{activeTab="objects";renderDetail();enterPulse("detail");};
    const ob=host.querySelector(".clashband canvas");if(ob&&benchOn())DK.scope(ob,drawOrbit);
    const nt=host.querySelector(".natick");if(nt)DK.scope(nt,drawTick);}
@@ -3391,7 +3449,7 @@ function renderTransports(body,t){
     <div id="tocList"></div>`;
   body.querySelector("#expTr").onclick=exportTransportsCSV;
   body.querySelector("#runSheet").onclick=()=>openRunSheet([t],`${t.demandId?t.demandId+" — ":""}${t.title}`,goliveTargetFor(t));
-  body.querySelector("#addTr").onclick=()=>{const sg=trDescSuggest(t);if(sg)toast("Description suggested from your naming pattern — edit it if it's not right");t.transports.push({id:uid(),number:"",desc:sg,system:t.system||state.settings.defaultSystem,released:false,kind:"workbench",client:"",syncs:[],tocId:"",toc:"",objectIds:[],dest:[],notes:""});touch(t);renderTransports(body,t);renderDetail();};
+  body.querySelector("#addTr").onclick=()=>{const sg=trDescSuggest(t);if(sg)toast("Description suggested from your naming pattern — edit it if it's not right");t.transports.push({id:uid(),number:"",desc:sg,system:t.system||state.settings.defaultSystem,released:false,kind:"workbench",client:"",syncs:[],tocId:"",toc:"",objectIds:[],dest:[],notes:"",addedOn:todayStr(),releasedOn:""});touch(t);renderTransports(body,t);renderDetail();};
   body.querySelector("#addToc").onclick=()=>{(t.tocs=t.tocs||[]).push(normToc({system:state.settings.defaultSystem}));touch(t);renderTransports(body,t);};
   drawReadiness();drawTrs();drawTocs();
 
@@ -3470,7 +3528,7 @@ function renderTransports(body,t){
       q(".kind").onchange=e=>{tr.kind=e.target.value;if(tr.kind!=="customizing")tr.client="";touch(t);drawTrs();drawReadiness();};
       q(".org").onchange=e=>{tr.system=e.target.value;if(tr.client&&!clientsForSystem(tr.system).includes(tr.client))tr.client="";touch(t);drawTrs();drawReadiness();};
       const cliSel=q(".cli");if(cliSel)cliSel.onchange=e=>{tr.client=e.target.value;touch(t);drawTrs();drawReadiness();};
-      q(".rel").onchange=e=>{tr.released=e.target.checked;touch(t);};
+      q(".rel").onchange=e=>{tr.released=e.target.checked;tr.releasedOn=tr.released?(tr.releasedOn||todayStr()):"";touch(t);};
       q(".notes").onchange=e=>{tr.notes=e.target.value;touch(t);};
       q(".tocsel").onchange=e=>{tr.tocId=e.target.value;touch(t);drawTrs();drawReadiness();};
       {const b=q(".tocone");if(b)b.onclick=()=>{const n=prompt(`ToC number for ${tr.number||"this transport"}:`,"");if(n===null)return;
@@ -3524,7 +3582,7 @@ function renderTransports(body,t){
           <button class="ghost sm danger cdel">🗑</button>
         </div>
         <div style="display:flex;gap:14px;flex-wrap:wrap">
-          <div style="flex:1;min-width:260px"><label>ToC moved to systems</label><div class="csyncs"></div><button class="sm caddsync" style="margin-top:4px">＋ Add sync target</button></div>
+          <div style="flex:1;min-width:260px"><label>ToC moved to systems</label><div class="csyncs"></div><button class="sm caddsync" style="margin-top:4px">＋ Add sync target</button> <button class="sm croute" style="margin-top:4px" title="Every system on a route, with one date">⇢ Move along a route…</button></div>
           <div style="flex:0 0 230px"><label>Bundled TRs</label><div class="faint mono" style="font-size:12px">${members.map(m=>esc(m.number||"(unnumbered)")).join(", ")||"—"}</div><label style="margin-top:10px">Notes</label><input class="cnotes" value="${esc(c.notes)}"></div>
         </div>`;
       const q=s=>card.querySelector(s);
@@ -3547,6 +3605,7 @@ function renderTransports(body,t){
           b.title=open?"Back to the grid":"Change dates, add or remove systems";b.onclick=()=>{if(open)tocEdit.delete(c.id);else tocEdit.add(c.id);drawCs();};sh.appendChild(b);}
       };
       q(".caddsync").onclick=()=>{c.syncs.push({system:"",date:todayStr()});touch(t);drawCs();};
+      q(".croute").onclick=()=>openTocRoute(t,c);
       drawCs();
       host.appendChild(card);
     });
@@ -5249,7 +5308,7 @@ function nextActionTrail(t){return (t.timeline||[]).filter(e=>e.type==="note"&&/
    to-dos and what's due — each done right where it shows. Close the day: an hours box for
    every demand, task and meeting touched that day, against the working day. */
 const CHASE_EVERY=3;   /* days between follow-ups on something you're waiting for */
-const AG_KINDS={step:{l:"Next step",pen:"pen-2",o:0},act:{l:"Action point",pen:"pen-5",o:1},chase:{l:"Follow up",pen:"pen-4",o:2},todo:{l:"To-do",pen:"pen-6",o:3},due:{l:"Due",pen:"pen-1",o:4}};
+const AG_KINDS={step:{l:"Next step",pen:"pen-2",o:0},act:{l:"Action point",pen:"pen-5",o:1},chase:{l:"Follow up",pen:"pen-4",o:2},todo:{l:"To-do",pen:"pen-6",o:3},release:{l:"Release",pen:"pen-1",o:3.5},check:{l:"Check in",pen:"pen-7",o:3.6},due:{l:"Due",pen:"pen-1",o:4}};
 /* an action point is yours when it has no owner, says me / myself / I, or names you (the Greeting name in ⋯) */
 function actionIsMine(a){const o=String(a.owner||"").trim().toLowerCase(),n=viewPref("userName","").trim().toLowerCase();
   return !o||["me","myself","i","self"].includes(o)||(!!n&&o.split(/[\s,/&+]+/).includes(n));}
@@ -5287,11 +5346,12 @@ function agendaItems(){const t0=todayStr(),out=[];
   state.tasks.forEach(x=>{const d=earliestOpenDue(x);if(!d||d>t0)return;const s=d===x.dueDate&&!["delivered","closed"].includes(x.status)?null:agSubDue(x,d);
     add("due",d,s?`Subtask: ${esc(s.title)}`:d<t0?"Past its due date":"Due today",x);});
   state.jobs.filter(j=>jobOpen(j)&&j.due&&j.due<=t0).forEach(x=>add("due",x.due,x.askedBy?`${esc(x.askedBy)} expects an answer`:"An answer is expected",x));
+  out.push(...agendaTransportItems(t0));
   return out.sort((a,b)=>a.date.localeCompare(b.date)||AG_KINDS[a.k].o-AG_KINDS[b.k].o);}
 const AG_CAP=10;
 function agendaHTML(items){const t0=todayStr(),late=items.filter(i=>i.date<t0).length,shown=agendaHTML.all?items:items.slice(0,AG_CAP);
   const have=efSum(state.efforts.filter(e=>e.date===t0)),evening=(()=>{const n=new Date();return n.getHours()*60+n.getMinutes()>=19*60+30;})()&&efWd(t0)&&!efOff(t0)&&have<EF_DAY&&viewPref("cd.done","")!==t0;
-  return `<div class="ck-unit agenda efx" id="agenda"><div class="ck-head"><h2>Today's agenda</h2><span class="ck-meta">${items.length?`${items.length} thing${items.length===1?"":"s"}${late?` · <b class="ag-late">${late} late</b>`:""} · `:""}next steps · your action points · follow-ups · due</span></div>
+  return `<div class="ck-unit agenda efx" id="agenda"><div class="ck-head"><h2>Today's agenda</h2><span class="ck-meta">${items.length?`${items.length} thing${items.length===1?"":"s"}${late?` · <b class="ag-late">${late} late</b>`:""} · `:""}next steps · action points · follow-ups · transports · due</span></div>
     ${items.length?`<div class="ag-list">${shown.map((it,i)=>{const K=AG_KINDS[it.k],n=-daysUntil(it.date);return `<div class="ag-row${n>0?" late":""}" data-ag="${i}" title="Open it">
       <span class="ag-when">${n>0?`${n} d late`:"today"}</span><span class="ag-k" style="--pen:var(--${K.pen})"><i></i>${K.l}</span>
       <span class="ag-what">${it.what}${it.sub?` <span class="ag-sub">${it.sub}</span>`:""}</span><span class="ag-of">${it.of}</span>
@@ -5358,6 +5418,141 @@ function openCloseDay(d){d=d&&d<=todayStr()?d:todayStr();const root=document.get
   q("#cdPrev").onclick=()=>openCloseDay(efAdd(d,-1));q("#cdNext").onclick=()=>openCloseDay(efAdd(d,1));
   q("#cdOff").onclick=()=>openDaysOff({date:d});
   sync();setTimeout(()=>{const b=boxes()[0];if(b)b.focus();},40);}
+/* ===================== TRANSPORTS AND TICKETS =====================
+   The transport board: every transport still on its way, across all demands — where it is,
+   where it goes next, released or not, how long it has sat there — filtered by landscape,
+   grouped by the next system, with an import recorded for several at once. A ToC moved
+   along a whole route in one go. Tickets as a light level above demands: the demands that
+   share a ticket ID, side by side. And two reminders for the agenda: a transport left
+   unreleased too long, and a demand handed to your team that has gone quiet. */
+const TRB={L:"",unrel:false,done:false,q:"",sel:new Set()};
+const QUIET_DAYS=7;   /* a handed-on demand with no update for this long comes up on the agenda */
+const unrelDays=()=>+state.settings.unreleasedDays||5;
+const trbKey=(t,tr)=>t.id+"|"+tr.id;
+function trLastMove(t,tr){return effectiveSyncs(t,tr).map(s=>s.date).filter(Boolean).sort().pop()||"";}
+/* since when it has sat where it is: its last move, else its release, else the day it was added */
+function trSince(t,tr){const m=trLastMove(t,tr);if(m)return {d:m,what:"moved"};if(tr.released&&tr.releasedOn)return {d:tr.releasedOn,what:"released"};return tr.addedOn?{d:tr.addedOn,what:"added"}:null;}
+function trUnrelDays(tr){return !tr.released&&tr.addedOn?Math.max(0,-daysUntil(tr.addedOn)):null;}
+const trTierIdx=x=>{const i=routeTiers().indexOf(String(x).slice(-1));return i<0?9:i;};
+function trBoardRows(){const out=[];
+  state.tasks.forEach(t=>{if(t.status==="closed")return;
+    t.transports.forEach(tr=>{if(!tr.system)return;
+      const R=reachedSystems(t,tr),T=trTargets(t,tr),route=[tr.system,...trRouteSystems(t,tr).filter(x=>x!==tr.system)];
+      T.forEach(x=>{if(!route.includes(x))route.push(x);});
+      const far=Math.max(0,...T.map(x=>route.indexOf(x))),path=route.slice(0,far+1);
+      const done=trComplete(t,tr),next=done?"":(path.find(x=>x!==tr.system&&!R.has(x))||trMissing(t,tr)[0]||"");
+      const at=[...path].reverse().find(x=>x===tr.system||R.has(x))||tr.system,since=trSince(t,tr);
+      out.push({t,tr,toc:tocFor(t,tr),path,R,T,done,next,at,since,sat:since?Math.max(0,-daysUntil(since.d)):null,unrel:trUnrelDays(tr)});});});
+  return out;}
+function trbFilter(rows){const w=TRB.q.toLowerCase().split(/\s+/).filter(Boolean);
+  return rows.filter(r=>(TRB.done||!r.done)&&(!TRB.unrel||!r.tr.released)&&(!TRB.L||r.path.some(x=>landscapeOf(x)===TRB.L))
+    &&(!w.length||w.every(x=>[r.tr.number,r.tr.desc,r.t.demandId,r.t.title,r.toc&&r.toc.number].join(" ").toLowerCase().includes(x))));}
+function trbRouteHTML(r){const when={};effectiveSyncs(r.t,r.tr).forEach(s=>{if(!when[s.system])when[s.system]=s.date;});
+  return `<span class="tb-route">${r.path.map((x,i)=>{const on=x===r.tr.system||r.R.has(x),nx=x===r.next;
+    return `${i?`<i class="${on?"on":""}"></i>`:""}<span class="tb-st ${on?"on":nx?"nx":""} ${sysTierCls(x)}" title="${esc(x)}${x===r.tr.system?" · built here":on?" · reached"+(when[x]?" "+when[x]:""):nx?" · next":" · still ahead"}">${esc(x)}</span>`;}).join("")}</span>`;}
+function renderTrBoard(){const host=document.getElementById("detail"),all=trBoardRows(),U5=unrelDays();
+  const live=all.filter(r=>!r.done),rows=trbFilter(all),keys=new Set(rows.map(r=>trbKey(r.t,r.tr)));
+  [...TRB.sel].forEach(k=>{if(!keys.has(k))TRB.sel.delete(k);});
+  const Ls=[...new Set(live.flatMap(r=>r.path.map(landscapeOf)))].sort();
+  const groups=new Map();rows.forEach(r=>{const k=r.done?"":r.next;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r);});
+  const order=[...groups.keys()].sort((a,b)=>(!a)-(!b)||trTierIdx(a)-trTierIdx(b)||a.localeCompare(b));
+  const unrel=live.filter(r=>!r.tr.released),late=unrel.filter(r=>(r.unrel||0)>=U5);
+  const nexts=new Map();live.forEach(r=>{if(r.next)nexts.set(r.next,(nexts.get(r.next)||0)+1);});const top=[...nexts].sort((a,b)=>b[1]-a[1])[0];
+  host.innerHTML=`<div class="efx ef-ws tb">
+    <div class="ef-wsh"><div><div class="ef-l1">⇢ Transports</div><h1>Every transport on its way</h1></div>
+      <div class="ef-ctl"><input id="tbQ" placeholder="Filter: number, text, demand…" value="${esc(TRB.q)}" autocomplete="off" style="width:240px"></div></div>
+    ${roHTML([{k:"On their way",v:U(live.length,"transport"+(live.length===1?"":"s"))},{k:"Not released",v:U(unrel.length,late.length?`${late.length} over ${U5} d`:"none too long"),cls:late.length?"bad":""},
+      {k:"Busiest next stop",v:top?U(esc(top[0]),top[1]+" waiting"):"—"},{k:"Demands",v:String(new Set(live.map(r=>r.t.id)).size)},
+      {k:"Complete",v:U(all.length-live.length,"at their destinations"),title:"Transports of open demands that reached every destination — ‘show complete’ lists them"}])}
+    <div class="sr-f tb-f"><span class="ef-lb">Landscape</span><div class="ef-row"><button class="ef-chip ${TRB.L?"":"on"}" data-l="">All</button>${Ls.map(L=>`<button class="ef-chip ${TRB.L===L?"on":""}" data-l="${esc(L)}">${esc(L)}x</button>`).join("")}</div>
+      <label class="tb-tg"><input type="checkbox" id="tbUnrel" ${TRB.unrel?"checked":""}> not released only</label><label class="tb-tg"><input type="checkbox" id="tbDone" ${TRB.done?"checked":""}> show complete</label></div>
+    ${order.length?order.map(k=>{const g=groups.get(k),tm=k?tierMeta(k):null,allSel=g.every(r=>TRB.sel.has(trbKey(r.t,r.tr))),fz=k?freezeFor(k):null;
+      return `<div class="ck-unit tb-g"><div class="ck-head"><h2>${k?`<label class="tb-gck"><input type="checkbox" data-gk="${esc(k)}" ${allSel?"checked":""} title="Select all ${g.length}"></label>Next stop <span class="sys ${sysTierCls(k)}">${esc(k)}</span>${tm?` <span class="faint tb-tl">${esc(tm.label)}</span>`:""}`:"✓ At their destinations"}${fz?` <span class="tb-fz">❄ frozen until ${esc(fz.to)}</span>`:""}</h2>
+        <span class="ck-meta">${g.length} transport${g.length===1?"":"s"}${k?` · <a href="#" data-rs="${esc(k)}">📋 run sheet for ${esc(k)}</a>`:""}</span></div>
+        ${g.sort((a,b)=>(b.sat??-1)-(a.sat??-1)).map(r=>{const key=trbKey(r.t,r.tr),ul=r.unrel!=null&&r.unrel>=U5;
+          return `<div class="tb-row${TRB.sel.has(key)?" sel":""}" data-key="${esc(key)}">
+            ${r.done?"<span></span>":`<input type="checkbox" class="tb-ck" ${TRB.sel.has(key)?"checked":""} title="Select for a bulk import">`}
+            <span class="tb-tr"><b class="mono">${esc(r.tr.number||"(unnumbered)")}</b>${isCust(r.tr)?` <span class="tb-tag">cust${r.tr.client?" "+esc(r.tr.client):""}</span>`:""}${r.toc?` <span class="tb-tag" title="Moves with its Transport of Copies">via ToC ${esc(r.toc.number||"")}</span>`:""}<span class="tb-ds">${esc(r.tr.desc||"")}</span></span>
+            <span class="tb-dm"><b class="mono">${esc(r.t.demandId||"—")}</b> ${esc(r.t.title)}</span>
+            ${trbRouteHTML(r)}
+            <span class="tb-rel ${r.tr.released?"":ul?"bad":"warn"}">${r.tr.released?"● released":`○ not released${r.unrel!=null?` · ${r.unrel} d`:""}`}</span>
+            <span class="tb-sat">${r.since?`${r.sat} d <span class="faint">at ${esc(r.at)}</span>`:`<span class="faint">at ${esc(r.at)}</span>`}</span></div>`;}).join("")}</div>`;}).join("")
+      :`<div class="ck-unit"><div class="ck-empty">${all.length?"Nothing matches — clear the filter.":"No transports yet. Add them on a demand's Transports tab."}</div></div>`}
+    <div class="tb-bulk ${TRB.sel.size?"on":""}" id="tbBulk"></div>
+  </div>`;
+  const q=s=>host.querySelector(s),byKey=new Map(rows.map(r=>[trbKey(r.t,r.tr),r]));
+  const fq=q("#tbQ");fq.oninput=()=>{TRB.q=fq.value;const p=fq.selectionStart;renderTrBoard();const n=document.getElementById("tbQ");n.focus();n.setSelectionRange(p,p);};
+  host.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{TRB.L=b.dataset.l;renderTrBoard();});
+  q("#tbUnrel").onchange=e=>{TRB.unrel=e.target.checked;renderTrBoard();};q("#tbDone").onchange=e=>{TRB.done=e.target.checked;renderTrBoard();};
+  host.querySelectorAll(".tb-row").forEach(el=>el.onclick=e=>{const r=byKey.get(el.dataset.key);if(!r)return;
+    if(e.target.classList.contains("tb-ck")){if(e.target.checked)TRB.sel.add(el.dataset.key);else TRB.sel.delete(el.dataset.key);el.classList.toggle("sel",e.target.checked);drawBulk();return;}
+    view="demands";activeId=r.t.id;activeTab="transports";renderApp();});
+  host.querySelectorAll("[data-gk]").forEach(c=>c.onchange=()=>{groups.get(c.dataset.gk).forEach(r=>{const k=trbKey(r.t,r.tr);if(c.checked)TRB.sel.add(k);else TRB.sel.delete(k);});renderTrBoard();});
+  host.querySelectorAll("[data-rs]").forEach(a=>a.onclick=e=>{e.preventDefault();const k=a.dataset.rs;openRunSheet([...new Set(groups.get(k).map(r=>r.t))],"Transport board",k);});
+  function drawBulk(){const b=q("#tbBulk"),sel=[...TRB.sel].map(k=>byKey.get(k)).filter(Boolean);b.classList.toggle("on",!!sel.length);if(!sel.length){b.innerHTML="";return;}
+    const c=new Map();sel.forEach(r=>{if(r.next)c.set(r.next,(c.get(r.next)||0)+1);});const opts=[...new Set(sel.flatMap(r=>r.path.filter(x=>x!==r.tr.system&&!r.R.has(x))))].sort((a,b)=>trTierIdx(a)-trTierIdx(b)||a.localeCompare(b));
+    const def=[...c].sort((a,b)=>b[1]-a[1])[0];
+    b.innerHTML=`<b>${sel.length} selected</b><span>Record an import into</span><select id="tbSys">${opts.map(x=>`<option ${def&&def[0]===x?"selected":""}>${esc(x)}</option>`).join("")}</select><span>on</span><input type="date" id="tbDate" value="${todayStr()}" max="${todayStr()}"><button class="primary sm" id="tbRec">✓ Record</button><button class="ghost sm" id="tbClr">Clear</button><span class="faint tb-bn" id="tbNote"></span>`;
+    const note=()=>{const s=q("#tbSys").value,skip=sel.filter(r=>!r.path.includes(s)&&!r.T.includes(s)).length,viaToc=new Set(sel.filter(r=>r.toc).map(r=>r.toc.id)).size;
+      q("#tbNote").textContent=[skip?`${skip} of them aren't routed through ${s} — left out`:"",viaToc?`${viaToc} ToC${viaToc>1?"s":""} — the import is recorded on the ToC`:""].filter(Boolean).join(" · ");};
+    q("#tbSys").onchange=note;note();
+    q("#tbClr").onclick=()=>{TRB.sel.clear();renderTrBoard();};
+    q("#tbRec").onclick=()=>{const s=q("#tbSys").value,d=q("#tbDate").value||todayStr();if(d>todayStr()){toast("That day hasn't happened yet",true);return;}
+      const undo=[],tocs=new Set();let n=0;
+      sel.filter(r=>r.path.includes(s)||r.T.includes(s)).forEach(r=>{
+        if(r.toc){if(tocs.has(r.toc.id)||r.toc.syncs.some(x=>x.system===s))return;tocs.add(r.toc.id);const y={system:s,date:d};r.toc.syncs.push(y);undo.push(()=>{const i=r.toc.syncs.indexOf(y);if(i>=0)r.toc.syncs.splice(i,1);});}
+        else{if(r.R.has(s))return;const y={system:s,date:d},rel=r.tr.released,ro=r.tr.releasedOn;r.tr.syncs.push(y);syncReleases(r.tr,s,d);
+          undo.push(()=>{const i=r.tr.syncs.indexOf(y);if(i>=0)r.tr.syncs.splice(i,1);r.tr.released=rel;r.tr.releasedOn=ro;});}
+        touch(r.t);n++;});
+      if(!n){toast(`Nothing to record — they're in ${s} already`,true);return;}
+      TRB.sel.clear();renderTrBoard();
+      efToastUndo(`Recorded ${n} import${n===1?"":"s"} into ${s} on ${d}`,()=>{undo.forEach(f=>f());markDirty();renderApp();});};}
+  drawBulk();}
+
+/* ---------- a ToC moved along a whole route in one go ---------- */
+function openTocRoute(t,c,after){const members=t.transports.filter(tr=>tr.tocId===c.id),tiers=routeTiers(),root=document.getElementById("modalRoot");
+  const origins=new Set(members.map(m=>m.system)),have=new Set(c.syncs.map(s=>s.system).filter(Boolean));
+  const own=members.flatMap(m=>trDest(t,m)).map(landscapeOf),cnt=new Map();own.forEach(L=>cnt.set(L,(cnt.get(L)||0)+1));
+  let L=[...cnt].sort((a,b)=>b[1]-a[1]).map(x=>x[0])[0]||landscapeOf(goliveTargetFor(t))||state.settings.landscapes[0]||"";
+  const draw=()=>{const sys=tiers.map(d=>L+d).filter(x=>!origins.has(x));
+    root.innerHTML=`<div class="modal-bg"><div class="modal efx" style="width:520px"><h2>⇢ Move ${esc(c.number||"the ToC")} along a route</h2>
+      <p class="faint" style="font-size:12px;margin-top:-8px">Every system on the route gets the same date — the ${members.length} transport${members.length===1?"":"s"} bundled in it follow.</p>
+      <div class="field"><label>Route</label><select id="trRoute">${state.settings.landscapes.map(x=>`<option value="${esc(x)}" ${x===L?"selected":""}>${esc(x)} route — ${tiers.map(d=>x+d).filter(y=>!origins.has(y)).map(esc).join(" → ")}</option>`).join("")}</select></div>
+      <div class="field"><label>Moved to</label><div class="tr-rsys">${sys.map(x=>`<label class="tr-rs ${have.has(x)?"done":""}"><input type="checkbox" value="${esc(x)}" ${have.has(x)?"disabled":"checked"}> <span class="sys ${sysTierCls(x)}">${esc(x)}</span>${have.has(x)?` <span class="faint">already there</span>`:""}</label>`).join("")||`<span class="faint">Nothing left on this route.</span>`}</div></div>
+      <div class="field"><label>On</label><input type="date" id="trRDate" value="${todayStr()}" max="${todayStr()}" style="width:170px"></div>
+      <div class="modal-foot"><button class="ghost" id="trRCancel">Cancel</button><button class="primary" id="trRGo">Move</button></div></div></div>`;
+    const q=s=>root.querySelector(s),close=()=>{root.innerHTML="";};
+    q("#trRoute").onchange=e=>{L=e.target.value;draw();};q("#trRCancel").onclick=close;
+    q(".modal-bg").onclick=e=>{if(e.target===q(".modal-bg"))close();};
+    q("#trRGo").onclick=()=>{const d=q("#trRDate").value||todayStr(),pick=[...root.querySelectorAll(".tr-rs input:checked:not(:disabled)")].map(i=>i.value);
+      if(!pick.length){toast("Tick at least one system",true);return;}if(d>todayStr()){toast("That day hasn't happened yet",true);return;}
+      const added=pick.map(x=>({system:x,date:d}));c.syncs.push(...added);touch(t);close();if(after)after();renderApp();
+      efToastUndo(`${c.number||"ToC"} moved to ${pick.join(" → ")} on ${d}`,()=>{c.syncs=c.syncs.filter(s=>!added.includes(s));touch(t);if(after)after();renderApp();});};};
+  draw();}
+
+/* ---------- tickets: the demands that share a ticket ID ---------- */
+function ticketSiblings(t){return t.demandId&&(demandIdCounts().get(t.demandId)||0)>1?state.tasks.filter(x=>x!==t&&x.demandId===t.demandId):[];}
+function ticketRollup(id){const ts=state.tasks.filter(x=>x.demandId===id),trs=ts.flatMap(x=>x.transports.map(tr=>[x,tr]));
+  return {ts,h:efSum(ts.flatMap(x=>efFor(x.id))),trs:trs.length,there:trs.filter(([x,tr])=>trComplete(x,tr)).length,open:ts.filter(x=>x.status!=="closed"&&x.status!=="delivered").length};}
+function ticketBandHTML(t){const sib=ticketSiblings(t);if(!sib.length)return "";const r=ticketRollup(t.demandId);
+  return `<div class="bband tkband"><span class="k">Ticket ${esc(t.demandId)} · ${r.ts.length} demands</span><span class="tx">${sib.map(x=>`<a class="tk-go" data-id="${x.id}" title="Open it"><span class="pill ${STATUS[x.status].cls}">${STATUS[x.status].label}</span> ${esc(x.title)}</a>`).join("")}</span>
+    <span class="tk-sum mono" title="The whole ticket — every demand under it">${efFh(Math.round(r.h*10)/10)} h · ${r.there}/${r.trs} TRs there</span></div>`;}
+
+/* ---------- agenda reminders ---------- */
+function agCheckedIn(x){const msg=`Checked in with ${builderNames(x)}`,u0=x.updatedAt;logTimeline(x,"note","","",msg);touch(x);renderApp();
+  efToastUndo(`${msg} — back on the agenda in ${QUIET_DAYS} days if nothing moves`,()=>{agUnlog(x,msg);x.updatedAt=u0;markDirty();renderApp();});}
+function agReleased(x,tr){const ro=tr.releasedOn;tr.released=true;tr.releasedOn=todayStr();touch(x);renderApp();
+  efToastUndo(`${tr.number||"Transport"} marked released`,()=>{tr.released=false;tr.releasedOn=ro;touch(x);renderApp();});}
+function agendaTransportItems(t0){const out=[],U5=unrelDays(),go=(x,tab)=>()=>{view="demands";activeId=x.id;activeTab=tab;renderApp();};
+  const of=x=>`${x.demandId?`<b class="mono">${esc(x.demandId)}</b> `:""}${esc(x.title)}`;
+  state.tasks.filter(x=>x.status!=="closed").forEach(x=>x.transports.forEach(tr=>{const n=trUnrelDays(tr);if(n==null||n<U5)return;
+    out.push({k:"release",date:efAdd(tr.addedOn,U5),what:`Release <b class="mono">${esc(tr.number||"(unnumbered)")}</b>`,sub:`unreleased ${n} d`,of:of(x),go:go(x,"transports"),
+      acts:[["Released",()=>agReleased(x,tr),"Mark it released"]]});}));
+  state.tasks.filter(x=>["open","progress","bug"].includes(x.status)&&buildersOf(x).length&&!(x.nextAction&&x.nextAction.date>t0)).forEach(x=>{
+    const last=isoTs(x.updatedAt||0),n=-daysUntil(last);if(n<QUIET_DAYS)return;
+    out.push({k:"check",date:efAdd(last,QUIET_DAYS),what:`Check in with ${esc(builderNames(x))}`,sub:`no update for ${n} d`,of:of(x),go:go(x,"overview"),
+      acts:[["Checked in",()=>agCheckedIn(x),`Note it in History — back in ${QUIET_DAYS} days if nothing moves`]]});});
+  return out;}
 /* ===================== TRANSPORT RUN SHEET ===================== */
 /* What Basis has to import into one system, in release order. A ToC stands in for the
    TRs bundled in it (imported once, where its first member sits in the order), customizing
@@ -5446,7 +5641,7 @@ function openRunSheet(tasks,label,defTarget){
     const mk=root.querySelector("#rs-mark");if(mk)mk.onclick=()=>{
       const v=prompt(`Basis imported all ${d.todo.length} item(s) into ${target}? Date of the import (YYYY-MM-DD):`,todayStr());if(v===null)return;
       const dt=v.trim();if(!/^\d{4}-\d{2}-\d{2}$/.test(dt)){toast("Use the YYYY-MM-DD format",true);return;}
-      const touched=new Set();d.todo.forEach(r=>{(r.toc||r.tr).syncs.push({system:target,date:dt});if(!r.toc)syncReleases(r.tr,target);touched.add(r.t);});
+      const touched=new Set();d.todo.forEach(r=>{(r.toc||r.tr).syncs.push({system:target,date:dt});if(!r.toc)syncReleases(r.tr,target,dt);touched.add(r.t);});
       touched.forEach(t=>touch(t));draw();toast(`Recorded ${d.todo.length} import(s) into ${target} on ${dt}`);};
   };
   draw();
@@ -5600,6 +5795,9 @@ function openMenu(){
       <span style="flex:1;font-size:13px">⏱ Working day <span class="faint" style="font-size:11px">— a full day of logged hours (day bars, week sheet, wrap-up)</span></span>
       <canvas id="mn-dayk" title="Drag up or down, scroll, or use the arrow keys — 4 to 12 hours" style="width:92px;height:80px;flex:none"></canvas></div>
     <div style="display:flex;align-items:center;gap:10px;margin:8px 0;padding:9px 11px;border:1px solid var(--line2);border-radius:8px">
+      <span style="flex:1;font-size:13px">⇢ Unreleased transports <span class="faint" style="font-size:11px">— after this many days, one that isn't released comes up on Today</span></span>
+      <input type="number" id="mn-unrel" min="1" max="60" value="${state.settings.unreleasedDays||5}" style="width:64px;padding:3px 6px"><span class="faint" style="font-size:12px">days</span></div>
+    <div style="display:flex;align-items:center;gap:10px;margin:8px 0;padding:9px 11px;border:1px solid var(--line2);border-radius:8px">
       <span style="flex:1;font-size:13px">🧩 Object types <span class="faint" style="font-size:11px">(${objTypes().length} in the Objects-tab dropdown)</span></span>
       <button class="sm" id="mn-objtypes">Edit…</button>
     </div>
@@ -5630,6 +5828,7 @@ function openMenu(){
   {const cv=root.querySelector("#mn-dayk"),lo=4,hi=12,get=()=>(Math.min(hi,Math.max(lo,state.settings.dayHours))-lo)/(hi-lo);let tmr=0;
    DK.scope(cv,(c,w,h)=>{const C=efC(cv);V2.dotKnob(c,C,w/2,h/2+4,34,get(),C["pen-2"],{value:efFh(state.settings.dayHours),name:"hours"});});
    V2.bindKnob(cv,get,f=>{const v=Math.round((lo+f*(hi-lo))*4)/4;if(v===state.settings.dayHours)return;state.settings.dayHours=v;clearTimeout(tmr);tmr=setTimeout(()=>{markDirty();renderApp();},400);},.25/(hi-lo));}
+  root.querySelector("#mn-unrel").onchange=e=>{state.settings.unreleasedDays=Math.min(60,Math.max(1,parseInt(e.target.value||"5",10)||5));e.target.value=state.settings.unreleasedDays;markDirty();};
   root.querySelector("#mn-imgexp").onchange=e=>{const n=Math.max(0,parseInt(e.target.value||"0",10)||0);state.settings.imageExpiryDays=n;markDirty();};
   root.querySelector("#mn-objtypes").onclick=()=>{close();openObjTypes(()=>renderApp());};
   root.querySelector("#mn-week").onclick=()=>{close();openWeekly();};
@@ -5948,7 +6147,7 @@ function cockpitHTML(mid=""){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>
     <div class="ck-tiles">${CK_TILES.map((x,i)=>`<div class="ck-unit ck-tile" data-i="${i}" style="--pen:${x.pen}"><div class="top"><span class="no">${x.no}</span><span class="st"><i></i><span>${x.st}</span></span></div>
       <canvas></canvas><div class="nm">${x.nm}</div><div class="bl">${x.bl}</div><div class="ft"><span>${foot[i]}</span><span class="go">Open ›</span></div></div>`).join("")}</div>
     <div class="ck-grid">
-      <div class="ck-unit go" id="ckPipeU" style="--pen:var(--pen-3)" title="Open the go-live view of your demands"><div class="ck-head"><h2>Transport pipeline</h2><span class="ck-meta">${c.total} transports · ${c.short} short of go-live · ${c.unrel} not released</span></div>
+      <div class="ck-unit go" id="ckPipeU" style="--pen:var(--pen-3)" title="Open the transport board"><div class="ck-head"><h2>Transport pipeline</h2><span class="ck-meta">${c.total} transports · ${c.short} short of go-live · ${c.unrel} not released</span></div>
         <canvas id="ckPipe" style="width:100%;height:${lanesN*104+8}px;display:block"></canvas>
         <div class="ck-note"><span class="ring"></span><span>Each bead is a <b>demand</b>, sitting at the furthest system its transports have reached (<b>×3</b> = three of them there) — hover to see the transports, click to open them. A <b>hollow ring</b> isn't released yet, a <b>pulse</b> is waiting for its next import. Prod shows a coming change freeze.</span></div></div>
       <div class="ck-unit"><div class="ck-head"><h2>Epics</h2><span class="ck-meta">${eps.length} active</span></div>
@@ -6065,7 +6264,7 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
   efHover(pipeRec,h=>{const t=h.g.t;return `<b>${esc(demandLabel(t))}</b>${t.demandId?` <span class="faint">${esc(t.title)}</span>`:""}<br><span class="faint">${h.g.items.length} transport${h.g.items.length>1?"s":""} at ${esc(h.sys)}</span>`
       +h.g.items.map(it=>`<div class="mono" style="font-size:11px;margin-top:3px">${esc(it.tr.number||"(unnumbered)")} ${it.rel?"":"<span style='color:var(--watch)'>· not released</span>"}${it.done?" · ✓ there":it.target?" · → "+esc(it.target):""}${it.tr.desc?`<div class="faint" style="font-family:var(--sans)">${esc(it.tr.desc)}</div>`:""}</div>`).join("")+`<div class="faint" style="margin-top:4px">click to open its transports</div>`;},
     h=>{view="demands";activeId=h.g.t.id;activeTab="transports";renderApp();});
-  q("#ckPipeU").onclick=()=>{if(pipeRec&&pipeRec.hv)return;goView(CK_TILES[3].view);};
+  q("#ckPipeU").onclick=()=>{if(pipeRec&&pipeRec.hv)return;view="transports";renderApp();};
   /* epic rings */
   host.querySelectorAll(".ck-ep").forEach(el=>{const e=epicById(el.dataset.e);if(!e)return;const r=epicRollup(e),f=r.ts.length?r.done/r.ts.length:0,st={v:mv?0:f};
     scope(el.querySelector("canvas"),(ctx,w,h,t,dt)=>{st.v+=(f-st.v)*DK.ease(dt,.04);dotRing(ctx,w/2,h/2,w/2-5,st.v,32,C["pen-5"],mv?t*.00008:0);
@@ -6160,6 +6359,7 @@ function demandHeadBench(t,sub,lc){
     ${na?`<div class="bband ${nad<=0?"watch":""}"><canvas class="natick"></canvas><span class="k">Next action · ${nad<0?(-nad)+" d ago":nad===0?"today":"in "+nad+" d"}</span><span class="tx"><b>${esc(na.note||"(no note)")}</b> <span class="mono faint">${na.date}</span></span><button class="sm" id="na-done" title="Did it — note it in History and clear">✓ Done</button><button class="sm ghost" id="na-edit" title="Change date or text">✎</button></div>`:""}
     ${cl.length?(()=>{const x=cl[0],o=x.open[0],more=cl.reduce((n,y)=>n+y.open.length,0)-1;
       return `<div class="clashband"><canvas class="orbit"></canvas><span><span class="ck">Object clash</span> <b class="mono">${esc(x.o.name)}</b> is also in flight in <a class="cb-go" data-id="${o.t.id}">${esc(demandLabel(o.t))}</a> <span class="clw">— ${esc(clashWhere(o))}${more>0?` · +${more} more`:""}. Agree the import order.</span></span><button class="sm cb-obj">Objects ›</button></div>`;})():""}
+    ${ticketBandHTML(t)}
     <div class="tabs">
       <button class="tab ${activeTab==="overview"?"active":""}" data-tab="overview" title="1">Overview</button>
       <button class="tab ${activeTab==="work"?"active":""}" data-tab="work" title="2">Work<span class="count">${sub.n}</span></button>
@@ -7907,15 +8107,36 @@ async function runSelfTest(){
    {const est=state.tasks.map(t=>t.estimate),txt=()=>document.getElementById("detail").textContent;state.tasks.forEach(t=>t.estimate=0);view="effort";renderApp();const none=!txt().includes("Estimate vs actual")&&!anyEstimate();
     state.tasks.forEach((t,i)=>t.estimate=est[i]);renderApp();const back=txt().includes("Estimate vs actual");view="today";renderApp();
     ok("Estimate panels stay hidden until an estimate exists",none&&back,`hidden ${none} · back ${back}`);}
+   {const a=state.tasks.find(x=>x.id==="st-a"),a1=a.transports.find(x=>x.id==="st-tr-a1"),a2=a.transports.find(x=>x.id==="st-tr-a2"),rows=trBoardRows();
+    const r1=rows.find(r=>r.tr===a1),r2=rows.find(r=>r.tr===a2);
+    ok("Transport board: where each transport is and where it goes next",r1&&r1.at==="H42"&&r1.next==="H41"&&r2&&r2.at==="H03"&&r2.next==="H02"&&!r2.tr.released,JSON.stringify(r1&&[r1.at,r1.next])+" "+JSON.stringify(r2&&[r2.at,r2.next]));
+    view="transports";renderApp();const row=[...document.querySelectorAll(".tb-row")].find(x=>x.dataset.key==="st-a|st-tr-a2");if(row)row.querySelector(".tb-ck").click();
+    const sy=document.getElementById("tbSys");if(sy){sy.value="H02";sy.dispatchEvent(new Event("change"));const rb=document.getElementById("tbRec");if(rb)rb.click();}
+    const rec=a2.syncs.some(x=>x.system==="H02"&&x.date===todayStr())&&a2.released&&a2.releasedOn===todayStr();
+    {const ub=[...document.querySelectorAll("#toast button")].find(x=>x.textContent==="Undo");if(ub)ub.click();}
+    ok("Transport board: an import recorded for the selected transports, with Undo",rec&&!a2.syncs.some(x=>x.system==="H02")&&!a2.released,`recorded ${rec} · after undo ${JSON.stringify(a2.syncs)} ${a2.released}`);
+    const toc=a.tocs[0],R=document.getElementById("modalRoot");openTocRoute(a,toc);const picked=[...R.querySelectorAll(".tr-rs input:checked:not(:disabled)")].map(i=>i.value);R.querySelector("#trRGo").click();
+    const moved=["H43","H41"].every(x=>toc.syncs.some(y=>y.system===x&&y.date===todayStr()));
+    {const ub=[...document.querySelectorAll("#toast button")].find(x=>x.textContent==="Undo");if(ub)ub.click();}
+    ok("A ToC moves along a whole route in one go (what's there already left out), with Undo",eq(picked,["H43","H41"])&&moved&&toc.syncs.length===1,`picked ${picked} · moved ${moved} · left ${toc.syncs.length}`);R.innerHTML="";
+    a2.addedOn=efAdd(todayStr(),-9);let it=agendaItems().find(i=>i.k==="release"&&i.what.includes("H03K900002"));const shown=!!it;if(it)it.acts[0][1]();
+    ok("Today: a transport unreleased too long comes up, and Released clears it",shown&&a2.released&&a2.releasedOn===todayStr()&&!agendaItems().some(i=>i.k==="release"&&i.what.includes("H03K900002")));
+    a2.released=false;a2.releasedOn="";a2.addedOn=todayStr();
+    const c=state.tasks.find(x=>x.id==="st-c");c.nextAction={date:"",note:""};c.updatedAt=Date.now()-10*864e5;it=agendaItems().find(i=>i.k==="check"&&i.what.includes("Sample Builder"));const quiet=!!it;if(it)it.acts[0][1]();
+    ok("Today: a demand handed to your team that went quiet comes up; Checked in notes it",quiet&&(c.timeline||[]).some(e=>/^Checked in with Sample Builder/.test(e.note||""))&&!agendaItems().some(i=>i.k==="check"&&i.what.includes("Sample Builder")));
+    ok("Tickets: demands sharing a ticket ID see each other, and group together",eq(ticketSiblings(c).map(x=>x.id),["st-d"])&&ticketBandHTML(c).includes("Ticket ST-3 · 2 demands")&&dvGroupOf(c,"ticket").k==="ST-3"&&dvGroupOf(a,"ticket").k==="__single");
+    const m=migrate(clone(stOldFixture())),tr0=m.tasks[0].transports[0];
+    ok("Upgrade: transports get the day they were added, the unreleased reminder a default",/^\d{4}-\d\d-\d\d$/.test(tr0.addedOn)&&tr0.releasedOn===""&&m.settings.unreleasedDays===5,JSON.stringify([tr0.addedOn,tr0.releasedOn,m.settings.unreleasedDays]));
+    view="today";renderApp();}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
-  const views=["today","demands","jobs","epics","debug","journal","meetings","playbook","team","vault","effort","review","month","search"];
+  const views=["today","demands","jobs","epics","debug","journal","meetings","playbook","team","vault","effort","review","month","search","transports"];
   const tabs=["overview","work","objects","transports","effort","history","reference","calls","images"],etabs=["overview","story","details","deps","subtasks","effort"];
   const a=state.tasks.find(t=>t.id==="st-a");
   const pick=()=>{activeJobId="st-job-1";activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
   const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
-  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Days off",()=>openDaysOff()],
+  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
     ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
     ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Settings menu",()=>openMenu()],["Close a task",()=>openJobClose(jobById("st-job-1"),"done")],["Log time on a task",()=>openLogTime({key:"j:st-job-1"})],["A closed task",()=>{view="jobs";activeJobId="st-job-2";renderApp();}],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
   const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;
