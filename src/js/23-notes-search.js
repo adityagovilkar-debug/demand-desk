@@ -88,6 +88,7 @@ function searchAll(q){const terms=searchTerms(q);if(!terms.length)return [];cons
   state.playbook.forEach(p=>add("Playbook",`${PLAY_KINDS[p.kind].icon} ${p.title}`,[p.title,p.category,p.body,(p.steps||[]).map(s=>s.text).join(" · "),(p.people||[]).map(x=>x.name+" "+x.role+" "+x.contact).join(" · "),(p.systems||[]).join(" ")],p.due||p.from||"",()=>{view="playbook";activePlayId=p.id;},p.category));
   state.images.forEach(im=>add("Image",`📷 ${im.label||im.file}`,[im.label,im.file],isoTs(im.addedAt),()=>gotoImage(im)));
   state.debug.forEach(s=>add("Debug",s.title,[s.title,s.demandId,s.resume,s.notes,s.objects.map(o=>o.name+" "+o.note).join(" · "),s.breakpoints.map(b=>b.object+" "+b.condition+" "+b.note).join(" · "),s.findings.map(f=>f.text).join(" · "),s.watches.map(w=>w.name+" "+w.value+" "+w.where).join(" · ")],isoTs(s.updatedAt),()=>{view="debug";activeDebugId=s.id;},s.demandId));
+  (state.sheets||[]).forEach(sh=>sh.rows.forEach((r,i)=>add("Sheet",`▦ ${sh.name} · ${r.filter(Boolean).slice(0,2).join(" · ").slice(0,70)}`,[r.map((c,k)=>(sh.headers[k]?sh.headers[k]+": ":"")+c).join(" · ")],sh.added,()=>{setTimeout(()=>openSheet(sh,i),0);},`row ${i+1} of ${sh.rows.length}`)));
   NOTES.forEach(n=>{if(terms.every(t=>n.low.includes(t)))hits.push({k:"Note",label:n.name,sub:n.folder||"(top folder)",text:n.text,low:n.low,date:n.date,note:n});});
   /* best match: words in the title count most, then how often they appear */
   hits.forEach(h=>{const lab=h.label.toLowerCase();let s=0;terms.forEach(t=>{if(lab.includes(t))s+=6;let i=0,c=0;while(c<6&&(i=h.low.indexOf(t,i))>=0){c++;i+=t.length;}s+=c;});h.score=s;});
@@ -102,7 +103,7 @@ function searchSnippets(text,terms,width=80,max=2){const t=String(text||""),low=
   const wins=[];pos.forEach(p=>{const a=Math.max(0,p-width),b=Math.min(t.length,p+width),l=wins[wins.length-1];if(l&&a<=l[1])l[1]=Math.max(l[1],b);else if(wins.length<max)wins.push([a,b]);});
   if(!wins.length)wins.push([0,Math.min(t.length,width*2)]);
   return wins.map(([a,b])=>(a>0?"…":"")+srMark(esc(t.slice(a,b).replace(/\s+/g," ")),terms)+(b<t.length?"…":"")).join(` <span class="faint">·</span> `);}
-const SR_PEN={Task:"pen-7",Demand:"pen-2",Object:"pen-4",Transport:"pen-3",ToC:"pen-5",Subtask:"ink-2",Reference:"ink-2",Meeting:"pen-4",Action:"pen-4",Vault:"ink-3",Journal:"pen-3","To-do":"pen-3",Win:"pen-4",Effort:"pen-2",Epic:"pen-5","Epic story":"pen-5","Waiting on":"pen-4",Playbook:"pen-6",Image:"ink-3",Debug:"pen-1",Note:"pen-7",Lesson:"pen-4"};
+const SR_PEN={Sheet:"pen-6",Task:"pen-7",Demand:"pen-2",Object:"pen-4",Transport:"pen-3",ToC:"pen-5",Subtask:"ink-2",Reference:"ink-2",Meeting:"pen-4",Action:"pen-4",Vault:"ink-3",Journal:"pen-3","To-do":"pen-3",Win:"pen-4",Effort:"pen-2",Epic:"pen-5","Epic story":"pen-5","Waiting on":"pen-4",Playbook:"pen-6",Image:"ink-3",Debug:"pen-1",Note:"pen-7",Lesson:"pen-4"};
 function openHit(h,terms){const box=document.getElementById("gsearchResults");if(box)box.classList.add("hide");
   if(h.k==="Note"){openNote(h.note,terms);return;}h.go();const gs=document.getElementById("globalSearch");if(gs)gs.value="";renderApp();}
 /* the title-bar box: the best few, then everything on the Search page */
@@ -128,6 +129,7 @@ function renderSearchPage(){const host=document.getElementById("detail");if(!hos
     <div class="ef-wsh"><div><div class="ef-l1">⌕ Search · your data file${NOTES.length?` + ${NOTES.length} old note${NOTES.length===1?"":"s"}`:""}</div><h1>Search</h1></div></div>
     <div class="sr-box"><input id="srQ" value="${esc(SRCH.q)}" placeholder='Words to find — every word must appear · "exact phrase" in quotes' autocomplete="off" spellcheck="false"><span class="faint mono">${terms.length?`${list.length}${list.length!==all.length?" of "+all.length:""} result${all.length===1?"":"s"}`:""}</span></div>
     ${notesStatusHTML()}
+    ${sheetsHTML()}
     ${all.length?`<div class="sr-filters">
       <div class="sr-f"><span class="ef-lb">Kind</span><div class="ef-row">${chip("kind","","All",all.length,!SRCH.kind)}${kinds.map(([k,n])=>chip("kind",k,k,n,SRCH.kind===k)).join("")}</div></div>
       <div class="sr-f"><span class="ef-lb">Year</span><div class="ef-row">${chip("year","","All",null,!SRCH.year)}${years.map(([y,n])=>chip("year",y,y==="—"?"No date":y,n,SRCH.year===y)).join("")}</div></div>
@@ -139,7 +141,7 @@ function renderSearchPage(){const host=document.getElementById("detail");if(!hos
     ${!terms.length?`<div class="faint sr-empty">Type above. Every word must appear somewhere in the entry (any order); put words in "quotes" to match them as a phrase. Results come from demands, objects, transports, subtasks, comments, meetings, journal, to-dos, effort notes, wins, epics, the playbook, debug sessions${NOTES.length?" and your old notes":""}.</div>`:""}
     ${terms.length&&!all.length?`<div class="faint sr-empty">Nothing matches every word. Try fewer words${NOTES.length?"":", or connect your old notes"}.</div>`:""}
   </div>`;
-  const q=s=>host.querySelector(s),inp=q("#srQ");wireNotesStatus(host);
+  const q=s=>host.querySelector(s),inp=q("#srQ");wireNotesStatus(host);wireSheets(host);
   inp.oninput=()=>{clearTimeout(inp._t);inp._t=setTimeout(()=>{SRCH.q=inp.value;SRCH.kind="";SRCH.year="";SRCH.limit=100;const pos=inp.selectionStart;renderSearchPage();const ni=document.getElementById("srQ");if(ni){ni.focus();ni.setSelectionRange(pos,pos);}},250);};
   host.querySelectorAll("[data-kind]").forEach(b=>b.onclick=()=>{SRCH.kind=b.dataset.kind;SRCH.limit=100;renderSearchPage();});
   host.querySelectorAll("[data-year]").forEach(b=>b.onclick=()=>{SRCH.year=b.dataset.year;SRCH.limit=100;renderSearchPage();});

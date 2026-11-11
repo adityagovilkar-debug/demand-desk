@@ -229,6 +229,19 @@ async function runSelfTest(){
     ok("The Edit dialog in groups — What, Where, When, Who, and More",gs===5&&more&&all,`groups ${gs} · more ${more} · fields ${all}`);
     ok("A day in Next 10 weeks lists what's on it; the Waiting tile names the longest waits",calDayItems(efAdd(todayStr(),10)).some(x=>x.k==="Epic target")&&waitListHTML(cockpitCounts().waiting).includes("QA team"));
     view="today";renderApp();}
+   {const a=state.tasks.find(x=>x.id==="st-a"),sb=seenForDemand(a);
+    ok("Seen before: demands sharing an object are found, with the object named",sb.some(h=>h.d.id==="st-c"&&h.why.includes("ZST_SHARED_CLASS"))&&!sb.some(h=>h.d.id==="st-dbg1"),JSON.stringify(sb.map(h=>[h.d.id,h.why])));
+    const j2={id:"st-j2",date:efAdd(todayStr(),-40),title:"",body:"Sample quokka wombat rollout",taskIds:[],epicIds:[],createdAt:Date.now(),updatedAt:Date.now()},m2=normMeeting({id:"st-m9",date:efAdd(todayStr(),-50),title:"Sample review",body:"quokka and wombat discussed"});
+    state.journal.push(j2);state.meetings.push(m2);markDirty();const jh=seenBefore(j2.body,[],d=>d.id===j2.id);
+    ok("Seen before: rarer words a journal entry shares with past meetings",jh.some(h=>h.d.id==="st-m9"&&h.why.includes("quokka")),JSON.stringify(jh.map(h=>[h.d.id,h.why])));
+    state.journal=state.journal.filter(x=>x!==j2);state.meetings=state.meetings.filter(x=>x!==m2);
+    const tsv=parseTSV('Col A\tCol B\n"x\ty"\t"q""z"\nlast\t\n');
+    ok("Excel rows: tabs, quoted cells and blank cells read as Excel writes them",eq(tsv,[["Col A","Col B"],["x\ty",'q"z'],["last",""]]),JSON.stringify(tsv));
+    const sh=normSheet({name:"ST sheet",headers:["Code"],rows:[["walrusuniquecell"]]});state.sheets=[sh];markDirty();
+    ok("Excel rows: Search finds a pasted row",searchAll("walrusuniquecell").some(h=>h.k==="Sheet"));state.sheets=[];markDirty();
+    const F=rcFiles(),y=(a.receivedDate||"").slice(0,4),key=`${y}/Demands/ST-1 Sample report gets a filter.md`,all=JSON.stringify(F);
+    ok("A readable copy: Markdown by year, secrets left out",!!F[key]&&F[key].includes("# ST-1 — Sample report gets a filter")&&!!F["README.md"]&&!all.includes("not-a-real-secret")&&!all.includes("not-a-real-password"),Object.keys(F).slice(0,6).join(" · "));
+    ok("The readable copy is asked for once a year, around New Year only",!readableCopyDue("2026-07-01")&&!readableCopyDue("2026-12-01"));}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
@@ -237,7 +250,7 @@ async function runSelfTest(){
   const a=state.tasks.find(t=>t.id==="st-a");
   const pick=()=>{activeJobId="st-job-1";activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
   const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
-  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Keyboard",()=>openKeys()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
+  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Keyboard",()=>openKeys()],["A readable copy",()=>openReadableCopy()],["Paste rows from Excel",()=>openPasteSheet()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
     ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
     ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Settings menu",()=>openMenu()],["Close a task",()=>openJobClose(jobById("st-job-1"),"done")],["Log time on a task",()=>openLogTime({key:"j:st-job-1"})],["A closed task",()=>{view="jobs";activeJobId="st-job-2";renderApp();}],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
   const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;

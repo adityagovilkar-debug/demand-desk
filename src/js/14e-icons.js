@@ -73,14 +73,17 @@ const IC_PATHS={
   warn:"M9 2.5l7 12.5H2zM9 7v4M9 13.3v.1",
   checkbox:"M3 3h12v12H3zM5.5 9.2l2.3 2.3 4.7-5",
   box0:"M3 3h12v12H3z",
-  flagf:"M4.5 16V2.5M4.5 3h9l-1.8 3 1.8 3h-9"};
+  flagf:"M4.5 16V2.5M4.5 3h9l-1.8 3 1.8 3h-9",
+  books:"M3 3h3v12H3zM7 3h3v12H7zM11.2 3.6l2.9-.8 2.9 11.6-2.9.8z",
+  download:"M9 2.5v9M5.5 8L9 11.5 12.5 8M3 14.5h12",
+  upload:"M9 11.5v-9M5.5 6L9 2.5 12.5 6M3 14.5h12"};
 const IC_OF={"🗑":"trash","⏱":"timer","📋":"clipboard","👥":"people","🔒":"lock","🔓":"unlock","🔗":"link","⛓":"link","💡":"bulb","⏳":"hourglass","⏰":"alarm","📞":"phone",
   "⏸":"pause","👷":"builder","🏖":"umbrella","🌴":"umbrella","🗂":"folders","📓":"notebook","🐞":"bug","❄":"snow","🔄":"refresh","🔁":"repeat","🏆":"trophy","⚙":"gear",
   "🗓":"calendar","📅":"calendar","📌":"pin","📍":"pin","🖨":"printer","📷":"camera","🖼":"picture","💾":"disk","📝":"note","🗒":"note","✍":"pencil","🚚":"truck",
   "📄":"doc","📁":"folder","📂":"folder","🔌":"plug","🎯":"target","💬":"chat","👁":"eye","🙈":"eyeoff","💤":"sleep","📥":"inbox","📦":"box","🧳":"case","🎉":"party",
   "✉":"mail","📨":"mail","📈":"chart","🔧":"wrench","☾":"moon","🌙":"moon","☀":"sun","⌨":"keyboard","🚀":"rocket","🏁":"flag","⚖":"scales","❓":"question","🧹":"broom",
   "🕸":"web","⛔":"stop","🙋":"person","👤":"person","🔍":"search","🎫":"ticket","🧩":"puzzle","🙏":"heart","🧯":"extinguisher","🎓":"cap","⭐":"star","⚠":"warn",
-  "☑":"checkbox","☐":"box0","⚑":"flagf"};
+  "☑":"checkbox","☐":"box0","⚑":"flagf","📚":"books","⬇":"download","⬆":"upload"};
 const IC_RE=new RegExp("("+Object.keys(IC_OF).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")\uFE0F?","gu");
 const icSvg=name=>`<svg class="ic ic-${name}" viewBox="0 0 18 18" aria-hidden="true"><path d="${IC_PATHS[name]}"/></svg>`;
 const IC_SKIP="textarea,select,option,script,style,svg,title,[contenteditable],.noic";

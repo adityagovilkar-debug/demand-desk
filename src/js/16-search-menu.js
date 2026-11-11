@@ -56,6 +56,7 @@ function openMenu(){
       <button id="mn-keys">⌨ Keyboard shortcuts (?)</button>
       <button id="mn-week">🗓 Weekly summary…</button>
       <button id="mn-hand">🧳 Handover pack…</button>
+      <button id="mn-rc">📚 A readable copy, by year…</button>
       <button id="mn-csv">⬇ Export transports (CSV for Excel)</button>
       <button id="mn-export">⬇ Export / download a copy (.json)</button>
       <button id="mn-import">⬆ Import / open a .json file</button>
@@ -86,6 +87,7 @@ function openMenu(){
   root.querySelector("#mn-week").onclick=()=>{close();openWeekly();};
   root.querySelector("#mn-keys").onclick=()=>{close();openKeys();};
   root.querySelector("#mn-hand").onclick=()=>{close();openHandover();};
+  root.querySelector("#mn-rc").onclick=()=>{close();openReadableCopy();};
   root.querySelector("#mn-csv").onclick=exportTransportsCSV;
   root.querySelector("#mn-export").onclick=exportDownload;
   root.querySelector("#mn-import").onclick=()=>{close();importViaInput();};

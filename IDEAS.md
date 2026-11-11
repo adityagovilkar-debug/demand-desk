@@ -119,16 +119,16 @@ D. **Encryption.** If the file still holds passwords or secret references withou
     three longest waits, clicking a day in Next 10 weeks to see what's on it, the
     Review month chart.
 
-## Phase 5 — Memory and looking back
+## Phase 5 — Memory and looking back — DONE 11 Nov 2026 (v49, data v33)
 
-24. **"Have I seen this before?" — the full version.** A panel that appears on its own:
+24. ✓ **"Have I seen this before?" — the full version.** A panel that appears on its own:
     past demands, journal entries and meetings (not only old .txt notes) that share
     objects or distinctive words with the demand you're on; also while you write a
     journal entry; matching on rare words, not only exact IDs; lessons from similar
     demands shown there. *(Today's "In your old notes" panel is the first slice.)*
-25. **A readable copy every year** — everything as plain text / Markdown files in
+25. ✓ **A readable copy every year** — everything as plain text / Markdown files in
     folders by year, readable in Notepad even if this app is ever gone.
-26. **Excel notes** — paste rows copied from Excel into the notes (no file reading).
+26. ✓ **Excel notes** — paste rows copied from Excel into the notes (no file reading).
 
 ## Suggested earlier — you passed on these (kept for reference)
 

@@ -31,11 +31,11 @@ const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod 
 /* The data format this copy understands. Bump it whenever a change adds or reshapes saved data —
    an older copy then refuses to save a file written by a newer one, instead of dropping fields
    it doesn't know about. */
-const DATA_VERSION=32;
+const DATA_VERSION=33;
 let dataNewer=0;   /* the version of a loaded file that's newer than this copy (0 = fine) */
 const SELFTEST=/[?&]selftest\b/.test(location.search);   /* sandbox: nothing is read from or written to your data */
 function newerMsg(){return `This data was saved by a newer Demand Desk (data version ${dataNewer}); this copy understands up to ${DATA_VERSION}. Saving is switched off so nothing gets dropped — open the file with the newest DemandDesk.html.`;}
-let state={version:DATA_VERSION,people:[],jobs:[],settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
+let state={version:DATA_VERSION,people:[],jobs:[],sheets:[],settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false, lastWriteAt=0, autoSaveDue=0, diskConflict=null, fileSig=null, savePromise=null, backupUnreadable=false;
 let view="today";
 let activeId=null, activeTab="overview", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -110,7 +110,7 @@ async function serializeData(){return isEncrypted()?await encryptStateStr(master
 
 /* ---------- persistence ---------- */
 let hadContent=false;
-function contentCount(){return (state.jobs||[]).length+state.tasks.length+state.epics.length+state.meetings.length+state.credentials.length+state.journal.length+state.todos.length+state.debug.length+state.images.length+state.playbook.length+(state.efforts||[]).length+(state.wins||[]).length;}
+function contentCount(){return (state.jobs||[]).length+(state.sheets||[]).length+state.tasks.length+state.epics.length+state.meetings.length+state.credentials.length+state.journal.length+state.todos.length+state.debug.length+state.images.length+state.playbook.length+(state.efforts||[]).length+(state.wins||[]).length;}
 function isValidState(s){return s&&typeof s==="object"&&Array.isArray(s.tasks)&&Array.isArray(s.epics)&&Array.isArray(s.meetings)&&Array.isArray(s.credentials)&&Array.isArray(s.journal)&&Array.isArray(s.todos)&&Array.isArray(s.debug)&&Array.isArray(s.images)&&Array.isArray(s.playbook)&&(s.efforts===undefined||Array.isArray(s.efforts));}
 function noteContent(){if(isValidState(state)&&contentCount()>0)hadContent=true;}
 /* defensive guard: returns true if it is SAFE to persist current state */
@@ -375,6 +375,8 @@ function migrate(d){
     d.jobs.push(normJob({id:x.id,title:x.text||"(to-do)",source:"self",received:isoTs(x.createdAt||Date.now()),due:x.due||"",status:x.done?"done":"open",
       closedOn:x.done?isoTs(x.doneAt||x.createdAt||Date.now()):"",outcome:x.resolution||"",createdAt:x.createdAt,updatedAt:x.doneAt||x.createdAt}));});
   d.todos=[];
+  /* v33: rows pasted from Excel, kept as searchable notes */
+  d.sheets=(d.sheets||[]).map(normSheet);
   d.credentials=(d.credentials||[]).map(c=>({id:c.id||uid(),system:c.system||"",client:c.client||"",label:c.label||"",url:c.url||"",username:c.username||"",password:c.password||"",notes:c.notes||"",updatedAt:c.updatedAt||Date.now()}));
   d.journal=(d.journal||[]).map(j=>({id:j.id||uid(),date:j.date||todayStr(),title:j.title||"",body:j.body||"",taskIds:(j.taskIds||[]).slice(),epicIds:(j.epicIds||[]).slice(),createdAt:j.createdAt||Date.now(),updatedAt:j.updatedAt||Date.now()}));
   d.debug=(d.debug||[]).map(s=>({id:s.id||uid(),title:s.title||"(untitled debug)",demandId:s.demandId||"",taskId:s.taskId||"",status:s.status||"active",resume:s.resume||"",notes:s.notes||"",

@@ -4,7 +4,7 @@
    due — each done right where it shows. Close the day: an hours box for
    every demand, task and meeting touched that day, against the working day. */
 const CHASE_EVERY=3;   /* days between follow-ups on something you're waiting for */
-const AG_KINDS={step:{l:"Next step",pen:"pen-2",o:0},act:{l:"Action point",pen:"pen-5",o:1},chase:{l:"Follow up",pen:"pen-4",o:2},todo:{l:"To-do",pen:"pen-6",o:3},release:{l:"Release",pen:"pen-1",o:3.5},check:{l:"Check in",pen:"pen-7",o:3.6},due:{l:"Due",pen:"pen-1",o:4}};
+const AG_KINDS={step:{l:"Next step",pen:"pen-2",o:0},act:{l:"Action point",pen:"pen-5",o:1},chase:{l:"Follow up",pen:"pen-4",o:2},todo:{l:"To-do",pen:"pen-6",o:3},release:{l:"Release",pen:"pen-1",o:3.5},check:{l:"Check in",pen:"pen-7",o:3.6},yearly:{l:"Once a year",pen:"pen-5",o:3.7},due:{l:"Due",pen:"pen-1",o:4}};
 /* an action point is yours when it has no owner, says me / myself / I, or names you (the Greeting name in ⋯) */
 function actionIsMine(a){const o=String(a.owner||"").trim().toLowerCase(),n=viewPref("userName","").trim().toLowerCase();
   return !o||["me","myself","i","self"].includes(o)||(!!n&&o.split(/[\s,/&+]+/).includes(n));}
@@ -41,6 +41,7 @@ function agendaItems(){const t0=todayStr(),out=[];
     add("due",d,s?`Subtask: ${esc(s.title)}`:d<t0?"Past its due date":"Due today",x);});
   state.jobs.filter(j=>jobOpen(j)&&j.due&&j.due<=t0).forEach(x=>add("due",x.due,x.askedBy?`${esc(x.askedBy)} expects an answer`:x.source==="self"?"Due":"An answer is expected",x));
   out.push(...agendaTransportItems(t0));
+  if(readableCopyDue(t0))out.push({k:"yearly",date:t0,what:"Make this year's readable copy",sub:"everything as Markdown, by year",of:"📚 your data file",go:openReadableCopy,acts:[["Make it",()=>openReadableCopy(),"Write the readable copy now"]]});
   return out.sort((a,b)=>a.date.localeCompare(b.date)||AG_KINDS[a.k].o-AG_KINDS[b.k].o);}
 const AG_CAP=10;
 function agendaHTML(items){const t0=todayStr(),late=items.filter(i=>i.date<t0).length,shown=agendaHTML.all?items:items.slice(0,AG_CAP);

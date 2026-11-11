@@ -888,6 +888,31 @@ file:
 - **Daily snapshots** — up to 14 are kept automatically on Save; restore any from
   the ⋯ menu (encrypted if encryption is on). Restoring marks the app "unsaved"
   so you remember to write it to your file.
+- **📚 A readable copy, by year** (⋯ menu) — everything in the file as plain Markdown,
+  in a folder you choose: `Demand Desk — readable copy / <year> /` Demands, Journal
+  (a file a month), Meetings, Tasks, Debug, `Hours.md`, `Wins and lessons.md`, pasted
+  Excel rows — plus `Epics/`, `Playbook/` and a `README.md` index. Readable in Notepad
+  even if this app is ever gone. **Passwords and secret reference entries are left
+  out.** Each run rewrites the files (a demand renamed since leaves its old file);
+  without folder access, download a year as one `.md`. From mid-December to the end
+  of January the agenda asks once: *Make this year's readable copy*.
+
+### Seen before — have I been here already?
+On a demand's side panel, and under the journal entry you're writing (it updates as
+you type), a list of past **demands, journal entries, meetings, debug sessions and
+pasted Excel rows** that share its **objects** (or object names you mention) or its
+**rarer words** — words found in only a few entries, so common ones like *payroll*
+don't count — best first, each saying what it shares. A similar demand's **lessons**
+show right under it. Things already linked to the demand, and demands on the same
+ticket, are left out. (*In your old notes*, below it, still matches the ticket ID,
+objects and transport numbers in your .txt notes folder.)
+
+### Excel rows
+On the **Search** page: **＋ Paste rows from Excel** — select rows in Excel, `Ctrl+C`,
+paste into the box, name them, keep them (first row as headings, or not). They're kept
+in your data file — no file is read — and **Search** finds them row by row (*Sheet*),
+*Seen before* matches them, and ▦ opens them as a table you can filter (or delete,
+with Undo). Data v33.
 
 ### Search (`Ctrl+K`) — your data file and your old notes
 - One box across demands, objects, transports, **system codes**, subtasks,

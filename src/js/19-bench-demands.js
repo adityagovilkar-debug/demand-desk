@@ -81,8 +81,8 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
     <div class="ck-unit cxs"><div class="ck-head"><h2>Linked</h2><a class="cxl" data-tab="calls">${links.length?links.length+" · link ›":"＋ link ›"}</a></div>
       ${links.slice(0,6).map(l=>`<div class="lk" data-k="${l.k}" data-id="${l.id}" style="--pen:${l.pen}"><i></i><span class="t">${esc(l.t)}</span><span class="d">${shortD(l.d)}</span></div>`).join("")||`<div class="bempty">No meetings, journal or debug sessions linked.</div>`}</div>
     <div class="ck-unit cxs"><div class="ck-head"><h2>Images</h2><a class="cxl" data-tab="images">${imgs.length?"all "+imgs.length+" ›":"Ctrl V to paste"}</a></div>
-      ${imgs.length?`<div class="thumbs">${imgs.slice(0,6).map(im=>`<div data-id="${im.id}" title="${esc(im.label||im.file)}"><span>${esc(im.label||im.file)}</span></div>`).join("")}</div>`:`<div class="bempty">Snip with Win+Shift+S, then Ctrl+V anywhere on this demand.</div>`}</div>${notesRailHTML(t)}</div>`;
-  const q=s=>host.querySelector(s);wireNotesRail(host,t);
+      ${imgs.length?`<div class="thumbs">${imgs.slice(0,6).map(im=>`<div data-id="${im.id}" title="${esc(im.label||im.file)}"><span>${esc(im.label||im.file)}</span></div>`).join("")}</div>`:`<div class="bempty">Snip with Win+Shift+S, then Ctrl+V anywhere on this demand.</div>`}</div>${seenRailHTML(t)}${notesRailHTML(t)}</div>`;
+  const q=s=>host.querySelector(s);wireNotesRail(host,t);wireSeen(host,seenForDemand(t));
   if(q("#cxNaDone"))q("#cxNaDone").onclick=()=>nextActionDone(t);
   if(q("#cxNaEdit"))q("#cxNaEdit").onclick=()=>openNextAction(t);
   if(q("#cxBuild"))q("#cxBuild").onclick=()=>openBuilders(t);
@@ -91,7 +91,7 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
   if(q("#cxEpic"))q("#cxEpic").onclick=()=>{view="epics";activeEpicId=t.epicId;epicTab="overview";renderApp();};
   host.querySelectorAll(".cxl[data-tab]").forEach(a=>a.onclick=()=>{activeTab=a.dataset.tab;renderDetail();enterPulse("detail");});
   host.querySelectorAll(".rf .c").forEach(b=>b.onclick=()=>{const r=refs.find(x=>x.id===b.parentElement.dataset.id);navigator.clipboard.writeText(r.value).then(()=>toast("Copied")).catch(()=>toast("Copy failed",true));});
-  host.querySelectorAll(".lk:not(.cx-note)").forEach(el=>el.onclick=()=>{const k=el.dataset.k,id=el.dataset.id;
+  host.querySelectorAll(".lk:not(.cx-note):not(.sb-r)").forEach(el=>el.onclick=()=>{const k=el.dataset.k,id=el.dataset.id;
     if(k==="meeting"){view="meetings";meetingRollup=false;activeMeetingId=id;}else if(k==="journal"){view="journal";journalTodos=false;activeJournalId=id;}else{view="debug";activeDebugId=id;}renderApp();});
   host.querySelectorAll(".thumbs [data-id]").forEach(el=>{const im=state.images.find(x=>x.id===el.dataset.id);if(!im)return;
     el.onclick=()=>openImageLightbox(im);imgUrl(im).then(u=>{if(u){el.style.backgroundImage=`url("${u}")`;el.classList.add("has");}});});

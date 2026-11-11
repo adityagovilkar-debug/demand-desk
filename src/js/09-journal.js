@@ -29,6 +29,7 @@ function renderJournalDetail(){
     <div class="detail-body"><div class="field"><label>Rough notes for the day</label><textarea id="j-body" class="jbody" placeholder="Anything — what you worked on, snippets, things to remember…">${esc(j.body)}</textarea></div><div id="j-links">${linkChips(j.body)}</div>
       <div class="sec-title" style="margin-top:14px"><h3>Linked epics &amp; demands</h3><div class="ln"></div><button class="sm" id="j-link">🔗 Link</button></div>
       <div class="chiprow" id="j-chips"></div>
+      <div id="j-seen"></div>
       <div id="j-imgs" style="margin-top:18px"></div></div>`;
   host.querySelector("#j-title").onchange=e=>{j.title=e.target.value;touch(j);renderJournalSidebar();};
   host.querySelector("#j-date").onchange=e=>{const nd=e.target.value||todayStr();
@@ -37,7 +38,8 @@ function renderJournalDetail(){
   host.querySelector("#j-body").onchange=e=>{j.body=e.target.value;touch(j);renderJournalSidebar();const l=host.querySelector("#j-links");if(l)l.innerHTML=linkChips(j.body);};
   host.querySelector("#j-del").onclick=()=>deleteWithUndo("Deleted the journal entry",()=>{state.journal=state.journal.filter(x=>x.id!==j.id);state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="journal"&&l.id===j.id)));activeJournalId=null;});
   host.querySelector("#j-link").onclick=()=>openLinkDemandsToJournal(j);
-  drawJournalChips(j);
+  drawJournalChips(j);drawJournalSeen(j);
+  host.querySelector("#j-body").addEventListener("input",e=>{clearTimeout(drawJournalSeen._t);const v=e.target.value;drawJournalSeen._t=setTimeout(()=>drawJournalSeen({...j,body:v}),700);});
   renderImagesSection(host.querySelector("#j-imgs"),"journal",j.id);
 }
 function drawJournalChips(j){drawLinkChips(document.getElementById("j-chips"),j,()=>{drawJournalChips(j);renderJournalSidebar();},"Nothing linked — link the epics or demands these notes are about.");}

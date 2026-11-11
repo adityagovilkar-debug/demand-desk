@@ -1679,6 +1679,23 @@
   .mg-more:not([open]){padding-bottom:2px}
   .mg-more summary .faint{text-transform:none;letter-spacing:0;font-weight:400}
   .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 12px}
+  /* ---------------- memory: Seen before, pasted Excel rows, the readable copy ---------------- */
+  .lk.sb-r .t{display:flex;flex-direction:column;gap:1px;white-space:normal}
+  .lk.sb-r .t>*{min-width:0}
+  .sb-why{font-family:var(--mono);font-size:9.5px;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:.02em}
+  .sb-why b{font-weight:600;color:var(--ink-2)}
+  .sb-les{font-size:11px;color:var(--ink-2);margin:-2px 0 6px 15px;line-height:1.45}
+  .sb-j{max-width:760px}
+  .sb-j .lk{font-size:12.5px}
+  .sh-list{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+  .sh-lh{display:flex;align-items:center;gap:10px;flex-basis:100%}
+  .sh-wrap{max-height:56vh;overflow:auto;border:1px solid var(--rule);border-radius:3px}
+  .sh-prev .sh-wrap{max-height:220px}
+  .sh-t{border-collapse:collapse;font-size:12px;width:100%}
+  .sh-t th{position:sticky;top:0;background:var(--paper-2);text-align:left;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .sh-t th,.sh-t td{padding:4px 8px;border-bottom:1px dotted var(--rule-strong);vertical-align:top;white-space:pre-wrap;max-width:320px}
+  .sh-t tr.hl td{background:color-mix(in srgb,var(--pen-6) 14%,transparent)}
+  .rc-sum{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);padding:8px 10px;border:1px solid var(--rule);border-radius:3px;background:var(--paper-2);margin:6px 0 8px}
 </style>
 </head>
 <body>
@@ -1792,11 +1809,11 @@ const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod 
 /* The data format this copy understands. Bump it whenever a change adds or reshapes saved data —
    an older copy then refuses to save a file written by a newer one, instead of dropping fields
    it doesn't know about. */
-const DATA_VERSION=32;
+const DATA_VERSION=33;
 let dataNewer=0;   /* the version of a loaded file that's newer than this copy (0 = fine) */
 const SELFTEST=/[?&]selftest\b/.test(location.search);   /* sandbox: nothing is read from or written to your data */
 function newerMsg(){return `This data was saved by a newer Demand Desk (data version ${dataNewer}); this copy understands up to ${DATA_VERSION}. Saving is switched off so nothing gets dropped — open the file with the newest DemandDesk.html.`;}
-let state={version:DATA_VERSION,people:[],jobs:[],settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
+let state={version:DATA_VERSION,people:[],jobs:[],sheets:[],settings:{landscapes:[...DEF_LANDSCAPES],tiers:DEF_TIERS,defaultSystem:"H03",encryption:false,autosave:true,clients:{},imageExpiryDays:90},tasks:[],epics:[],meetings:[],calls:[],teamMeetings:[],credentials:[],journal:[],todos:[],debug:[],images:[],playbook:[],efforts:[],daysOff:[],wins:[],reviewNotes:{}};
 let fileHandle=null, dirty=false, autoSaveTimer=null, lastSaveAuto=false, lastWriteAt=0, autoSaveDue=0, diskConflict=null, fileSig=null, savePromise=null, backupUnreadable=false;
 let view="today";
 let activeId=null, activeTab="overview", activeMeetingId=null, meetingRollup=false, rollupOwner="", rollupTeam="";
@@ -1871,7 +1888,7 @@ async function serializeData(){return isEncrypted()?await encryptStateStr(master
 
 /* ---------- persistence ---------- */
 let hadContent=false;
-function contentCount(){return (state.jobs||[]).length+state.tasks.length+state.epics.length+state.meetings.length+state.credentials.length+state.journal.length+state.todos.length+state.debug.length+state.images.length+state.playbook.length+(state.efforts||[]).length+(state.wins||[]).length;}
+function contentCount(){return (state.jobs||[]).length+(state.sheets||[]).length+state.tasks.length+state.epics.length+state.meetings.length+state.credentials.length+state.journal.length+state.todos.length+state.debug.length+state.images.length+state.playbook.length+(state.efforts||[]).length+(state.wins||[]).length;}
 function isValidState(s){return s&&typeof s==="object"&&Array.isArray(s.tasks)&&Array.isArray(s.epics)&&Array.isArray(s.meetings)&&Array.isArray(s.credentials)&&Array.isArray(s.journal)&&Array.isArray(s.todos)&&Array.isArray(s.debug)&&Array.isArray(s.images)&&Array.isArray(s.playbook)&&(s.efforts===undefined||Array.isArray(s.efforts));}
 function noteContent(){if(isValidState(state)&&contentCount()>0)hadContent=true;}
 /* defensive guard: returns true if it is SAFE to persist current state */
@@ -2136,6 +2153,8 @@ function migrate(d){
     d.jobs.push(normJob({id:x.id,title:x.text||"(to-do)",source:"self",received:isoTs(x.createdAt||Date.now()),due:x.due||"",status:x.done?"done":"open",
       closedOn:x.done?isoTs(x.doneAt||x.createdAt||Date.now()):"",outcome:x.resolution||"",createdAt:x.createdAt,updatedAt:x.doneAt||x.createdAt}));});
   d.todos=[];
+  /* v33: rows pasted from Excel, kept as searchable notes */
+  d.sheets=(d.sheets||[]).map(normSheet);
   d.credentials=(d.credentials||[]).map(c=>({id:c.id||uid(),system:c.system||"",client:c.client||"",label:c.label||"",url:c.url||"",username:c.username||"",password:c.password||"",notes:c.notes||"",updatedAt:c.updatedAt||Date.now()}));
   d.journal=(d.journal||[]).map(j=>({id:j.id||uid(),date:j.date||todayStr(),title:j.title||"",body:j.body||"",taskIds:(j.taskIds||[]).slice(),epicIds:(j.epicIds||[]).slice(),createdAt:j.createdAt||Date.now(),updatedAt:j.updatedAt||Date.now()}));
   d.debug=(d.debug||[]).map(s=>({id:s.id||uid(),title:s.title||"(untitled debug)",demandId:s.demandId||"",taskId:s.taskId||"",status:s.status||"active",resume:s.resume||"",notes:s.notes||"",
@@ -4256,6 +4275,7 @@ function renderJournalDetail(){
     <div class="detail-body"><div class="field"><label>Rough notes for the day</label><textarea id="j-body" class="jbody" placeholder="Anything — what you worked on, snippets, things to remember…">${esc(j.body)}</textarea></div><div id="j-links">${linkChips(j.body)}</div>
       <div class="sec-title" style="margin-top:14px"><h3>Linked epics &amp; demands</h3><div class="ln"></div><button class="sm" id="j-link">🔗 Link</button></div>
       <div class="chiprow" id="j-chips"></div>
+      <div id="j-seen"></div>
       <div id="j-imgs" style="margin-top:18px"></div></div>`;
   host.querySelector("#j-title").onchange=e=>{j.title=e.target.value;touch(j);renderJournalSidebar();};
   host.querySelector("#j-date").onchange=e=>{const nd=e.target.value||todayStr();
@@ -4264,7 +4284,8 @@ function renderJournalDetail(){
   host.querySelector("#j-body").onchange=e=>{j.body=e.target.value;touch(j);renderJournalSidebar();const l=host.querySelector("#j-links");if(l)l.innerHTML=linkChips(j.body);};
   host.querySelector("#j-del").onclick=()=>deleteWithUndo("Deleted the journal entry",()=>{state.journal=state.journal.filter(x=>x.id!==j.id);state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="journal"&&l.id===j.id)));activeJournalId=null;});
   host.querySelector("#j-link").onclick=()=>openLinkDemandsToJournal(j);
-  drawJournalChips(j);
+  drawJournalChips(j);drawJournalSeen(j);
+  host.querySelector("#j-body").addEventListener("input",e=>{clearTimeout(drawJournalSeen._t);const v=e.target.value;drawJournalSeen._t=setTimeout(()=>drawJournalSeen({...j,body:v}),700);});
   renderImagesSection(host.querySelector("#j-imgs"),"journal",j.id);
 }
 function drawJournalChips(j){drawLinkChips(document.getElementById("j-chips"),j,()=>{drawJournalChips(j);renderJournalSidebar();},"Nothing linked — link the epics or demands these notes are about.");}
@@ -5165,7 +5186,7 @@ function nextActionTrail(t){return (t.timeline||[]).filter(e=>e.type==="note"&&/
    due — each done right where it shows. Close the day: an hours box for
    every demand, task and meeting touched that day, against the working day. */
 const CHASE_EVERY=3;   /* days between follow-ups on something you're waiting for */
-const AG_KINDS={step:{l:"Next step",pen:"pen-2",o:0},act:{l:"Action point",pen:"pen-5",o:1},chase:{l:"Follow up",pen:"pen-4",o:2},todo:{l:"To-do",pen:"pen-6",o:3},release:{l:"Release",pen:"pen-1",o:3.5},check:{l:"Check in",pen:"pen-7",o:3.6},due:{l:"Due",pen:"pen-1",o:4}};
+const AG_KINDS={step:{l:"Next step",pen:"pen-2",o:0},act:{l:"Action point",pen:"pen-5",o:1},chase:{l:"Follow up",pen:"pen-4",o:2},todo:{l:"To-do",pen:"pen-6",o:3},release:{l:"Release",pen:"pen-1",o:3.5},check:{l:"Check in",pen:"pen-7",o:3.6},yearly:{l:"Once a year",pen:"pen-5",o:3.7},due:{l:"Due",pen:"pen-1",o:4}};
 /* an action point is yours when it has no owner, says me / myself / I, or names you (the Greeting name in ⋯) */
 function actionIsMine(a){const o=String(a.owner||"").trim().toLowerCase(),n=viewPref("userName","").trim().toLowerCase();
   return !o||["me","myself","i","self"].includes(o)||(!!n&&o.split(/[\s,/&+]+/).includes(n));}
@@ -5202,6 +5223,7 @@ function agendaItems(){const t0=todayStr(),out=[];
     add("due",d,s?`Subtask: ${esc(s.title)}`:d<t0?"Past its due date":"Due today",x);});
   state.jobs.filter(j=>jobOpen(j)&&j.due&&j.due<=t0).forEach(x=>add("due",x.due,x.askedBy?`${esc(x.askedBy)} expects an answer`:x.source==="self"?"Due":"An answer is expected",x));
   out.push(...agendaTransportItems(t0));
+  if(readableCopyDue(t0))out.push({k:"yearly",date:t0,what:"Make this year's readable copy",sub:"everything as Markdown, by year",of:"📚 your data file",go:openReadableCopy,acts:[["Make it",()=>openReadableCopy(),"Write the readable copy now"]]});
   return out.sort((a,b)=>a.date.localeCompare(b.date)||AG_KINDS[a.k].o-AG_KINDS[b.k].o);}
 const AG_CAP=10;
 function agendaHTML(items){const t0=todayStr(),late=items.filter(i=>i.date<t0).length,shown=agendaHTML.all?items:items.slice(0,AG_CAP);
@@ -5540,14 +5562,17 @@ const IC_PATHS={
   warn:"M9 2.5l7 12.5H2zM9 7v4M9 13.3v.1",
   checkbox:"M3 3h12v12H3zM5.5 9.2l2.3 2.3 4.7-5",
   box0:"M3 3h12v12H3z",
-  flagf:"M4.5 16V2.5M4.5 3h9l-1.8 3 1.8 3h-9"};
+  flagf:"M4.5 16V2.5M4.5 3h9l-1.8 3 1.8 3h-9",
+  books:"M3 3h3v12H3zM7 3h3v12H7zM11.2 3.6l2.9-.8 2.9 11.6-2.9.8z",
+  download:"M9 2.5v9M5.5 8L9 11.5 12.5 8M3 14.5h12",
+  upload:"M9 11.5v-9M5.5 6L9 2.5 12.5 6M3 14.5h12"};
 const IC_OF={"🗑":"trash","⏱":"timer","📋":"clipboard","👥":"people","🔒":"lock","🔓":"unlock","🔗":"link","⛓":"link","💡":"bulb","⏳":"hourglass","⏰":"alarm","📞":"phone",
   "⏸":"pause","👷":"builder","🏖":"umbrella","🌴":"umbrella","🗂":"folders","📓":"notebook","🐞":"bug","❄":"snow","🔄":"refresh","🔁":"repeat","🏆":"trophy","⚙":"gear",
   "🗓":"calendar","📅":"calendar","📌":"pin","📍":"pin","🖨":"printer","📷":"camera","🖼":"picture","💾":"disk","📝":"note","🗒":"note","✍":"pencil","🚚":"truck",
   "📄":"doc","📁":"folder","📂":"folder","🔌":"plug","🎯":"target","💬":"chat","👁":"eye","🙈":"eyeoff","💤":"sleep","📥":"inbox","📦":"box","🧳":"case","🎉":"party",
   "✉":"mail","📨":"mail","📈":"chart","🔧":"wrench","☾":"moon","🌙":"moon","☀":"sun","⌨":"keyboard","🚀":"rocket","🏁":"flag","⚖":"scales","❓":"question","🧹":"broom",
   "🕸":"web","⛔":"stop","🙋":"person","👤":"person","🔍":"search","🎫":"ticket","🧩":"puzzle","🙏":"heart","🧯":"extinguisher","🎓":"cap","⭐":"star","⚠":"warn",
-  "☑":"checkbox","☐":"box0","⚑":"flagf"};
+  "☑":"checkbox","☐":"box0","⚑":"flagf","📚":"books","⬇":"download","⬆":"upload"};
 const IC_RE=new RegExp("("+Object.keys(IC_OF).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")\uFE0F?","gu");
 const icSvg=name=>`<svg class="ic ic-${name}" viewBox="0 0 18 18" aria-hidden="true"><path d="${IC_PATHS[name]}"/></svg>`;
 const IC_SKIP="textarea,select,option,script,style,svg,title,[contenteditable],.noic";
@@ -5591,6 +5616,169 @@ function wireCalClick(cv,host){const box=host.querySelector("#ckCalDay");if(!cv|
       ${items.length?items.map((x,i)=>`<div class="ck-cd-r" data-i="${i}" style="--pen:var(--${x.pen})"><i></i><span class="k">${x.k}</span><span class="tx">${x.tx}</span></div>`).join(""):`<div class="faint">Nothing on this day.</div>`}`;
     box.classList.add("on");box.querySelectorAll(".ck-cd-r").forEach(el=>el.onclick=()=>items[+el.dataset.i].go());
     box.querySelector(".ck-cd-x").onclick=ev=>{ev.preventDefault();box.classList.remove("on");};});}
+/* ===================== MEMORY AND LOOKING BACK =====================
+   Seen before: past demands, journal entries, meetings, debug sessions and pasted Excel
+   rows that share a demand's objects or its rarer words — on the demand's side panel and
+   under the journal entry you're writing, with the lessons from similar demands. Excel
+   rows: paste rows copied from Excel and they become searchable notes. A readable copy:
+   everything as Markdown files in folders by year, readable in Notepad without the app. */
+
+/* ---------- Seen before ---------- */
+const SB_STOP=new Set(("that this with from have will what when where which into been were they them their there then than also only just more most some such very your about after before again "+
+  "because being both down during each here once other over same should through under until while would could shall must does doing done make made need needs needed please thanks thank "+
+  "regards today tomorrow yesterday week weeks month days check checked call called mail email sent send team issue issues change changes changed demand demands task tasks note notes "+
+  "data report work working okay sure like still asked said told want wants given using used test tested testing fine good able already").split(" "));
+function sbTokens(s){const out=new Set();String(s||"").toLowerCase().replace(/[a-z0-9_\/]{4,}/g,w=>{if(SB_STOP.has(w))return "";if(/^\d+$/.test(w)&&w.length<5)return "";out.add(w);return "";});return out;}
+const SB_PEN={Demand:"pen-2",Journal:"pen-3",Meeting:"pen-4",Debug:"pen-1",Sheet:"pen-6"};
+/* the index is rebuilt only after the data changes (editSeq) */
+function sbIndex(){const c=sbIndex;if(c.docs&&c.seq===editSeq&&c.sheets===(state.sheets||[]).length)return c;const docs=[];
+  const add=(d,text)=>{d.tok=sbTokens(text);docs.push(d);};
+  state.tasks.forEach(t=>add({k:"Demand",id:t.id,t,label:demandLabel(t)===t.demandId?`${t.demandId} · ${t.title}`:demandLabel(t)||t.title,date:t.receivedDate||isoTs(t.createdAt),
+    objs:new Set(t.objects.map(o=>objKey(o.name)).filter(Boolean)),go:()=>{view="demands";activeId=t.id;activeTab="overview";renderApp();}},
+    [t.title,t.description,t.notes,(t.comments||[]).map(x=>x.text).join(" "),t.objects.map(o=>o.name+" "+(o.desc||"")).join(" "),(t.lessons||[]).map(l=>l.text).join(" "),
+     (t.timeline||[]).filter(e=>e.type==="note").map(e=>e.note).join(" ")].join(" ")));
+  state.journal.forEach(j=>add({k:"Journal",id:j.id,label:j.title||"Journal · "+j.date,date:j.date,go:()=>{view="journal";activeJournalId=j.id;renderApp();}},[j.title,j.body].join(" ")));
+  state.meetings.forEach(m=>add({k:"Meeting",id:m.id,label:m.title,date:m.date,go:()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;renderApp();}},
+    [m.title,m.body,m.actions.map(a=>a.text+" "+(a.resolution||"")).join(" ")].join(" ")));
+  state.debug.forEach(s=>add({k:"Debug",id:s.id,label:s.title,date:isoTs(s.updatedAt||s.createdAt||Date.now()),objs:new Set((s.objects||[]).map(o=>objKey(o.name)).filter(Boolean)),
+    go:()=>{view="debug";activeDebugId=s.id;renderApp();}},[s.title,s.resume,s.notes,(s.objects||[]).map(o=>o.name+" "+(o.note||"")).join(" "),(s.findings||[]).map(f=>f.text).join(" ")].join(" ")));
+  (state.sheets||[]).forEach(sh=>sh.rows.forEach((r,i)=>add({k:"Sheet",id:sh.id+"#"+i,label:`${sh.name} · ${r.filter(Boolean).slice(0,2).join(" · ").slice(0,60)}`,date:sh.added,
+    go:()=>openSheet(sh,i)},r.join(" "))));
+  const df=new Map();docs.forEach(d=>d.tok.forEach(w=>df.set(w,(df.get(w)||0)+1)));
+  Object.assign(c,{docs,df,N:docs.length,seq:editSeq,sheets:(state.sheets||[]).length});return c;}
+/* scored by shared objects (strong) and shared rare words (the rarer, the more) */
+function seenBefore(text,objs,skip){const {docs,df,N}=sbIndex(),q=sbTokens(text),idf=w=>Math.log((N+1)/((df.get(w)||0)+.5)),cut=Math.log((N+1)/(Math.max(4,N*.03)+.5));
+  const rare=[...q].filter(w=>idf(w)>=cut),out=[];
+  docs.forEach(d=>{if(skip&&skip(d))return;let s=0;const why=[];
+    (objs||[]).forEach(o=>{if(d.objs&&d.objs.has(o)){s+=9;why.push(o);}});
+    rare.forEach(w=>{if(d.tok.has(w)){s+=idf(w);if(why.length<4&&!why.includes(w.toUpperCase()))why.push(w);}});
+    if(s>=Math.max(1.7*cut,2))out.push({d,s,why});});
+  return out.sort((a,b)=>b.s-a.s||String(b.d.date).localeCompare(String(a.d.date))).slice(0,6);}
+function seenForDemand(t){const linked=new Set([...meetingsForTask(t.id).map(m=>m.id),...journalForTask(t.id).map(j=>j.id),...debugForTask(t.id).map(s=>s.id)]);
+  return seenBefore([t.title,t.description,t.notes,t.objects.map(o=>o.name+" "+(o.desc||"")).join(" ")].join(" "),t.objects.map(o=>objKey(o.name)).filter(Boolean),
+    d=>d.id===t.id||linked.has(d.id)||(d.k==="Demand"&&t.demandId&&d.t.demandId===t.demandId));}
+function seenListHTML(hits,empty){if(!hits.length)return `<div class="bempty">${empty}</div>`;
+  return hits.map((h,i)=>`<div class="lk sb-r" data-i="${i}" style="--pen:var(--${SB_PEN[h.d.k]})" title="${esc(h.d.k)} — shares ${esc(h.why.join(", "))}"><i></i><span class="t">${esc(h.d.label)}<span class="sb-why">${esc(h.d.k)} · ${h.why.map(w=>`<b>${esc(w)}</b>`).join(" · ")}</span></span><span class="d">${h.d.date?shortD(h.d.date):""}</span></div>`
+    +(h.d.k==="Demand"&&(h.d.t.lessons||[]).length?h.d.t.lessons.slice(0,2).map(l=>`<div class="sb-les">💡 ${esc(l.text.split("\n")[0].slice(0,140))}</div>`).join(""):"")).join("");}
+function seenRailHTML(t){const hits=seenForDemand(t);
+  return `<div class="ck-unit cxs seenb"><div class="ck-head"><h2>Seen before</h2><span class="ck-meta">${hits.length?hits.length+" in your file":""}</span></div>
+    ${seenListHTML(hits,"Nothing else in your file shares its objects or its rarer words.")}</div>`;}
+function wireSeen(host,hits){host.querySelectorAll(".sb-r").forEach(el=>el.onclick=()=>{const h=hits[+el.dataset.i];if(h)h.d.go();});}
+/* object names you mention count like a demand's own objects */
+function objsInText(text){const known=new Set();state.tasks.forEach(t=>t.objects.forEach(o=>{const k=objKey(o.name);if(k)known.add(k);}));
+  return [...sbTokens(text)].map(w=>w.toUpperCase()).filter(w=>known.has(w));}
+function drawJournalSeen(j){const host=document.getElementById("j-seen");if(!host)return;const txt=[j.title,j.body].join(" "),hits=seenBefore(txt,objsInText(txt),d=>d.id===j.id);
+  host.innerHTML=`<div class="sec-title" style="margin-top:14px"><h3>Seen before</h3><div class="ln"></div><span class="faint" style="font-size:11px">${hits.length?"shares rarer words with what you're writing":"updates as you write"}</span></div>
+    <div class="sb-j">${seenListHTML(hits,"Nothing else in your file shares the rarer words of this entry yet.")}</div>`;wireSeen(host,hits);}
+
+/* ---------- Excel rows, pasted ---------- */
+function normSheet(x){const rows=(x.rows||[]).map(r=>(r||[]).map(c=>String(c==null?"":c)));return{id:x.id||uid(),name:String(x.name||"").trim()||"(pasted rows)",added:/^\d{4}-\d\d-\d\d$/.test(x.added||"")?x.added:todayStr(),
+  headers:(x.headers||[]).map(String),rows,note:String(x.note||"")};}
+/* what Excel puts on the clipboard: tab-separated cells, quoted when a cell holds a tab, quote or line break */
+function parseTSV(s){const rows=[];let row=[],cell="",q=false;s=String(s||"").replace(/\r\n?/g,"\n");
+  for(let i=0;i<s.length;i++){const ch=s[i];
+    if(q){if(ch==='"'){if(s[i+1]==='"'){cell+='"';i++;}else q=false;}else cell+=ch;continue;}
+    if(ch==='"'&&cell===""){q=true;continue;}
+    if(ch==="\t"){row.push(cell);cell="";}else if(ch==="\n"){row.push(cell);rows.push(row);row=[];cell="";}else cell+=ch;}
+  if(cell!==""||row.length){row.push(cell);rows.push(row);}
+  return rows.filter(r=>r.some(c=>c.trim()));}
+function openPasteSheet(){const root=document.getElementById("modalRoot");let rows=[],first=true;
+  root.innerHTML=`<div class="modal-bg"><div class="modal efx" style="width:720px"><h2>Paste rows from Excel</h2>
+    <p class="faint" style="font-size:12px;margin-top:-8px">Select the rows in Excel, Ctrl+C, then Ctrl+V below. They're kept in your data file and found by Search and by <i>Seen before</i> — nothing is read from a file.</p>
+    <div class="field"><label>Name</label><input id="shName" placeholder="e.g. Transport log 2021 · Basis contacts · Old demand tracker"></div>
+    <div class="field"><label>Rows</label><textarea id="shText" rows="6" placeholder="Paste here (Ctrl+V)" style="font-family:var(--mono);font-size:12px;white-space:pre"></textarea></div>
+    <label class="tb-tg" style="margin:0 0 10px"><input type="checkbox" id="shHead" checked> The first row is headings</label>
+    <div id="shPrev" class="sh-prev"></div>
+    <div class="modal-foot"><button class="ghost" id="shCancel">Cancel</button><button class="primary" id="shSave" disabled>Keep these rows</button></div></div></div>`;
+  const q=s=>root.querySelector(s),close=()=>{root.innerHTML="";};
+  const draw=()=>{rows=parseTSV(q("#shText").value);first=q("#shHead").checked;const h=first&&rows.length?rows[0]:[],body=first?rows.slice(1):rows,w=Math.max(0,...rows.map(r=>r.length));
+    q("#shSave").disabled=!body.length;q("#shSave").textContent=body.length?`Keep ${body.length} row${body.length===1?"":"s"}`:"Keep these rows";
+    q("#shPrev").innerHTML=rows.length?`<div class="faint" style="font-size:11px;margin-bottom:4px">${body.length} row${body.length===1?"":"s"} × ${w} column${w===1?"":"s"}</div>${sheetTableHTML(h,body.slice(0,6))}${body.length>6?`<div class="faint" style="font-size:11px">… and ${body.length-6} more</div>`:""}`:"";};
+  q("#shText").oninput=draw;q("#shHead").onchange=draw;q("#shCancel").onclick=close;q(".modal-bg").onclick=e=>{if(e.target===q(".modal-bg"))close();};
+  q("#shSave").onclick=()=>{const body=first?rows.slice(1):rows;if(!body.length)return;
+    const sh=normSheet({name:q("#shName").value,headers:first?rows[0]:[],rows:body});(state.sheets=state.sheets||[]).unshift(sh);markDirty();close();renderApp();
+    toast(`Kept ${body.length} row${body.length===1?"":"s"} as “${sh.name}” — Search finds them now`);};
+  setTimeout(()=>{const el=q("#shText");if(el)el.focus();},40);}
+function sheetTableHTML(h,rows,hl){const w=Math.max(h.length,...rows.map(r=>r.length),0);
+  return `<div class="sh-wrap"><table class="sh-t">${h.length?`<tr>${Array.from({length:w},(_,i)=>`<th>${esc(h[i]||"")}</th>`).join("")}</tr>`:""}${rows.map((r,i)=>`<tr${i===hl?' class="hl"':""} data-r="${i}">${Array.from({length:w},(_,k)=>`<td>${esc(r[k]||"")}</td>`).join("")}</tr>`).join("")}</table></div>`;}
+function openSheet(sh,row){const root=document.getElementById("modalRoot");let f="";
+  const draw=()=>{const w=f.toLowerCase().split(/\s+/).filter(Boolean),idx=sh.rows.map((r,i)=>i).filter(i=>!w.length||w.every(x=>sh.rows[i].join(" ").toLowerCase().includes(x)));
+    root.querySelector("#shBody").innerHTML=`<div class="faint" style="font-size:11px;margin-bottom:4px">${idx.length} of ${sh.rows.length} rows</div>`+sheetTableHTML(sh.headers,idx.map(i=>sh.rows[i]),row!=null?idx.indexOf(row):-1);
+    const hr=root.querySelector("tr.hl");if(hr)hr.scrollIntoView({block:"center"});};
+  root.innerHTML=`<div class="modal-bg"><div class="modal efx" style="width:900px"><h2>▦ ${esc(sh.name)} <span class="faint" style="font-weight:400;font-size:12px">pasted ${esc(sh.added)}</span></h2>
+    <input id="shF" placeholder="Filter rows…" autocomplete="off" style="margin-bottom:8px"><div id="shBody"></div>
+    <div class="modal-foot"><button class="ghost sm" id="shDel" style="margin-right:auto">🗑 Delete these rows</button><button class="primary" id="shClose">Close</button></div></div></div>`;
+  const close=()=>{root.innerHTML="";};root.querySelector("#shClose").onclick=close;root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
+  root.querySelector("#shF").oninput=e=>{f=e.target.value;row=null;draw();};
+  root.querySelector("#shDel").onclick=()=>{close();deleteWithUndo(`Deleted “${sh.name}”`,()=>{state.sheets=state.sheets.filter(x=>x.id!==sh.id);});};
+  draw();}
+function sheetsHTML(){const sh=state.sheets||[];
+  return `<div class="sh-list"><div class="sh-lh"><span class="ef-lb" style="margin:0">Excel rows you've pasted</span><button class="sm" id="shAdd">＋ Paste rows from Excel</button></div>
+    ${sh.length?sh.map(s=>`<button class="ef-chip sh-c" data-sh="${s.id}">▦ ${esc(s.name)} <b class="mono">${s.rows.length}</b></button>`).join(""):`<span class="faint" style="font-size:12px">None yet — copy rows in Excel and paste them here; Search and <i>Seen before</i> find them.</span>`}</div>`;}
+function wireSheets(host){const a=host.querySelector("#shAdd");if(a)a.onclick=openPasteSheet;
+  host.querySelectorAll("[data-sh]").forEach(b=>b.onclick=()=>{const s=(state.sheets||[]).find(x=>x.id===b.dataset.sh);if(s)openSheet(s);});}
+
+/* ---------- a readable copy, by year ---------- */
+const rcName=s=>String(s||"").replace(/[\\/:*?"<>|\u0000-\u001f]+/g,"-").replace(/\s+/g," ").trim().slice(0,80)||"untitled";
+const rcYear=d=>(d||"").slice(0,4)||"undated";
+function rcDemand(t){const L=[],ep=epicById(t.epicId),hrs=efSum(efFor(t.id));
+  L.push(`# ${t.demandId?t.demandId+" — ":""}${t.title}`,"",
+    `| | |`,`|---|---|`,...[["Status",STATUS[t.status].label],["Type",t.type],["System",(t.system||"")+(t.client?" / "+t.client:"")],["Epic",ep?epicLabel(ep)+(t.wave?" · "+t.wave:""):""],
+      ["Asked by",t.requestor],["Built by",builderNames(t)||"me"],["Received",t.receivedDate],["Due",t.dueDate],["Project",t.project],["Theme",t.theme],["Hours logged",hrs?efFh(hrs)+" h":""]]
+      .filter(x=>x[1]).map(([k,v])=>`| ${k} | ${String(v).replace(/\|/g,"/")} |`),"");
+  if(t.description)L.push("## What it is","",t.description,"");
+  if(t.notes)L.push("## Where it stands","",t.notes,"");
+  const subs=[];(function w(a,d){a.forEach(s=>{subs.push(`${"  ".repeat(d)}- [${s.done?"x":" "}] ${s.title||"(subtask)"}${s.dueDate?" (due "+s.dueDate+")":""}`);w(s.children||[],d+1);});})(t.subtasks||[],0);
+  if(subs.length)L.push("## Subtasks","",...subs,"");
+  if(t.objects.length)L.push("## Objects","",...t.objects.map(o=>`- ${o.name} — ${o.type||""} ${o.action||""}${o.desc?": "+o.desc:""}`),"");
+  if(t.transports.length)L.push("## Transports","",...t.transports.map(tr=>{const syn=effectiveSyncs(t,tr).filter(s=>s.system);return `- ${tr.number||"(unnumbered)"}${tr.desc?" — "+tr.desc:""} · from ${tr.system}${tr.released?"":" · not released"}${syn.length?" · reached "+syn.map(s=>s.system+(s.date?" "+s.date:"")).join(", "):""}`;}),"");
+  const refs=(t.reference||[]).filter(r=>!r.secret);if(refs.length)L.push("## Reference","",...refs.map(r=>`- ${r.label}: ${r.value}`),"");
+  if((t.lessons||[]).length)L.push("## Lessons","",...t.lessons.map(l=>`- ${l.date}: ${l.text}`),"");
+  if((t.comments||[]).length)L.push("## Comments","",...t.comments.map(c=>`- ${c.text}`),"");
+  const tl=(t.timeline||[]).slice().sort((a,b)=>a.ts-b.ts);if(tl.length)L.push("## History","",...tl.map(e=>`- ${isoTs(e.ts)} ${e.type==="status"?"→ "+(STATUS[e.to]||{label:e.to}).label:e.note||""}`),"");
+  return L.join("\n");}
+/* every file of the copy as {path: text}; secrets (vault, secret references) are left out */
+function rcFiles(){const F={},put=(p,t)=>{F[p]=t;},years=new Set();
+  state.tasks.forEach(t=>{const y=rcYear(t.receivedDate||isoTs(t.createdAt));years.add(y);put(`${y}/Demands/${rcName((t.demandId?t.demandId+" ":"")+t.title)}.md`,rcDemand(t));});
+  const jm=new Map();state.journal.forEach(j=>{const k=j.date.slice(0,7);if(!jm.has(k))jm.set(k,[]);jm.get(k).push(j);});
+  jm.forEach((js,k)=>{years.add(k.slice(0,4));put(`${k.slice(0,4)}/Journal/${k}.md`,[`# Journal — ${k}`,"",...js.sort((a,b)=>a.date.localeCompare(b.date)).flatMap(j=>[`## ${j.date}${j.title?" — "+j.title:""}`,"",j.body||"",""])].join("\n"));});
+  state.meetings.forEach(m=>{const y=rcYear(m.date);years.add(y);put(`${y}/Meetings/${rcName(m.date+" "+m.title)}.md`,[`# ${m.title}`,"",`${m.date}${m.team?" · "+m.team:""}${m.attendees?" · with "+m.attendees:""}${m.hours?" · "+efFh(m.hours)+" h":""}`,"",m.body||"",
+    ...(m.actions.length?["","## Action points","",...m.actions.map(a=>`- [${a.done?"x":" "}] ${a.text}${a.owner?" ("+a.owner+")":""}${a.due?" — due "+a.due:""}${a.resolution?" → "+a.resolution:""}`)]:[])].join("\n"));});
+  state.jobs.forEach(j=>{const y=rcYear(j.received);years.add(y);put(`${y}/Tasks/${rcName(j.received+" "+j.title)}.md`,[`# ${j.title}`,"",`${JOB_STATUS[j.status].l} · came in by ${JOB_SRC[j.source]}${j.askedBy?" · asked by "+j.askedBy:""} · received ${j.received}${j.due?" · expected "+j.due:""}${j.closedOn?" · closed "+j.closedOn:""}`,"",
+    j.brief?"## The ask\n\n"+j.brief+"\n":"",j.log.length?"## Log\n\n"+j.log.map(x=>`- ${x.date} ${JOB_LOG[x.kind].l}: ${x.text}`).join("\n")+"\n":"",j.outcome?"## Outcome\n\n"+j.outcome:""].filter(x=>x!=="").join("\n"));});
+  state.debug.forEach(s=>{const y=rcYear(isoTs(s.createdAt||s.updatedAt||Date.now()));years.add(y);put(`${y}/Debug/${rcName(s.title)}.md`,[`# ${s.title}`,"",s.resume?"**Resume here:** "+s.resume:"","",s.notes||"",
+    ...(s.findings||[]).map(f=>`- ${f.text}`)].join("\n"));});
+  [...years].forEach(y=>{const es=state.efforts.filter(e=>e.date.slice(0,4)===y);if(es.length){const by=new Map();es.forEach(e=>{const k=efName(efKey(e));by.set(k,(by.get(k)||0)+e.hours);});
+      put(`${y}/Hours.md`,[`# Hours — ${y}`,"",`${efFh(efSum(es))} h in all`,"","| Where | Hours |","|---|---|",...[...by].sort((a,b)=>b[1]-a[1]).map(([k,h])=>`| ${k.replace(/\|/g,"/")} | ${efFh(Math.round(h*100)/100)} |`)].join("\n"));}
+    const wins=state.wins.filter(w=>w.date.slice(0,4)===y),les=state.tasks.flatMap(t=>(t.lessons||[]).filter(l=>(l.date||"").slice(0,4)===y).map(l=>({t,l})));
+    if(wins.length||les.length)put(`${y}/Wins and lessons.md`,[`# Wins and lessons — ${y}`,"",...wins.map(w=>`- ${w.date} ${WIN_KINDS[w.kind].l}: ${w.text}`),"",...les.map(({t,l})=>`- ${l.date} lesson on ${demandLabel(t)}: ${l.text}`)].join("\n"));});
+  state.epics.forEach(e=>put(`Epics/${rcName((e.code?e.code+" ":"")+e.name)}.md`,[`# ${epicLabel(e)}`,"",e.description||"","","## Story","",...e.log.slice().sort((a,b)=>(a.date||"").localeCompare(b.date||"")).map(x=>`- ${x.date} ${EPIC_LOG[x.kind].label}: ${x.text}`)].join("\n")));
+  state.playbook.forEach(p=>put(`Playbook/${rcName(p.title)}.md`,[`# ${p.title}`,"",p.body||"",...(p.steps||[]).map((s,i)=>`${i+1}. ${s.text}`),...(p.people||[]).map(x=>`- ${x.name} — ${x.role} ${x.contact}`)].join("\n")));
+  (state.sheets||[]).forEach(sh=>put(`${rcYear(sh.added)}/Excel rows/${rcName(sh.name)}.md`,[`# ${sh.name}`,"",...(sh.headers.length?["| "+sh.headers.join(" | ")+" |","|"+sh.headers.map(()=>"---").join("|")+"|"]:[]),...sh.rows.map(r=>"| "+r.map(c=>c.replace(/\|/g,"/").replace(/\n/g," ")).join(" | ")+" |")].join("\n")));
+  const ys=[...years].sort().reverse();
+  put("README.md",[`# Demand Desk — a readable copy`,"",`Written ${todayStr()} from the data file. Plain Markdown: open any file in Notepad. Passwords and secret reference entries are left out.`,"",
+    ...ys.map(y=>`- **${y}** — ${Object.keys(F).filter(p=>p.startsWith(y+"/Demands/")).length} demands, ${Object.keys(F).filter(p=>p.startsWith(y+"/Meetings/")).length} meetings, ${Object.keys(F).filter(p=>p.startsWith(y+"/Tasks/")).length} tasks`),"","- **Epics**, **Playbook** — not by year"].join("\n"));
+  return F;}
+async function rcWrite(dir,path,text){const parts=path.split("/");let d=dir;for(const p of parts.slice(0,-1))d=await d.getDirectoryHandle(p,{create:true});
+  const fh=await d.getFileHandle(parts[parts.length-1],{create:true}),w=await fh.createWritable();await w.write(text);await w.close();}
+function openReadableCopy(){const root=document.getElementById("modalRoot"),F=rcFiles(),n=Object.keys(F).length,last=viewPref("readable.at",""),fs=!!window.showDirectoryPicker;
+  const years=[...new Set(Object.keys(F).map(p=>p.split("/")[0]).filter(x=>/^\d{4}$/.test(x)))].sort().reverse();
+  root.innerHTML=`<div class="modal-bg"><div class="modal efx" style="width:560px"><h2>📚 A readable copy</h2>
+    <p style="font-size:13px;line-height:1.55;margin-top:-6px">Everything in your data file as plain Markdown files, in folders by year — demands, journal, meetings, tasks, debug sessions, hours, wins and lessons, epics, the playbook, pasted Excel rows. Readable in Notepad even if this app is ever gone. <b>Passwords and secret reference entries are left out.</b></p>
+    <div class="rc-sum">${n} files · ${years.join(" · ")||"no dated items yet"}${last?` · last written <b>${esc(last)}</b>`:""}</div>
+    <p class="faint" style="font-size:11.5px">Each run rewrites the files. Pick the same folder each year (the folder picker remembers it); a demand you've renamed since leaves its old file behind.</p>
+    <div class="modal-foot">${fs?"":`<span class="faint" style="font-size:11px;margin-right:auto">This browser can't write folders — download one file per year instead.</span>`}<button class="ghost" id="rcCancel">Cancel</button>${years.length?`<button id="rcDl" title="One .md file with this year's demands, journal, meetings and tasks">⬇ ${years[0]} as one file</button>`:""}${fs?`<button class="primary" id="rcGo">Choose a folder and write</button>`:""}</div></div></div>`;
+  const q=s=>root.querySelector(s),close=()=>{root.innerHTML="";};q("#rcCancel").onclick=close;q(".modal-bg").onclick=e=>{if(e.target===q(".modal-bg"))close();};
+  const dl=q("#rcDl");if(dl)dl.onclick=()=>{const y=years[0],txt=Object.keys(F).filter(p=>p.startsWith(y+"/")).sort().map(p=>`<!-- ${p} -->\n\n${F[p]}`).join("\n\n---\n\n");
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/markdown"}));a.download=`Demand Desk ${y}.md`;a.click();URL.revokeObjectURL(a.href);setViewPref("readable.at",todayStr());close();toast(`Downloaded Demand Desk ${y}.md`);};
+  const go=q("#rcGo");if(go)go.onclick=async()=>{let dir;try{dir=await window.showDirectoryPicker({id:"dd-readable",mode:"readwrite"});}catch(e){return;}
+    go.disabled=true;go.textContent="Writing…";let k=0;
+    try{const top=await dir.getDirectoryHandle("Demand Desk — readable copy",{create:true});for(const [p,t] of Object.entries(F)){await rcWrite(top,p,t);if(++k%25===0)go.textContent=`Writing… ${k} of ${n}`;}
+      setViewPref("readable.at",todayStr());close();renderApp();toast(`Wrote ${k} files to ${dir.name} / Demand Desk — readable copy`);}
+    catch(e){go.disabled=false;go.textContent="Choose a folder and write";toast("Couldn't write: "+e.message,true);}};}
+/* the agenda asks once a year, from mid-December to the end of January */
+function readableCopyDue(t0){const m=+t0.slice(5,7),d=+t0.slice(8,10);if(!((m===12&&d>=15)||m===1))return false;
+  const cycle=m===12?t0.slice(0,4):String(+t0.slice(0,4)-1),last=viewPref("readable.at","");return !(last&&last>=cycle+"-12-01");}
 /* ===================== TRANSPORT RUN SHEET ===================== */
 /* What Basis has to import into one system, in release order. A ToC stands in for the
    TRs bundled in it (imported once, where its first member sits in the order), customizing
@@ -5842,6 +6030,7 @@ function openMenu(){
       <button id="mn-keys">⌨ Keyboard shortcuts (?)</button>
       <button id="mn-week">🗓 Weekly summary…</button>
       <button id="mn-hand">🧳 Handover pack…</button>
+      <button id="mn-rc">📚 A readable copy, by year…</button>
       <button id="mn-csv">⬇ Export transports (CSV for Excel)</button>
       <button id="mn-export">⬇ Export / download a copy (.json)</button>
       <button id="mn-import">⬆ Import / open a .json file</button>
@@ -5872,6 +6061,7 @@ function openMenu(){
   root.querySelector("#mn-week").onclick=()=>{close();openWeekly();};
   root.querySelector("#mn-keys").onclick=()=>{close();openKeys();};
   root.querySelector("#mn-hand").onclick=()=>{close();openHandover();};
+  root.querySelector("#mn-rc").onclick=()=>{close();openReadableCopy();};
   root.querySelector("#mn-csv").onclick=exportTransportsCSV;
   root.querySelector("#mn-export").onclick=exportDownload;
   root.querySelector("#mn-import").onclick=()=>{close();importViaInput();};
@@ -6607,8 +6797,8 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
     <div class="ck-unit cxs"><div class="ck-head"><h2>Linked</h2><a class="cxl" data-tab="calls">${links.length?links.length+" · link ›":"＋ link ›"}</a></div>
       ${links.slice(0,6).map(l=>`<div class="lk" data-k="${l.k}" data-id="${l.id}" style="--pen:${l.pen}"><i></i><span class="t">${esc(l.t)}</span><span class="d">${shortD(l.d)}</span></div>`).join("")||`<div class="bempty">No meetings, journal or debug sessions linked.</div>`}</div>
     <div class="ck-unit cxs"><div class="ck-head"><h2>Images</h2><a class="cxl" data-tab="images">${imgs.length?"all "+imgs.length+" ›":"Ctrl V to paste"}</a></div>
-      ${imgs.length?`<div class="thumbs">${imgs.slice(0,6).map(im=>`<div data-id="${im.id}" title="${esc(im.label||im.file)}"><span>${esc(im.label||im.file)}</span></div>`).join("")}</div>`:`<div class="bempty">Snip with Win+Shift+S, then Ctrl+V anywhere on this demand.</div>`}</div>${notesRailHTML(t)}</div>`;
-  const q=s=>host.querySelector(s);wireNotesRail(host,t);
+      ${imgs.length?`<div class="thumbs">${imgs.slice(0,6).map(im=>`<div data-id="${im.id}" title="${esc(im.label||im.file)}"><span>${esc(im.label||im.file)}</span></div>`).join("")}</div>`:`<div class="bempty">Snip with Win+Shift+S, then Ctrl+V anywhere on this demand.</div>`}</div>${seenRailHTML(t)}${notesRailHTML(t)}</div>`;
+  const q=s=>host.querySelector(s);wireNotesRail(host,t);wireSeen(host,seenForDemand(t));
   if(q("#cxNaDone"))q("#cxNaDone").onclick=()=>nextActionDone(t);
   if(q("#cxNaEdit"))q("#cxNaEdit").onclick=()=>openNextAction(t);
   if(q("#cxBuild"))q("#cxBuild").onclick=()=>openBuilders(t);
@@ -6617,7 +6807,7 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
   if(q("#cxEpic"))q("#cxEpic").onclick=()=>{view="epics";activeEpicId=t.epicId;epicTab="overview";renderApp();};
   host.querySelectorAll(".cxl[data-tab]").forEach(a=>a.onclick=()=>{activeTab=a.dataset.tab;renderDetail();enterPulse("detail");});
   host.querySelectorAll(".rf .c").forEach(b=>b.onclick=()=>{const r=refs.find(x=>x.id===b.parentElement.dataset.id);navigator.clipboard.writeText(r.value).then(()=>toast("Copied")).catch(()=>toast("Copy failed",true));});
-  host.querySelectorAll(".lk:not(.cx-note)").forEach(el=>el.onclick=()=>{const k=el.dataset.k,id=el.dataset.id;
+  host.querySelectorAll(".lk:not(.cx-note):not(.sb-r)").forEach(el=>el.onclick=()=>{const k=el.dataset.k,id=el.dataset.id;
     if(k==="meeting"){view="meetings";meetingRollup=false;activeMeetingId=id;}else if(k==="journal"){view="journal";journalTodos=false;activeJournalId=id;}else{view="debug";activeDebugId=id;}renderApp();});
   host.querySelectorAll(".thumbs [data-id]").forEach(el=>{const im=state.images.find(x=>x.id===el.dataset.id);if(!im)return;
     el.onclick=()=>openImageLightbox(im);imgUrl(im).then(u=>{if(u){el.style.backgroundImage=`url("${u}")`;el.classList.add("has");}});});
@@ -7767,6 +7957,7 @@ function searchAll(q){const terms=searchTerms(q);if(!terms.length)return [];cons
   state.playbook.forEach(p=>add("Playbook",`${PLAY_KINDS[p.kind].icon} ${p.title}`,[p.title,p.category,p.body,(p.steps||[]).map(s=>s.text).join(" · "),(p.people||[]).map(x=>x.name+" "+x.role+" "+x.contact).join(" · "),(p.systems||[]).join(" ")],p.due||p.from||"",()=>{view="playbook";activePlayId=p.id;},p.category));
   state.images.forEach(im=>add("Image",`📷 ${im.label||im.file}`,[im.label,im.file],isoTs(im.addedAt),()=>gotoImage(im)));
   state.debug.forEach(s=>add("Debug",s.title,[s.title,s.demandId,s.resume,s.notes,s.objects.map(o=>o.name+" "+o.note).join(" · "),s.breakpoints.map(b=>b.object+" "+b.condition+" "+b.note).join(" · "),s.findings.map(f=>f.text).join(" · "),s.watches.map(w=>w.name+" "+w.value+" "+w.where).join(" · ")],isoTs(s.updatedAt),()=>{view="debug";activeDebugId=s.id;},s.demandId));
+  (state.sheets||[]).forEach(sh=>sh.rows.forEach((r,i)=>add("Sheet",`▦ ${sh.name} · ${r.filter(Boolean).slice(0,2).join(" · ").slice(0,70)}`,[r.map((c,k)=>(sh.headers[k]?sh.headers[k]+": ":"")+c).join(" · ")],sh.added,()=>{setTimeout(()=>openSheet(sh,i),0);},`row ${i+1} of ${sh.rows.length}`)));
   NOTES.forEach(n=>{if(terms.every(t=>n.low.includes(t)))hits.push({k:"Note",label:n.name,sub:n.folder||"(top folder)",text:n.text,low:n.low,date:n.date,note:n});});
   /* best match: words in the title count most, then how often they appear */
   hits.forEach(h=>{const lab=h.label.toLowerCase();let s=0;terms.forEach(t=>{if(lab.includes(t))s+=6;let i=0,c=0;while(c<6&&(i=h.low.indexOf(t,i))>=0){c++;i+=t.length;}s+=c;});h.score=s;});
@@ -7781,7 +7972,7 @@ function searchSnippets(text,terms,width=80,max=2){const t=String(text||""),low=
   const wins=[];pos.forEach(p=>{const a=Math.max(0,p-width),b=Math.min(t.length,p+width),l=wins[wins.length-1];if(l&&a<=l[1])l[1]=Math.max(l[1],b);else if(wins.length<max)wins.push([a,b]);});
   if(!wins.length)wins.push([0,Math.min(t.length,width*2)]);
   return wins.map(([a,b])=>(a>0?"…":"")+srMark(esc(t.slice(a,b).replace(/\s+/g," ")),terms)+(b<t.length?"…":"")).join(` <span class="faint">·</span> `);}
-const SR_PEN={Task:"pen-7",Demand:"pen-2",Object:"pen-4",Transport:"pen-3",ToC:"pen-5",Subtask:"ink-2",Reference:"ink-2",Meeting:"pen-4",Action:"pen-4",Vault:"ink-3",Journal:"pen-3","To-do":"pen-3",Win:"pen-4",Effort:"pen-2",Epic:"pen-5","Epic story":"pen-5","Waiting on":"pen-4",Playbook:"pen-6",Image:"ink-3",Debug:"pen-1",Note:"pen-7",Lesson:"pen-4"};
+const SR_PEN={Sheet:"pen-6",Task:"pen-7",Demand:"pen-2",Object:"pen-4",Transport:"pen-3",ToC:"pen-5",Subtask:"ink-2",Reference:"ink-2",Meeting:"pen-4",Action:"pen-4",Vault:"ink-3",Journal:"pen-3","To-do":"pen-3",Win:"pen-4",Effort:"pen-2",Epic:"pen-5","Epic story":"pen-5","Waiting on":"pen-4",Playbook:"pen-6",Image:"ink-3",Debug:"pen-1",Note:"pen-7",Lesson:"pen-4"};
 function openHit(h,terms){const box=document.getElementById("gsearchResults");if(box)box.classList.add("hide");
   if(h.k==="Note"){openNote(h.note,terms);return;}h.go();const gs=document.getElementById("globalSearch");if(gs)gs.value="";renderApp();}
 /* the title-bar box: the best few, then everything on the Search page */
@@ -7807,6 +7998,7 @@ function renderSearchPage(){const host=document.getElementById("detail");if(!hos
     <div class="ef-wsh"><div><div class="ef-l1">⌕ Search · your data file${NOTES.length?` + ${NOTES.length} old note${NOTES.length===1?"":"s"}`:""}</div><h1>Search</h1></div></div>
     <div class="sr-box"><input id="srQ" value="${esc(SRCH.q)}" placeholder='Words to find — every word must appear · "exact phrase" in quotes' autocomplete="off" spellcheck="false"><span class="faint mono">${terms.length?`${list.length}${list.length!==all.length?" of "+all.length:""} result${all.length===1?"":"s"}`:""}</span></div>
     ${notesStatusHTML()}
+    ${sheetsHTML()}
     ${all.length?`<div class="sr-filters">
       <div class="sr-f"><span class="ef-lb">Kind</span><div class="ef-row">${chip("kind","","All",all.length,!SRCH.kind)}${kinds.map(([k,n])=>chip("kind",k,k,n,SRCH.kind===k)).join("")}</div></div>
       <div class="sr-f"><span class="ef-lb">Year</span><div class="ef-row">${chip("year","","All",null,!SRCH.year)}${years.map(([y,n])=>chip("year",y,y==="—"?"No date":y,n,SRCH.year===y)).join("")}</div></div>
@@ -7818,7 +8010,7 @@ function renderSearchPage(){const host=document.getElementById("detail");if(!hos
     ${!terms.length?`<div class="faint sr-empty">Type above. Every word must appear somewhere in the entry (any order); put words in "quotes" to match them as a phrase. Results come from demands, objects, transports, subtasks, comments, meetings, journal, to-dos, effort notes, wins, epics, the playbook, debug sessions${NOTES.length?" and your old notes":""}.</div>`:""}
     ${terms.length&&!all.length?`<div class="faint sr-empty">Nothing matches every word. Try fewer words${NOTES.length?"":", or connect your old notes"}.</div>`:""}
   </div>`;
-  const q=s=>host.querySelector(s),inp=q("#srQ");wireNotesStatus(host);
+  const q=s=>host.querySelector(s),inp=q("#srQ");wireNotesStatus(host);wireSheets(host);
   inp.oninput=()=>{clearTimeout(inp._t);inp._t=setTimeout(()=>{SRCH.q=inp.value;SRCH.kind="";SRCH.year="";SRCH.limit=100;const pos=inp.selectionStart;renderSearchPage();const ni=document.getElementById("srQ");if(ni){ni.focus();ni.setSelectionRange(pos,pos);}},250);};
   host.querySelectorAll("[data-kind]").forEach(b=>b.onclick=()=>{SRCH.kind=b.dataset.kind;SRCH.limit=100;renderSearchPage();});
   host.querySelectorAll("[data-year]").forEach(b=>b.onclick=()=>{SRCH.year=b.dataset.year;SRCH.limit=100;renderSearchPage();});
@@ -8189,6 +8381,19 @@ async function runSelfTest(){
     ok("The Edit dialog in groups — What, Where, When, Who, and More",gs===5&&more&&all,`groups ${gs} · more ${more} · fields ${all}`);
     ok("A day in Next 10 weeks lists what's on it; the Waiting tile names the longest waits",calDayItems(efAdd(todayStr(),10)).some(x=>x.k==="Epic target")&&waitListHTML(cockpitCounts().waiting).includes("QA team"));
     view="today";renderApp();}
+   {const a=state.tasks.find(x=>x.id==="st-a"),sb=seenForDemand(a);
+    ok("Seen before: demands sharing an object are found, with the object named",sb.some(h=>h.d.id==="st-c"&&h.why.includes("ZST_SHARED_CLASS"))&&!sb.some(h=>h.d.id==="st-dbg1"),JSON.stringify(sb.map(h=>[h.d.id,h.why])));
+    const j2={id:"st-j2",date:efAdd(todayStr(),-40),title:"",body:"Sample quokka wombat rollout",taskIds:[],epicIds:[],createdAt:Date.now(),updatedAt:Date.now()},m2=normMeeting({id:"st-m9",date:efAdd(todayStr(),-50),title:"Sample review",body:"quokka and wombat discussed"});
+    state.journal.push(j2);state.meetings.push(m2);markDirty();const jh=seenBefore(j2.body,[],d=>d.id===j2.id);
+    ok("Seen before: rarer words a journal entry shares with past meetings",jh.some(h=>h.d.id==="st-m9"&&h.why.includes("quokka")),JSON.stringify(jh.map(h=>[h.d.id,h.why])));
+    state.journal=state.journal.filter(x=>x!==j2);state.meetings=state.meetings.filter(x=>x!==m2);
+    const tsv=parseTSV('Col A\tCol B\n"x\ty"\t"q""z"\nlast\t\n');
+    ok("Excel rows: tabs, quoted cells and blank cells read as Excel writes them",eq(tsv,[["Col A","Col B"],["x\ty",'q"z'],["last",""]]),JSON.stringify(tsv));
+    const sh=normSheet({name:"ST sheet",headers:["Code"],rows:[["walrusuniquecell"]]});state.sheets=[sh];markDirty();
+    ok("Excel rows: Search finds a pasted row",searchAll("walrusuniquecell").some(h=>h.k==="Sheet"));state.sheets=[];markDirty();
+    const F=rcFiles(),y=(a.receivedDate||"").slice(0,4),key=`${y}/Demands/ST-1 Sample report gets a filter.md`,all=JSON.stringify(F);
+    ok("A readable copy: Markdown by year, secrets left out",!!F[key]&&F[key].includes("# ST-1 — Sample report gets a filter")&&!!F["README.md"]&&!all.includes("not-a-real-secret")&&!all.includes("not-a-real-password"),Object.keys(F).slice(0,6).join(" · "));
+    ok("The readable copy is asked for once a year, around New Year only",!readableCopyDue("2026-07-01")&&!readableCopyDue("2026-12-01"));}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
@@ -8197,7 +8402,7 @@ async function runSelfTest(){
   const a=state.tasks.find(t=>t.id==="st-a");
   const pick=()=>{activeJobId="st-job-1";activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
   const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
-  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Keyboard",()=>openKeys()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
+  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Keyboard",()=>openKeys()],["A readable copy",()=>openReadableCopy()],["Paste rows from Excel",()=>openPasteSheet()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
     ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
     ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Settings menu",()=>openMenu()],["Close a task",()=>openJobClose(jobById("st-job-1"),"done")],["Log time on a task",()=>openLogTime({key:"j:st-job-1"})],["A closed task",()=>{view="jobs";activeJobId="st-job-2";renderApp();}],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
   const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;
