@@ -26,10 +26,10 @@ five years of use.
 
 ## Decisions (answered 11 Nov 2026)
 
-- **A — retire the classic themes: YES.** Bench (Paper / Backlit) becomes the only
+- **A — retire the classic themes: YES — done in v48.** Bench (Paper / Backlit) becomes the only
   look; the classic themes and their second copies of screens are removed. Done as
   part of Phase 4 (one coherent look), which is easier with one look to design for.
-- **B — fold the Journal's to-dos into Tasks: YES.** Journal to-dos become one-line
+- **B — fold the Journal's to-dos into Tasks: YES — done in v48 (data v32).** Journal to-dos become one-line
   tasks (title, due date, done) and the Journal's to-do list goes; one list for
   things to do. Done with the Phase 4 clean-up, with a data upgrade that moves
   every to-do across, nothing lost.
@@ -100,22 +100,22 @@ D. **Encryption.** If the file still holds passwords or secret references withou
 16. ✓ **Handed-on demands going quiet** — a demand built by someone in your team with no
     update for a week shows on Today with a one-click "checked in" note.
 
-## Phase 4 — One coherent look (mockup first)
+## Phase 4 — One coherent look — DONE 11 Nov 2026 (v48, data v32; with decisions A and B)
 
-17. **Line icons instead of emoji** — the app uses several hundred emoji as icons;
+17. ✓ **Line icons instead of emoji** — the app uses several hundred emoji as icons;
     in the Instrument look they are the odd ones out (as the pies and stamps were).
     Replace them with the icon family the side rail already uses, or plain labels.
-18. **The demand page's tabs on one row** — nine tabs wrap onto two lines. Fold Linked
+18. ✓ **The demand page's tabs on one row** — nine tabs wrap onto two lines. Fold Linked
     and Images into the side panel (where they already show) and keep one row.
-19. **Tasks and Meetings get the same header as Demands and Epics** — title, stat
+19. ✓ **Tasks and Meetings get the same header as Demands and Epics** — title, stat
     strip, bands — instead of a row of form fields.
-20. **The Edit demand dialog in groups** — What / Where / When / Who, with the rarely
+20. ✓ **The Edit demand dialog in groups** — What / Where / When / Who, with the rarely
     used fields behind "More", instead of sixteen fields in two columns.
-21. **In-app dialogs and Undo instead of browser pop-ups** — about forty places still
+21. ✓ **In-app dialogs and Undo instead of browser pop-ups** — about forty places still
     use the browser's own prompt and confirm boxes. Deletes become "Deleted · Undo".
-22. **A few more keys, and a "?" sheet listing them** — next action, done, log time,
+22. ✓ **A few more keys, and a "?" sheet listing them** — next action, done, log time,
     edit, move between workspaces.
-23. **Finish Instrument v2** — the Journey as a rail, the Waiting tile listing the
+23. ◐ **Finish Instrument v2** *(done: the Waiting tile's three longest waits, click a day in Next 10 weeks; still to do: the Journey as a rail, the Review month chart)* — the Journey as a rail, the Waiting tile listing the
     three longest waits, clicking a day in Next 10 weeks to see what's on it, the
     Review month chart.
 

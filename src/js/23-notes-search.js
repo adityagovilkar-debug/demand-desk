@@ -21,7 +21,7 @@ async function notesConnect(){if(!window.showDirectoryPicker){toast("This browse
 async function notesReconnect(){if(!notesDirSaved)return notesConnect();
   try{const p=await notesDirSaved.requestPermission({mode:"read"});if(p==="granted"){notesDir=notesDirSaved;await notesScan(true);}else toast("Permission not given — still searching the copy from the last read",true);}
   catch(e){toast("Couldn't reconnect: "+e.message,true);}}
-async function notesForget(){if(!confirm("Forget the notes folder?\n\nYour .txt files are not touched — this only clears the copy this app keeps for searching."))return;
+async function notesForget(){if(!await askOk("Your .txt files are not touched — this only clears the copy this app keeps for searching.",{title:"Forget the notes folder?",ok:"Forget"}))return;
   notesDir=notesDirSaved=null;NOTES=[];NOTES_META=null;if(useIdb){await idbDel("notesdir");await idbDel("notescache");await idbDel("notesmeta");}renderApp();toast("Notes folder forgotten");}
 function notesProgress(n){const el=document.getElementById("ntStatusTxt");if(el&&n!=null)el.textContent=`Reading… ${n} file${n===1?"":"s"} so far`;}
 function notesScan(loud){if(!notesDir)return Promise.resolve();if(notesBusy)return notesBusy;
@@ -77,7 +77,6 @@ function searchAll(q){const terms=searchTerms(q);if(!terms.length)return [];cons
     m.actions.forEach(a=>add("Action",`${a.done?"✓ ":""}${a.text||"(action)"}${a.owner?" ("+a.owner+")":""}`,[a.text,a.owner,a.resolution&&"↳ "+a.resolution],a.due||m.date,go,m.title));});
   state.credentials.forEach(c=>add("Vault",`${c.system||""}${c.client?"/"+c.client:""} ${c.label||""}`.trim()||"(credential)",[c.system,c.client,c.label,c.username,c.url,c.notes],"",()=>{view="vault";}));
   state.journal.forEach(j=>add("Journal",j.title||"Journal · "+j.date,[j.title,j.body],j.date,()=>{view="journal";journalTodos=false;activeJournalId=j.id;}));
-  state.todos.forEach(x=>add("To-do",`${x.done?"✓ ":""}${x.text||"(to-do)"}`,[x.text,x.resolution&&"↳ "+x.resolution],x.due||isoTs(x.createdAt),()=>{view="journal";journalTodos=true;}));
   state.wins.forEach(w=>add("Win",`${WIN_KINDS[w.kind].icon} ${w.text}`,[w.text],w.date,()=>{view="review";}));
   state.efforts.forEach(e=>{const k=efKey(e);add("Effort",`${efFh(e.hours)} h · ${efName(k)}`,[e.note,e.activity],e.date,()=>{
     if(e.taskId&&efTaskOf(e.taskId)){view="demands";activeId=e.taskId;activeTab="effort";}else if(e.epicId&&epicById(e.epicId)){view="epics";activeEpicId=e.epicId;epicTab="effort";}else view="effort";setTimeout(()=>openEfDay(e.date,k),0);},e.activity);});

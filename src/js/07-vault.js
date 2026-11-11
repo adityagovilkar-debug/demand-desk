@@ -42,7 +42,7 @@ function wireCredRow(tr){const c=state.credentials.find(x=>x.id===tr.dataset.id)
   bind(".c-label","label");bind(".c-user","username");bind(".c-pass","password");bind(".c-url","url");bind(".c-notes","notes");
   tr.querySelector(".c-eye").onclick=()=>{revealPw[c.id]=!revealPw[c.id];drawVault();};
   tr.querySelector(".c-copy").onclick=()=>{navigator.clipboard.writeText(c.password).then(()=>toast("Password copied")).catch(()=>toast("Copy failed",true));};
-  tr.querySelector(".c-del").onclick=()=>{if(confirm("Delete this credential?")){state.credentials=state.credentials.filter(x=>x.id!==c.id);delete revealPw[c.id];markDirty();renderVault();}};
+  tr.querySelector(".c-del").onclick=()=>deleteWithUndo("Deleted the login",()=>{state.credentials=state.credentials.filter(x=>x.id!==c.id);delete revealPw[c.id];});
 }
 function drawVault(){
   const body=document.getElementById("vaultBody");if(!body)return;
@@ -81,6 +81,6 @@ async function openEncryptionDialog(){
   const close=()=>root.innerHTML="";
   root.querySelector("#e-close").onclick=close;
   root.querySelector("#e-change").onclick=async()=>{close();const pw=await promptPassword("New master password",true);if(pw===null)return;const old=masterPassword;masterPassword=pw;recryptSnapshots(old,pw);markDirty();toast("Password changed — Save to apply");};
-  root.querySelector("#e-remove").onclick=()=>{if(confirm("Remove encryption? The file will be saved as PLAIN TEXT, including any stored passwords.")){const old=masterPassword;state.settings.encryption=false;masterPassword=null;recryptSnapshots(old,null);markDirty();close();toast("Encryption removed — Save to write plain text");renderApp();}};
+  root.querySelector("#e-remove").onclick=async()=>{if(await askOk("The file will be saved as plain text, including any stored passwords.",{title:"Remove encryption?",ok:"Remove encryption",danger:true})){const old=masterPassword;state.settings.encryption=false;masterPassword=null;recryptSnapshots(old,null);markDirty();close();toast("Encryption removed — Save to write plain text");renderApp();}};
 }
 

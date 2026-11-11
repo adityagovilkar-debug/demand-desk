@@ -36,7 +36,7 @@ function renderToday(){
         <dt>Demands</dt><dd>Every requirement/change: branching subtasks, objects touched, transports, reference facts, post-delivery Tech Spec.</dd>
         <dt>Epics</dt><dd>Group related demands under one initiative — each keeps its own transports and go-live target.</dd>
         <dt>Debug</dt><dd>Breakpoints, findings &amp; a “resume here” note so you're never lost after a weekend.</dd>
-        <dt>Journal</dt><dd>One consolidated rough-notes entry per day, plus your personal action items.</dd>
+        <dt>Journal</dt><dd>One consolidated rough-notes entry per day.</dd>
         <dt>Meetings</dt><dd>Call &amp; team-meeting notes with action points, linkable to demands.</dd>
         <dt>Playbook</dt><dd>Processes, FAQs, freeze periods, recurring obligations, contact lists.</dd>
         <dt>Vault</dt><dd>System credentials — set a master password first.</dd>
@@ -60,7 +60,6 @@ function renderToday(){
   const stale=tasks.filter(t=>["open","progress"].includes(t.status)&&(Date.now()-t.updatedAt)>14*86400000&&!(t.nextAction&&t.nextAction.date>todayStr()));
   const actions=[];state.meetings.forEach(m=>m.actions.forEach(a=>{if(!a.done)actions.push({a,m});}));
   actions.sort((x,y)=>(x.a.due||"9999").localeCompare(y.a.due||"9999"));
-  const mytodos=state.todos.filter(x=>!x.done).sort((a,b)=>(a.due||"9999").localeCompare(b.due||"9999"));
   const todayJ=state.journal.find(j=>j.date===todayStr());
 
   const cards=[];
@@ -77,7 +76,6 @@ function renderToday(){
   card("Waiting on","⏳","warn",waiting.map(t=>({main:dlabel(t),sub:`${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+"d":""}`,go:goDemand(t.id)})));
   card("Due this week","📅","",dueWeek.map(t=>({main:dlabel(t),sub:`${earliestOpenDue(t)} (${daysUntil(earliestOpenDue(t))}d)`,go:goDemand(t.id)})));
   card("Open action points","☑","",actions.map(({a,m})=>({main:esc(a.text||"(no text)"),sub:`${esc(a.owner||"—")}${m.team?" · "+esc(m.team):""}`,go:()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;renderApp();}})));
-  card("My action items","✅","",mytodos.map(x=>({main:esc(x.text||"(no text)"),sub:x.due?(daysUntil(x.due)<0?"⚠ "+x.due:x.due):"",go:()=>{view="journal";journalTodos=true;renderApp();}})));
   card("Expired images — delete for data hygiene","🧹","warn",expiredImages().map(im=>({main:esc(im.label||im.file),sub:"expired "+im.expiry,go:()=>gotoImage(im)})));
   const epicsDue=state.epics.filter(e=>!["delivered","closed"].includes(e.status)&&e.targetDate&&daysUntil(e.targetDate)<=21)
     .sort((a,b)=>a.targetDate.localeCompare(b.targetDate));
@@ -114,11 +112,8 @@ function renderToday(){
     return `<div class="dashcard ${c.tone}"><h3>${c.icon} ${c.title}<span class="cnt">${c.items.length}</span></h3>${shown.map((it,ii)=>`<div class="dashitem ${String(it.sub||"").replace(/<[^>]+>/g,"").length>26?"two":""}" data-c="${ci}" data-i="${ii}"><span class="di-main">${it.main}</span>${it.sub?`<span class="di-sub">${it.sub}</span>`:""}${it.acts?`<span class="di-acts">${it.acts.map((a,ai)=>`<button class="sm ghost" data-c="${ci}" data-i="${ii}" data-a="${ai}" title="${esc(a[2]||"")}">${a[0]}</button>`).join("")}</span>`:""}</div>`).join("")}${c.items.length>shown.length?`<div class="dashitem" data-more="${ci}"><span class="di-main" style="color:var(--accent)">＋ ${c.items.length-shown.length} more…</span></div>`:""}</div>`;}).join("")+`</div>`;
   html+=`<div class="dash-grid dg-row" style="margin-top:14px"><div class="dashcard"><h3>📓 Today's journal</h3>${(todayJ&&(todayJ.body||todayJ.title))?`<div style="font-size:13px;white-space:pre-wrap;max-height:120px;overflow:auto;line-height:1.5">${esc(((todayJ.title?todayJ.title+"\n":"")+todayJ.body)).slice(0,400)}</div><button class="sm" id="openJ" style="margin-top:8px">Open journal</button>`:`<div class="dash-empty">No entry for today yet.</div><button class="sm" id="openJ" style="margin-top:8px">＋ Start today's note</button>`}</div>${efTodayHTML()}</div>`;
   const attn=cards.reduce((n,c)=>n+c.items.length,0),wrap=encWarnHTML()+wrapUpHTML(),ag=agendaItems();
-  if(wrap&&!benchOn())html=wrap+html;
-  host.innerHTML=benchOn()
-    ?`<div class="dash cockpit"><div class="ck-in">${cockpitHTML(agendaHTML(ag))}${wrap}<div class="ck-sech"><span class="ck-lbl">Needs attention · ${attn}</span></div>${html}</div></div>`
-    :`<div class="dash"><div class="dash-head"><h1>Today</h1><span class="faint">${new Date().toDateString()}</span></div>${agendaHTML(ag)}${html}</div>`;
-  if(benchOn())mountCockpit(host);
+  host.innerHTML=`<div class="dash cockpit"><div class="ck-in">${cockpitHTML(agendaHTML(ag))}${wrap}<div class="ck-sech"><span class="ck-lbl">Needs attention · ${attn}</span></div>${html}</div></div>`;
+  mountCockpit(host);
   efWireToday(host);wireAgenda(host,ag);
   host.querySelectorAll(".dashitem[data-c]").forEach(el=>el.onclick=()=>cards[+el.dataset.c].items[+el.dataset.i].go());
   host.querySelectorAll(".di-acts button").forEach(b=>b.onclick=e=>{e.stopPropagation();cards[+b.dataset.c].items[+b.dataset.i].acts[+b.dataset.a][1]();});
@@ -239,7 +234,6 @@ function renderTeamPage(host){const ppl=state.people.slice().sort((a,b)=>(b.acti
     cq(".tm-r").onchange=e=>{p.role=e.target.value.trim();markDirty();};
     cq(".tm-gone").onchange=e=>{p.active=!e.target.checked;markDirty();renderApp();};
     cq(".tm-del").onclick=()=>{const ds=demandsOf(p.id);
-      if(!confirm(ds.length?`Remove ${p.name}? They come off ${ds.length} demand(s) too — or tick “moved on” instead to keep them there.`:`Remove ${p.name} from your team list?`))return;
-      ds.forEach(t=>setBuilders(t,t.builders.filter(x=>x!==p.id)));state.people=state.people.filter(x=>x.id!==p.id);markDirty();renderApp();};
+      deleteWithUndo(`Removed ${p.name}`,()=>{ds.forEach(t=>setBuilders(t,t.builders.filter(x=>x!==p.id)));state.people=state.people.filter(x=>x.id!==p.id);});};
     c.querySelectorAll(".tm-d").forEach(r=>r.onclick=()=>{view="demands";activeId=r.dataset.id;activeTab="overview";playTeam=false;renderApp();});});}
 

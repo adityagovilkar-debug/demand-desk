@@ -69,7 +69,7 @@ function renderPlaybookDetail(){
   host.querySelector("#pb-body").onchange=e=>{p.body=e.target.value;touch(p);const l=host.querySelector("#pb-links");if(l)l.innerHTML=linkChips(p.body);};
   host.querySelector("#pb-pin").onclick=()=>{p.pinned=!p.pinned;touch(p);renderApp();};
   host.querySelector("#pb-print").onclick=()=>printPlay(p);
-  host.querySelector("#pb-del").onclick=()=>{if(confirm("Delete this playbook entry?")){state.playbook=state.playbook.filter(x=>x.id!==p.id);state.tasks.forEach(t=>(t.lessons||[]).forEach(l=>{if(l.playId===p.id)l.playId="";}));state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="playbook"&&l.id===p.id)));activePlayId=null;markDirty();renderApp();}};
+  host.querySelector("#pb-del").onclick=()=>deleteWithUndo("Deleted the playbook entry",()=>{state.playbook=state.playbook.filter(x=>x.id!==p.id);state.tasks.forEach(t=>(t.lessons||[]).forEach(l=>{if(l.playId===p.id)l.playId="";}));state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="playbook"&&l.id===p.id)));activePlayId=null;});
   renderPlayKind(host.querySelector("#pb-kind-sec"),p);
   renderImagesSection(host.querySelector("#pb-imgs"),"playbook",p.id);
 }

@@ -39,30 +39,7 @@ function renderEpicDetail(){
   if(!e){host.innerHTML=nopick("Select an epic, or create one to group<br>related demands under one initiative.");return;}
   const st=EPIC_STATUS[e.status],r=epicRollup(e),pk=epicParked(e,r),fu=epicFollowUps(e);
   const storyN=epicStory(e).length,openDeps=e.deps.filter(x=>!x.done).length,sub=countSubs(e.subtasks);
-  host.innerHTML=benchOn()?epicHeadBench(e,r,pk,fu,storyN,openDeps,sub):`<div class="detail-head"><div class="dh-top"><div style="flex:1">
-      <div class="dh-demand">◆ ${esc(e.code)||"— no code —"} · ${e.role==="contributor"?"I contribute a part":"I lead this"}</div>
-      <input id="ep-name" value="${esc(e.name)}" style="font-size:19px;font-weight:650;border-color:transparent;background:transparent;padding:2px 4px;width:100%">
-      <div class="dh-dates" style="margin-top:6px">
-        <span>Code <input id="ep-code" class="mono" value="${esc(e.code)}" placeholder="LUCA" style="width:110px"></span>
-        <span>Owner <input id="ep-owner" value="${esc(e.owner)}" placeholder="Who drives it" style="width:150px"></span>
-        <span>Target <input type="date" id="ep-target" value="${e.targetDate||""}" style="width:150px"></span>
-        <span>Status <select id="ep-status" style="width:130px">${Object.entries(EPIC_STATUS).map(([k,v])=>`<option value="${k}" ${k===e.status?"selected":""}>${v.label}</option>`).join("")}</select></span>
-        <span>My role <select id="ep-role" style="width:190px"><option value="lead" ${e.role==="lead"?"selected":""}>Lead — I own it</option><option value="contributor" ${e.role==="contributor"?"selected":""}>Contributor — one slice</option></select></span>
-      </div></div>
-      <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
-        <span class="pill ${st.cls}" style="font-size:12px">${st.label}</span>
-        ${pk&&pk.parked?`<span class="pill" style="font-size:12px;color:var(--amber);border-color:var(--amber-line)">⏸ Parked${pk.days!=null?" · "+pk.days+"d":""}</span>`:""}
-        <div style="display:flex;gap:6px"><button class="sm" id="ep-brief" title="The whole epic as one document — for handovers, or when someone asks what happened a year ago">📄 Epic brief</button><button class="sm" id="ep-add">🔗 Assign demands</button><button class="sm danger" id="ep-del">🗑 Delete</button></div>
-      </div></div>
-      <div class="tabs">
-        <button class="tab ${epicTab==="overview"?"active":""}" data-tab="overview">Overview<span class="count">${r.ts.length}</span></button>
-        <button class="tab ${epicTab==="story"?"active":""}" data-tab="story">Story<span class="count">${storyN}</span></button>
-        <button class="tab ${epicTab==="deps"?"active":""}" data-tab="deps">Waiting on others<span class="count">${openDeps}${fu.length?" · 📞"+fu.length:""}</span></button>
-        <button class="tab ${epicTab==="subtasks"?"active":""}" data-tab="subtasks">Subtasks<span class="count">${sub.n}</span></button>
-        <button class="tab ${epicTab==="effort"?"active":""}" data-tab="effort">Effort<span class="count">${efFh(Math.round(efSum(epicEfforts(e))))} h</span></button>
-        <span class="tind"></span>
-      </div></div>
-    <div class="detail-body" id="epBody"></div>`;
+  host.innerHTML=epicHeadBench(e,r,pk,fu,storyN,openDeps,sub);
   const on=(sel,ev,fn)=>{const el=host.querySelector(sel);if(el)el[ev]=fn;};
   on("#ep-name","onchange",ev=>{e.name=ev.target.value||"(untitled epic)";touch(e);renderApp();});
   on("#ep-code","onchange",ev=>{e.code=ev.target.value.trim();touch(e);renderApp();});
@@ -73,22 +50,15 @@ function renderEpicDetail(){
   on("#ep-role","onchange",ev=>{e.role=ev.target.value;touch(e);renderEpicDetail();});
   on("#ep-brief","onclick",()=>openEpicBrief(e));
   on("#ep-add","onclick",()=>openAssignDemandsToEpic(e));
-  on("#ep-del","onclick",()=>{
-    const n=tasksForEpic(e.id).length;
-    if(!confirm("Delete this epic?"+(n?"\n\n"+n+" demand(s) will simply become un-grouped — no demand is deleted.":"")+"\n\nThe epic's own story, dependencies and subtasks are deleted with it."+(state.efforts.some(x=>x.epicId===e.id)?"\n\nSo are the "+efFh(efSum(state.efforts.filter(x=>x.epicId===e.id)))+" h logged on the epic itself.":"")))return;
+  on("#ep-del","onclick",()=>deleteWithUndo(`Deleted the epic ${e.code||e.name}`,()=>{
     state.tasks.forEach(t=>{if(t.epicId===e.id)t.epicId="";});state.efforts=state.efforts.filter(x=>x.epicId!==e.id);
     state.meetings.concat(state.journal).forEach(x=>{if(x.epicIds)x.epicIds=x.epicIds.filter(id=>id!==e.id);});
-    state.epics=state.epics.filter(x=>x.id!==e.id);activeEpicId=null;markDirty();renderApp();});
+    state.epics=state.epics.filter(x=>x.id!==e.id);activeEpicId=null;}));
   host.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{epicTab=b.dataset.tab;renderEpicDetail();enterPulse("detail");});
   const body=host.querySelector("#epBody");
-  if(benchOn()){wireEpicHeadBench(host,e);const tb=epicBenchTab();
+  {wireEpicHeadBench(host,e);const tb=epicBenchTab();
     if(tb==="deps")renderEpicDeps(body,e);else if(tb==="effort")renderEpicEffort(body,e);else if(tb==="subtasks")renderEpicSubtasks(body,e);
     else if(tb==="details")renderEpicOverview(body,e,r,pk,fu);else renderEpicOverviewBench(body,e,r);}
-  else if(epicTab==="story")renderEpicStory(body,e);
-  else if(epicTab==="deps")renderEpicDeps(body,e);
-  else if(epicTab==="subtasks")renderEpicSubtasks(body,e);
-  else if(epicTab==="effort")renderEpicEffort(body,e);
-  else renderEpicOverview(body,e,r,pk,fu);
   placeTabInd(host);
 }
 function renderEpicOverview(body,e,r,pk,fu){
@@ -216,10 +186,9 @@ function renderEpicStory(body,e){
     else if(s.dataset.mid){view="meetings";meetingRollup=false;activeMeetingId=s.dataset.mid;renderApp();}
     else if(s.dataset.jid){view="journal";journalTodos=false;activeJournalId=s.dataset.jid;renderApp();}});
   host.querySelectorAll(".storyrow[data-log]").forEach(row=>{const x=e.log.find(l=>l.id===row.dataset.log);if(!x)return;
-    row.querySelector(".l-del").onclick=()=>{if(confirm("Delete this story entry?")){e.log=e.log.filter(l=>l.id!==x.id);touch(e);renderEpicDetail();}};
-    row.querySelector(".l-edit").onclick=()=>{
-      const tx=prompt("Entry text:",x.text);if(tx===null)return;
-      const dt=prompt("Date (YYYY-MM-DD):",x.date);if(dt===null)return;
+    row.querySelector(".l-del").onclick=()=>deleteWithUndo("Deleted the story entry",()=>{e.log=e.log.filter(l=>l.id!==x.id);touch(e);});
+    row.querySelector(".l-edit").onclick=async()=>{
+      const v=await askBox({title:"Edit the story entry",fields:[{k:"tx",label:"Entry",value:x.text,type:"textarea"},{k:"dt",label:"Date",value:x.date,type:"date"}],ok:"Save"});if(!v)return;const tx=v.tx,dt=v.dt||"";
       if(tx.trim())x.text=tx.trim();if(/^\d{4}-\d{2}-\d{2}$/.test(dt.trim()))x.date=dt.trim();touch(e);renderEpicDetail();};});
 }
 function openEpicLinkPicker(e,kind){
@@ -269,17 +238,17 @@ function renderEpicDeps(body,e){
     const us=tr.querySelector(".d-unsnooze");if(us)us.onclick=()=>{x.snoozeUntil="";touch(e);renderEpicDetail();};
     const dn=tr.querySelector(".d-done");if(dn)dn.onclick=()=>depDelivered(e,x);
     const ro=tr.querySelector(".d-reopen");if(ro)ro.onclick=()=>{x.done=false;x.doneDate="";touch(e);renderEpicDetail();};
-    tr.querySelector(".d-del").onclick=()=>{if(confirm("Remove this dependency?")){e.deps=e.deps.filter(d=>d.id!==x.id);touch(e);renderEpicDetail();}};});
+    tr.querySelector(".d-del").onclick=()=>deleteWithUndo("Removed the dependency",()=>{e.deps=e.deps.filter(d=>d.id!==x.id);touch(e);});});
 }
-function depCheckIn(e,x){const who=x.team||"the other team";
-  const note=prompt(`What did ${who} say? (goes into the epic's Story — blank is fine)`,"");if(note===null)return;
-  const nd=(prompt("New expected date, if they gave one (YYYY-MM-DD). Blank keeps: "+(x.expected||"none"),"")||"").trim();
+async function depCheckIn(e,x){const who=x.team||"the other team";
+  const v=await askBox({title:`Checked with ${who}`,fields:[{k:"note",label:"What did they say? (goes into the epic's Story — blank is fine)",type:"textarea"},{k:"nd",label:"New expected date, if they gave one",type:"date",hint:"Blank keeps "+(x.expected||"none")}],ok:"Log it"});if(!v)return;
+  const note=v.note||"",nd=(v.nd||"").trim();
   x.lastCheck=todayStr();x.snoozeUntil="";
   const newExp=/^\d{4}-\d{2}-\d{2}$/.test(nd);if(newExp)x.expected=nd;
   e.log.push({id:uid(),date:todayStr(),kind:"followup",text:`Checked with ${who}${x.what?" re "+x.what:""}${note.trim()?": "+note.trim():""}${newExp?" · now expected "+nd:""}`});
   touch(e);renderEpicDetail();toast("Follow-up logged in the Story");}
-function depSnooze(e,x){const who=x.team||"the other team";
-  const v=prompt(`Remind me about ${who} again in how many days?\n(or type a date, YYYY-MM-DD)`,"14");if(v===null)return;const t=v.trim();
+async function depSnooze(e,x){const who=x.team||"the other team";
+  const v=await askText(`Remind me about ${who} again in…`,{label:"Days — or a date (YYYY-MM-DD)",value:"14",ok:"Snooze"});if(v===null)return;const t=v.trim();
   let until="";if(/^\d{4}-\d{2}-\d{2}$/.test(t))until=t;else if(/^\d+$/.test(t)&&+t>0){const d=new Date();d.setDate(d.getDate()+(+t));until=isoD(d);}
   if(!until||until<=todayStr()){toast("Give a number of days, or a future date",true);return;}
   x.snoozeUntil=until;touch(e);renderEpicDetail();toast("No follow-up nudges until "+until);}

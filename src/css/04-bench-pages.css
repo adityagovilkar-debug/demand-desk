@@ -159,8 +159,8 @@
   .dchip .x:hover{color:var(--red)}
   .dests .dadd{width:auto;font-size:11.5px;padding:3px 6px}
   .dests .dhint{font-size:11px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dchip{border-radius:2px;background:transparent}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dests .dl{font-family:var(--label);font-size:9px;letter-spacing:.16em}
+  :root[data-theme="bench"] .dchip{border-radius:2px;background:transparent}
+  :root[data-theme="bench"] .dests .dl{font-family:var(--label);font-size:9px;letter-spacing:.16em}
 
   /* ---------------- Bench Demands: three panes, list rows, board, rail, overview, transport map ---------------- */
   .cxr,#boardHost,.lbmode{display:none}

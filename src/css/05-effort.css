@@ -2,8 +2,7 @@
   :root[data-theme="bench"]{--pen-7:#1F8AA8;--pen-8:#A8336E}
   :root[data-theme="bench"][data-mode="dark"]{--pen-7:#4CC3E0;--pen-8:#E36BA8}
   /* the classic themes have no drafting-pen palette — give the effort pages one built from their own colours */
-  :root:not([data-theme="bench"]) .efx{--paper:var(--panel);--paper-2:var(--panel2);--rule:var(--line);--rule-strong:var(--line2);--ink:var(--txt);--ink-2:var(--muted);--ink-3:var(--faint);--ink-4:var(--line2);
-    --pen-1:var(--red);--pen-2:var(--accent);--pen-3:var(--green);--pen-4:var(--amber);--pen-5:var(--accent2);--pen-6:#E0782F;--pen-7:var(--teal);--pen-8:#D0508F;--good:var(--green);--watch:var(--amber);--bad:var(--red);--label:var(--sans)}
+  
   .efx{color:var(--ink)}
   .efx .ef-lb,.ef-lb{display:block;font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:5px}
   .efx .ef-qc{display:grid;gap:12px}

@@ -1,7 +1,6 @@
 /* ===================== JOURNAL ===================== */
 function activeJournal(){return state.journal.find(j=>j.id===activeJournalId);}
 function renderJournalSidebar(){
-  const openTodos=state.todos.filter(x=>!x.done).length;
   document.getElementById("side").innerHTML=`
     <div class="side-tools">
       <button class="primary" id="btnToday" style="width:100%">＋ Today's entry</button>
@@ -10,61 +9,16 @@ function renderJournalSidebar(){
   document.getElementById("btnToday").onclick=()=>{journalTodos=false;let j=state.journal.find(x=>x.date===todayStr());if(!j){j={id:uid(),date:todayStr(),title:"",body:"",createdAt:Date.now(),updatedAt:Date.now()};state.journal.unshift(j);markDirty();}activeJournalId=j.id;renderApp();};
   const el=document.getElementById("jList");
   const rows=state.journal.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt);
-  const pinned=`<div class="tcard ${journalTodos?"active":""}" data-todos="1" style="border-left-color:var(--green)">
-    <div class="ttitle">✅ My action items</div><div class="meta faint">${openTodos} open reminder(s)</div></div>`;
   const list=rows.length?rows.map(j=>{const preview=(j.body||"").replace(/\s+/g," ").slice(0,60);
     return `<div class="tcard ${(!journalTodos&&j.id===activeJournalId)?"active":""}" data-id="${j.id}">
       <div class="demand">📓 ${j.date}${j.date===todayStr()?" · today":""}</div>
       <div class="ttitle">${esc(j.title)||"<span class='faint' style='font-weight:400'>(no title)</span>"}</div>
       <div class="meta faint">${esc(preview)||"empty"}${((j.taskIds||[]).length+(j.epicIds||[]).length)?`<span class="lc-badge">🔗 ${(j.taskIds||[]).length+(j.epicIds||[]).length}</span>`:""}</div></div>`;}).join(""):`<div class="empty" style="padding:20px 12px">No journal entries yet.<br>Keep daily rough notes here.</div>`;
-  el.innerHTML=pinned+list;
-  el.querySelector("[data-todos]").onclick=()=>{journalTodos=true;renderApp();};
+  el.innerHTML=list;
   el.querySelectorAll(".tcard[data-id]").forEach(x=>x.onclick=()=>{journalTodos=false;activeJournalId=x.dataset.id;renderApp();});
-}
-function renderTodos(host){
-  const open=state.todos.filter(x=>!x.done).sort((a,b)=>(a.due||"9999").localeCompare(b.due||"9999"));
-  const done=state.todos.filter(x=>x.done);
-  host.innerHTML=`<div class="detail-head"><div class="dh-top"><div style="flex:1">
-      <h1>✅ My action items</h1>
-      <div class="dh-dates"><span>Personal reminders &amp; tasks — not tied to any demand or meeting</span></div></div></div>
-    <div class="tabs"><button class="tab active">${open.length} open${done.length?` · ${done.length} done`:""}</button></div></div>
-    <div class="detail-body">
-      <div class="cmt-add" style="margin-bottom:14px"><textarea id="td-text" placeholder="New reminder / task… (Enter to add)" rows="1" style="min-height:38px"></textarea><input type="date" id="td-due" title="Due (optional)" style="flex:0 0 150px"><button class="primary sm" id="td-add" style="flex:0 0 auto">Add</button></div>
-      <div id="td-open"></div>
-      ${done.length?`<div class="sec-title" style="margin-top:20px"><h3>Completed</h3><div class="ln"></div><button class="sm" id="td-clear">🗑 Clear completed</button></div><div id="td-done"></div>`:""}
-    </div>`;
-  const addBox=host.querySelector("#td-text"),dueBox=host.querySelector("#td-due");
-  const add=()=>{const v=addBox.value.trim();if(!v)return;state.todos.unshift({id:uid(),text:v,done:false,due:dueBox.value||"",createdAt:Date.now(),doneAt:null});addBox.value="";dueBox.value="";markDirty();renderTodos(host);renderJournalSidebar();};
-  host.querySelector("#td-add").onclick=add;
-  addBox.onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();add();}};
-  const drawList=(container,arr,isDone)=>{
-    if(!arr.length){container.innerHTML=isDone?"":`<div class="faint" style="font-size:12px;padding:4px 2px">No open items. Add reminders above.</div>`;return;}
-    container.innerHTML="";
-    arr.forEach(x=>{const row=document.createElement("div");row.className="actitem"+(x.done?" done":"");const dc=dueClass(x.due,x.done?"closed":"open");
-      row.innerHTML=`<span class="chk ${x.done?"done":""}">${x.done?"✓":""}</span>
-        <span class="at">${esc(x.text)||"<span class='faint'>(click to write)</span>"}</span>
-        <input type="date" class="du ${dc}" value="${x.due||""}" title="Due" style="flex:0 0 140px">
-        <span class="nact">${x.done?"":`<button class="ghost sm td-job" title="More than a one-liner? Make it a task — with a log, next actions, reference facts and hours">↗ Task</button>`}<button class="ghost sm td-res" title="Outcome / resolution note">📝</button><button class="ghost sm danger td-del">🗑</button></span>
-        ${x.resolution?`<span class="ares" title="Outcome — click to edit">↳ ${esc(x.resolution)}</span>`:""}`;
-      row.querySelector(".chk").onclick=()=>{x.done=!x.done;x.doneAt=x.done?Date.now():null;markDirty();renderTodos(host);renderJournalSidebar();};
-      const at=row.querySelector(".at");at.onclick=()=>editInline(at,x.text,v=>{x.text=v;markDirty();renderTodos(host);});
-      row.querySelector(".du").onchange=e=>{x.due=e.target.value;markDirty();renderTodos(host);};
-      {const jb=row.querySelector(".td-job");if(jb)jb.onclick=()=>{x.done=true;x.doneAt=Date.now();x.resolution=x.resolution||"→ moved to Tasks";
-        newJob({title:x.text,due:x.due||"",source:"self",received:isoTs(x.createdAt||Date.now())});toast("Moved to Tasks — the to-do is ticked off");};}
-      row.querySelector(".td-del").onclick=()=>{state.todos=state.todos.filter(y=>y.id!==x.id);markDirty();renderTodos(host);renderJournalSidebar();};
-      const editRes=()=>{let ar=row.querySelector(".ares");if(!ar){ar=document.createElement("span");ar.className="ares";row.appendChild(ar);}
-        editInline(ar,x.resolution||"",v=>{x.resolution=v;markDirty();renderTodos(host);});};
-      row.querySelector(".td-res").onclick=editRes;
-      const arEl=row.querySelector(".ares");if(arEl)arEl.onclick=editRes;
-      container.appendChild(row);});
-  };
-  drawList(host.querySelector("#td-open"),open,false);
-  const dd=host.querySelector("#td-done");if(dd)drawList(dd,done,true);
-  const clr=host.querySelector("#td-clear");if(clr)clr.onclick=()=>{if(confirm("Remove all completed items?")){state.todos=state.todos.filter(x=>!x.done);markDirty();renderTodos(host);renderJournalSidebar();}};
 }
 function renderJournalDetail(){
   const host=document.getElementById("detail");
-  if(journalTodos)return renderTodos(host);
   const j=activeJournal();
   if(!j){host.innerHTML=nopick("Pick a day on the left, or click<br><b>＋ Today's entry</b> to start writing.");return;}
   host.innerHTML=`<div class="detail-head"><div class="dh-top"><div style="flex:1">
@@ -81,7 +35,7 @@ function renderJournalDetail(){
     if(state.journal.some(x=>x.id!==j.id&&x.date===nd)){toast("An entry for "+nd+" already exists",true);e.target.value=j.date;return;}
     j.date=nd;touch(j);renderJournalSidebar();};
   host.querySelector("#j-body").onchange=e=>{j.body=e.target.value;touch(j);renderJournalSidebar();const l=host.querySelector("#j-links");if(l)l.innerHTML=linkChips(j.body);};
-  host.querySelector("#j-del").onclick=()=>{if(confirm("Delete this journal entry?")){state.journal=state.journal.filter(x=>x.id!==j.id);state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="journal"&&l.id===j.id)));activeJournalId=null;markDirty();renderApp();}};
+  host.querySelector("#j-del").onclick=()=>deleteWithUndo("Deleted the journal entry",()=>{state.journal=state.journal.filter(x=>x.id!==j.id);state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="journal"&&l.id===j.id)));activeJournalId=null;});
   host.querySelector("#j-link").onclick=()=>openLinkDemandsToJournal(j);
   drawJournalChips(j);
   renderImagesSection(host.querySelector("#j-imgs"),"journal",j.id);

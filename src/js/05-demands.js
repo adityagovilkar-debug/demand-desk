@@ -38,10 +38,10 @@ function dvSaved(){let a=null;try{a=JSON.parse(viewPref("savedViews","null"));}c
   if(fresh)dvSetSaved(out); /* ids must be stable, or a chip click can't find its view */
   return out;}
 function dvSetSaved(a){setViewPref("savedViews",JSON.stringify(a.map(x=>({id:x.id,name:x.name,view:dvNorm(x.view)}))));}
-function dvSaveCurrent(){const v=dvGet(),saved=dvSaved();
-  const name=(prompt("Name this view — it becomes a one-click chip above the list:","")||"").trim();if(!name)return false;
+async function dvSaveCurrent(){const v=dvGet(),saved=dvSaved();
+  const name=((await askText("Save this view",{label:"Name — it becomes a one-click chip above the list",ok:"Save"}))||"").trim();if(!name)return false;
   const ex=saved.find(s=>s.name.toLowerCase()===name.toLowerCase());
-  if(ex){if(!confirm(`Replace the saved view “${ex.name}” with the current settings?`))return false;ex.view=v;}
+  if(ex){if(!await askOk(`“${ex.name}” gets the current settings.`,{title:"Replace a saved view?",ok:"Replace"}))return false;ex.view=v;}
   else saved.push({id:uid(),name,view:v});
   dvSetSaved(saved);toast(`Saved view “${name}”`);return true;}
 
@@ -159,7 +159,7 @@ function renderDemandSidebar(){
   document.getElementById("btnPortfolio").onclick=openPortfolio;
   document.getElementById("btnAging").onclick=openAging;
   document.querySelectorAll(".dvview[data-id]").forEach(b=>b.onclick=()=>{const s=dvSaved().find(x=>x.id===b.dataset.id);if(s){dvSet(s.view);renderDemandSidebar();}});
-  {const sv=document.getElementById("dvSave");if(sv)sv.onclick=()=>{if(dvSaveCurrent())renderDemandSidebar();};}
+  {const sv=document.getElementById("dvSave");if(sv)sv.onclick=async()=>{if(await dvSaveCurrent())renderDemandSidebar();};}
   document.getElementById("dvOpen").onclick=openViewPanel;
   const q=document.getElementById("dvQ"),qx=document.getElementById("dvQx");
   /* oninput only — the list updates as you type without redrawing the box under the cursor */
@@ -225,13 +225,14 @@ function openViewPanel(){
     panel.querySelectorAll("select[data-f]").forEach(s=>s.onchange=()=>update(x=>{if(s.value)x.f[s.dataset.f]=s.value;else delete x.f[s.dataset.f];}));
     panel.querySelector("#dv-reset").onclick=()=>update(x=>{Object.assign(x,dvBlank());});
     panel.querySelector("#dv-done").onclick=close;
-    panel.querySelector("#dv-save").onclick=()=>{if(dvSaveCurrent()){renderDemandSidebar();draw();}};
+    panel.querySelector("#dv-save").onclick=async()=>{if(await dvSaveCurrent()){renderDemandSidebar();draw();}};
     panel.querySelectorAll(".dvsv").forEach(el=>{const id=el.dataset.id;
       const edit=fn=>{const a=dvSaved(),i=a.findIndex(s=>s.id===id);if(i<0)return;if(fn(a,i)===false)return;dvSetSaved(a);renderDemandSidebar();draw();};
       el.querySelector(".dvsv-n").onclick=()=>{const s=dvSaved().find(x=>x.id===id);if(s){dvSet(s.view);renderDemandSidebar();draw();}};
       el.querySelector(".sv-up").onclick=()=>edit((a,i)=>{if(!i)return false;[a[i-1],a[i]]=[a[i],a[i-1]];});
-      el.querySelector(".sv-ren").onclick=()=>edit((a,i)=>{const nm=(prompt("Rename view:",a[i].name)||"").trim();if(!nm)return false;a[i].name=nm;});
-      el.querySelector(".sv-del").onclick=()=>edit((a,i)=>{if(!confirm(`Delete the saved view “${a[i].name}”?`))return false;a.splice(i,1);});});
+      el.querySelector(".sv-ren").onclick=async()=>{const sv=dvSaved().find(x=>x.id===id);if(!sv)return;const nm=((await askText("Rename the view",{value:sv.name,ok:"Rename"}))||"").trim();if(nm)edit((a,i)=>{a[i].name=nm;});};
+      el.querySelector(".sv-del").onclick=()=>{const sv=dvSaved().find(x=>x.id===id);edit((a,i)=>{a.splice(i,1);});
+        if(sv)efToastUndo(`Deleted the view “${sv.name}”`,()=>{const a=dvSaved();a.push(sv);dvSetSaved(a);renderDemandSidebar();draw();});};});
     const rs=panel.querySelector("#sv-restore");if(rs)rs.onclick=()=>{const a=dvSaved();
       DV_PRESETS.forEach(p=>{if(!a.some(s=>s.name===p.name))a.push({id:uid(),name:p.name,view:dvNorm(p.view)});});dvSetSaved(a);renderDemandSidebar();draw();};
     panel.scrollTop=keep;place();
@@ -249,27 +250,7 @@ function viewPref(k,def){try{const v=localStorage.getItem("demanddesk."+k);retur
 function setViewPref(k,v){try{localStorage.setItem("demanddesk."+k,v);}catch(e){}}
 function groupByEpic(){return viewPref("groupEpic","1")==="1";}
 const EPIC_GROUP_RANK={active:0,onhold:1,delivered:2,closed:3};
-function demandCard(t,grouped,cidx){if(benchOn())return demandCardBench(t,grouped,cidx);const st=STATUS[t.status],sub=countSubs(t.subtasks),due=earliestOpenDue(t),dc=dueClass(due,t.status);
-    const lc=linkedCount(t.id);
-    return `<div class="tcard s-${t.status} ${t.id===activeId?"active":""}" data-id="${t.id}">
-      <div class="demand">${esc(t.demandId||"— no demand id —")}</div>
-      <div class="ttitle">${esc(t.title)}</div>
-      <div class="meta"><span class="pill ${st.cls}">${st.label}</span>
-        ${t.system?sysPill(t.system,"",t.client):""}
-        ${isWaiting(t)?`<span class="pill" style="color:var(--amber);border-color:var(--amber-line)">⏳ ${esc(t.waiting.on)}${waitDays(t)!=null?" "+waitDays(t)+"d":""}</span>`:""}
-        ${(()=>{const ep=epicById(t.epicId);if(!ep)return "";if(grouped)return t.wave?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">${esc(t.wave)}</span>`:"";
-          return `<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">◆ ${esc(ep.code||ep.name)}${t.wave?" · "+esc(t.wave):""}</span>`;})()}
-        ${t.project?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">▦ ${esc(t.project)}</span>`:""}
-        ${t.theme?`<span class="pill type">${esc(t.theme)}</span>`:`<span class="pill type">${esc(t.type)}</span>`}
-        ${t.requestor?`<span class="faint">👤 ${esc(t.requestor)}</span>`:""}
-        ${buildersOf(t).length?`<span class="bld-tag" title="Built by">👷 ${esc(builderNames(t))}</span>`:""}
-        ${sub.n?`<span class="faint">☑ ${sub.done}/${sub.n}</span>`:""}
-        ${lc?`<span class="lc-badge">🔗 ${lc}</span>`:""}
-        ${(t.reference&&t.reference.length)?`<span class="lc-badge">🔑 ${t.reference.length}</span>`:""}
-        ${reworkCount(t)?`<span class="lc-badge" style="color:var(--red)">↻ ${reworkCount(t)}</span>`:""}
-        ${(()=>{const n=openClashCount(t,cidx);return n?`<span class="clashtag" title="${n} object(s) also in flight in another demand">⚠ ${n} clash</span>`:"";})()}
-        ${t.nextAction&&t.nextAction.date&&t.status!=="closed"?`<span class="due ${nextActionDue(t)?"soon":""}" title="Next action${t.nextAction.note?": "+esc(t.nextAction.note):""}">⏰ ${t.nextAction.date.slice(5)}</span>`:""}
-        ${due?`<span class="due ${dc}">⚑ ${due}${dc==="over"?" ("+(-daysUntil(due))+"d)":""}</span>`:""}</div></div>`;}
+function demandCard(t,grouped,cidx){return demandCardBench(t,grouped,cidx);}
 function renderList(){
   if(demandsMode()==="board"){renderBoard();return;}
   const el=document.getElementById("taskList");if(!el)return;
@@ -311,37 +292,9 @@ function renderList(){
 }
 function renderDetail(){
   const t=activeTask(),host=document.getElementById("detail");
-  if(!benchOn()&&activeTab==="overview")activeTab="work";   /* Overview is a Bench tab; classic opens on Work */
-  if(!t){host.innerHTML=nopick("Select a demand on the left,<br>or create a new one to begin.");if(benchOn())renderCtxRail();return;}
+  if(!t){host.innerHTML=nopick("Select a demand on the left,<br>or create a new one to begin.");renderCtxRail();return;}
   const st=STATUS[t.status],sub=countSubs(t.subtasks),lc=linkedCount(t.id);
-  host.innerHTML=benchOn()?demandHeadBench(t,sub,lc):`
-    <div class="detail-head">
-      <div class="dh-top"><div style="flex:1">
-        <div class="dh-demand">${esc(t.demandId||"— no demand id —")}</div>
-        <h1>${esc(t.title)}</h1>
-        <div class="dh-dates"><span>Type: <b>${esc(t.type)}</b></span>${t.system?`<span>System: ${sysPill(t.system,"",t.client)}</span>`:""}${(()=>{const ep=epicById(t.epicId);return ep?`<span>Epic: <b class="ep-go" style="color:var(--accent2);cursor:pointer">◆ ${esc(epicLabel(ep))}</b>${t.wave?` · <b>${esc(t.wave)}</b>`:""}</span>`:"";})()}${t.project?`<span>Project: <b>▦ ${esc(t.project)}</b></span>`:""}${t.theme?`<span>Theme: <b>${esc(t.theme)}</b></span>`:""}${t.requestor?`<span>Requestor: <b>👤 ${esc(t.requestor)}</b></span>`:""}<span>Built by: <a class="bld-link" id="dh-build" title="Who's building it">👷 ${buildersOf(t).length?esc(builderNames(t)):"you"}</a></span><span>Received: <b class="mono">${t.receivedDate||"—"}</b></span><span>Due: <b class="mono due ${dueClass(t.dueDate,t.status)}">${t.dueDate||"—"}</b></span>${reworkCount(t)?`<span style="color:var(--red)">↻ ${reworkCount(t)} rework cycle(s)</span>`:""}</div>
-        ${t.nextAction&&t.nextAction.date?`<div class="nextact ${nextActionDue(t)?"due":""}">⏰ Next action <b class="mono">${t.nextAction.date}</b>${(()=>{const n=daysUntil(t.nextAction.date);return n<0?` (${-n}d ago)`:n===0?" (today)":` (in ${n}d)`;})()}${t.nextAction.note?` — ${esc(t.nextAction.note)}`:""}
-          <button class="ghost sm" id="na-done" title="Did it — note it in History and clear">✓ Done</button><button class="ghost sm" id="na-edit" title="Change date or text">✎</button></div>`:""}
-        ${(()=>{const cl=taskClashes(t).filter(x=>x.open.length);if(!cl.length)return "";const x=cl[0],o=x.open[0],more=cl.reduce((n,y)=>n+y.open.length,0)-1;
-          return `<div class="clashband"><canvas class="orbit"></canvas><span>⚠ <b class="mono">${esc(x.o.name)}</b> is also in flight in <a class="cb-go" data-id="${o.t.id}">${esc(demandLabel(o.t))}</a> <span class="clw">— ${esc(clashWhere(o))}${more>0?` · +${more} more`:""}</span></span><button class="sm ghost cb-obj">Objects ›</button></div>`;})()}
-      </div>
-      <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
-        ${benchOn()?statusSegHTML(t):`<select id="dh-status" class="pill ${st.cls} statsel" title="Change status — logged in History">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${k===t.status?"selected":""}>${v.label}</option>`).join("")}</select>`}
-        ${isWaiting(t)?`<span class="pill" style="font-size:12px;color:var(--amber);border-color:var(--amber-line)">⏳ Waiting on ${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+"d":""}</span>`:""}
-        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="sm" id="btnNext" title="When should this demand come back up on Today?">⏰ Next action</button><button class="sm" id="dhWin" title="Note a win about this demand (W)">🏆 Win</button><button class="sm" id="btnSpec" title="Generate post-delivery technical spec">📄 Tech Spec</button><button class="sm" id="btnEditTask">✎ Edit</button><button class="sm danger" id="btnDelTask">🗑 Delete</button></div>
-      </div></div>
-      <div class="tabs">
-        <button class="tab ${activeTab==="work"?"active":""}" data-tab="work">Work &amp; Subtasks<span class="count">${sub.n}</span></button>
-        <button class="tab ${activeTab==="objects"?"active":""}" data-tab="objects">Objects<span class="count">${t.objects.length}</span>${(()=>{const n=openClashCount(t);return n?`<span class="clashtag" title="Object(s) also in flight in another demand">⚠ ${n}</span>`:"";})()}</button>
-        <button class="tab ${activeTab==="transports"?"active":""}" data-tab="transports">Transports<span class="count">${t.transports.length}</span></button>
-        <button class="tab ${activeTab==="reference"?"active":""}" data-tab="reference">Reference<span class="count">${(t.reference||[]).length}</span></button>
-        <button class="tab ${activeTab==="calls"?"active":""}" data-tab="calls">Linked<span class="count">${lc}</span></button>
-        <button class="tab ${activeTab==="images"?"active":""}" data-tab="images">Images<span class="count">${imagesFor("demand",t.id).length}</span></button>
-        <button class="tab ${activeTab==="effort"?"active":""}" data-tab="effort">Effort<span class="count">${efFh(efSum(efFor(t.id)))} h</span></button>
-        <button class="tab ${activeTab==="history"?"active":""}" data-tab="history">History<span class="count">${(t.timeline||[]).length}</span></button>
-        <span class="tind"></span>
-      </div>
-    </div><div class="detail-body" id="detailBody"></div>`;
+  host.innerHTML=demandHeadBench(t,sub,lc);
   const epGo=host.querySelector(".ep-go");if(epGo)epGo.onclick=()=>{view="epics";activeEpicId=t.epicId;renderApp();};
   host.querySelector("#btnSpec").onclick=()=>openTechSpec(t);
   host.querySelector("#btnEditTask").onclick=()=>openTaskModal(t);
@@ -358,11 +311,11 @@ function renderDetail(){
    const co=host.querySelector(".cb-obj");if(co)co.onclick=()=>{activeTab="objects";renderDetail();enterPulse("detail");};
    const ob=host.querySelector(".clashband canvas");if(ob&&benchOn())DK.scope(ob,drawOrbit);
    const nt=host.querySelector(".natick");if(nt)DK.scope(nt,drawTick);}
-  host.querySelector("#btnDelTask").onclick=()=>{if(confirm("Delete this demand and all its subtasks, objects, transports"+(efFor(t.id).length?" and the "+efFh(efSum(efFor(t.id)))+" h logged against it":"")+"?")){state.tasks=state.tasks.filter(x=>x.id!==t.id);state.efforts=state.efforts.filter(e=>e.taskId!==t.id);state.meetings.forEach(m=>m.taskIds=m.taskIds.filter(id=>id!==t.id));state.journal.forEach(j=>j.taskIds=(j.taskIds||[]).filter(id=>id!==t.id));state.debug.forEach(s=>{if(s.taskId===t.id)s.taskId="";});state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="demand"&&l.id===t.id)));activeId=null;markDirty();renderApp();}};
+  host.querySelector("#btnDelTask").onclick=()=>deleteWithUndo(`Deleted ${demandLabel(t)}`,()=>{state.tasks=state.tasks.filter(x=>x.id!==t.id);state.efforts=state.efforts.filter(e=>e.taskId!==t.id);state.meetings.forEach(m=>m.taskIds=m.taskIds.filter(id=>id!==t.id));state.journal.forEach(j=>j.taskIds=(j.taskIds||[]).filter(id=>id!==t.id));state.debug.forEach(s=>{if(s.taskId===t.id)s.taskId="";});state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="demand"&&l.id===t.id)));activeId=null;});
   host.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{activeTab=b.dataset.tab;renderDetail();enterPulse("detail");});
   const body=host.querySelector("#detailBody");
   if(activeTab==="overview")renderOverview(body,t);
-  else if(activeTab==="work")(benchOn()?renderWorkBench:renderWork)(body,t);
+  else if(activeTab==="work")renderWorkBench(body,t);
   else if(activeTab==="objects")renderObjects(body,t);
   else if(activeTab==="transports")renderTransports(body,t);
   else if(activeTab==="reference")renderReference(body,t);
@@ -413,7 +366,7 @@ function renderHistory(body,t){
       <span>Requirement changes: <b style="color:${changeEvents(t).length?"var(--accent2)":"var(--txt)"}">${changeEvents(t).length}</b></span>
       <span>Delivered: <b>${dd.length?dd.join(", "):"—"}</b></span></div>
     <div id="tlList"></div>`;
-  body.querySelector("#addEvt").onclick=()=>{const n=prompt("Timeline note (e.g. 'QA raised bug on PA0008'):");if(n){logTimeline(t,"note","","",n);touch(t);renderHistory(body,t);}};
+  body.querySelector("#addEvt").onclick=async()=>{const n=await askText("Add a note to History",{placeholder:"e.g. QA raised a bug on PA0008",ok:"Add"});if(n&&n.trim()){logTimeline(t,"note","","",n);touch(t);renderHistory(body,t);}};
   const host=body.querySelector("#tlList");
   if(!tl.length){host.innerHTML=`<div class="faint" style="font-size:12px">No history yet. Status changes are logged automatically.</div>`;return;}
   const bench=benchOn();let lastM="",idx=0;host.classList.toggle("btl",bench);
@@ -435,29 +388,6 @@ function renderHistory(body,t){
 }
 function nopick(msg){return `<div class="nopick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 9v11"/></svg><div>${msg}</div></div>`;}
 
-function renderWork(body,t){
-  const pinned=(t.reference||[]).filter(r=>r.pinned);
-  body.innerHTML=`
-    ${pinned.length?`<div class="pinbox" id="pinBox"></div>`:""}
-    <div class="grid2" style="margin-bottom:6px">
-      <div class="field"><label>What is to be done</label><textarea id="fDesc" placeholder="Scope, requirement summary, acceptance criteria…">${esc(t.description)}</textarea></div>
-      <div class="field"><label>Working notes / status log</label><textarea id="fNotes" placeholder="Running notes, blockers, who asked, decisions…">${esc(t.notes)}</textarea></div>
-    </div>
-    <div id="n-links" style="margin-bottom:12px">${linkChips((t.description||"")+" "+(t.notes||""))}</div>
-    <div class="sec-title"><h3>Subtasks (branching)</h3><div class="ln"></div><button class="sm" id="addRoot">＋ Add subtask</button></div>
-    <div class="tree" id="tree"></div>
-    <div class="sec-title" style="margin-top:24px"><h3>Comments on this demand</h3><div class="ln"></div></div>
-    <div id="taskCmts"></div>
-    <div id="lsHost" style="margin-top:24px"></div>`;
-  const updNL=()=>{body.querySelector("#n-links").innerHTML=linkChips((t.description||"")+" "+(t.notes||""));};
-  body.querySelector("#fDesc").onchange=e=>{t.description=e.target.value;touch(t);updNL();};
-  body.querySelector("#fNotes").onchange=e=>{t.notes=e.target.value;touch(t);updNL();};
-  body.querySelector("#addRoot").onclick=()=>{t.subtasks.push(mkSub());touch(t);renderDetail();};
-  renderTree(body.querySelector("#tree"),t,t.subtasks);
-  renderComments(body.querySelector("#taskCmts"),t,()=>touch(t));
-  if(pinned.length)drawPinned(body.querySelector("#pinBox"),t,pinned);
-  renderLessons(body.querySelector("#lsHost"),t);
-}
 function drawPinned(host,t,pinned){
   host.innerHTML=`<div class="pin-title">📌 Key reference</div>`+pinned.map(r=>{const rv=revealPw[r.id];
     return `<div class="pin-row" data-id="${r.id}"><span class="pin-l">${esc(r.label)||"(label)"}</span>
@@ -490,8 +420,7 @@ function renderTree(host,t,list,rr){
     row.querySelector(".a-cmt").onclick=()=>openSubCommentsModal(t,s,rr);
     row.querySelector(".a-add").onclick=()=>{s.children.push(mkSub());s.collapsed=false;touch(t);rr();};
     row.querySelector(".a-del").onclick=()=>{const n=countSubs(s.children).n,c=(s.comments||[]).length;
-      if((n||c)&&!confirm(`Delete “${s.title||"subtask"}”${n?` and the ${n} subtask(s) under it`:""}${c?` (${c} comment(s))`:""}?`))return;
-      const r=findSub(t.subtasks,s.id);if(r){r.parent.splice(r.parent.indexOf(s),1);touch(t);rr();}};
+      deleteWithUndo(`Deleted “${s.title||"subtask"}”${n?` and the ${n} under it`:""}`,()=>{const r=findSub(t.subtasks,s.id);if(r){r.parent.splice(r.parent.indexOf(s),1);touch(t);}});};
     if(kids&&!s.collapsed)renderTree(node.querySelector(".children"),t,s.children,rr);
     host.appendChild(node);});
 }
@@ -507,7 +436,7 @@ function renderComments(host,owner,onChange){
   host.querySelector(".c-post").onclick=post;
   ta.onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")post();};
   host.querySelectorAll(".cmt").forEach(el=>{const c=list.find(x=>x.id===el.dataset.id);
-    el.querySelector(".c-del").onclick=()=>{if(confirm("Delete this comment?")){list.splice(list.indexOf(c),1);onChange();renderComments(host,owner,onChange);}};
+    el.querySelector(".c-del").onclick=async()=>{if(await askOk("It can't be brought back.",{title:"Delete this comment?",ok:"Delete",danger:true})){list.splice(list.indexOf(c),1);onChange();renderComments(host,owner,onChange);}};
     const txt=el.querySelector(".cmt-text");txt.onclick=e=>{if(e.target.tagName==="A")return;editInline(txt,c.text,v=>{if(v){c.text=v;}onChange();renderComments(host,owner,onChange);});};});
 }
 function openSubCommentsModal(t,s,rr){
@@ -545,7 +474,7 @@ function renderObjects(body,t){
       tr.querySelector(".o-type").onchange=e=>{o.type=e.target.value;touch(t);};
       tr.querySelector(".o-act").onchange=e=>{o.action=e.target.value;touch(t);drawClash(o);};
       tr.querySelector(".o-desc").onchange=e=>{o.desc=e.target.value;touch(t);};
-      tr.querySelector(".o-del").onclick=()=>{if(o.name&&!confirm(`Remove ${o.name} from this demand's objects?`))return;t.objects=t.objects.filter(x=>x.id!==o.id);t.transports.forEach(x=>{if(x.objectIds)x.objectIds=x.objectIds.filter(id=>id!==o.id);});touch(t);draw();renderDetail();};});
+      tr.querySelector(".o-del").onclick=()=>deleteWithUndo(`Removed ${o.name||"the object"}`,()=>{t.objects=t.objects.filter(x=>x.id!==o.id);t.transports.forEach(x=>{if(x.objectIds)x.objectIds=x.objectIds.filter(id=>id!==o.id);});touch(t);});});
     const idx=clashIndex();t.objects.forEach(o=>drawClash(o,idx));};
   body.querySelector("#objTypes").onclick=()=>openObjTypes(()=>{draw();});
   body.querySelector("#addObj").onclick=()=>{t.objects.push({id:uid(),name:"",type:objTypes()[0],action:"Modified",desc:"",ackClash:[]});touch(t);draw();};
@@ -656,10 +585,10 @@ function renderTransports(body,t){
       q(".rel").onchange=e=>{tr.released=e.target.checked;tr.releasedOn=tr.released?(tr.releasedOn||todayStr()):"";touch(t);};
       q(".notes").onchange=e=>{tr.notes=e.target.value;touch(t);};
       q(".tocsel").onchange=e=>{tr.tocId=e.target.value;touch(t);drawTrs();drawReadiness();};
-      {const b=q(".tocone");if(b)b.onclick=()=>{const n=prompt(`ToC number for ${tr.number||"this transport"}:`,"");if(n===null)return;
+      {const b=q(".tocone");if(b)b.onclick=async()=>{const n=await askText("A new ToC",{label:`ToC number for ${tr.number||"this transport"}`,placeholder:"e.g. H03K900499 — or fill it in later",ok:"Create"});if(n===null)return;
         const c=normToc({number:n.trim(),desc:tr.desc});(t.tocs=t.tocs||[]).push(c);tr.tocId=c.id;touch(t);drawTrs();drawTocs();drawReadiness();
         toast(`${c.number||"New ToC"} created and ${tr.number||"the transport"} bundled in — record where the ToC moves under Transports of Copies`);};}
-      q(".del").onclick=()=>{if((tr.number||tr.syncs.some(x=>x.system))&&!confirm(`Delete transport ${tr.number||"(unnumbered)"}? Its sync history goes with it.`))return;t.transports=t.transports.filter(x=>x.id!==tr.id);touch(t);renderTransports(body,t);renderDetail();};
+      q(".del").onclick=()=>deleteWithUndo(`Deleted transport ${tr.number||"(unnumbered)"}`,()=>{t.transports=t.transports.filter(x=>x.id!==tr.id);touch(t);});
       q(".up").onclick=()=>{if(idx>0){[t.transports[idx-1],t.transports[idx]]=[t.transports[idx],t.transports[idx-1]];touch(t);drawTrs();drawReadiness();}};
       q(".down").onclick=()=>{if(idx<t.transports.length-1){[t.transports[idx+1],t.transports[idx]]=[t.transports[idx],t.transports[idx+1]];touch(t);drawTrs();drawReadiness();}};
       const syncHost=q(".syncs");
@@ -714,7 +643,7 @@ function renderTransports(body,t){
       q(".cnum").onchange=e=>{c.number=e.target.value;touch(t);drawTrs();drawReadiness();};
       q(".cdsc").onchange=e=>{c.desc=e.target.value;touch(t);};
       q(".cnotes").onchange=e=>{c.notes=e.target.value;touch(t);};
-      q(".cdel").onclick=()=>{if(members.length&&!confirm("Delete this ToC? "+members.length+" TR(s) will become un-bundled."))return;t.transports.forEach(tr=>{if(tr.tocId===c.id)tr.tocId="";});t.tocs=t.tocs.filter(x=>x.id!==c.id);touch(t);renderTransports(body,t);};
+      q(".cdel").onclick=()=>deleteWithUndo(`Deleted ToC ${c.number||""}`,()=>{t.transports.forEach(tr=>{if(tr.tocId===c.id)tr.tocId="";});t.tocs=t.tocs.filter(x=>x.id!==c.id);touch(t);});
       const sh=q(".csyncs");
       /* a ToC moved to many systems shows the grid; its date rows open only for editing */
       const drawCs=()=>{sh.innerHTML="";const n=c.syncs.filter(s=>s.system).length,many=n>3,open=!many||tocEdit.has(c.id),ab=q(".caddsync");
@@ -970,24 +899,12 @@ function openLinkMeetingModal(t){
 
 function openTaskModal(existing){
   const t=existing||{};const root=document.getElementById("modalRoot");
-  root.innerHTML=`<div class="modal-bg"><div class="modal"><h2>${existing?"Edit demand":"New demand / task"}</h2>
-    <div class="grid2"><div class="field"><label>Demand ID</label><input id="m-demand" class="mono" value="${esc(t.demandId)||""}" placeholder="DMND-12345"></div>
-      <div class="field"><label>Type</label><select id="m-type">${TASK_TYPES.map(x=>`<option ${x===t.type?"selected":""}>${x}</option>`).join("")}</select></div></div>
-    <div class="field"><label>Title</label><input id="m-title" value="${esc(t.title)||""}" placeholder="Short description of the requirement"></div>
-    <div class="grid2"><div class="field"><label>◆ Epic</label><select id="m-epic"><option value="">— none —</option>${state.epics.slice().sort((a,b)=>epicLabel(a).localeCompare(epicLabel(b))).map(x=>`<option value="${x.id}" ${(t.epicId||(!existing&&view==="epics"?activeEpicId:""))===x.id?"selected":""}>${esc(epicLabel(x))}</option>`).join("")}</select></div>
-      <div class="field"><label>Wave / phase within the epic</label><input id="m-wave" list="dl-wave" value="${esc(t.wave)||""}" placeholder="e.g. Wave 2, Sync to backends"><datalist id="dl-wave">${distinctVals("wave").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div></div>
-    <div class="grid2"><div class="field"><label>Source system</label><select id="m-sys">${systemOptions(existing?t.system:(t.system||state.settings.defaultSystem))}</select></div>
-      <div class="field"><label>Client / mandant</label><select id="m-client">${clientOptions(existing?t.system:(t.system||state.settings.defaultSystem),t.client)}</select></div></div>
-    <div class="grid2"><div class="field"><label>Project (initiative)</label><input id="m-proj" list="dl-proj" value="${esc(t.project)||""}" placeholder="e.g. Sailpoint integration"><datalist id="dl-proj">${distinctVals("project").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div>
-      <div class="field"><label>Theme (functional area)</label><input id="m-theme" list="dl-theme" value="${esc(t.theme)||""}" placeholder="e.g. Travel, TRem, Payroll"><datalist id="dl-theme">${distinctVals("theme").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div></div>
-    <div class="grid2"><div class="field"><label>Requestor / who asked</label><input id="m-req" list="dl-req" value="${esc(t.requestor)||""}" placeholder="Name / team"><datalist id="dl-req">${distinctVals("requestor").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div>
-      <div class="field"><label>Status</label><select id="m-status">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${k===t.status?"selected":""}>${v.label}</option>`).join("")}</select></div></div>
-    <div class="grid2"><div class="field"><label>Received date</label><input type="date" id="m-rec" value="${t.receivedDate||todayStr()}"></div>
-      <div class="field"><label>Due date</label><input type="date" id="m-due" value="${t.dueDate||""}"></div></div>
-    <div class="grid2"><div class="field"><label>⏳ Waiting on (blocked by)</label><input id="m-wait" list="dl-wait" value="${esc((t.waiting&&t.waiting.on)||"")}" placeholder="blank = not blocked"><datalist id="dl-wait">${WAIT_OPTIONS.map(x=>`<option value="${x}">`).join("")}</datalist></div>
-      <div class="field"><label>Waiting since</label><input type="date" id="m-waitsince" value="${(t.waiting&&t.waiting.since)||""}"></div></div>
-    <div class="field"><label>👷 Built by <span class="faint" style="font-weight:400;text-transform:none;letter-spacing:0">— someone in your team; none ticked = you</span></label><div id="m-build"></div></div>
-    <div class="field"><label>Description</label><textarea id="m-desc">${esc(t.description)||""}</textarea></div>
+  root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:680px"><h2>${existing?"Edit demand":"New demand / task"}</h2>
+    <div class="mg"><div class="mg-h">What</div><div class="grid2"><div class="field"><label>Demand ID</label><input id="m-demand" class="mono" value="${esc(t.demandId)||""}" placeholder="DMND-12345"></div><div class="field"><label>Type</label><select id="m-type">${TASK_TYPES.map(x=>`<option ${x===t.type?"selected":""}>${x}</option>`).join("")}</select></div></div><div class="field"><label>Title</label><input id="m-title" value="${esc(t.title)||""}" placeholder="Short description of the requirement"></div><div class="field"><label>Description</label><textarea id="m-desc">${esc(t.description)||""}</textarea></div></div>
+    <div class="mg"><div class="mg-h">Where</div><div class="grid2"><div class="field"><label>Source system</label><select id="m-sys">${systemOptions(existing?t.system:(t.system||state.settings.defaultSystem))}</select></div><div class="field"><label>Client / mandant</label><select id="m-client">${clientOptions(existing?t.system:(t.system||state.settings.defaultSystem),t.client)}</select></div></div><div class="grid2"><div class="field"><label>◆ Epic</label><select id="m-epic"><option value="">— none —</option>${state.epics.slice().sort((a,b)=>epicLabel(a).localeCompare(epicLabel(b))).map(x=>`<option value="${x.id}" ${(t.epicId||(!existing&&view==="epics"?activeEpicId:""))===x.id?"selected":""}>${esc(epicLabel(x))}</option>`).join("")}</select></div><div class="field"><label>Wave / phase within the epic</label><input id="m-wave" list="dl-wave" value="${esc(t.wave)||""}" placeholder="e.g. Wave 2, Sync to backends"><datalist id="dl-wave">${distinctVals("wave").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div></div></div>
+    <div class="mg"><div class="mg-h">When</div><div class="grid3"><div class="field"><label>Status</label><select id="m-status">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${k===t.status?"selected":""}>${v.label}</option>`).join("")}</select></div><div class="field"><label>Received date</label><input type="date" id="m-rec" value="${t.receivedDate||todayStr()}"></div><div class="field"><label>Due date</label><input type="date" id="m-due" value="${t.dueDate||""}"></div></div></div>
+    <div class="mg"><div class="mg-h">Who</div><div class="grid3"><div class="field"><label>Requestor / who asked</label><input id="m-req" list="dl-req" value="${esc(t.requestor)||""}" placeholder="Name / team"><datalist id="dl-req">${distinctVals("requestor").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div><div class="field"><label>⏳ Waiting on (blocked by)</label><input id="m-wait" list="dl-wait" value="${esc((t.waiting&&t.waiting.on)||"")}" placeholder="blank = not blocked"><datalist id="dl-wait">${WAIT_OPTIONS.map(x=>`<option value="${x}">`).join("")}</datalist></div><div class="field"><label>Waiting since</label><input type="date" id="m-waitsince" value="${(t.waiting&&t.waiting.since)||""}"></div></div><div class="field"><label>👷 Built by <span class="faint" style="font-weight:400;text-transform:none;letter-spacing:0">— someone in your team; none ticked = you</span></label><div id="m-build"></div></div></div>
+    <details class="mg mg-more"${t.project||t.theme?" open":""}><summary class="mg-h">More — project and theme${t.project||t.theme?` <span class="faint">${esc([t.project,t.theme].filter(Boolean).join(" · "))}</span>`:""}</summary><div class="grid2"><div class="field"><label>Project (initiative)</label><input id="m-proj" list="dl-proj" value="${esc(t.project)||""}" placeholder="e.g. Sailpoint integration"><datalist id="dl-proj">${distinctVals("project").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div><div class="field"><label>Theme (functional area)</label><input id="m-theme" list="dl-theme" value="${esc(t.theme)||""}" placeholder="e.g. Travel, TRem, Payroll"><datalist id="dl-theme">${distinctVals("theme").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div></div></details>
     <div class="modal-foot"><button id="m-cancel" class="ghost">Cancel</button><button id="m-save" class="primary">${existing?"Save changes":"Create demand"}</button></div></div></div>`;
   const bsel=(t.builders||[]).slice(),bhost=root.querySelector("#m-build"),bdraw=()=>{bhost.innerHTML=builderChipsHTML(bsel);wireBuilderChips(bhost,bsel,bdraw);};bdraw();
   const close=()=>root.innerHTML="";
@@ -997,7 +914,7 @@ function openTaskModal(existing){
   md.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();root.querySelector("#m-save").click();}});
   root.querySelector("#m-cancel").onclick=close;
   root.querySelector(".modal-bg").onclick=e=>{if(e.target!==root.querySelector(".modal-bg"))return;
-    if(!edited||confirm(existing?"Discard your changes to this demand?":"Discard this new demand?"))close();};
+    if(!edited){close();return;}askOk(existing?"Your changes to this demand will be lost.":"This new demand won't be created.",{title:"Discard?",ok:"Discard",danger:true}).then(y=>{if(y)close();});};
   {const sy=root.querySelector("#m-sys"),cl=root.querySelector("#m-client");
    sy.onchange=()=>{cl.innerHTML=clientOptions(sy.value,"");};}
   root.querySelector("#m-title").focus();

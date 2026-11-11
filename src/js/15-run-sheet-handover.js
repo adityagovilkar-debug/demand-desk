@@ -83,8 +83,8 @@ function openRunSheet(tasks,label,defTarget){
     const cp=root.querySelector("#rs-copy");if(cp)cp.onclick=()=>{const x=runSheetData(tasks,target,false);
       copyRich(runSheetHTML(x,target,label,notes[label]||""),runSheetText(x,target,label,notes[label]||"")).then(()=>toast("Copied — paste it into your mail to Basis")).catch(()=>toast("Copy failed",true));};
     const tx=root.querySelector("#rs-text");if(tx)tx.onclick=()=>{navigator.clipboard.writeText(runSheetText(runSheetData(tasks,target,false),target,label,notes[label]||"")).then(()=>toast("Copied as text")).catch(()=>toast("Copy failed",true));};
-    const mk=root.querySelector("#rs-mark");if(mk)mk.onclick=()=>{
-      const v=prompt(`Basis imported all ${d.todo.length} item(s) into ${target}? Date of the import (YYYY-MM-DD):`,todayStr());if(v===null)return;
+    const mk=root.querySelector("#rs-mark");if(mk)mk.onclick=async()=>{
+      const v=await askText(`Basis imported all ${d.todo.length} item(s) into ${target}?`,{label:"Date of the import",type:"date",value:todayStr(),ok:"Record"});if(v===null)return;
       const dt=v.trim();if(!/^\d{4}-\d{2}-\d{2}$/.test(dt)){toast("Use the YYYY-MM-DD format",true);return;}
       const touched=new Set();d.todo.forEach(r=>{(r.toc||r.tr).syncs.push({system:target,date:dt});if(!r.toc)syncReleases(r.tr,target,dt);touched.add(r.t);});
       touched.forEach(t=>touch(t));draw();toast(`Recorded ${d.todo.length} import(s) into ${target} on ${dt}`);};
@@ -147,7 +147,7 @@ function handoverDoc(s,ts){
   const per=[
     ...state.playbook.filter(p=>p.kind==="freeze"&&p.from&&p.to&&p.from<=winEnd&&p.to>=winStart).map(p=>`❄ Change freeze ${p.from} → ${p.to}: ${p.title}${(p.systems||[]).length?" ("+p.systems.join(", ")+")":""}`),
     ...state.playbook.filter(p=>p.kind==="recurring"&&inWin(p.due)).map(p=>`🔁 ${p.due}: ${p.title}`),
-    ...(s.todos?state.todos.filter(x=>!x.done&&x.due&&x.due<=winEnd).map(x=>`☐ ${x.due}: ${x.text}`):[])];
+    ...(s.todos?state.jobs.filter(j=>jobOpen(j)&&j.due&&j.due<=winEnd).map(j=>`☐ ${j.due}: ${j.title}`):[])];
   if(per.length){H.push(`<h3>During this period (${esc(winStart)} → ${esc(winEnd)})</h3>`);M.push(`## During this period (${winStart} → ${winEnd})`,``);list("Coming up",per);}
   return {html:H.join(""),md:M.join("\n")};
 }
@@ -168,7 +168,7 @@ function openHandover(){
     <details style="margin-bottom:10px"><summary style="cursor:pointer;font-size:13px">Demands included: <b id="ho-n">${s.ids.size}</b> of ${cand.length} not closed — choose…</summary>
       <div style="display:flex;gap:6px;margin:8px 0"><button class="sm" id="ho-def" title="Open, in progress, bug, and delivered-but-not-yet-in-Prod">Open work</button><button class="sm" id="ho-all">All</button><button class="sm" id="ho-none">None</button></div>
       <div class="picklist" id="ho-list" style="max-height:220px"></div></details>
-    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px">${[["actions","Open action points from linked meetings"],["refs","Reference entries (secrets left out)"],["todos","My to-dos due before I'm back"]].map(([k,l])=>`<label ${lbl}><input type="checkbox" class="ho-opt" data-k="${k}" ${s[k]?"checked":""} style="width:auto"> ${l}</label>`).join("")}</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px">${[["actions","Open action points from linked meetings"],["refs","Reference entries (secrets left out)"],["todos","My tasks due before I'm back"]].map(([k,l])=>`<label ${lbl}><input type="checkbox" class="ho-opt" data-k="${k}" ${s[k]?"checked":""} style="width:auto"> ${l}</label>`).join("")}</div>
     <div class="specpaper specdoc" id="ho-prev"></div>
     <div class="modal-foot"><button id="ho-copy">📋 Copy Markdown</button><button id="ho-md">⬇ Download .md</button><button id="ho-print">🖨 Print / Save PDF</button><button id="ho-close" class="primary">Close</button></div></div></div>`;
   const prev=()=>{root.querySelector("#ho-prev").innerHTML=handoverDoc(s,chosen()).html;root.querySelector("#ho-n").textContent=s.ids.size;};

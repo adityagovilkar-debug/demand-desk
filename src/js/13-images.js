@@ -101,7 +101,7 @@ function renderImagesSection(host,kind,id){
     card.querySelector(".im-expiry").onchange=e=>{im.expiry=e.target.value;markDirty();renderImagesSection(host,kind,id);};
     card.querySelector(".im-unlink").onclick=()=>{im.links=im.links.filter(l=>!(l.kind===kind&&l.id===id));markDirty();renderImagesSection(host,kind,id);};
     card.querySelector(".im-del").onclick=async()=>{
-      if(!confirm("Delete "+im.file+" from the folder AND remove its record?"))return;
+      if(!await askOk(im.file+" is deleted from your images folder, and its record goes too. This can't be undone.",{title:"Delete this image?",ok:"Delete",danger:true}))return;
       const dir=await ensureImgDir(true);
       if(dir){try{await dir.removeEntry(im.file);}catch(e){/* already gone is fine */}}
       if(imgUrlCache[im.file]){URL.revokeObjectURL(imgUrlCache[im.file]);delete imgUrlCache[im.file];}

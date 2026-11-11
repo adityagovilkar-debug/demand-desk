@@ -4,7 +4,7 @@
    what happened (calls, analysis, updates in, what you sent), the next action and who you're
    waiting on, reference facts, and finally what you reported back and whether it was in time.
    Hours are logged against a task like any demand (effort key "j:<id>"). Stored as state.jobs
-   (state.todos is the Journal's quick checklist; state.tasks are demands). */
+   (state.tasks are demands; the Journal's old to-do list became tasks in v32). */
 const JOB_STATUS={open:{l:"To do",cls:"open"},progress:{l:"In progress",cls:"progress"},done:{l:"Done",cls:"delivered"},dropped:{l:"Dropped",cls:"closed"}};
 const JOB_SRC={call:"📞 Call",meeting:"👥 Meeting",email:"✉ Email",chat:"💬 Chat",self:"🙋 Myself",other:"Other"};
 const JOB_LOG={call:{i:"📞",l:"Call"},analysis:{i:"🔍",l:"Analysis"},update:{i:"📨",l:"Update in"},sent:{i:"✉",l:"Sent / reported"},note:{i:"📝",l:"Note"},step:{i:"✓",l:"Step done"}};
@@ -73,21 +73,27 @@ function renderJobDetail(){const j=activeJob(),host=document.getElementById("det
   if(!j){host.innerHTML=nopick("Select a task, or create one —<br>anything you've been asked that<br>isn't a demand.");return;}
   const st=JOB_STATUS[j.status],na=jobOpen(j)&&j.nextAction.date?j.nextAction:null,nad=na?daysUntil(na.date):0,tm=jobTiming(j),bench=benchOn();
   const asked=[...new Set(state.jobs.map(x=>x.askedBy).filter(Boolean))].sort();
-  host.innerHTML=`<div class="detail-head"><div class="dh-top"><div style="flex:1">
-      <input id="jb-title" value="${esc(j.title)}" style="font-size:18px;font-weight:650;border-color:transparent;background:transparent;padding:2px 4px;width:100%">
-      <div class="dh-dates" style="margin-top:8px">
+  const hOpen=hdrOpen.has(j.id)||j.title==="(untitled task)",hrs=jobHours(j),dn=j.due?daysUntil(j.due):null;
+  host.innerHTML=`<div class="detail-head bhead" style="--pen:${JOB_PEN[j.status]}">
+    <div class="bh-top"><div class="bh-l">
+        <div class="bh-no"><span class="bh-id">Task</span> · ${esc(JOB_SRC[j.source])}${j.askedBy?` · asked by ${esc(j.askedBy)}`:""}</div>
+        <input id="jb-title" class="bh-title" value="${esc(j.title)}" title="Click to rename"></div>
+      <div class="bh-acts"><div class="seg" id="jb-seg" title="Status">${Object.entries(JOB_STATUS).map(([k,v])=>`<button data-s="${k}" class="${k===j.status?"on":""}" style="--pen:${JOB_PEN[k]}"><i></i>${v.l}</button>`).join("")}</div>
+        <div class="bh-btns"><button class="sm" id="jb-logt" title="Log time against this task">⏱ Log time</button>${jobOpen(j)?`<button class="sm primary" id="jb-close" title="Record what you reported back">✓ Close…</button>`:""}<button class="sm ${hOpen?"on":""}" id="jb-det" title="Status, who asked, how it came in, the dates">✎ Details</button><button class="sm ghost danger" id="jb-del" title="Delete this task">🗑</button></div></div></div>
+    ${roHTML([{k:"Received",v:shortD(j.received)},
+      {k:"Expected",v:j.due?shortD(j.due)+(jobOpen(j)&&dn!=null?`<small>${dn<0?-dn+" d late":dn===0?"today":"in "+dn+" d"}</small>`:""):"—",cls:jobOpen(j)&&dn!=null?(dn<0?"bad":dn<=1?"warn":""):""},
+      {k:"Logged",v:hrs?U(efFh(hrs),"h"):"—"},{k:"Log",v:U(j.log.length,j.log.length===1?"entry":"entries")},
+      jobWaiting(j)?{k:"Waiting on",v:esc(j.waiting.on)+(jobWaitDays(j)!=null?`<small>${jobWaitDays(j)} d</small>`:""),cls:"warn"}:null],"stack")}
+    <div class="bh-fields ${hOpen?"":"hide"}"><div class="dh-dates" style="margin-top:8px">
         <span>Status <select id="jb-status" style="width:130px">${Object.entries(JOB_STATUS).map(([k,v])=>`<option value="${k}" ${k===j.status?"selected":""}>${v.l}</option>`).join("")}</select></span>
         <span>Asked by <input id="jb-asked" list="dl-jasked" value="${esc(j.askedBy)}" placeholder="e.g. my manager, team mailbox" style="width:180px"><datalist id="dl-jasked">${asked.map(a=>`<option value="${esc(a)}">`).join("")}</datalist></span>
         <span>Came in by <select id="jb-src" style="width:130px">${Object.entries(JOB_SRC).map(([k,v])=>`<option value="${k}" ${k===j.source?"selected":""}>${v}</option>`).join("")}</select></span>
         <span>Received <input type="date" id="jb-rec" value="${j.received}" style="width:150px"></span>
         <span>Expected by <input type="date" id="jb-due" value="${j.due}" style="width:150px"></span>
-      </div><canvas class="jb-rail" title="From the ask to the answer"></canvas><div class="jb-railnote">${(()=>{const age=-daysUntil(j.received)+1,n=j.due?daysUntil(j.due):null,tm=jobTiming(j);
+      </div></div>
+    <canvas class="jb-rail" title="From the ask to the answer"></canvas><div class="jb-railnote">${(()=>{const age=-daysUntil(j.received)+1,n=j.due?daysUntil(j.due):null,tm=jobTiming(j);
         if(j.status==="done")return tm?`Reported back ${tm.txt}`:"Reported back";if(j.status==="dropped")return "Dropped";
-        return `Day ${age} · `+(n==null?"no date expected":n>0?`expected in ${n} d`:n===0?"expected today":`${-n} d past expected`);})()}</div></div>
-      <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end"><span class="pill ${st.cls}" style="font-size:12px">${st.l}</span>
-        <button class="sm" id="jb-logt" title="Log time against this task">⏱ Log time</button>
-        ${jobOpen(j)?`<button class="sm primary" id="jb-close" title="Record what you reported back">✓ Close…</button>`:""}
-        <button class="sm danger" id="jb-del">🗑 Delete</button></div></div>
+        return `Day ${age} · `+(n==null?"no date expected":n>0?`expected in ${n} d`:n===0?"expected today":`${-n} d past expected`);})()}</div>
     ${na?(bench?`<div class="bband ${nad<=0?"watch":""}"><span class="k">Next action · ${nad<0?(-nad)+" d ago":nad===0?"today":"in "+nad+" d"}</span><span class="tx"><b>${esc(na.note||"(no note)")}</b> <span class="mono faint">${na.date}</span></span><button class="sm" id="jb-nadone">✓ Done</button><button class="sm ghost" id="jb-naedit">✎</button></div>`
        :`<div class="nextact ${nad<=0?"due":""}">⏰ Next action <b class="mono">${na.date}</b> — ${esc(na.note||"(no note)")} <button class="ghost sm" id="jb-nadone">✓ Done</button><button class="ghost sm" id="jb-naedit">✎</button></div>`)
       :jobOpen(j)?`<div class="jb-bandrow"><button class="sm ghost" id="jb-naset">⏰ Set the next action</button></div>`:""}
@@ -125,12 +131,13 @@ function renderJobDetail(){const j=activeJob(),host=document.getElementById("det
     if((v==="done"||v==="dropped")&&jobOpen(j)){e.target.value=j.status;openJobClose(j,v);return;}
     if(jobOpen({status:v})&&!jobOpen(j)){j.closedOn="";jobLog(j,"note","Reopened");}
     j.status=v;touch(j);renderApp();};
+  host.querySelectorAll("#jb-seg button").forEach(b=>b.onclick=()=>{if(b.dataset.s===j.status)return;const sel=q("#jb-status");sel.value=b.dataset.s;sel.onchange({target:sel});});
+  q("#jb-det").onclick=()=>hdrToggle(j.id,renderJobDetail);
   q("#jb-brief").onchange=e=>{j.brief=e.target.value;touch(j);};
   {const o=q("#jb-out");if(o)o.onchange=e=>{j.outcome=e.target.value;touch(j);};}
   q("#jb-logt").onclick=q("#jb-logt2").onclick=()=>openLogTime({key:"j:"+j.id});
   {const c=q("#jb-close");if(c)c.onclick=()=>openJobClose(j,"done");}
-  q("#jb-del").onclick=()=>{const h=jobHours(j);if(!confirm(`Delete “${j.title}”?${h?` The ${efFh(h)} h logged on it stay in Effort as “(deleted task)”.`:""}`))return;
-    state.jobs=state.jobs.filter(x=>x.id!==j.id);activeJobId=null;markDirty();renderApp();};
+  q("#jb-del").onclick=()=>deleteWithUndo(`Deleted “${j.title}”`,()=>{state.jobs=state.jobs.filter(x=>x.id!==j.id);activeJobId=null;});
   {const d=q("#jb-nadone");if(d)d.onclick=()=>nextActionDone(j);const ed=q("#jb-naedit");if(ed)ed.onclick=()=>openNextAction(j);const s=q("#jb-naset");if(s)s.onclick=()=>openNextAction(j);}
   {const w=q("#jb-won");if(w)w.onchange=e=>{const v=e.target.value.trim();if(v&&!j.waiting.on)jobLog(j,"note",`Waiting on ${v}`);j.waiting={on:v,since:v?(j.waiting.since||todayStr()):""};touch(j);renderApp();};
    const ws=q("#jb-wsince");if(ws)ws.onchange=e=>{j.waiting.since=e.target.value;touch(j);renderApp();};}

@@ -24,21 +24,7 @@
     --radius:9px; --mono:"Cascadia Code","Consolas",ui-monospace,monospace;
     --sans:"Segoe UI",system-ui,-apple-system,sans-serif;
   }
-  :root[data-theme="light"]{
-    --bg:#eef1f5; --bg2:#ffffff; --panel:#ffffff; --panel2:#eef1f5;
-    --line:#d8dee4; --line2:#ccd3da;
-    --txt:#1f2328; --muted:#59636e; --faint:#818b96;
-    --accent:#1f6feb; --accent2:#6b46e0; --on-accent:#ffffff;
-    --green:#1a7f37; --amber:#9a6700; --red:#cf222e; --teal:#0f8a80;
-    --chip:#eaeef2;
-    --danger-bg:#ffebe9; --toc-bg:#f3f0ff;
-    --cover-yes-bg:#e6f4ea; --cover-yes-line:#b7e0c3;
-    --cover-no-bg:#fbeec2; --cover-no-line:#e6d19a;
-    --resume-bg:#eaf5ee; --pin-bg:#fbf3dd;
-    --exp-bg:#ffe9e6; --exp-line:#f0b3ab;
-    --alert-line:#f0b3ab; --warn-line:#e6d19a;
-    --accent-line:#b6d3f5; --green-line:#b7e0c3; --amber-line:#e6d19a; --red-line:#f0b3ab; --violet-line:#d0c4e4; --teal-line:#b3dfd9;
-  }
+  
   /* ---- INSTRUMENT WHITE ----
      Scientific-plotter look: white paper, hairlines, drafting-pen signal colours,
      silkscreen micro-labels, tabular mono figures. Adapted from instrument-white/.
@@ -51,33 +37,7 @@
        violet   #6B3FA0 — projects & Transports-of-Copies (structural grouping)
      Ink carries all structure; a colour anywhere means a real state.
      Scoped entirely under the attribute — dark and light are untouched. */
-  :root[data-theme="instrument"]{
-    color-scheme:light;
-    --bg:#FFFFFF; --bg2:#FFFFFF; --panel:#FFFFFF; --panel2:#F7F7F4;
-    --line:#E7E6DF; --line2:#D6D5CC;
-    --txt:#12141A; --muted:#5A5E68; --faint:#9A9EA8;
-    --accent:#1B4FA0; --accent2:#6B3FA0; --on-accent:#FFFFFF;
-    --green:#0E7C63; --amber:#B07500; --red:#D93A1E; --teal:#0E7C63;
-    --chip:#FFFFFF;
-    /* the system forbids surface gradients and tinted fills — flat paper, ruled edges */
-    --danger-bg:#FDF1EE; --toc-bg:#FFFFFF;
-    --cover-yes-bg:#FFFFFF; --cover-yes-line:#B4D8CE;
-    --cover-no-bg:#FFFFFF; --cover-no-line:#E4D3A6;
-    --resume-bg:#FFFFFF; --pin-bg:#FFFFFF;
-    --exp-bg:#FFFFFF; --exp-line:#F0C0B6;
-    --alert-line:#F0C0B6; --warn-line:#E4D3A6;
-    --accent-line:#BFD0E6; --green-line:#B4D8CE; --amber-line:#E4D3A6; --red-line:#F0C0B6; --violet-line:#D0C4E4; --teal-line:#B4D8CE;
-    --radius:3px;
-    --mono:ui-monospace,"Cascadia Mono","JetBrains Mono","SF Mono",Consolas,monospace;
-    --sans:"Inter","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
-    /* Silkscreen face for micro-labels. Bahnschrift is Windows' stock DIN — the
-       typeface of engineering drawings — so it needs no install and gives the
-       labels a genuinely technical voice instead of falling back to Segoe UI
-       (Inter is not installed on a locked-down machine, so --sans alone still
-       renders as the old font). Condensed, so tracked uppercase stays compact. */
-    --label:"Bahnschrift","Inter","Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
-    --rule-strong:#D6D5CC; --grid-dot:#DEDDD6; --ink-3:#9A9EA8;
-  }
+  
   *{box-sizing:border-box}
   html,body{height:100%}
   body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);font-size:14px;line-height:1.45;overflow:hidden}
@@ -324,11 +284,11 @@
   .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:9px 16px;font-size:13px;z-index:80;box-shadow:0 8px 30px rgba(0,0,0,.4);opacity:0;transition:.25s;pointer-events:none}
   .toast.show{opacity:1;bottom:26px}
   .toast.err{border-color:var(--red);color:#ffb4ae}
-  :root[data-theme="light"] .toast.err,:root:is([data-theme="instrument"],[data-theme="bench"]) .toast.err{color:var(--red)}
+  :root[data-theme="bench"] .toast.err{color:var(--red)}
   /* status is changeable straight from the demand header */
   .statsel{width:auto;font-size:12px;padding:2px 6px;cursor:pointer;font-family:inherit}
   .statsel option{color:var(--txt);background:var(--panel)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .statsel{font-size:10px;padding:2px 4px}
+  :root[data-theme="bench"] .statsel{font-size:10px;padding:2px 4px}
   .savestate.conflict{color:var(--red);cursor:pointer;font-weight:600}
   .peerwarn{display:flex;align-items:center;gap:10px;padding:6px 16px;background:var(--danger-bg);border-bottom:1px solid var(--red-line);color:var(--red);font-size:12.5px;flex:0 0 auto;position:relative;z-index:1}
   .peerwarn button{margin-left:auto;flex:0 0 auto}
@@ -378,10 +338,10 @@
   .dvsv-n{cursor:pointer}.dvsv-n:hover{color:var(--accent)}
   .dvsv button{padding:0 4px;font-size:11px}
   @media (max-width:720px){.dvcols{grid-template-columns:1fr 1fr}.dvcols>div:last-child{grid-column:1/-1}}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dvview,:root:is([data-theme="instrument"],[data-theme="bench"]) .dvchip,:root:is([data-theme="instrument"],[data-theme="bench"]) .dvsv,:root:is([data-theme="instrument"],[data-theme="bench"]) .dvn{border-radius:2px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dvpanel{border-radius:3px;box-shadow:0 2px 10px rgba(18,20,26,.07)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dvview,:root:is([data-theme="instrument"],[data-theme="bench"]) .dvpanel h4,:root:is([data-theme="instrument"],[data-theme="bench"]) .dvsub{font-family:var(--label);letter-spacing:.1em;text-transform:uppercase;font-size:9.5px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dvpanel label.dvopt{font-family:var(--sans);font-size:12.5px;letter-spacing:0;color:var(--txt)}
+  :root[data-theme="bench"] .dvview,:root[data-theme="bench"] .dvchip,:root[data-theme="bench"] .dvsv,:root[data-theme="bench"] .dvn{border-radius:2px}
+  :root[data-theme="bench"] .dvpanel{border-radius:3px;box-shadow:0 2px 10px rgba(18,20,26,.07)}
+  :root[data-theme="bench"] .dvview,:root[data-theme="bench"] .dvpanel h4,:root[data-theme="bench"] .dvsub{font-family:var(--label);letter-spacing:.1em;text-transform:uppercase;font-size:9.5px}
+  :root[data-theme="bench"] .dvpanel label.dvopt{font-family:var(--sans);font-size:12.5px;letter-spacing:0;color:var(--txt)}
 
   .gsearch{position:absolute;top:40px;left:0;width:420px;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:6px;max-height:60vh;overflow:auto;z-index:60;box-shadow:0 12px 40px rgba(0,0,0,.5)}
   .gsr{padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12px}
@@ -468,197 +428,197 @@
      tics, silkscreen micro-labels, tabular mono figures, outlined pills.
      Every rule is scoped under the theme attribute, so dark/light are untouched
      and no render logic changes. ============================================== */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) body{font-size:13.5px;letter-spacing:.005em}
+  :root[data-theme="bench"] body{font-size:13.5px;letter-spacing:.005em}
 
   /* Engineering dot-grid paper (§4). Even across the whole viewport rather than
      masked to a fade — it reads as blueprint field, and every panel then sits on
      it as a sheet of paper. Kept faint enough to be near-subliminal. */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) #app::before{
+  :root[data-theme="bench"] #app::before{
     content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     background-image:radial-gradient(circle at 1px 1px,var(--grid-dot) 1px,transparent 0);
     background-size:22px 22px;opacity:.55}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) header,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) main{position:relative;z-index:1}
+  :root[data-theme="bench"] header,
+  :root[data-theme="bench"] main{position:relative;z-index:1}
   /* The grid only shows through if the big surfaces stop painting white over it.
      Panels/cards keep their fill, so they read as paper laid on the blueprint. */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) main,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) aside,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) section.detail,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .detail-body,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .listwrap,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .side-tools,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dash{background:transparent}
+  :root[data-theme="bench"] main,
+  :root[data-theme="bench"] aside,
+  :root[data-theme="bench"] section.detail,
+  :root[data-theme="bench"] .detail-body,
+  :root[data-theme="bench"] .listwrap,
+  :root[data-theme="bench"] .side-tools,
+  :root[data-theme="bench"] .dash{background:transparent}
 
   /* near-square geometry; depth from hairlines only — no shadows, no glow */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) button,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) input,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) select,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) textarea,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .pill,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .chip,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .sys,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .lc-badge,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .expbadge,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .kindtag,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .toctag{border-radius:2px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .tcard,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .trcard,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .modal,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .imgcard,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .actitem,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .cmt,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .finding,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .nrow,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .readybar,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .resume-box,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .pinbox,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .tbl-wrap,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .getting-started,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .picklist,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .gsearch,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .toast{border-radius:3px;box-shadow:none}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .modal,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .gsearch,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .toast{box-shadow:0 2px 10px rgba(18,20,26,.07)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .lightbox img{box-shadow:none;border:1px solid var(--rule-strong)}
+  :root[data-theme="bench"] button,
+  :root[data-theme="bench"] input,
+  :root[data-theme="bench"] select,
+  :root[data-theme="bench"] textarea,
+  :root[data-theme="bench"] .pill,
+  :root[data-theme="bench"] .chip,
+  :root[data-theme="bench"] .sys,
+  :root[data-theme="bench"] .lc-badge,
+  :root[data-theme="bench"] .expbadge,
+  :root[data-theme="bench"] .kindtag,
+  :root[data-theme="bench"] .toctag{border-radius:2px}
+  :root[data-theme="bench"] .tcard,
+  :root[data-theme="bench"] .dashcard,
+  :root[data-theme="bench"] .trcard,
+  :root[data-theme="bench"] .modal,
+  :root[data-theme="bench"] .imgcard,
+  :root[data-theme="bench"] .actitem,
+  :root[data-theme="bench"] .cmt,
+  :root[data-theme="bench"] .finding,
+  :root[data-theme="bench"] .nrow,
+  :root[data-theme="bench"] .readybar,
+  :root[data-theme="bench"] .resume-box,
+  :root[data-theme="bench"] .pinbox,
+  :root[data-theme="bench"] .tbl-wrap,
+  :root[data-theme="bench"] .getting-started,
+  :root[data-theme="bench"] .picklist,
+  :root[data-theme="bench"] .gsearch,
+  :root[data-theme="bench"] .toast{border-radius:3px;box-shadow:none}
+  :root[data-theme="bench"] .modal,
+  :root[data-theme="bench"] .gsearch,
+  :root[data-theme="bench"] .toast{box-shadow:0 2px 10px rgba(18,20,26,.07)}
+  :root[data-theme="bench"] .lightbox img{box-shadow:none;border:1px solid var(--rule-strong)}
 
   /* registration tics — the detail that reads "instrument", not "web card".
      Panels only; list rows at this density would be noise. */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .trcard,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .modal,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .resume-box,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .pinbox,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .readybar,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .getting-started,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .imgcard{position:relative}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard::before,  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard::after,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .trcard::before,    :root:is([data-theme="instrument"],[data-theme="bench"]) .trcard::after,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .modal::before,     :root:is([data-theme="instrument"],[data-theme="bench"]) .modal::after,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .resume-box::before,:root:is([data-theme="instrument"],[data-theme="bench"]) .resume-box::after,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .pinbox::before,    :root:is([data-theme="instrument"],[data-theme="bench"]) .pinbox::after,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .readybar::before,  :root:is([data-theme="instrument"],[data-theme="bench"]) .readybar::after,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .getting-started::before,:root:is([data-theme="instrument"],[data-theme="bench"]) .getting-started::after,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .imgcard::before,   :root:is([data-theme="instrument"],[data-theme="bench"]) .imgcard::after{
+  :root[data-theme="bench"] .dashcard,
+  :root[data-theme="bench"] .trcard,
+  :root[data-theme="bench"] .modal,
+  :root[data-theme="bench"] .resume-box,
+  :root[data-theme="bench"] .pinbox,
+  :root[data-theme="bench"] .readybar,
+  :root[data-theme="bench"] .getting-started,
+  :root[data-theme="bench"] .imgcard{position:relative}
+  :root[data-theme="bench"] .dashcard::before,  :root[data-theme="bench"] .dashcard::after,
+  :root[data-theme="bench"] .trcard::before,    :root[data-theme="bench"] .trcard::after,
+  :root[data-theme="bench"] .modal::before,     :root[data-theme="bench"] .modal::after,
+  :root[data-theme="bench"] .resume-box::before,:root[data-theme="bench"] .resume-box::after,
+  :root[data-theme="bench"] .pinbox::before,    :root[data-theme="bench"] .pinbox::after,
+  :root[data-theme="bench"] .readybar::before,  :root[data-theme="bench"] .readybar::after,
+  :root[data-theme="bench"] .getting-started::before,:root[data-theme="bench"] .getting-started::after,
+  :root[data-theme="bench"] .imgcard::before,   :root[data-theme="bench"] .imgcard::after{
     content:"";position:absolute;width:7px;height:7px;border:solid var(--rule-strong);pointer-events:none}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard::before,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .trcard::before,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .modal::before,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .resume-box::before,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .pinbox::before,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .readybar::before,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .getting-started::before,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .imgcard::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard::after,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .trcard::after,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .modal::after,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .resume-box::after,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .pinbox::after,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .readybar::after,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .getting-started::after,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .imgcard::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
+  :root[data-theme="bench"] .dashcard::before,
+  :root[data-theme="bench"] .trcard::before,
+  :root[data-theme="bench"] .modal::before,
+  :root[data-theme="bench"] .resume-box::before,
+  :root[data-theme="bench"] .pinbox::before,
+  :root[data-theme="bench"] .readybar::before,
+  :root[data-theme="bench"] .getting-started::before,
+  :root[data-theme="bench"] .imgcard::before{top:-1px;left:-1px;border-width:1px 0 0 1px}
+  :root[data-theme="bench"] .dashcard::after,
+  :root[data-theme="bench"] .trcard::after,
+  :root[data-theme="bench"] .modal::after,
+  :root[data-theme="bench"] .resume-box::after,
+  :root[data-theme="bench"] .pinbox::after,
+  :root[data-theme="bench"] .readybar::after,
+  :root[data-theme="bench"] .getting-started::after,
+  :root[data-theme="bench"] .imgcard::after{bottom:-1px;right:-1px;border-width:0 1px 1px 0}
 
   /* silkscreen micro-labels — DIN face, uppercase, wide tracking, quiet ink (§3) */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) label,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .sec-title h3,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard h3,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .stat,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) th,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .tab,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .pill,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .cover,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .kindtag,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .toctag,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .expbadge,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .gsr .k{font-family:var(--label)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) label{font-size:8.5px;letter-spacing:.17em;color:var(--ink-3)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .sec-title h3,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashcard h3{font-size:9.5px;letter-spacing:.22em;font-weight:600;color:var(--muted)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .stat{border-radius:2px;background:transparent}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .stats{gap:1px;background:var(--line);border:1px solid var(--line);padding:1px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .stat{border:none;background:var(--panel);font-size:8.5px;
+  :root[data-theme="bench"] label,
+  :root[data-theme="bench"] .sec-title h3,
+  :root[data-theme="bench"] .dashcard h3,
+  :root[data-theme="bench"] .stat,
+  :root[data-theme="bench"] th,
+  :root[data-theme="bench"] .tab,
+  :root[data-theme="bench"] .pill,
+  :root[data-theme="bench"] .cover,
+  :root[data-theme="bench"] .kindtag,
+  :root[data-theme="bench"] .toctag,
+  :root[data-theme="bench"] .expbadge,
+  :root[data-theme="bench"] .gsr .k{font-family:var(--label)}
+  :root[data-theme="bench"] label{font-size:8.5px;letter-spacing:.17em;color:var(--ink-3)}
+  :root[data-theme="bench"] .sec-title h3,
+  :root[data-theme="bench"] .dashcard h3{font-size:9.5px;letter-spacing:.22em;font-weight:600;color:var(--muted)}
+  :root[data-theme="bench"] .stat{border-radius:2px;background:transparent}
+  :root[data-theme="bench"] .stats{gap:1px;background:var(--line);border:1px solid var(--line);padding:1px}
+  :root[data-theme="bench"] .stat{border:none;background:var(--panel);font-size:8.5px;
     letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);padding:7px 2px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) header .logo{font-family:var(--mono);font-size:11px;letter-spacing:.3em}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) header .logo .dot{box-shadow:none;width:7px;height:7px;border-radius:50%}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) header{background:var(--panel)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) aside{background:transparent;border-right:1px solid var(--line)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .detail-head{border-bottom:1px solid var(--line)}
+  :root[data-theme="bench"] header .logo{font-family:var(--mono);font-size:11px;letter-spacing:.3em}
+  :root[data-theme="bench"] header .logo .dot{box-shadow:none;width:7px;height:7px;border-radius:50%}
+  :root[data-theme="bench"] header{background:var(--panel)}
+  :root[data-theme="bench"] aside{background:transparent;border-right:1px solid var(--line)}
+  :root[data-theme="bench"] .detail-head{border-bottom:1px solid var(--line)}
 
   /* nav + tabs as instrument controls */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .nav{background:transparent;border-color:transparent;padding:0;gap:1px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .navbtn{font-family:var(--label);font-size:10px;letter-spacing:.15em;
+  :root[data-theme="bench"] .nav{background:transparent;border-color:transparent;padding:0;gap:1px}
+  :root[data-theme="bench"] .navbtn{font-family:var(--label);font-size:10px;letter-spacing:.15em;
     text-transform:uppercase;border-radius:2px;border:1px solid transparent;padding:5px 9px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .navbtn.active{background:transparent;color:var(--txt);border-color:var(--rule-strong)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .wavehead,:root:is([data-theme="instrument"],[data-theme="bench"]) .storymonth,:root:is([data-theme="instrument"],[data-theme="bench"]) .storyrow .sk{font-family:var(--label);letter-spacing:.16em}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .storyrow.src-log{background:transparent;box-shadow:inset 2px 0 0 var(--accent2)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .eghead{font-family:var(--label);letter-spacing:.06em;background:var(--bg2)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .eghead:hover{background:var(--panel2)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .tab{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .tab .count{font-family:var(--mono);font-variant-numeric:tabular-nums;
+  :root[data-theme="bench"] .navbtn.active{background:transparent;color:var(--txt);border-color:var(--rule-strong)}
+  :root[data-theme="bench"] .wavehead,:root[data-theme="bench"] .storymonth,:root[data-theme="bench"] .storyrow .sk{font-family:var(--label);letter-spacing:.16em}
+  :root[data-theme="bench"] .storyrow.src-log{background:transparent;box-shadow:inset 2px 0 0 var(--accent2)}
+  :root[data-theme="bench"] .eghead{font-family:var(--label);letter-spacing:.06em;background:var(--bg2)}
+  :root[data-theme="bench"] .eghead:hover{background:var(--panel2)}
+  :root[data-theme="bench"] .tab{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+  :root[data-theme="bench"] .tab .count{font-family:var(--mono);font-variant-numeric:tabular-nums;
     background:transparent;border:1px solid var(--rule-strong);border-radius:2px}
 
   /* every figure mono + tabular — non-tabular digits jitter as values change (§3) */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .stat b,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .due,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .demand,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dh-demand,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .di-sub,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .fts,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .cmt-meta,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .lc-badge{font-family:var(--mono);font-variant-numeric:tabular-nums}
+  :root[data-theme="bench"] .stat b,
+  :root[data-theme="bench"] .due,
+  :root[data-theme="bench"] .demand,
+  :root[data-theme="bench"] .dh-demand,
+  :root[data-theme="bench"] .di-sub,
+  :root[data-theme="bench"] .fts,
+  :root[data-theme="bench"] .cmt-meta,
+  :root[data-theme="bench"] .lc-badge{font-family:var(--mono);font-variant-numeric:tabular-nums}
   /* numbers are mono, prose is not — a blanket td rule widens text columns and
      forces titles to wrap. The numeric cells already carry .mono / .due. */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .mono,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) input[type="date"],
-  :root:is([data-theme="instrument"],[data-theme="bench"]) table td.mono{font-variant-numeric:tabular-nums}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .stat b{letter-spacing:-.01em;font-weight:600;font-size:17px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dh-demand{letter-spacing:.06em}
+  :root[data-theme="bench"] .mono,
+  :root[data-theme="bench"] input[type="date"],
+  :root[data-theme="bench"] table td.mono{font-variant-numeric:tabular-nums}
+  :root[data-theme="bench"] .stat b{letter-spacing:-.01em;font-weight:600;font-size:17px}
+  :root[data-theme="bench"] .dh-demand{letter-spacing:.06em}
 
   /* pills: outlined silkscreen, never filled lozenges */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .pill,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .lc-badge,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .expbadge,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .kindtag,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .toctag,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .cover{background:transparent;font-size:9px;letter-spacing:.11em;
+  :root[data-theme="bench"] .pill,
+  :root[data-theme="bench"] .lc-badge,
+  :root[data-theme="bench"] .expbadge,
+  :root[data-theme="bench"] .kindtag,
+  :root[data-theme="bench"] .toctag,
+  :root[data-theme="bench"] .cover{background:transparent;font-size:9px;letter-spacing:.11em;
     text-transform:uppercase;font-weight:600;padding:1px 6px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .statchip{font-family:var(--label);border-radius:2px;font-size:9.5px;
+  :root[data-theme="bench"] .statchip{font-family:var(--label);border-radius:2px;font-size:9.5px;
     letter-spacing:.12em;text-transform:uppercase}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .statchip.on{background:transparent;font-weight:700}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .sys{background:transparent;letter-spacing:.06em}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .sys .d{letter-spacing:.12em}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .chip{background:transparent}
+  :root[data-theme="bench"] .statchip.on{background:transparent;font-weight:700}
+  :root[data-theme="bench"] .sys{background:transparent;letter-spacing:.06em}
+  :root[data-theme="bench"] .sys .d{letter-spacing:.12em}
+  :root[data-theme="bench"] .chip{background:transparent}
 
   /* status edge on list cards stays the only heavy colour — it is the value */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .tcard{border-left-width:2px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .tcard.active{background:var(--panel2)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .tcard.s-closed{opacity:.55}
+  :root[data-theme="bench"] .tcard{border-left-width:2px}
+  :root[data-theme="bench"] .tcard.active{background:var(--panel2)}
+  :root[data-theme="bench"] .tcard.s-closed{opacity:.55}
 
   /* tinted boxes lose their fills; the coloured left edge carries the meaning */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .resume-box,
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .pinbox{border-left-width:2px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .cover.yes{border-color:var(--green-line)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .cover.no{border-color:var(--amber-line)}
+  :root[data-theme="bench"] .resume-box,
+  :root[data-theme="bench"] .pinbox{border-left-width:2px}
+  :root[data-theme="bench"] .cover.yes{border-color:var(--green-line)}
+  :root[data-theme="bench"] .cover.no{border-color:var(--amber-line)}
   /* unknown/absent is outlined, never a fourth status fill (§7) */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .nothumb{border-style:dashed;color:var(--ink-3)}
+  :root[data-theme="bench"] .nothumb{border-style:dashed;color:var(--ink-3)}
 
   /* first-run panel reads as a legend/key on the blueprint, not a welcome banner */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .getting-started h1{font-family:var(--label);font-size:13px;
+  :root[data-theme="bench"] .getting-started h1{font-family:var(--label);font-size:13px;
     font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--txt)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .gs-lede{font-size:11.5px;color:var(--ink-3)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .gs-list dt{font-family:var(--label);font-size:10px;font-weight:600;
+  :root[data-theme="bench"] .gs-lede{font-size:11.5px;color:var(--ink-3)}
+  :root[data-theme="bench"] .gs-list dt{font-family:var(--label);font-size:10px;font-weight:600;
     letter-spacing:.18em;text-transform:uppercase;color:var(--accent);min-width:96px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .gs-list dd{font-size:11.5px;color:var(--ink-3);line-height:1.55}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .gs-list dt:not(:first-of-type),
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .gs-list dd:not(:first-of-type){border-top-style:dotted;border-top-color:var(--rule-strong)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .gs-tip{font-size:10.5px;letter-spacing:.03em;color:var(--ink-3)}
+  :root[data-theme="bench"] .gs-list dd{font-size:11.5px;color:var(--ink-3);line-height:1.55}
+  :root[data-theme="bench"] .gs-list dt:not(:first-of-type),
+  :root[data-theme="bench"] .gs-list dd:not(:first-of-type){border-top-style:dotted;border-top-color:var(--rule-strong)}
+  :root[data-theme="bench"] .gs-tip{font-size:10.5px;letter-spacing:.03em;color:var(--ink-3)}
 
   /* dotted row separators, as on plotter paper */
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dashitem{border-bottom-style:dotted;border-bottom-color:var(--rule-strong)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) th{font-size:8.5px;letter-spacing:.15em;color:var(--ink-3)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) td{border-bottom-style:dotted;border-bottom-color:var(--rule-strong)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) ::-webkit-scrollbar-thumb{border-radius:2px;background:var(--rule-strong)}
+  :root[data-theme="bench"] .dashitem{border-bottom-style:dotted;border-bottom-color:var(--rule-strong)}
+  :root[data-theme="bench"] th{font-size:8.5px;letter-spacing:.15em;color:var(--ink-3)}
+  :root[data-theme="bench"] td{border-bottom-style:dotted;border-bottom-color:var(--rule-strong)}
+  :root[data-theme="bench"] ::-webkit-scrollbar-thumb{border-radius:2px;background:var(--rule-strong)}
 
 
   /* ================= BENCH — Paper + Backlit (the default look) =================
@@ -1029,8 +989,8 @@
   .dchip .x:hover{color:var(--red)}
   .dests .dadd{width:auto;font-size:11.5px;padding:3px 6px}
   .dests .dhint{font-size:11px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dchip{border-radius:2px;background:transparent}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dests .dl{font-family:var(--label);font-size:9px;letter-spacing:.16em}
+  :root[data-theme="bench"] .dchip{border-radius:2px;background:transparent}
+  :root[data-theme="bench"] .dests .dl{font-family:var(--label);font-size:9px;letter-spacing:.16em}
 
   /* ---------------- Bench Demands: three panes, list rows, board, rail, overview, transport map ---------------- */
   .cxr,#boardHost,.lbmode{display:none}
@@ -1186,8 +1146,7 @@
   :root[data-theme="bench"]{--pen-7:#1F8AA8;--pen-8:#A8336E}
   :root[data-theme="bench"][data-mode="dark"]{--pen-7:#4CC3E0;--pen-8:#E36BA8}
   /* the classic themes have no drafting-pen palette — give the effort pages one built from their own colours */
-  :root:not([data-theme="bench"]) .efx{--paper:var(--panel);--paper-2:var(--panel2);--rule:var(--line);--rule-strong:var(--line2);--ink:var(--txt);--ink-2:var(--muted);--ink-3:var(--faint);--ink-4:var(--line2);
-    --pen-1:var(--red);--pen-2:var(--accent);--pen-3:var(--green);--pen-4:var(--amber);--pen-5:var(--accent2);--pen-6:#E0782F;--pen-7:var(--teal);--pen-8:#D0508F;--good:var(--green);--watch:var(--amber);--bad:var(--red);--label:var(--sans)}
+  
   .efx{color:var(--ink)}
   .efx .ef-lb,.ef-lb{display:block;font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:5px}
   .efx .ef-qc{display:grid;gap:12px}
@@ -1673,6 +1632,53 @@
   .tkband .tk-go:hover{text-decoration:underline}
   .tkband .tk-go .pill{font-size:9.5px;padding:0 5px;margin-right:3px}
   .tkband .tk-sum{margin-left:auto;font-size:11px;color:var(--ink-2);white-space:nowrap}
+  /* ---------------- in-app dialogs, the keys sheet, demand tabs on one row ---------------- */
+  .ask-bg{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--paper) 60%,transparent);backdrop-filter:blur(2px)}
+  .ask{animation:bmodin .18s cubic-bezier(.2,.8,.2,1)}
+  .ask .ask-t{white-space:pre-line;font-size:13px;line-height:1.55;color:var(--ink-2);margin:-4px 0 14px}
+  .ask .ask-h{font-size:11px;color:var(--ink-3);margin-top:4px}
+  .ask .primary.ask-danger{background:var(--bad);border-color:var(--bad);color:#fff}
+  .keys-g{display:grid;grid-template-columns:1fr 1fr;gap:18px 28px}
+  .keys-s .ef-lb{display:block;font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:6px}
+  .keys-r{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:5px 0;border-bottom:1px dotted var(--rule-strong);font-size:12.5px}
+  .keys-r span:last-child{color:var(--ink-2);text-align:right}
+  kbd{font-family:var(--mono);font-size:10.5px;padding:1px 6px;border:1px solid var(--rule-strong);border-bottom-width:2px;border-radius:3px;background:var(--paper-2);color:var(--ink);white-space:nowrap}
+  .tabs .kbh.keyhint{cursor:pointer}
+  .tabs .kbh.keyhint:hover{color:var(--ink)}
+  /* Linked and Images live in the side panel; their tabs show only when it's off or the window is narrow */
+  @media (min-width:1181px){main.demands3:not(.noctx) .tabs .tab.inrail:not(.active){display:none}}
+  /* ---------------- one coherent look: line icons, Task/Meeting headers, the Edit dialog in groups ---------------- */
+  .icw{display:inline-flex;vertical-align:-.18em;line-height:0}
+  .ic{width:1.12em;height:1.12em;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  :root[data-theme="bench"] .bhead input.bh-title{display:block;width:100%;margin:5px 0 0;padding:0 4px;font-family:inherit;font-size:24px;font-weight:600;letter-spacing:-.015em;line-height:1.25;color:var(--ink);background:transparent;border:1px solid transparent;border-radius:3px}
+  :root[data-theme="bench"] .bhead input.bh-title:hover{border-color:var(--rule)}
+  :root[data-theme="bench"] .bhead input.bh-title:focus{border-color:var(--rule-strong);background:var(--paper);outline:none}
+  .bh-fields{margin:12px 0 0;padding:10px 12px;border:1px dashed var(--rule-strong);border-radius:3px;background:var(--paper-2)}
+  .bh-fields .dh-dates{margin:0}
+  .bh-btns .sm.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .ck-wl{display:flex;flex-direction:column;gap:3px;font-size:11.5px}
+  .ck-wl div{display:flex;gap:7px;align-items:baseline;min-width:0}
+  .ck-wl b{font-weight:600;color:var(--ink)}
+  .ck-wl span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink-2)}
+  .ck-wl i{font-style:normal;font-family:var(--mono);font-size:10.5px;color:var(--watch)}
+  .ck-calday{display:none;margin-top:8px;padding-top:8px;border-top:1px dotted var(--rule-strong);font-size:12px}
+  .ck-calday.on{display:block}
+  .ck-cd-h{display:flex;gap:8px;align-items:baseline;margin-bottom:5px}
+  .ck-cd-x{margin-left:auto;color:var(--ink-3);text-decoration:none}
+  .ck-cd-r{display:grid;grid-template-columns:8px 78px minmax(0,1fr);gap:8px;align-items:center;padding:3px 0;cursor:pointer}
+  .ck-cd-r i{width:6px;height:6px;border-radius:50%;background:var(--pen)}
+  .ck-cd-r .k{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);font-weight:600;white-space:nowrap}
+  .ck-cd-r .tx{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ck-cd-r:hover .tx{text-decoration:underline}
+  .mg{margin:0 0 12px;padding:10px 12px 2px;border:1px solid var(--rule);border-radius:3px}
+  .mg-h{font-size:9px;letter-spacing:.2em;text-transform:uppercase;font-weight:600;color:var(--ink-3);margin-bottom:8px}
+  .mg-more summary{cursor:pointer;list-style:none}
+  .mg-more summary::-webkit-details-marker{display:none}
+  .mg-more summary::before{content:"▸ ";color:var(--ink-3)}
+  .mg-more[open] summary::before{content:"▾ "}
+  .mg-more:not([open]){padding-bottom:2px}
+  .mg-more summary .faint{text-transform:none;letter-spacing:0;font-weight:400}
+  .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 12px}
 </style>
 </head>
 <body>
@@ -1786,7 +1792,7 @@ const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod 
 /* The data format this copy understands. Bump it whenever a change adds or reshapes saved data —
    an older copy then refuses to save a file written by a newer one, instead of dropping fields
    it doesn't know about. */
-const DATA_VERSION=31;
+const DATA_VERSION=32;
 let dataNewer=0;   /* the version of a loaded file that's newer than this copy (0 = fine) */
 const SELFTEST=/[?&]selftest\b/.test(location.search);   /* sandbox: nothing is read from or written to your data */
 function newerMsg(){return `This data was saved by a newer Demand Desk (data version ${dataNewer}); this copy understands up to ${DATA_VERSION}. Saving is switched off so nothing gets dropped — open the file with the newest DemandDesk.html.`;}
@@ -2125,7 +2131,11 @@ function migrate(d){
   (d.calls||[]).forEach(c=>d.meetings.push(normMeeting({id:c.id,date:c.date,title:c.title||"(untitled call)",team:"",attendees:c.attendees,body:c.body,taskIds:c.taskIds,actions:[],createdAt:c.createdAt,updatedAt:c.updatedAt})));
   (d.teamMeetings||[]).forEach(m=>d.meetings.push(normMeeting({id:m.id,date:m.date,title:m.title||"(untitled meeting)",team:m.team||"",attendees:m.attendees,body:m.body,taskIds:[],actions:m.actions,createdAt:m.createdAt,updatedAt:m.updatedAt})));
   d.calls=[];d.teamMeetings=[];
-  d.todos=(d.todos||[]).map(normTodo);
+  /* v32: the Journal's to-do list became Tasks — one list for things to do */
+  (d.todos||[]).map(normTodo).forEach(x=>{if(d.jobs.some(j=>j.id===x.id))return;
+    d.jobs.push(normJob({id:x.id,title:x.text||"(to-do)",source:"self",received:isoTs(x.createdAt||Date.now()),due:x.due||"",status:x.done?"done":"open",
+      closedOn:x.done?isoTs(x.doneAt||x.createdAt||Date.now()):"",outcome:x.resolution||"",createdAt:x.createdAt,updatedAt:x.doneAt||x.createdAt}));});
+  d.todos=[];
   d.credentials=(d.credentials||[]).map(c=>({id:c.id||uid(),system:c.system||"",client:c.client||"",label:c.label||"",url:c.url||"",username:c.username||"",password:c.password||"",notes:c.notes||"",updatedAt:c.updatedAt||Date.now()}));
   d.journal=(d.journal||[]).map(j=>({id:j.id||uid(),date:j.date||todayStr(),title:j.title||"",body:j.body||"",taskIds:(j.taskIds||[]).slice(),epicIds:(j.epicIds||[]).slice(),createdAt:j.createdAt||Date.now(),updatedAt:j.updatedAt||Date.now()}));
   d.debug=(d.debug||[]).map(s=>({id:s.id||uid(),title:s.title||"(untitled debug)",demandId:s.demandId||"",taskId:s.taskId||"",status:s.status||"active",resume:s.resume||"",notes:s.notes||"",
@@ -2266,23 +2276,23 @@ async function loadFromText(txt,labelName){
 }
 const UNSAVED_MSG="You have changes that haven't reached your data file yet.\n\nOpening a different file replaces what's on screen (a copy is kept first — ⋯ → Restore a daily snapshot). Continue?";
 async function openFile(){if(!supportsFS)return importViaInput();
-  flushEdits();if(dirty&&!confirm(UNSAVED_MSG))return;
+  flushEdits();if(dirty&&!await askOk(UNSAVED_MSG,{title:"Open another file?",ok:"Open"}))return;
   try{const[h]=await window.showOpenFilePicker({types:[{description:"Demand Desk data",accept:{"application/json":[".json"]}}]});
     const f=await h.getFile();const txt=await f.text();
     if(dirty)await snapshotNow("before opening "+h.name);
     if(!await loadFromText(txt,h.name))return;
     fileHandle=h;diskConflict=null;dirty=false;setFileLabel(h.name);await noteFileSig();rememberHandle();resetActive();backupLocal();renderApp();toast("Opened "+h.name);
   }catch(e){if(e.name!=="AbortError")toast("Couldn't open: "+e.message,true);}}
-function saveGuardOk(action){
+async function saveGuardOk(action){
   if(SELFTEST){toast("Self-test sandbox — nothing is saved",true);return false;}
   if(dataNewer){toast(newerMsg(),true);return false;}
   if(pendingEncrypted){toast("Unlock first — nothing can be saved while the data is still locked",true);return false;}
   if(!isValidState(state)){toast("Save blocked — data looks corrupted; your file was NOT overwritten.",true);return false;}
-  if(hadContent&&contentCount()===0){return confirm("⚠ You're about to "+action+" an EMPTY dataset — every demand, debug session, journal entry etc. is currently empty.\n\nThis is unusual and may be a mistake. Continue anyway?");}
+  if(hadContent&&contentCount()===0){return askOk("You\'re about to "+action+" an EMPTY dataset — every demand, debug session, journal entry etc. is currently empty.\n\nThis is unusual and may be a mistake. Continue anyway?",{title:"⚠ An empty file?",ok:"Continue",danger:true});}
   return true;
 }
 async function saveFile(){flushEdits();if(!supportsFS)return exportDownload();
-  if(!saveGuardOk("save"))return;
+  if(!await saveGuardOk("save"))return;
   try{
     /* a remembered file that just needs permission again: re-link it rather than
        opening a Save-As dialog that could fork the data into a second file */
@@ -2293,9 +2303,9 @@ async function saveFile(){flushEdits();if(!supportsFS)return exportDownload();
     await writeFile();diskConflict=null;lastSaveAuto=false;setFileLabel(fileHandle.name);rememberHandle();renderSaveState();maybeSnapshot();toast("Saved → "+fileHandle.name+(isEncrypted()?" 🔒":""));
   }catch(e){if(e.name!=="AbortError")toast("Save failed: "+e.message,true);}}
 function setFileLabel(n){const el=document.getElementById("fileLabel");if(el)el.textContent=n?("— "+n):"";}
-async function exportDownload(){if(!saveGuardOk("download"))return;const b=new Blob([await serializeData()],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="demand-desk-data.json";a.click();URL.revokeObjectURL(a.href);if(!supportsFS)dirty=false; /* only when the download IS the save — otherwise the linked file is still behind */
+async function exportDownload(){if(!await saveGuardOk("download"))return;const b=new Blob([await serializeData()],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="demand-desk-data.json";a.click();URL.revokeObjectURL(a.href);if(!supportsFS)dirty=false; /* only when the download IS the save — otherwise the linked file is still behind */
   renderSaveState();maybeSnapshot();toast("Downloaded data file"+(isEncrypted()?" 🔒":""));}
-function importViaInput(){flushEdits();if(dirty&&!confirm(UNSAVED_MSG))return;
+async function importViaInput(){flushEdits();if(dirty&&!await askOk(UNSAVED_MSG,{title:"Open another file?",ok:"Open"}))return;
   const i=document.createElement("input");i.type="file";i.accept=".json,application/json";
   i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{try{if(dirty)await snapshotNow("before importing "+f.name);if(!await loadFromText(r.result,f.name))return;dirty=false;resetActive();backupLocal();renderApp();toast("Imported "+f.name);}catch(e){toast("Bad file: "+e.message,true);}};r.readAsText(f);};i.click();}
 
@@ -2483,7 +2493,7 @@ function renderToday(){
         <dt>Demands</dt><dd>Every requirement/change: branching subtasks, objects touched, transports, reference facts, post-delivery Tech Spec.</dd>
         <dt>Epics</dt><dd>Group related demands under one initiative — each keeps its own transports and go-live target.</dd>
         <dt>Debug</dt><dd>Breakpoints, findings &amp; a “resume here” note so you're never lost after a weekend.</dd>
-        <dt>Journal</dt><dd>One consolidated rough-notes entry per day, plus your personal action items.</dd>
+        <dt>Journal</dt><dd>One consolidated rough-notes entry per day.</dd>
         <dt>Meetings</dt><dd>Call &amp; team-meeting notes with action points, linkable to demands.</dd>
         <dt>Playbook</dt><dd>Processes, FAQs, freeze periods, recurring obligations, contact lists.</dd>
         <dt>Vault</dt><dd>System credentials — set a master password first.</dd>
@@ -2507,7 +2517,6 @@ function renderToday(){
   const stale=tasks.filter(t=>["open","progress"].includes(t.status)&&(Date.now()-t.updatedAt)>14*86400000&&!(t.nextAction&&t.nextAction.date>todayStr()));
   const actions=[];state.meetings.forEach(m=>m.actions.forEach(a=>{if(!a.done)actions.push({a,m});}));
   actions.sort((x,y)=>(x.a.due||"9999").localeCompare(y.a.due||"9999"));
-  const mytodos=state.todos.filter(x=>!x.done).sort((a,b)=>(a.due||"9999").localeCompare(b.due||"9999"));
   const todayJ=state.journal.find(j=>j.date===todayStr());
 
   const cards=[];
@@ -2524,7 +2533,6 @@ function renderToday(){
   card("Waiting on","⏳","warn",waiting.map(t=>({main:dlabel(t),sub:`${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+"d":""}`,go:goDemand(t.id)})));
   card("Due this week","📅","",dueWeek.map(t=>({main:dlabel(t),sub:`${earliestOpenDue(t)} (${daysUntil(earliestOpenDue(t))}d)`,go:goDemand(t.id)})));
   card("Open action points","☑","",actions.map(({a,m})=>({main:esc(a.text||"(no text)"),sub:`${esc(a.owner||"—")}${m.team?" · "+esc(m.team):""}`,go:()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;renderApp();}})));
-  card("My action items","✅","",mytodos.map(x=>({main:esc(x.text||"(no text)"),sub:x.due?(daysUntil(x.due)<0?"⚠ "+x.due:x.due):"",go:()=>{view="journal";journalTodos=true;renderApp();}})));
   card("Expired images — delete for data hygiene","🧹","warn",expiredImages().map(im=>({main:esc(im.label||im.file),sub:"expired "+im.expiry,go:()=>gotoImage(im)})));
   const epicsDue=state.epics.filter(e=>!["delivered","closed"].includes(e.status)&&e.targetDate&&daysUntil(e.targetDate)<=21)
     .sort((a,b)=>a.targetDate.localeCompare(b.targetDate));
@@ -2561,11 +2569,8 @@ function renderToday(){
     return `<div class="dashcard ${c.tone}"><h3>${c.icon} ${c.title}<span class="cnt">${c.items.length}</span></h3>${shown.map((it,ii)=>`<div class="dashitem ${String(it.sub||"").replace(/<[^>]+>/g,"").length>26?"two":""}" data-c="${ci}" data-i="${ii}"><span class="di-main">${it.main}</span>${it.sub?`<span class="di-sub">${it.sub}</span>`:""}${it.acts?`<span class="di-acts">${it.acts.map((a,ai)=>`<button class="sm ghost" data-c="${ci}" data-i="${ii}" data-a="${ai}" title="${esc(a[2]||"")}">${a[0]}</button>`).join("")}</span>`:""}</div>`).join("")}${c.items.length>shown.length?`<div class="dashitem" data-more="${ci}"><span class="di-main" style="color:var(--accent)">＋ ${c.items.length-shown.length} more…</span></div>`:""}</div>`;}).join("")+`</div>`;
   html+=`<div class="dash-grid dg-row" style="margin-top:14px"><div class="dashcard"><h3>📓 Today's journal</h3>${(todayJ&&(todayJ.body||todayJ.title))?`<div style="font-size:13px;white-space:pre-wrap;max-height:120px;overflow:auto;line-height:1.5">${esc(((todayJ.title?todayJ.title+"\n":"")+todayJ.body)).slice(0,400)}</div><button class="sm" id="openJ" style="margin-top:8px">Open journal</button>`:`<div class="dash-empty">No entry for today yet.</div><button class="sm" id="openJ" style="margin-top:8px">＋ Start today's note</button>`}</div>${efTodayHTML()}</div>`;
   const attn=cards.reduce((n,c)=>n+c.items.length,0),wrap=encWarnHTML()+wrapUpHTML(),ag=agendaItems();
-  if(wrap&&!benchOn())html=wrap+html;
-  host.innerHTML=benchOn()
-    ?`<div class="dash cockpit"><div class="ck-in">${cockpitHTML(agendaHTML(ag))}${wrap}<div class="ck-sech"><span class="ck-lbl">Needs attention · ${attn}</span></div>${html}</div></div>`
-    :`<div class="dash"><div class="dash-head"><h1>Today</h1><span class="faint">${new Date().toDateString()}</span></div>${agendaHTML(ag)}${html}</div>`;
-  if(benchOn())mountCockpit(host);
+  host.innerHTML=`<div class="dash cockpit"><div class="ck-in">${cockpitHTML(agendaHTML(ag))}${wrap}<div class="ck-sech"><span class="ck-lbl">Needs attention · ${attn}</span></div>${html}</div></div>`;
+  mountCockpit(host);
   efWireToday(host);wireAgenda(host,ag);
   host.querySelectorAll(".dashitem[data-c]").forEach(el=>el.onclick=()=>cards[+el.dataset.c].items[+el.dataset.i].go());
   host.querySelectorAll(".di-acts button").forEach(b=>b.onclick=e=>{e.stopPropagation();cards[+b.dataset.c].items[+b.dataset.i].acts[+b.dataset.a][1]();});
@@ -2686,8 +2691,7 @@ function renderTeamPage(host){const ppl=state.people.slice().sort((a,b)=>(b.acti
     cq(".tm-r").onchange=e=>{p.role=e.target.value.trim();markDirty();};
     cq(".tm-gone").onchange=e=>{p.active=!e.target.checked;markDirty();renderApp();};
     cq(".tm-del").onclick=()=>{const ds=demandsOf(p.id);
-      if(!confirm(ds.length?`Remove ${p.name}? They come off ${ds.length} demand(s) too — or tick “moved on” instead to keep them there.`:`Remove ${p.name} from your team list?`))return;
-      ds.forEach(t=>setBuilders(t,t.builders.filter(x=>x!==p.id)));state.people=state.people.filter(x=>x.id!==p.id);markDirty();renderApp();};
+      deleteWithUndo(`Removed ${p.name}`,()=>{ds.forEach(t=>setBuilders(t,t.builders.filter(x=>x!==p.id)));state.people=state.people.filter(x=>x.id!==p.id);});};
     c.querySelectorAll(".tm-d").forEach(r=>r.onclick=()=>{view="demands";activeId=r.dataset.id;activeTab="overview";playTeam=false;renderApp();});});}
 
 /* ===================== TASKS — work that isn't a demand =====================
@@ -2696,7 +2700,7 @@ function renderTeamPage(host){const ppl=state.people.slice().sort((a,b)=>(b.acti
    what happened (calls, analysis, updates in, what you sent), the next action and who you're
    waiting on, reference facts, and finally what you reported back and whether it was in time.
    Hours are logged against a task like any demand (effort key "j:<id>"). Stored as state.jobs
-   (state.todos is the Journal's quick checklist; state.tasks are demands). */
+   (state.tasks are demands; the Journal's old to-do list became tasks in v32). */
 const JOB_STATUS={open:{l:"To do",cls:"open"},progress:{l:"In progress",cls:"progress"},done:{l:"Done",cls:"delivered"},dropped:{l:"Dropped",cls:"closed"}};
 const JOB_SRC={call:"📞 Call",meeting:"👥 Meeting",email:"✉ Email",chat:"💬 Chat",self:"🙋 Myself",other:"Other"};
 const JOB_LOG={call:{i:"📞",l:"Call"},analysis:{i:"🔍",l:"Analysis"},update:{i:"📨",l:"Update in"},sent:{i:"✉",l:"Sent / reported"},note:{i:"📝",l:"Note"},step:{i:"✓",l:"Step done"}};
@@ -2765,21 +2769,27 @@ function renderJobDetail(){const j=activeJob(),host=document.getElementById("det
   if(!j){host.innerHTML=nopick("Select a task, or create one —<br>anything you've been asked that<br>isn't a demand.");return;}
   const st=JOB_STATUS[j.status],na=jobOpen(j)&&j.nextAction.date?j.nextAction:null,nad=na?daysUntil(na.date):0,tm=jobTiming(j),bench=benchOn();
   const asked=[...new Set(state.jobs.map(x=>x.askedBy).filter(Boolean))].sort();
-  host.innerHTML=`<div class="detail-head"><div class="dh-top"><div style="flex:1">
-      <input id="jb-title" value="${esc(j.title)}" style="font-size:18px;font-weight:650;border-color:transparent;background:transparent;padding:2px 4px;width:100%">
-      <div class="dh-dates" style="margin-top:8px">
+  const hOpen=hdrOpen.has(j.id)||j.title==="(untitled task)",hrs=jobHours(j),dn=j.due?daysUntil(j.due):null;
+  host.innerHTML=`<div class="detail-head bhead" style="--pen:${JOB_PEN[j.status]}">
+    <div class="bh-top"><div class="bh-l">
+        <div class="bh-no"><span class="bh-id">Task</span> · ${esc(JOB_SRC[j.source])}${j.askedBy?` · asked by ${esc(j.askedBy)}`:""}</div>
+        <input id="jb-title" class="bh-title" value="${esc(j.title)}" title="Click to rename"></div>
+      <div class="bh-acts"><div class="seg" id="jb-seg" title="Status">${Object.entries(JOB_STATUS).map(([k,v])=>`<button data-s="${k}" class="${k===j.status?"on":""}" style="--pen:${JOB_PEN[k]}"><i></i>${v.l}</button>`).join("")}</div>
+        <div class="bh-btns"><button class="sm" id="jb-logt" title="Log time against this task">⏱ Log time</button>${jobOpen(j)?`<button class="sm primary" id="jb-close" title="Record what you reported back">✓ Close…</button>`:""}<button class="sm ${hOpen?"on":""}" id="jb-det" title="Status, who asked, how it came in, the dates">✎ Details</button><button class="sm ghost danger" id="jb-del" title="Delete this task">🗑</button></div></div></div>
+    ${roHTML([{k:"Received",v:shortD(j.received)},
+      {k:"Expected",v:j.due?shortD(j.due)+(jobOpen(j)&&dn!=null?`<small>${dn<0?-dn+" d late":dn===0?"today":"in "+dn+" d"}</small>`:""):"—",cls:jobOpen(j)&&dn!=null?(dn<0?"bad":dn<=1?"warn":""):""},
+      {k:"Logged",v:hrs?U(efFh(hrs),"h"):"—"},{k:"Log",v:U(j.log.length,j.log.length===1?"entry":"entries")},
+      jobWaiting(j)?{k:"Waiting on",v:esc(j.waiting.on)+(jobWaitDays(j)!=null?`<small>${jobWaitDays(j)} d</small>`:""),cls:"warn"}:null],"stack")}
+    <div class="bh-fields ${hOpen?"":"hide"}"><div class="dh-dates" style="margin-top:8px">
         <span>Status <select id="jb-status" style="width:130px">${Object.entries(JOB_STATUS).map(([k,v])=>`<option value="${k}" ${k===j.status?"selected":""}>${v.l}</option>`).join("")}</select></span>
         <span>Asked by <input id="jb-asked" list="dl-jasked" value="${esc(j.askedBy)}" placeholder="e.g. my manager, team mailbox" style="width:180px"><datalist id="dl-jasked">${asked.map(a=>`<option value="${esc(a)}">`).join("")}</datalist></span>
         <span>Came in by <select id="jb-src" style="width:130px">${Object.entries(JOB_SRC).map(([k,v])=>`<option value="${k}" ${k===j.source?"selected":""}>${v}</option>`).join("")}</select></span>
         <span>Received <input type="date" id="jb-rec" value="${j.received}" style="width:150px"></span>
         <span>Expected by <input type="date" id="jb-due" value="${j.due}" style="width:150px"></span>
-      </div><canvas class="jb-rail" title="From the ask to the answer"></canvas><div class="jb-railnote">${(()=>{const age=-daysUntil(j.received)+1,n=j.due?daysUntil(j.due):null,tm=jobTiming(j);
+      </div></div>
+    <canvas class="jb-rail" title="From the ask to the answer"></canvas><div class="jb-railnote">${(()=>{const age=-daysUntil(j.received)+1,n=j.due?daysUntil(j.due):null,tm=jobTiming(j);
         if(j.status==="done")return tm?`Reported back ${tm.txt}`:"Reported back";if(j.status==="dropped")return "Dropped";
-        return `Day ${age} · `+(n==null?"no date expected":n>0?`expected in ${n} d`:n===0?"expected today":`${-n} d past expected`);})()}</div></div>
-      <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end"><span class="pill ${st.cls}" style="font-size:12px">${st.l}</span>
-        <button class="sm" id="jb-logt" title="Log time against this task">⏱ Log time</button>
-        ${jobOpen(j)?`<button class="sm primary" id="jb-close" title="Record what you reported back">✓ Close…</button>`:""}
-        <button class="sm danger" id="jb-del">🗑 Delete</button></div></div>
+        return `Day ${age} · `+(n==null?"no date expected":n>0?`expected in ${n} d`:n===0?"expected today":`${-n} d past expected`);})()}</div>
     ${na?(bench?`<div class="bband ${nad<=0?"watch":""}"><span class="k">Next action · ${nad<0?(-nad)+" d ago":nad===0?"today":"in "+nad+" d"}</span><span class="tx"><b>${esc(na.note||"(no note)")}</b> <span class="mono faint">${na.date}</span></span><button class="sm" id="jb-nadone">✓ Done</button><button class="sm ghost" id="jb-naedit">✎</button></div>`
        :`<div class="nextact ${nad<=0?"due":""}">⏰ Next action <b class="mono">${na.date}</b> — ${esc(na.note||"(no note)")} <button class="ghost sm" id="jb-nadone">✓ Done</button><button class="ghost sm" id="jb-naedit">✎</button></div>`)
       :jobOpen(j)?`<div class="jb-bandrow"><button class="sm ghost" id="jb-naset">⏰ Set the next action</button></div>`:""}
@@ -2817,12 +2827,13 @@ function renderJobDetail(){const j=activeJob(),host=document.getElementById("det
     if((v==="done"||v==="dropped")&&jobOpen(j)){e.target.value=j.status;openJobClose(j,v);return;}
     if(jobOpen({status:v})&&!jobOpen(j)){j.closedOn="";jobLog(j,"note","Reopened");}
     j.status=v;touch(j);renderApp();};
+  host.querySelectorAll("#jb-seg button").forEach(b=>b.onclick=()=>{if(b.dataset.s===j.status)return;const sel=q("#jb-status");sel.value=b.dataset.s;sel.onchange({target:sel});});
+  q("#jb-det").onclick=()=>hdrToggle(j.id,renderJobDetail);
   q("#jb-brief").onchange=e=>{j.brief=e.target.value;touch(j);};
   {const o=q("#jb-out");if(o)o.onchange=e=>{j.outcome=e.target.value;touch(j);};}
   q("#jb-logt").onclick=q("#jb-logt2").onclick=()=>openLogTime({key:"j:"+j.id});
   {const c=q("#jb-close");if(c)c.onclick=()=>openJobClose(j,"done");}
-  q("#jb-del").onclick=()=>{const h=jobHours(j);if(!confirm(`Delete “${j.title}”?${h?` The ${efFh(h)} h logged on it stay in Effort as “(deleted task)”.`:""}`))return;
-    state.jobs=state.jobs.filter(x=>x.id!==j.id);activeJobId=null;markDirty();renderApp();};
+  q("#jb-del").onclick=()=>deleteWithUndo(`Deleted “${j.title}”`,()=>{state.jobs=state.jobs.filter(x=>x.id!==j.id);activeJobId=null;});
   {const d=q("#jb-nadone");if(d)d.onclick=()=>nextActionDone(j);const ed=q("#jb-naedit");if(ed)ed.onclick=()=>openNextAction(j);const s=q("#jb-naset");if(s)s.onclick=()=>openNextAction(j);}
   {const w=q("#jb-won");if(w)w.onchange=e=>{const v=e.target.value.trim();if(v&&!j.waiting.on)jobLog(j,"note",`Waiting on ${v}`);j.waiting={on:v,since:v?(j.waiting.since||todayStr()):""};touch(j);renderApp();};
    const ws=q("#jb-wsince");if(ws)ws.onchange=e=>{j.waiting.since=e.target.value;touch(j);renderApp();};}
@@ -2913,10 +2924,10 @@ function dvSaved(){let a=null;try{a=JSON.parse(viewPref("savedViews","null"));}c
   if(fresh)dvSetSaved(out); /* ids must be stable, or a chip click can't find its view */
   return out;}
 function dvSetSaved(a){setViewPref("savedViews",JSON.stringify(a.map(x=>({id:x.id,name:x.name,view:dvNorm(x.view)}))));}
-function dvSaveCurrent(){const v=dvGet(),saved=dvSaved();
-  const name=(prompt("Name this view — it becomes a one-click chip above the list:","")||"").trim();if(!name)return false;
+async function dvSaveCurrent(){const v=dvGet(),saved=dvSaved();
+  const name=((await askText("Save this view",{label:"Name — it becomes a one-click chip above the list",ok:"Save"}))||"").trim();if(!name)return false;
   const ex=saved.find(s=>s.name.toLowerCase()===name.toLowerCase());
-  if(ex){if(!confirm(`Replace the saved view “${ex.name}” with the current settings?`))return false;ex.view=v;}
+  if(ex){if(!await askOk(`“${ex.name}” gets the current settings.`,{title:"Replace a saved view?",ok:"Replace"}))return false;ex.view=v;}
   else saved.push({id:uid(),name,view:v});
   dvSetSaved(saved);toast(`Saved view “${name}”`);return true;}
 
@@ -3034,7 +3045,7 @@ function renderDemandSidebar(){
   document.getElementById("btnPortfolio").onclick=openPortfolio;
   document.getElementById("btnAging").onclick=openAging;
   document.querySelectorAll(".dvview[data-id]").forEach(b=>b.onclick=()=>{const s=dvSaved().find(x=>x.id===b.dataset.id);if(s){dvSet(s.view);renderDemandSidebar();}});
-  {const sv=document.getElementById("dvSave");if(sv)sv.onclick=()=>{if(dvSaveCurrent())renderDemandSidebar();};}
+  {const sv=document.getElementById("dvSave");if(sv)sv.onclick=async()=>{if(await dvSaveCurrent())renderDemandSidebar();};}
   document.getElementById("dvOpen").onclick=openViewPanel;
   const q=document.getElementById("dvQ"),qx=document.getElementById("dvQx");
   /* oninput only — the list updates as you type without redrawing the box under the cursor */
@@ -3100,13 +3111,14 @@ function openViewPanel(){
     panel.querySelectorAll("select[data-f]").forEach(s=>s.onchange=()=>update(x=>{if(s.value)x.f[s.dataset.f]=s.value;else delete x.f[s.dataset.f];}));
     panel.querySelector("#dv-reset").onclick=()=>update(x=>{Object.assign(x,dvBlank());});
     panel.querySelector("#dv-done").onclick=close;
-    panel.querySelector("#dv-save").onclick=()=>{if(dvSaveCurrent()){renderDemandSidebar();draw();}};
+    panel.querySelector("#dv-save").onclick=async()=>{if(await dvSaveCurrent()){renderDemandSidebar();draw();}};
     panel.querySelectorAll(".dvsv").forEach(el=>{const id=el.dataset.id;
       const edit=fn=>{const a=dvSaved(),i=a.findIndex(s=>s.id===id);if(i<0)return;if(fn(a,i)===false)return;dvSetSaved(a);renderDemandSidebar();draw();};
       el.querySelector(".dvsv-n").onclick=()=>{const s=dvSaved().find(x=>x.id===id);if(s){dvSet(s.view);renderDemandSidebar();draw();}};
       el.querySelector(".sv-up").onclick=()=>edit((a,i)=>{if(!i)return false;[a[i-1],a[i]]=[a[i],a[i-1]];});
-      el.querySelector(".sv-ren").onclick=()=>edit((a,i)=>{const nm=(prompt("Rename view:",a[i].name)||"").trim();if(!nm)return false;a[i].name=nm;});
-      el.querySelector(".sv-del").onclick=()=>edit((a,i)=>{if(!confirm(`Delete the saved view “${a[i].name}”?`))return false;a.splice(i,1);});});
+      el.querySelector(".sv-ren").onclick=async()=>{const sv=dvSaved().find(x=>x.id===id);if(!sv)return;const nm=((await askText("Rename the view",{value:sv.name,ok:"Rename"}))||"").trim();if(nm)edit((a,i)=>{a[i].name=nm;});};
+      el.querySelector(".sv-del").onclick=()=>{const sv=dvSaved().find(x=>x.id===id);edit((a,i)=>{a.splice(i,1);});
+        if(sv)efToastUndo(`Deleted the view “${sv.name}”`,()=>{const a=dvSaved();a.push(sv);dvSetSaved(a);renderDemandSidebar();draw();});};});
     const rs=panel.querySelector("#sv-restore");if(rs)rs.onclick=()=>{const a=dvSaved();
       DV_PRESETS.forEach(p=>{if(!a.some(s=>s.name===p.name))a.push({id:uid(),name:p.name,view:dvNorm(p.view)});});dvSetSaved(a);renderDemandSidebar();draw();};
     panel.scrollTop=keep;place();
@@ -3124,27 +3136,7 @@ function viewPref(k,def){try{const v=localStorage.getItem("demanddesk."+k);retur
 function setViewPref(k,v){try{localStorage.setItem("demanddesk."+k,v);}catch(e){}}
 function groupByEpic(){return viewPref("groupEpic","1")==="1";}
 const EPIC_GROUP_RANK={active:0,onhold:1,delivered:2,closed:3};
-function demandCard(t,grouped,cidx){if(benchOn())return demandCardBench(t,grouped,cidx);const st=STATUS[t.status],sub=countSubs(t.subtasks),due=earliestOpenDue(t),dc=dueClass(due,t.status);
-    const lc=linkedCount(t.id);
-    return `<div class="tcard s-${t.status} ${t.id===activeId?"active":""}" data-id="${t.id}">
-      <div class="demand">${esc(t.demandId||"— no demand id —")}</div>
-      <div class="ttitle">${esc(t.title)}</div>
-      <div class="meta"><span class="pill ${st.cls}">${st.label}</span>
-        ${t.system?sysPill(t.system,"",t.client):""}
-        ${isWaiting(t)?`<span class="pill" style="color:var(--amber);border-color:var(--amber-line)">⏳ ${esc(t.waiting.on)}${waitDays(t)!=null?" "+waitDays(t)+"d":""}</span>`:""}
-        ${(()=>{const ep=epicById(t.epicId);if(!ep)return "";if(grouped)return t.wave?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">${esc(t.wave)}</span>`:"";
-          return `<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">◆ ${esc(ep.code||ep.name)}${t.wave?" · "+esc(t.wave):""}</span>`;})()}
-        ${t.project?`<span class="pill" style="color:var(--accent2);border-color:var(--violet-line)">▦ ${esc(t.project)}</span>`:""}
-        ${t.theme?`<span class="pill type">${esc(t.theme)}</span>`:`<span class="pill type">${esc(t.type)}</span>`}
-        ${t.requestor?`<span class="faint">👤 ${esc(t.requestor)}</span>`:""}
-        ${buildersOf(t).length?`<span class="bld-tag" title="Built by">👷 ${esc(builderNames(t))}</span>`:""}
-        ${sub.n?`<span class="faint">☑ ${sub.done}/${sub.n}</span>`:""}
-        ${lc?`<span class="lc-badge">🔗 ${lc}</span>`:""}
-        ${(t.reference&&t.reference.length)?`<span class="lc-badge">🔑 ${t.reference.length}</span>`:""}
-        ${reworkCount(t)?`<span class="lc-badge" style="color:var(--red)">↻ ${reworkCount(t)}</span>`:""}
-        ${(()=>{const n=openClashCount(t,cidx);return n?`<span class="clashtag" title="${n} object(s) also in flight in another demand">⚠ ${n} clash</span>`:"";})()}
-        ${t.nextAction&&t.nextAction.date&&t.status!=="closed"?`<span class="due ${nextActionDue(t)?"soon":""}" title="Next action${t.nextAction.note?": "+esc(t.nextAction.note):""}">⏰ ${t.nextAction.date.slice(5)}</span>`:""}
-        ${due?`<span class="due ${dc}">⚑ ${due}${dc==="over"?" ("+(-daysUntil(due))+"d)":""}</span>`:""}</div></div>`;}
+function demandCard(t,grouped,cidx){return demandCardBench(t,grouped,cidx);}
 function renderList(){
   if(demandsMode()==="board"){renderBoard();return;}
   const el=document.getElementById("taskList");if(!el)return;
@@ -3186,37 +3178,9 @@ function renderList(){
 }
 function renderDetail(){
   const t=activeTask(),host=document.getElementById("detail");
-  if(!benchOn()&&activeTab==="overview")activeTab="work";   /* Overview is a Bench tab; classic opens on Work */
-  if(!t){host.innerHTML=nopick("Select a demand on the left,<br>or create a new one to begin.");if(benchOn())renderCtxRail();return;}
+  if(!t){host.innerHTML=nopick("Select a demand on the left,<br>or create a new one to begin.");renderCtxRail();return;}
   const st=STATUS[t.status],sub=countSubs(t.subtasks),lc=linkedCount(t.id);
-  host.innerHTML=benchOn()?demandHeadBench(t,sub,lc):`
-    <div class="detail-head">
-      <div class="dh-top"><div style="flex:1">
-        <div class="dh-demand">${esc(t.demandId||"— no demand id —")}</div>
-        <h1>${esc(t.title)}</h1>
-        <div class="dh-dates"><span>Type: <b>${esc(t.type)}</b></span>${t.system?`<span>System: ${sysPill(t.system,"",t.client)}</span>`:""}${(()=>{const ep=epicById(t.epicId);return ep?`<span>Epic: <b class="ep-go" style="color:var(--accent2);cursor:pointer">◆ ${esc(epicLabel(ep))}</b>${t.wave?` · <b>${esc(t.wave)}</b>`:""}</span>`:"";})()}${t.project?`<span>Project: <b>▦ ${esc(t.project)}</b></span>`:""}${t.theme?`<span>Theme: <b>${esc(t.theme)}</b></span>`:""}${t.requestor?`<span>Requestor: <b>👤 ${esc(t.requestor)}</b></span>`:""}<span>Built by: <a class="bld-link" id="dh-build" title="Who's building it">👷 ${buildersOf(t).length?esc(builderNames(t)):"you"}</a></span><span>Received: <b class="mono">${t.receivedDate||"—"}</b></span><span>Due: <b class="mono due ${dueClass(t.dueDate,t.status)}">${t.dueDate||"—"}</b></span>${reworkCount(t)?`<span style="color:var(--red)">↻ ${reworkCount(t)} rework cycle(s)</span>`:""}</div>
-        ${t.nextAction&&t.nextAction.date?`<div class="nextact ${nextActionDue(t)?"due":""}">⏰ Next action <b class="mono">${t.nextAction.date}</b>${(()=>{const n=daysUntil(t.nextAction.date);return n<0?` (${-n}d ago)`:n===0?" (today)":` (in ${n}d)`;})()}${t.nextAction.note?` — ${esc(t.nextAction.note)}`:""}
-          <button class="ghost sm" id="na-done" title="Did it — note it in History and clear">✓ Done</button><button class="ghost sm" id="na-edit" title="Change date or text">✎</button></div>`:""}
-        ${(()=>{const cl=taskClashes(t).filter(x=>x.open.length);if(!cl.length)return "";const x=cl[0],o=x.open[0],more=cl.reduce((n,y)=>n+y.open.length,0)-1;
-          return `<div class="clashband"><canvas class="orbit"></canvas><span>⚠ <b class="mono">${esc(x.o.name)}</b> is also in flight in <a class="cb-go" data-id="${o.t.id}">${esc(demandLabel(o.t))}</a> <span class="clw">— ${esc(clashWhere(o))}${more>0?` · +${more} more`:""}</span></span><button class="sm ghost cb-obj">Objects ›</button></div>`;})()}
-      </div>
-      <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
-        ${benchOn()?statusSegHTML(t):`<select id="dh-status" class="pill ${st.cls} statsel" title="Change status — logged in History">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${k===t.status?"selected":""}>${v.label}</option>`).join("")}</select>`}
-        ${isWaiting(t)?`<span class="pill" style="font-size:12px;color:var(--amber);border-color:var(--amber-line)">⏳ Waiting on ${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+"d":""}</span>`:""}
-        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="sm" id="btnNext" title="When should this demand come back up on Today?">⏰ Next action</button><button class="sm" id="dhWin" title="Note a win about this demand (W)">🏆 Win</button><button class="sm" id="btnSpec" title="Generate post-delivery technical spec">📄 Tech Spec</button><button class="sm" id="btnEditTask">✎ Edit</button><button class="sm danger" id="btnDelTask">🗑 Delete</button></div>
-      </div></div>
-      <div class="tabs">
-        <button class="tab ${activeTab==="work"?"active":""}" data-tab="work">Work &amp; Subtasks<span class="count">${sub.n}</span></button>
-        <button class="tab ${activeTab==="objects"?"active":""}" data-tab="objects">Objects<span class="count">${t.objects.length}</span>${(()=>{const n=openClashCount(t);return n?`<span class="clashtag" title="Object(s) also in flight in another demand">⚠ ${n}</span>`:"";})()}</button>
-        <button class="tab ${activeTab==="transports"?"active":""}" data-tab="transports">Transports<span class="count">${t.transports.length}</span></button>
-        <button class="tab ${activeTab==="reference"?"active":""}" data-tab="reference">Reference<span class="count">${(t.reference||[]).length}</span></button>
-        <button class="tab ${activeTab==="calls"?"active":""}" data-tab="calls">Linked<span class="count">${lc}</span></button>
-        <button class="tab ${activeTab==="images"?"active":""}" data-tab="images">Images<span class="count">${imagesFor("demand",t.id).length}</span></button>
-        <button class="tab ${activeTab==="effort"?"active":""}" data-tab="effort">Effort<span class="count">${efFh(efSum(efFor(t.id)))} h</span></button>
-        <button class="tab ${activeTab==="history"?"active":""}" data-tab="history">History<span class="count">${(t.timeline||[]).length}</span></button>
-        <span class="tind"></span>
-      </div>
-    </div><div class="detail-body" id="detailBody"></div>`;
+  host.innerHTML=demandHeadBench(t,sub,lc);
   const epGo=host.querySelector(".ep-go");if(epGo)epGo.onclick=()=>{view="epics";activeEpicId=t.epicId;renderApp();};
   host.querySelector("#btnSpec").onclick=()=>openTechSpec(t);
   host.querySelector("#btnEditTask").onclick=()=>openTaskModal(t);
@@ -3233,11 +3197,11 @@ function renderDetail(){
    const co=host.querySelector(".cb-obj");if(co)co.onclick=()=>{activeTab="objects";renderDetail();enterPulse("detail");};
    const ob=host.querySelector(".clashband canvas");if(ob&&benchOn())DK.scope(ob,drawOrbit);
    const nt=host.querySelector(".natick");if(nt)DK.scope(nt,drawTick);}
-  host.querySelector("#btnDelTask").onclick=()=>{if(confirm("Delete this demand and all its subtasks, objects, transports"+(efFor(t.id).length?" and the "+efFh(efSum(efFor(t.id)))+" h logged against it":"")+"?")){state.tasks=state.tasks.filter(x=>x.id!==t.id);state.efforts=state.efforts.filter(e=>e.taskId!==t.id);state.meetings.forEach(m=>m.taskIds=m.taskIds.filter(id=>id!==t.id));state.journal.forEach(j=>j.taskIds=(j.taskIds||[]).filter(id=>id!==t.id));state.debug.forEach(s=>{if(s.taskId===t.id)s.taskId="";});state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="demand"&&l.id===t.id)));activeId=null;markDirty();renderApp();}};
+  host.querySelector("#btnDelTask").onclick=()=>deleteWithUndo(`Deleted ${demandLabel(t)}`,()=>{state.tasks=state.tasks.filter(x=>x.id!==t.id);state.efforts=state.efforts.filter(e=>e.taskId!==t.id);state.meetings.forEach(m=>m.taskIds=m.taskIds.filter(id=>id!==t.id));state.journal.forEach(j=>j.taskIds=(j.taskIds||[]).filter(id=>id!==t.id));state.debug.forEach(s=>{if(s.taskId===t.id)s.taskId="";});state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="demand"&&l.id===t.id)));activeId=null;});
   host.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{activeTab=b.dataset.tab;renderDetail();enterPulse("detail");});
   const body=host.querySelector("#detailBody");
   if(activeTab==="overview")renderOverview(body,t);
-  else if(activeTab==="work")(benchOn()?renderWorkBench:renderWork)(body,t);
+  else if(activeTab==="work")renderWorkBench(body,t);
   else if(activeTab==="objects")renderObjects(body,t);
   else if(activeTab==="transports")renderTransports(body,t);
   else if(activeTab==="reference")renderReference(body,t);
@@ -3288,7 +3252,7 @@ function renderHistory(body,t){
       <span>Requirement changes: <b style="color:${changeEvents(t).length?"var(--accent2)":"var(--txt)"}">${changeEvents(t).length}</b></span>
       <span>Delivered: <b>${dd.length?dd.join(", "):"—"}</b></span></div>
     <div id="tlList"></div>`;
-  body.querySelector("#addEvt").onclick=()=>{const n=prompt("Timeline note (e.g. 'QA raised bug on PA0008'):");if(n){logTimeline(t,"note","","",n);touch(t);renderHistory(body,t);}};
+  body.querySelector("#addEvt").onclick=async()=>{const n=await askText("Add a note to History",{placeholder:"e.g. QA raised a bug on PA0008",ok:"Add"});if(n&&n.trim()){logTimeline(t,"note","","",n);touch(t);renderHistory(body,t);}};
   const host=body.querySelector("#tlList");
   if(!tl.length){host.innerHTML=`<div class="faint" style="font-size:12px">No history yet. Status changes are logged automatically.</div>`;return;}
   const bench=benchOn();let lastM="",idx=0;host.classList.toggle("btl",bench);
@@ -3310,29 +3274,6 @@ function renderHistory(body,t){
 }
 function nopick(msg){return `<div class="nopick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16v16H4z"/><path d="M4 9h16M9 9v11"/></svg><div>${msg}</div></div>`;}
 
-function renderWork(body,t){
-  const pinned=(t.reference||[]).filter(r=>r.pinned);
-  body.innerHTML=`
-    ${pinned.length?`<div class="pinbox" id="pinBox"></div>`:""}
-    <div class="grid2" style="margin-bottom:6px">
-      <div class="field"><label>What is to be done</label><textarea id="fDesc" placeholder="Scope, requirement summary, acceptance criteria…">${esc(t.description)}</textarea></div>
-      <div class="field"><label>Working notes / status log</label><textarea id="fNotes" placeholder="Running notes, blockers, who asked, decisions…">${esc(t.notes)}</textarea></div>
-    </div>
-    <div id="n-links" style="margin-bottom:12px">${linkChips((t.description||"")+" "+(t.notes||""))}</div>
-    <div class="sec-title"><h3>Subtasks (branching)</h3><div class="ln"></div><button class="sm" id="addRoot">＋ Add subtask</button></div>
-    <div class="tree" id="tree"></div>
-    <div class="sec-title" style="margin-top:24px"><h3>Comments on this demand</h3><div class="ln"></div></div>
-    <div id="taskCmts"></div>
-    <div id="lsHost" style="margin-top:24px"></div>`;
-  const updNL=()=>{body.querySelector("#n-links").innerHTML=linkChips((t.description||"")+" "+(t.notes||""));};
-  body.querySelector("#fDesc").onchange=e=>{t.description=e.target.value;touch(t);updNL();};
-  body.querySelector("#fNotes").onchange=e=>{t.notes=e.target.value;touch(t);updNL();};
-  body.querySelector("#addRoot").onclick=()=>{t.subtasks.push(mkSub());touch(t);renderDetail();};
-  renderTree(body.querySelector("#tree"),t,t.subtasks);
-  renderComments(body.querySelector("#taskCmts"),t,()=>touch(t));
-  if(pinned.length)drawPinned(body.querySelector("#pinBox"),t,pinned);
-  renderLessons(body.querySelector("#lsHost"),t);
-}
 function drawPinned(host,t,pinned){
   host.innerHTML=`<div class="pin-title">📌 Key reference</div>`+pinned.map(r=>{const rv=revealPw[r.id];
     return `<div class="pin-row" data-id="${r.id}"><span class="pin-l">${esc(r.label)||"(label)"}</span>
@@ -3365,8 +3306,7 @@ function renderTree(host,t,list,rr){
     row.querySelector(".a-cmt").onclick=()=>openSubCommentsModal(t,s,rr);
     row.querySelector(".a-add").onclick=()=>{s.children.push(mkSub());s.collapsed=false;touch(t);rr();};
     row.querySelector(".a-del").onclick=()=>{const n=countSubs(s.children).n,c=(s.comments||[]).length;
-      if((n||c)&&!confirm(`Delete “${s.title||"subtask"}”${n?` and the ${n} subtask(s) under it`:""}${c?` (${c} comment(s))`:""}?`))return;
-      const r=findSub(t.subtasks,s.id);if(r){r.parent.splice(r.parent.indexOf(s),1);touch(t);rr();}};
+      deleteWithUndo(`Deleted “${s.title||"subtask"}”${n?` and the ${n} under it`:""}`,()=>{const r=findSub(t.subtasks,s.id);if(r){r.parent.splice(r.parent.indexOf(s),1);touch(t);}});};
     if(kids&&!s.collapsed)renderTree(node.querySelector(".children"),t,s.children,rr);
     host.appendChild(node);});
 }
@@ -3382,7 +3322,7 @@ function renderComments(host,owner,onChange){
   host.querySelector(".c-post").onclick=post;
   ta.onkeydown=e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter")post();};
   host.querySelectorAll(".cmt").forEach(el=>{const c=list.find(x=>x.id===el.dataset.id);
-    el.querySelector(".c-del").onclick=()=>{if(confirm("Delete this comment?")){list.splice(list.indexOf(c),1);onChange();renderComments(host,owner,onChange);}};
+    el.querySelector(".c-del").onclick=async()=>{if(await askOk("It can't be brought back.",{title:"Delete this comment?",ok:"Delete",danger:true})){list.splice(list.indexOf(c),1);onChange();renderComments(host,owner,onChange);}};
     const txt=el.querySelector(".cmt-text");txt.onclick=e=>{if(e.target.tagName==="A")return;editInline(txt,c.text,v=>{if(v){c.text=v;}onChange();renderComments(host,owner,onChange);});};});
 }
 function openSubCommentsModal(t,s,rr){
@@ -3420,7 +3360,7 @@ function renderObjects(body,t){
       tr.querySelector(".o-type").onchange=e=>{o.type=e.target.value;touch(t);};
       tr.querySelector(".o-act").onchange=e=>{o.action=e.target.value;touch(t);drawClash(o);};
       tr.querySelector(".o-desc").onchange=e=>{o.desc=e.target.value;touch(t);};
-      tr.querySelector(".o-del").onclick=()=>{if(o.name&&!confirm(`Remove ${o.name} from this demand's objects?`))return;t.objects=t.objects.filter(x=>x.id!==o.id);t.transports.forEach(x=>{if(x.objectIds)x.objectIds=x.objectIds.filter(id=>id!==o.id);});touch(t);draw();renderDetail();};});
+      tr.querySelector(".o-del").onclick=()=>deleteWithUndo(`Removed ${o.name||"the object"}`,()=>{t.objects=t.objects.filter(x=>x.id!==o.id);t.transports.forEach(x=>{if(x.objectIds)x.objectIds=x.objectIds.filter(id=>id!==o.id);});touch(t);});});
     const idx=clashIndex();t.objects.forEach(o=>drawClash(o,idx));};
   body.querySelector("#objTypes").onclick=()=>openObjTypes(()=>{draw();});
   body.querySelector("#addObj").onclick=()=>{t.objects.push({id:uid(),name:"",type:objTypes()[0],action:"Modified",desc:"",ackClash:[]});touch(t);draw();};
@@ -3531,10 +3471,10 @@ function renderTransports(body,t){
       q(".rel").onchange=e=>{tr.released=e.target.checked;tr.releasedOn=tr.released?(tr.releasedOn||todayStr()):"";touch(t);};
       q(".notes").onchange=e=>{tr.notes=e.target.value;touch(t);};
       q(".tocsel").onchange=e=>{tr.tocId=e.target.value;touch(t);drawTrs();drawReadiness();};
-      {const b=q(".tocone");if(b)b.onclick=()=>{const n=prompt(`ToC number for ${tr.number||"this transport"}:`,"");if(n===null)return;
+      {const b=q(".tocone");if(b)b.onclick=async()=>{const n=await askText("A new ToC",{label:`ToC number for ${tr.number||"this transport"}`,placeholder:"e.g. H03K900499 — or fill it in later",ok:"Create"});if(n===null)return;
         const c=normToc({number:n.trim(),desc:tr.desc});(t.tocs=t.tocs||[]).push(c);tr.tocId=c.id;touch(t);drawTrs();drawTocs();drawReadiness();
         toast(`${c.number||"New ToC"} created and ${tr.number||"the transport"} bundled in — record where the ToC moves under Transports of Copies`);};}
-      q(".del").onclick=()=>{if((tr.number||tr.syncs.some(x=>x.system))&&!confirm(`Delete transport ${tr.number||"(unnumbered)"}? Its sync history goes with it.`))return;t.transports=t.transports.filter(x=>x.id!==tr.id);touch(t);renderTransports(body,t);renderDetail();};
+      q(".del").onclick=()=>deleteWithUndo(`Deleted transport ${tr.number||"(unnumbered)"}`,()=>{t.transports=t.transports.filter(x=>x.id!==tr.id);touch(t);});
       q(".up").onclick=()=>{if(idx>0){[t.transports[idx-1],t.transports[idx]]=[t.transports[idx],t.transports[idx-1]];touch(t);drawTrs();drawReadiness();}};
       q(".down").onclick=()=>{if(idx<t.transports.length-1){[t.transports[idx+1],t.transports[idx]]=[t.transports[idx],t.transports[idx+1]];touch(t);drawTrs();drawReadiness();}};
       const syncHost=q(".syncs");
@@ -3589,7 +3529,7 @@ function renderTransports(body,t){
       q(".cnum").onchange=e=>{c.number=e.target.value;touch(t);drawTrs();drawReadiness();};
       q(".cdsc").onchange=e=>{c.desc=e.target.value;touch(t);};
       q(".cnotes").onchange=e=>{c.notes=e.target.value;touch(t);};
-      q(".cdel").onclick=()=>{if(members.length&&!confirm("Delete this ToC? "+members.length+" TR(s) will become un-bundled."))return;t.transports.forEach(tr=>{if(tr.tocId===c.id)tr.tocId="";});t.tocs=t.tocs.filter(x=>x.id!==c.id);touch(t);renderTransports(body,t);};
+      q(".cdel").onclick=()=>deleteWithUndo(`Deleted ToC ${c.number||""}`,()=>{t.transports.forEach(tr=>{if(tr.tocId===c.id)tr.tocId="";});t.tocs=t.tocs.filter(x=>x.id!==c.id);touch(t);});
       const sh=q(".csyncs");
       /* a ToC moved to many systems shows the grid; its date rows open only for editing */
       const drawCs=()=>{sh.innerHTML="";const n=c.syncs.filter(s=>s.system).length,many=n>3,open=!many||tocEdit.has(c.id),ab=q(".caddsync");
@@ -3845,24 +3785,12 @@ function openLinkMeetingModal(t){
 
 function openTaskModal(existing){
   const t=existing||{};const root=document.getElementById("modalRoot");
-  root.innerHTML=`<div class="modal-bg"><div class="modal"><h2>${existing?"Edit demand":"New demand / task"}</h2>
-    <div class="grid2"><div class="field"><label>Demand ID</label><input id="m-demand" class="mono" value="${esc(t.demandId)||""}" placeholder="DMND-12345"></div>
-      <div class="field"><label>Type</label><select id="m-type">${TASK_TYPES.map(x=>`<option ${x===t.type?"selected":""}>${x}</option>`).join("")}</select></div></div>
-    <div class="field"><label>Title</label><input id="m-title" value="${esc(t.title)||""}" placeholder="Short description of the requirement"></div>
-    <div class="grid2"><div class="field"><label>◆ Epic</label><select id="m-epic"><option value="">— none —</option>${state.epics.slice().sort((a,b)=>epicLabel(a).localeCompare(epicLabel(b))).map(x=>`<option value="${x.id}" ${(t.epicId||(!existing&&view==="epics"?activeEpicId:""))===x.id?"selected":""}>${esc(epicLabel(x))}</option>`).join("")}</select></div>
-      <div class="field"><label>Wave / phase within the epic</label><input id="m-wave" list="dl-wave" value="${esc(t.wave)||""}" placeholder="e.g. Wave 2, Sync to backends"><datalist id="dl-wave">${distinctVals("wave").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div></div>
-    <div class="grid2"><div class="field"><label>Source system</label><select id="m-sys">${systemOptions(existing?t.system:(t.system||state.settings.defaultSystem))}</select></div>
-      <div class="field"><label>Client / mandant</label><select id="m-client">${clientOptions(existing?t.system:(t.system||state.settings.defaultSystem),t.client)}</select></div></div>
-    <div class="grid2"><div class="field"><label>Project (initiative)</label><input id="m-proj" list="dl-proj" value="${esc(t.project)||""}" placeholder="e.g. Sailpoint integration"><datalist id="dl-proj">${distinctVals("project").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div>
-      <div class="field"><label>Theme (functional area)</label><input id="m-theme" list="dl-theme" value="${esc(t.theme)||""}" placeholder="e.g. Travel, TRem, Payroll"><datalist id="dl-theme">${distinctVals("theme").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div></div>
-    <div class="grid2"><div class="field"><label>Requestor / who asked</label><input id="m-req" list="dl-req" value="${esc(t.requestor)||""}" placeholder="Name / team"><datalist id="dl-req">${distinctVals("requestor").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div>
-      <div class="field"><label>Status</label><select id="m-status">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${k===t.status?"selected":""}>${v.label}</option>`).join("")}</select></div></div>
-    <div class="grid2"><div class="field"><label>Received date</label><input type="date" id="m-rec" value="${t.receivedDate||todayStr()}"></div>
-      <div class="field"><label>Due date</label><input type="date" id="m-due" value="${t.dueDate||""}"></div></div>
-    <div class="grid2"><div class="field"><label>⏳ Waiting on (blocked by)</label><input id="m-wait" list="dl-wait" value="${esc((t.waiting&&t.waiting.on)||"")}" placeholder="blank = not blocked"><datalist id="dl-wait">${WAIT_OPTIONS.map(x=>`<option value="${x}">`).join("")}</datalist></div>
-      <div class="field"><label>Waiting since</label><input type="date" id="m-waitsince" value="${(t.waiting&&t.waiting.since)||""}"></div></div>
-    <div class="field"><label>👷 Built by <span class="faint" style="font-weight:400;text-transform:none;letter-spacing:0">— someone in your team; none ticked = you</span></label><div id="m-build"></div></div>
-    <div class="field"><label>Description</label><textarea id="m-desc">${esc(t.description)||""}</textarea></div>
+  root.innerHTML=`<div class="modal-bg"><div class="modal" style="width:680px"><h2>${existing?"Edit demand":"New demand / task"}</h2>
+    <div class="mg"><div class="mg-h">What</div><div class="grid2"><div class="field"><label>Demand ID</label><input id="m-demand" class="mono" value="${esc(t.demandId)||""}" placeholder="DMND-12345"></div><div class="field"><label>Type</label><select id="m-type">${TASK_TYPES.map(x=>`<option ${x===t.type?"selected":""}>${x}</option>`).join("")}</select></div></div><div class="field"><label>Title</label><input id="m-title" value="${esc(t.title)||""}" placeholder="Short description of the requirement"></div><div class="field"><label>Description</label><textarea id="m-desc">${esc(t.description)||""}</textarea></div></div>
+    <div class="mg"><div class="mg-h">Where</div><div class="grid2"><div class="field"><label>Source system</label><select id="m-sys">${systemOptions(existing?t.system:(t.system||state.settings.defaultSystem))}</select></div><div class="field"><label>Client / mandant</label><select id="m-client">${clientOptions(existing?t.system:(t.system||state.settings.defaultSystem),t.client)}</select></div></div><div class="grid2"><div class="field"><label>◆ Epic</label><select id="m-epic"><option value="">— none —</option>${state.epics.slice().sort((a,b)=>epicLabel(a).localeCompare(epicLabel(b))).map(x=>`<option value="${x.id}" ${(t.epicId||(!existing&&view==="epics"?activeEpicId:""))===x.id?"selected":""}>${esc(epicLabel(x))}</option>`).join("")}</select></div><div class="field"><label>Wave / phase within the epic</label><input id="m-wave" list="dl-wave" value="${esc(t.wave)||""}" placeholder="e.g. Wave 2, Sync to backends"><datalist id="dl-wave">${distinctVals("wave").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div></div></div>
+    <div class="mg"><div class="mg-h">When</div><div class="grid3"><div class="field"><label>Status</label><select id="m-status">${Object.entries(STATUS).map(([k,v])=>`<option value="${k}" ${k===t.status?"selected":""}>${v.label}</option>`).join("")}</select></div><div class="field"><label>Received date</label><input type="date" id="m-rec" value="${t.receivedDate||todayStr()}"></div><div class="field"><label>Due date</label><input type="date" id="m-due" value="${t.dueDate||""}"></div></div></div>
+    <div class="mg"><div class="mg-h">Who</div><div class="grid3"><div class="field"><label>Requestor / who asked</label><input id="m-req" list="dl-req" value="${esc(t.requestor)||""}" placeholder="Name / team"><datalist id="dl-req">${distinctVals("requestor").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div><div class="field"><label>⏳ Waiting on (blocked by)</label><input id="m-wait" list="dl-wait" value="${esc((t.waiting&&t.waiting.on)||"")}" placeholder="blank = not blocked"><datalist id="dl-wait">${WAIT_OPTIONS.map(x=>`<option value="${x}">`).join("")}</datalist></div><div class="field"><label>Waiting since</label><input type="date" id="m-waitsince" value="${(t.waiting&&t.waiting.since)||""}"></div></div><div class="field"><label>👷 Built by <span class="faint" style="font-weight:400;text-transform:none;letter-spacing:0">— someone in your team; none ticked = you</span></label><div id="m-build"></div></div></div>
+    <details class="mg mg-more"${t.project||t.theme?" open":""}><summary class="mg-h">More — project and theme${t.project||t.theme?` <span class="faint">${esc([t.project,t.theme].filter(Boolean).join(" · "))}</span>`:""}</summary><div class="grid2"><div class="field"><label>Project (initiative)</label><input id="m-proj" list="dl-proj" value="${esc(t.project)||""}" placeholder="e.g. Sailpoint integration"><datalist id="dl-proj">${distinctVals("project").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div><div class="field"><label>Theme (functional area)</label><input id="m-theme" list="dl-theme" value="${esc(t.theme)||""}" placeholder="e.g. Travel, TRem, Payroll"><datalist id="dl-theme">${distinctVals("theme").map(v=>`<option value="${esc(v)}">`).join("")}</datalist></div></div></details>
     <div class="modal-foot"><button id="m-cancel" class="ghost">Cancel</button><button id="m-save" class="primary">${existing?"Save changes":"Create demand"}</button></div></div></div>`;
   const bsel=(t.builders||[]).slice(),bhost=root.querySelector("#m-build"),bdraw=()=>{bhost.innerHTML=builderChipsHTML(bsel);wireBuilderChips(bhost,bsel,bdraw);};bdraw();
   const close=()=>root.innerHTML="";
@@ -3872,7 +3800,7 @@ function openTaskModal(existing){
   md.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="Enter"){e.preventDefault();root.querySelector("#m-save").click();}});
   root.querySelector("#m-cancel").onclick=close;
   root.querySelector(".modal-bg").onclick=e=>{if(e.target!==root.querySelector(".modal-bg"))return;
-    if(!edited||confirm(existing?"Discard your changes to this demand?":"Discard this new demand?"))close();};
+    if(!edited){close();return;}askOk(existing?"Your changes to this demand will be lost.":"This new demand won't be created.",{title:"Discard?",ok:"Discard",danger:true}).then(y=>{if(y)close();});};
   {const sy=root.querySelector("#m-sys"),cl=root.querySelector("#m-client");
    sy.onchange=()=>{cl.innerHTML=clientOptions(sy.value,"");};}
   root.querySelector("#m-title").focus();
@@ -3921,16 +3849,21 @@ function renderMeetingDetail(){
   if(meetingRollup){return renderActionRollup(host);}
   const m=activeMeeting();
   if(!m){host.innerHTML=nopick("Select a meeting,<br>or create a new one.");return;}
-  host.innerHTML=`<div class="detail-head"><div class="dh-top"><div style="flex:1">
-      <input id="mt-title" value="${esc(m.title)}" style="font-size:18px;font-weight:650;border-color:transparent;background:transparent;padding:2px 4px;width:100%">
-      <div class="dh-dates" style="margin-top:8px">
+  const hOpen=hdrOpen.has(m.id)||!m.title||m.title==="(untitled meeting)",oa=m.actions.filter(a=>!a.done).length,nl=(m.taskIds||[]).length+(m.epicIds||[]).length;
+  host.innerHTML=`<div class="detail-head bhead" style="--pen:var(--pen-4)">
+    <div class="bh-top"><div class="bh-l">
+        <div class="bh-no"><span class="bh-id">Meeting</span> · ${esc(efWdl(m.date))}${m.team?` · ${esc(m.team)}`:""}</div>
+        <input id="mt-title" class="bh-title" value="${esc(m.title)}" title="Click to rename">
+        <div class="bh-sub">${m.attendees?"with "+esc(m.attendees):"no attendees noted"}</div></div>
+      <div class="bh-acts"><div class="bh-btns"><button class="sm ${hOpen?"on":""}" id="mt-det" title="Date, team, attendees, duration">✎ Details</button><button class="sm ghost danger" id="mt-del" title="Delete this meeting">🗑</button></div></div></div>
+    ${roHTML([{k:"Date",v:shortD(m.date)},{k:"Team",v:m.team?esc(m.team):"—"},{k:"Duration",v:m.hours?U(efFh(m.hours),"h"):"—",title:"Logged in Effort for you"},
+      {k:"Action points",v:m.actions.length?U(oa+" / "+m.actions.length,"open"):"—",cls:oa?"warn":""},{k:"Linked",v:nl?U(nl,nl===1?"demand or epic":"demands & epics"):"—"}],"stack")}
+    <div class="bh-fields ${hOpen?"":"hide"}"><div class="dh-dates" style="margin-top:8px">
         <span>Date <input type="date" id="mt-date" value="${m.date}" style="width:150px"></span>
         <span>Team <input id="mt-team" list="dl-team-m" value="${esc(m.team)}" placeholder="e.g. Portal Team" style="width:150px"><datalist id="dl-team-m">${distinctMeetingTeams().map(x=>`<option value="${esc(x)}">`).join("")}</datalist></span>
         <span class="dh-grow">Attendees <input id="mt-att" value="${esc(m.attendees)}" placeholder="Names…"></span>
         <span>Duration <input id="mt-hrs" value="${m.hours?efFh(m.hours):""}" placeholder="45m · 1.5h" style="width:90px" title="Logged in Effort for you — don't log it again there"></span>
-      </div><div id="mt-eff"></div></div>
-      <button class="sm danger" id="mt-del" style="align-self:flex-start">🗑 Delete</button></div>
-    <div class="tabs"><button class="tab active">Notes, Demands &amp; Action Points</button></div></div>
+      </div></div><div id="mt-eff"></div></div>
     <div class="detail-body">
       <div class="field"><label>Notes</label><textarea id="mt-body" style="min-height:180px">${esc(m.body)}</textarea></div>
       <div id="mt-links">${linkChips(m.body)}</div>
@@ -3947,8 +3880,9 @@ function renderMeetingDetail(){
     m.hours=h;e.target.value=h?efFh(h):"";touch(m);meetingEffortSync(m);drawMeetingEff(m);};
   host.querySelector("#mt-team").onchange=e=>{m.team=e.target.value.trim();touch(m);renderMeetingSidebar();};
   host.querySelector("#mt-att").onchange=e=>{m.attendees=e.target.value;touch(m);renderMeetingSidebar();};
+  host.querySelector("#mt-det").onclick=()=>hdrToggle(m.id,renderMeetingDetail);
   host.querySelector("#mt-body").onchange=e=>{m.body=e.target.value;touch(m);const l=host.querySelector("#mt-links");if(l)l.innerHTML=linkChips(m.body);};
-  host.querySelector("#mt-del").onclick=()=>{if(confirm("Delete this meeting and its action points?")){state.meetings=state.meetings.filter(x=>x.id!==m.id);meetingEffortRemove(m.id);state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="meeting"&&l.id===m.id)));activeMeetingId=null;markDirty();renderApp();}};
+  host.querySelector("#mt-del").onclick=()=>deleteWithUndo("Deleted the meeting",()=>{state.meetings=state.meetings.filter(x=>x.id!==m.id);meetingEffortRemove(m.id);state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="meeting"&&l.id===m.id)));activeMeetingId=null;});
   host.querySelector("#mt-link").onclick=()=>openLinkDemandsToMeeting(m);
   host.querySelector("#mt-addact").onclick=()=>{m.actions.push(normAction({}));touch(m);drawMeetingActions(m);renderMeetingSidebar();};
   drawMeetingChips(m);drawMeetingActions(m);
@@ -4089,7 +4023,7 @@ function wireCredRow(tr){const c=state.credentials.find(x=>x.id===tr.dataset.id)
   bind(".c-label","label");bind(".c-user","username");bind(".c-pass","password");bind(".c-url","url");bind(".c-notes","notes");
   tr.querySelector(".c-eye").onclick=()=>{revealPw[c.id]=!revealPw[c.id];drawVault();};
   tr.querySelector(".c-copy").onclick=()=>{navigator.clipboard.writeText(c.password).then(()=>toast("Password copied")).catch(()=>toast("Copy failed",true));};
-  tr.querySelector(".c-del").onclick=()=>{if(confirm("Delete this credential?")){state.credentials=state.credentials.filter(x=>x.id!==c.id);delete revealPw[c.id];markDirty();renderVault();}};
+  tr.querySelector(".c-del").onclick=()=>deleteWithUndo("Deleted the login",()=>{state.credentials=state.credentials.filter(x=>x.id!==c.id);delete revealPw[c.id];});
 }
 function drawVault(){
   const body=document.getElementById("vaultBody");if(!body)return;
@@ -4128,7 +4062,7 @@ async function openEncryptionDialog(){
   const close=()=>root.innerHTML="";
   root.querySelector("#e-close").onclick=close;
   root.querySelector("#e-change").onclick=async()=>{close();const pw=await promptPassword("New master password",true);if(pw===null)return;const old=masterPassword;masterPassword=pw;recryptSnapshots(old,pw);markDirty();toast("Password changed — Save to apply");};
-  root.querySelector("#e-remove").onclick=()=>{if(confirm("Remove encryption? The file will be saved as PLAIN TEXT, including any stored passwords.")){const old=masterPassword;state.settings.encryption=false;masterPassword=null;recryptSnapshots(old,null);markDirty();close();toast("Encryption removed — Save to write plain text");renderApp();}};
+  root.querySelector("#e-remove").onclick=async()=>{if(await askOk("The file will be saved as plain text, including any stored passwords.",{title:"Remove encryption?",ok:"Remove encryption",danger:true})){const old=masterPassword;state.settings.encryption=false;masterPassword=null;recryptSnapshots(old,null);markDirty();close();toast("Encryption removed — Save to write plain text");renderApp();}};
 }
 
 /* ===================== OBJECT INDEX (cross-reference) ===================== */
@@ -4154,10 +4088,10 @@ function openObjTypes(onDone){
         arr[i]=v;save(arr);};
       tr.querySelector(".ot-up").onclick=()=>{if(i){[arr[i-1],arr[i]]=[arr[i],arr[i-1]];save(arr);}};
       tr.querySelector(".ot-dn").onclick=()=>{if(i<arr.length-1){[arr[i+1],arr[i]]=[arr[i],arr[i+1]];save(arr);}};
-      tr.querySelector(".ot-x").onclick=()=>{
+      tr.querySelector(".ot-x").onclick=async()=>{
         if(arr.length===1){toast("Keep at least one type",true);return;}
         const n=objTypeUsage(arr[i]);
-        if(n&&!confirm(`"${arr[i]}" is used by ${n} object(s).\n\nThose objects keep the type — it just won't be offered for new ones. Remove it from the list?`))return;
+        if(n&&!await askOk(`“${arr[i]}” is used by ${n} object(s). They keep the type — it just won't be offered for new ones.`,{title:"Remove this type from the list?",ok:"Remove"}))return;
         arr.splice(i,1);save(arr);};});};
   const add=()=>{const el=root.querySelector("#ot-new"),v=el.value.trim();if(!v)return;
     const arr=objTypes().slice();
@@ -4165,7 +4099,7 @@ function openObjTypes(onDone){
     arr.push(v);state.settings.objTypes=arr;markDirty();el.value="";draw();el.focus();};
   root.querySelector("#ot-add").onclick=add;
   root.querySelector("#ot-new").onkeydown=ev=>{if(ev.key==="Enter")add();};
-  root.querySelector("#ot-reset").onclick=()=>{if(confirm("Restore the built-in list of object types?\n\nObjects already logged keep their current type."))
+  root.querySelector("#ot-reset").onclick=async()=>{if(await askOk("Objects already logged keep their current type.",{title:"Restore the built-in object types?",ok:"Restore"}))
     {state.settings.objTypes=[...DEF_OBJ_TYPES];markDirty();draw();}};
   const close=()=>{root.innerHTML="";if(onDone)onDone();};
   root.querySelector("#ot-close").onclick=close;
@@ -4294,7 +4228,6 @@ function openAging(){
 /* ===================== JOURNAL ===================== */
 function activeJournal(){return state.journal.find(j=>j.id===activeJournalId);}
 function renderJournalSidebar(){
-  const openTodos=state.todos.filter(x=>!x.done).length;
   document.getElementById("side").innerHTML=`
     <div class="side-tools">
       <button class="primary" id="btnToday" style="width:100%">＋ Today's entry</button>
@@ -4303,61 +4236,16 @@ function renderJournalSidebar(){
   document.getElementById("btnToday").onclick=()=>{journalTodos=false;let j=state.journal.find(x=>x.date===todayStr());if(!j){j={id:uid(),date:todayStr(),title:"",body:"",createdAt:Date.now(),updatedAt:Date.now()};state.journal.unshift(j);markDirty();}activeJournalId=j.id;renderApp();};
   const el=document.getElementById("jList");
   const rows=state.journal.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.createdAt-a.createdAt);
-  const pinned=`<div class="tcard ${journalTodos?"active":""}" data-todos="1" style="border-left-color:var(--green)">
-    <div class="ttitle">✅ My action items</div><div class="meta faint">${openTodos} open reminder(s)</div></div>`;
   const list=rows.length?rows.map(j=>{const preview=(j.body||"").replace(/\s+/g," ").slice(0,60);
     return `<div class="tcard ${(!journalTodos&&j.id===activeJournalId)?"active":""}" data-id="${j.id}">
       <div class="demand">📓 ${j.date}${j.date===todayStr()?" · today":""}</div>
       <div class="ttitle">${esc(j.title)||"<span class='faint' style='font-weight:400'>(no title)</span>"}</div>
       <div class="meta faint">${esc(preview)||"empty"}${((j.taskIds||[]).length+(j.epicIds||[]).length)?`<span class="lc-badge">🔗 ${(j.taskIds||[]).length+(j.epicIds||[]).length}</span>`:""}</div></div>`;}).join(""):`<div class="empty" style="padding:20px 12px">No journal entries yet.<br>Keep daily rough notes here.</div>`;
-  el.innerHTML=pinned+list;
-  el.querySelector("[data-todos]").onclick=()=>{journalTodos=true;renderApp();};
+  el.innerHTML=list;
   el.querySelectorAll(".tcard[data-id]").forEach(x=>x.onclick=()=>{journalTodos=false;activeJournalId=x.dataset.id;renderApp();});
-}
-function renderTodos(host){
-  const open=state.todos.filter(x=>!x.done).sort((a,b)=>(a.due||"9999").localeCompare(b.due||"9999"));
-  const done=state.todos.filter(x=>x.done);
-  host.innerHTML=`<div class="detail-head"><div class="dh-top"><div style="flex:1">
-      <h1>✅ My action items</h1>
-      <div class="dh-dates"><span>Personal reminders &amp; tasks — not tied to any demand or meeting</span></div></div></div>
-    <div class="tabs"><button class="tab active">${open.length} open${done.length?` · ${done.length} done`:""}</button></div></div>
-    <div class="detail-body">
-      <div class="cmt-add" style="margin-bottom:14px"><textarea id="td-text" placeholder="New reminder / task… (Enter to add)" rows="1" style="min-height:38px"></textarea><input type="date" id="td-due" title="Due (optional)" style="flex:0 0 150px"><button class="primary sm" id="td-add" style="flex:0 0 auto">Add</button></div>
-      <div id="td-open"></div>
-      ${done.length?`<div class="sec-title" style="margin-top:20px"><h3>Completed</h3><div class="ln"></div><button class="sm" id="td-clear">🗑 Clear completed</button></div><div id="td-done"></div>`:""}
-    </div>`;
-  const addBox=host.querySelector("#td-text"),dueBox=host.querySelector("#td-due");
-  const add=()=>{const v=addBox.value.trim();if(!v)return;state.todos.unshift({id:uid(),text:v,done:false,due:dueBox.value||"",createdAt:Date.now(),doneAt:null});addBox.value="";dueBox.value="";markDirty();renderTodos(host);renderJournalSidebar();};
-  host.querySelector("#td-add").onclick=add;
-  addBox.onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();add();}};
-  const drawList=(container,arr,isDone)=>{
-    if(!arr.length){container.innerHTML=isDone?"":`<div class="faint" style="font-size:12px;padding:4px 2px">No open items. Add reminders above.</div>`;return;}
-    container.innerHTML="";
-    arr.forEach(x=>{const row=document.createElement("div");row.className="actitem"+(x.done?" done":"");const dc=dueClass(x.due,x.done?"closed":"open");
-      row.innerHTML=`<span class="chk ${x.done?"done":""}">${x.done?"✓":""}</span>
-        <span class="at">${esc(x.text)||"<span class='faint'>(click to write)</span>"}</span>
-        <input type="date" class="du ${dc}" value="${x.due||""}" title="Due" style="flex:0 0 140px">
-        <span class="nact">${x.done?"":`<button class="ghost sm td-job" title="More than a one-liner? Make it a task — with a log, next actions, reference facts and hours">↗ Task</button>`}<button class="ghost sm td-res" title="Outcome / resolution note">📝</button><button class="ghost sm danger td-del">🗑</button></span>
-        ${x.resolution?`<span class="ares" title="Outcome — click to edit">↳ ${esc(x.resolution)}</span>`:""}`;
-      row.querySelector(".chk").onclick=()=>{x.done=!x.done;x.doneAt=x.done?Date.now():null;markDirty();renderTodos(host);renderJournalSidebar();};
-      const at=row.querySelector(".at");at.onclick=()=>editInline(at,x.text,v=>{x.text=v;markDirty();renderTodos(host);});
-      row.querySelector(".du").onchange=e=>{x.due=e.target.value;markDirty();renderTodos(host);};
-      {const jb=row.querySelector(".td-job");if(jb)jb.onclick=()=>{x.done=true;x.doneAt=Date.now();x.resolution=x.resolution||"→ moved to Tasks";
-        newJob({title:x.text,due:x.due||"",source:"self",received:isoTs(x.createdAt||Date.now())});toast("Moved to Tasks — the to-do is ticked off");};}
-      row.querySelector(".td-del").onclick=()=>{state.todos=state.todos.filter(y=>y.id!==x.id);markDirty();renderTodos(host);renderJournalSidebar();};
-      const editRes=()=>{let ar=row.querySelector(".ares");if(!ar){ar=document.createElement("span");ar.className="ares";row.appendChild(ar);}
-        editInline(ar,x.resolution||"",v=>{x.resolution=v;markDirty();renderTodos(host);});};
-      row.querySelector(".td-res").onclick=editRes;
-      const arEl=row.querySelector(".ares");if(arEl)arEl.onclick=editRes;
-      container.appendChild(row);});
-  };
-  drawList(host.querySelector("#td-open"),open,false);
-  const dd=host.querySelector("#td-done");if(dd)drawList(dd,done,true);
-  const clr=host.querySelector("#td-clear");if(clr)clr.onclick=()=>{if(confirm("Remove all completed items?")){state.todos=state.todos.filter(x=>!x.done);markDirty();renderTodos(host);renderJournalSidebar();}};
 }
 function renderJournalDetail(){
   const host=document.getElementById("detail");
-  if(journalTodos)return renderTodos(host);
   const j=activeJournal();
   if(!j){host.innerHTML=nopick("Pick a day on the left, or click<br><b>＋ Today's entry</b> to start writing.");return;}
   host.innerHTML=`<div class="detail-head"><div class="dh-top"><div style="flex:1">
@@ -4374,7 +4262,7 @@ function renderJournalDetail(){
     if(state.journal.some(x=>x.id!==j.id&&x.date===nd)){toast("An entry for "+nd+" already exists",true);e.target.value=j.date;return;}
     j.date=nd;touch(j);renderJournalSidebar();};
   host.querySelector("#j-body").onchange=e=>{j.body=e.target.value;touch(j);renderJournalSidebar();const l=host.querySelector("#j-links");if(l)l.innerHTML=linkChips(j.body);};
-  host.querySelector("#j-del").onclick=()=>{if(confirm("Delete this journal entry?")){state.journal=state.journal.filter(x=>x.id!==j.id);state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="journal"&&l.id===j.id)));activeJournalId=null;markDirty();renderApp();}};
+  host.querySelector("#j-del").onclick=()=>deleteWithUndo("Deleted the journal entry",()=>{state.journal=state.journal.filter(x=>x.id!==j.id);state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="journal"&&l.id===j.id)));activeJournalId=null;});
   host.querySelector("#j-link").onclick=()=>openLinkDemandsToJournal(j);
   drawJournalChips(j);
   renderImagesSection(host.querySelector("#j-imgs"),"journal",j.id);
@@ -4455,7 +4343,7 @@ function renderDebugDetail(){
   host.querySelector("#d-demand").onchange=e=>{s.demandId=e.target.value;touch(s);renderDebugSidebar();};
   host.querySelector("#d-status").onchange=e=>{s.status=e.target.value;touch(s);renderDebugDetail();renderDebugSidebar();};
   host.querySelector("#d-link").onchange=e=>{s.taskId=e.target.value;const t=state.tasks.find(x=>x.id===e.target.value);if(t&&!s.demandId&&t.demandId)s.demandId=t.demandId;touch(s);renderDebugDetail();};
-  host.querySelector("#d-del").onclick=()=>{if(confirm("Delete this debug session?")){state.debug=state.debug.filter(x=>x.id!==s.id);activeDebugId=null;markDirty();renderApp();}};
+  host.querySelector("#d-del").onclick=()=>deleteWithUndo("Deleted the debug session",()=>{state.debug=state.debug.filter(x=>x.id!==s.id);activeDebugId=null;});
   renderDebugBody(host.querySelector("#dBody"),s);
 }
 function renderDebugBody(body,s){
@@ -4555,30 +4443,7 @@ function renderEpicDetail(){
   if(!e){host.innerHTML=nopick("Select an epic, or create one to group<br>related demands under one initiative.");return;}
   const st=EPIC_STATUS[e.status],r=epicRollup(e),pk=epicParked(e,r),fu=epicFollowUps(e);
   const storyN=epicStory(e).length,openDeps=e.deps.filter(x=>!x.done).length,sub=countSubs(e.subtasks);
-  host.innerHTML=benchOn()?epicHeadBench(e,r,pk,fu,storyN,openDeps,sub):`<div class="detail-head"><div class="dh-top"><div style="flex:1">
-      <div class="dh-demand">◆ ${esc(e.code)||"— no code —"} · ${e.role==="contributor"?"I contribute a part":"I lead this"}</div>
-      <input id="ep-name" value="${esc(e.name)}" style="font-size:19px;font-weight:650;border-color:transparent;background:transparent;padding:2px 4px;width:100%">
-      <div class="dh-dates" style="margin-top:6px">
-        <span>Code <input id="ep-code" class="mono" value="${esc(e.code)}" placeholder="LUCA" style="width:110px"></span>
-        <span>Owner <input id="ep-owner" value="${esc(e.owner)}" placeholder="Who drives it" style="width:150px"></span>
-        <span>Target <input type="date" id="ep-target" value="${e.targetDate||""}" style="width:150px"></span>
-        <span>Status <select id="ep-status" style="width:130px">${Object.entries(EPIC_STATUS).map(([k,v])=>`<option value="${k}" ${k===e.status?"selected":""}>${v.label}</option>`).join("")}</select></span>
-        <span>My role <select id="ep-role" style="width:190px"><option value="lead" ${e.role==="lead"?"selected":""}>Lead — I own it</option><option value="contributor" ${e.role==="contributor"?"selected":""}>Contributor — one slice</option></select></span>
-      </div></div>
-      <div style="display:flex;flex-direction:column;gap:7px;align-items:flex-end">
-        <span class="pill ${st.cls}" style="font-size:12px">${st.label}</span>
-        ${pk&&pk.parked?`<span class="pill" style="font-size:12px;color:var(--amber);border-color:var(--amber-line)">⏸ Parked${pk.days!=null?" · "+pk.days+"d":""}</span>`:""}
-        <div style="display:flex;gap:6px"><button class="sm" id="ep-brief" title="The whole epic as one document — for handovers, or when someone asks what happened a year ago">📄 Epic brief</button><button class="sm" id="ep-add">🔗 Assign demands</button><button class="sm danger" id="ep-del">🗑 Delete</button></div>
-      </div></div>
-      <div class="tabs">
-        <button class="tab ${epicTab==="overview"?"active":""}" data-tab="overview">Overview<span class="count">${r.ts.length}</span></button>
-        <button class="tab ${epicTab==="story"?"active":""}" data-tab="story">Story<span class="count">${storyN}</span></button>
-        <button class="tab ${epicTab==="deps"?"active":""}" data-tab="deps">Waiting on others<span class="count">${openDeps}${fu.length?" · 📞"+fu.length:""}</span></button>
-        <button class="tab ${epicTab==="subtasks"?"active":""}" data-tab="subtasks">Subtasks<span class="count">${sub.n}</span></button>
-        <button class="tab ${epicTab==="effort"?"active":""}" data-tab="effort">Effort<span class="count">${efFh(Math.round(efSum(epicEfforts(e))))} h</span></button>
-        <span class="tind"></span>
-      </div></div>
-    <div class="detail-body" id="epBody"></div>`;
+  host.innerHTML=epicHeadBench(e,r,pk,fu,storyN,openDeps,sub);
   const on=(sel,ev,fn)=>{const el=host.querySelector(sel);if(el)el[ev]=fn;};
   on("#ep-name","onchange",ev=>{e.name=ev.target.value||"(untitled epic)";touch(e);renderApp();});
   on("#ep-code","onchange",ev=>{e.code=ev.target.value.trim();touch(e);renderApp();});
@@ -4589,22 +4454,15 @@ function renderEpicDetail(){
   on("#ep-role","onchange",ev=>{e.role=ev.target.value;touch(e);renderEpicDetail();});
   on("#ep-brief","onclick",()=>openEpicBrief(e));
   on("#ep-add","onclick",()=>openAssignDemandsToEpic(e));
-  on("#ep-del","onclick",()=>{
-    const n=tasksForEpic(e.id).length;
-    if(!confirm("Delete this epic?"+(n?"\n\n"+n+" demand(s) will simply become un-grouped — no demand is deleted.":"")+"\n\nThe epic's own story, dependencies and subtasks are deleted with it."+(state.efforts.some(x=>x.epicId===e.id)?"\n\nSo are the "+efFh(efSum(state.efforts.filter(x=>x.epicId===e.id)))+" h logged on the epic itself.":"")))return;
+  on("#ep-del","onclick",()=>deleteWithUndo(`Deleted the epic ${e.code||e.name}`,()=>{
     state.tasks.forEach(t=>{if(t.epicId===e.id)t.epicId="";});state.efforts=state.efforts.filter(x=>x.epicId!==e.id);
     state.meetings.concat(state.journal).forEach(x=>{if(x.epicIds)x.epicIds=x.epicIds.filter(id=>id!==e.id);});
-    state.epics=state.epics.filter(x=>x.id!==e.id);activeEpicId=null;markDirty();renderApp();});
+    state.epics=state.epics.filter(x=>x.id!==e.id);activeEpicId=null;}));
   host.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{epicTab=b.dataset.tab;renderEpicDetail();enterPulse("detail");});
   const body=host.querySelector("#epBody");
-  if(benchOn()){wireEpicHeadBench(host,e);const tb=epicBenchTab();
+  {wireEpicHeadBench(host,e);const tb=epicBenchTab();
     if(tb==="deps")renderEpicDeps(body,e);else if(tb==="effort")renderEpicEffort(body,e);else if(tb==="subtasks")renderEpicSubtasks(body,e);
     else if(tb==="details")renderEpicOverview(body,e,r,pk,fu);else renderEpicOverviewBench(body,e,r);}
-  else if(epicTab==="story")renderEpicStory(body,e);
-  else if(epicTab==="deps")renderEpicDeps(body,e);
-  else if(epicTab==="subtasks")renderEpicSubtasks(body,e);
-  else if(epicTab==="effort")renderEpicEffort(body,e);
-  else renderEpicOverview(body,e,r,pk,fu);
   placeTabInd(host);
 }
 function renderEpicOverview(body,e,r,pk,fu){
@@ -4732,10 +4590,9 @@ function renderEpicStory(body,e){
     else if(s.dataset.mid){view="meetings";meetingRollup=false;activeMeetingId=s.dataset.mid;renderApp();}
     else if(s.dataset.jid){view="journal";journalTodos=false;activeJournalId=s.dataset.jid;renderApp();}});
   host.querySelectorAll(".storyrow[data-log]").forEach(row=>{const x=e.log.find(l=>l.id===row.dataset.log);if(!x)return;
-    row.querySelector(".l-del").onclick=()=>{if(confirm("Delete this story entry?")){e.log=e.log.filter(l=>l.id!==x.id);touch(e);renderEpicDetail();}};
-    row.querySelector(".l-edit").onclick=()=>{
-      const tx=prompt("Entry text:",x.text);if(tx===null)return;
-      const dt=prompt("Date (YYYY-MM-DD):",x.date);if(dt===null)return;
+    row.querySelector(".l-del").onclick=()=>deleteWithUndo("Deleted the story entry",()=>{e.log=e.log.filter(l=>l.id!==x.id);touch(e);});
+    row.querySelector(".l-edit").onclick=async()=>{
+      const v=await askBox({title:"Edit the story entry",fields:[{k:"tx",label:"Entry",value:x.text,type:"textarea"},{k:"dt",label:"Date",value:x.date,type:"date"}],ok:"Save"});if(!v)return;const tx=v.tx,dt=v.dt||"";
       if(tx.trim())x.text=tx.trim();if(/^\d{4}-\d{2}-\d{2}$/.test(dt.trim()))x.date=dt.trim();touch(e);renderEpicDetail();};});
 }
 function openEpicLinkPicker(e,kind){
@@ -4785,17 +4642,17 @@ function renderEpicDeps(body,e){
     const us=tr.querySelector(".d-unsnooze");if(us)us.onclick=()=>{x.snoozeUntil="";touch(e);renderEpicDetail();};
     const dn=tr.querySelector(".d-done");if(dn)dn.onclick=()=>depDelivered(e,x);
     const ro=tr.querySelector(".d-reopen");if(ro)ro.onclick=()=>{x.done=false;x.doneDate="";touch(e);renderEpicDetail();};
-    tr.querySelector(".d-del").onclick=()=>{if(confirm("Remove this dependency?")){e.deps=e.deps.filter(d=>d.id!==x.id);touch(e);renderEpicDetail();}};});
+    tr.querySelector(".d-del").onclick=()=>deleteWithUndo("Removed the dependency",()=>{e.deps=e.deps.filter(d=>d.id!==x.id);touch(e);});});
 }
-function depCheckIn(e,x){const who=x.team||"the other team";
-  const note=prompt(`What did ${who} say? (goes into the epic's Story — blank is fine)`,"");if(note===null)return;
-  const nd=(prompt("New expected date, if they gave one (YYYY-MM-DD). Blank keeps: "+(x.expected||"none"),"")||"").trim();
+async function depCheckIn(e,x){const who=x.team||"the other team";
+  const v=await askBox({title:`Checked with ${who}`,fields:[{k:"note",label:"What did they say? (goes into the epic's Story — blank is fine)",type:"textarea"},{k:"nd",label:"New expected date, if they gave one",type:"date",hint:"Blank keeps "+(x.expected||"none")}],ok:"Log it"});if(!v)return;
+  const note=v.note||"",nd=(v.nd||"").trim();
   x.lastCheck=todayStr();x.snoozeUntil="";
   const newExp=/^\d{4}-\d{2}-\d{2}$/.test(nd);if(newExp)x.expected=nd;
   e.log.push({id:uid(),date:todayStr(),kind:"followup",text:`Checked with ${who}${x.what?" re "+x.what:""}${note.trim()?": "+note.trim():""}${newExp?" · now expected "+nd:""}`});
   touch(e);renderEpicDetail();toast("Follow-up logged in the Story");}
-function depSnooze(e,x){const who=x.team||"the other team";
-  const v=prompt(`Remind me about ${who} again in how many days?\n(or type a date, YYYY-MM-DD)`,"14");if(v===null)return;const t=v.trim();
+async function depSnooze(e,x){const who=x.team||"the other team";
+  const v=await askText(`Remind me about ${who} again in…`,{label:"Days — or a date (YYYY-MM-DD)",value:"14",ok:"Snooze"});if(v===null)return;const t=v.trim();
   let until="";if(/^\d{4}-\d{2}-\d{2}$/.test(t))until=t;else if(/^\d+$/.test(t)&&+t>0){const d=new Date();d.setDate(d.getDate()+(+t));until=isoD(d);}
   if(!until||until<=todayStr()){toast("Give a number of days, or a future date",true);return;}
   x.snoozeUntil=until;touch(e);renderEpicDetail();toast("No follow-up nudges until "+until);}
@@ -4950,7 +4807,7 @@ function renderPlaybookDetail(){
   host.querySelector("#pb-body").onchange=e=>{p.body=e.target.value;touch(p);const l=host.querySelector("#pb-links");if(l)l.innerHTML=linkChips(p.body);};
   host.querySelector("#pb-pin").onclick=()=>{p.pinned=!p.pinned;touch(p);renderApp();};
   host.querySelector("#pb-print").onclick=()=>printPlay(p);
-  host.querySelector("#pb-del").onclick=()=>{if(confirm("Delete this playbook entry?")){state.playbook=state.playbook.filter(x=>x.id!==p.id);state.tasks.forEach(t=>(t.lessons||[]).forEach(l=>{if(l.playId===p.id)l.playId="";}));state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="playbook"&&l.id===p.id)));activePlayId=null;markDirty();renderApp();}};
+  host.querySelector("#pb-del").onclick=()=>deleteWithUndo("Deleted the playbook entry",()=>{state.playbook=state.playbook.filter(x=>x.id!==p.id);state.tasks.forEach(t=>(t.lessons||[]).forEach(l=>{if(l.playId===p.id)l.playId="";}));state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="playbook"&&l.id===p.id)));activePlayId=null;});
   renderPlayKind(host.querySelector("#pb-kind-sec"),p);
   renderImagesSection(host.querySelector("#pb-imgs"),"playbook",p.id);
 }
@@ -5147,7 +5004,7 @@ function renderImagesSection(host,kind,id){
     card.querySelector(".im-expiry").onchange=e=>{im.expiry=e.target.value;markDirty();renderImagesSection(host,kind,id);};
     card.querySelector(".im-unlink").onclick=()=>{im.links=im.links.filter(l=>!(l.kind===kind&&l.id===id));markDirty();renderImagesSection(host,kind,id);};
     card.querySelector(".im-del").onclick=async()=>{
-      if(!confirm("Delete "+im.file+" from the folder AND remove its record?"))return;
+      if(!await askOk(im.file+" is deleted from your images folder, and its record goes too. This can't be undone.",{title:"Delete this image?",ok:"Delete",danger:true}))return;
       const dir=await ensureImgDir(true);
       if(dir){try{await dir.removeEntry(im.file);}catch(e){/* already gone is fine */}}
       if(imgUrlCache[im.file]){URL.revokeObjectURL(imgUrlCache[im.file]);delete imgUrlCache[im.file];}
@@ -5304,8 +5161,8 @@ function nextActionTrail(t){return (t.timeline||[]).filter(e=>e.type==="note"&&/
 
 /* ===================== THE DAILY LOOP =====================
    Today's agenda: one ordered list of what the day asks of you — next steps due (demands and
-   tasks), your own meeting action points, follow-ups on what you're waiting for, Journal
-   to-dos and what's due — each done right where it shows. Close the day: an hours box for
+   tasks), your own meeting action points, follow-ups on what you're waiting for, and what's
+   due — each done right where it shows. Close the day: an hours box for
    every demand, task and meeting touched that day, against the working day. */
 const CHASE_EVERY=3;   /* days between follow-ups on something you're waiting for */
 const AG_KINDS={step:{l:"Next step",pen:"pen-2",o:0},act:{l:"Action point",pen:"pen-5",o:1},chase:{l:"Follow up",pen:"pen-4",o:2},todo:{l:"To-do",pen:"pen-6",o:3},release:{l:"Release",pen:"pen-1",o:3.5},check:{l:"Check in",pen:"pen-7",o:3.6},due:{l:"Due",pen:"pen-1",o:4}};
@@ -5341,11 +5198,9 @@ function agendaItems(){const t0=todayStr(),out=[];
   [...state.tasks,...state.jobs].filter(chaseDue).forEach(x=>{const n=isJob(x)?jobWaitDays(x):waitDays(x),lc=lastChase(x);
     add("chase",t0,`Chase ${esc(x.waiting.on)}`,x,[["Chased",()=>agChased(x),`You chased them — it comes back in ${CHASE_EVERY} days`],["Answer in",()=>agAnswerIn(x),"Not waiting any more"]],
       {sub:[n!=null?`waiting ${n} d`:"",lc&&lc>=(x.waiting.since||"")?`chased ${-daysUntil(lc)} d ago`:""].filter(Boolean).join(" · ")});});
-  state.todos.filter(x=>!x.done&&x.due&&x.due<=t0).forEach(x=>out.push({k:"todo",date:x.due,what:esc(x.text||"(no text)"),of:"📓 Journal",go:()=>{view="journal";journalTodos=true;renderApp();},
-    acts:[["✓ Done",()=>{x.done=true;x.doneAt=Date.now();markDirty();renderApp();efToastUndo("To-do ticked off",()=>{x.done=false;x.doneAt=null;markDirty();renderApp();});},"Tick it off"]]}));
   state.tasks.forEach(x=>{const d=earliestOpenDue(x);if(!d||d>t0)return;const s=d===x.dueDate&&!["delivered","closed"].includes(x.status)?null:agSubDue(x,d);
     add("due",d,s?`Subtask: ${esc(s.title)}`:d<t0?"Past its due date":"Due today",x);});
-  state.jobs.filter(j=>jobOpen(j)&&j.due&&j.due<=t0).forEach(x=>add("due",x.due,x.askedBy?`${esc(x.askedBy)} expects an answer`:"An answer is expected",x));
+  state.jobs.filter(j=>jobOpen(j)&&j.due&&j.due<=t0).forEach(x=>add("due",x.due,x.askedBy?`${esc(x.askedBy)} expects an answer`:x.source==="self"?"Due":"An answer is expected",x));
   out.push(...agendaTransportItems(t0));
   return out.sort((a,b)=>a.date.localeCompare(b.date)||AG_KINDS[a.k].o-AG_KINDS[b.k].o);}
 const AG_CAP=10;
@@ -5553,6 +5408,189 @@ function agendaTransportItems(t0){const out=[],U5=unrelDays(),go=(x,tab)=>()=>{v
     out.push({k:"check",date:efAdd(last,QUIET_DAYS),what:`Check in with ${esc(builderNames(x))}`,sub:`no update for ${n} d`,of:of(x),go:go(x,"overview"),
       acts:[["Checked in",()=>agCheckedIn(x),`Note it in History — back in ${QUIET_DAYS} days if nothing moves`]]});});
   return out;}
+/* ===================== IN-APP DIALOGS, UNDO AND KEYS =====================
+   The app's own questions instead of the browser's prompt and confirm boxes: askBox (a
+   title, a line of text, any fields), askOk and askText. They sit above any open dialog
+   and answer with a promise. Deletes don't ask — they happen, with "Deleted · Undo" for a
+   few seconds (the data as it was is kept that long). And the keyboard: ? lists every key. */
+function askBox(o){return new Promise(res=>{const el=document.createElement("div"),fs=o.fields||[];el.className="ask-bg";
+  el.innerHTML=`<div class="modal ask" role="dialog" aria-modal="true" style="width:${o.width||440}px"><h2>${esc(o.title||"")}</h2>${o.text?`<p class="ask-t">${esc(o.text)}</p>`:""}
+    ${fs.map((f,i)=>`<div class="field"><label>${esc(f.label||"")}</label>${f.type==="textarea"?`<textarea data-i="${i}" rows="${f.rows||3}" placeholder="${esc(f.placeholder||"")}">${esc(f.value||"")}</textarea>`
+      :`<input data-i="${i}" type="${f.type||"text"}" value="${esc(f.value==null?"":f.value)}" placeholder="${esc(f.placeholder||"")}" autocomplete="off"${f.type==="date"?' style="width:170px"':""}>`}${f.hint?`<div class="ask-h">${esc(f.hint)}</div>`:""}</div>`).join("")}
+    <div class="modal-foot"><button class="ghost" data-a="no">${esc(o.cancel||"Cancel")}</button><button class="primary${o.danger?" ask-danger":""}" data-a="ok">${esc(o.ok||"OK")}</button></div></div>`;
+  document.body.appendChild(el);
+  const vals=()=>{const r={};fs.forEach((f,i)=>{r[f.k||i]=el.querySelector(`[data-i="${i}"]`).value;});return r;};
+  const done=v=>{el.remove();document.removeEventListener("keydown",key,true);res(v);};
+  const ok=()=>{if(o.check){const m=o.check(vals());if(m){toast(m,true);return;}}done(fs.length?vals():true);};
+  const key=e=>{if(e.key==="Escape"){e.preventDefault();e.stopImmediatePropagation();done(null);}
+    else if(e.key==="Enter"&&(e.target.tagName!=="TEXTAREA"||e.ctrlKey||e.metaKey)&&e.target.tagName!=="BUTTON"){e.preventDefault();e.stopImmediatePropagation();ok();}};
+  document.addEventListener("keydown",key,true);
+  el.querySelector('[data-a="no"]').onclick=()=>done(null);el.querySelector('[data-a="ok"]').onclick=ok;
+  el.addEventListener("mousedown",e=>{if(e.target===el)done(null);});
+  setTimeout(()=>{const f=el.querySelector("[data-i]")||el.querySelector('[data-a="ok"]');if(f){f.focus();if(f.select&&f.type!=="date")f.select();}},30);});}
+const askOk=(text,o={})=>askBox({title:o.title||"Are you sure?",text,ok:o.ok||"OK",danger:o.danger,cancel:o.cancel}).then(v=>!!v);
+const askText=(title,o={})=>askBox({title,text:o.text,ok:o.ok,fields:[{k:"v",label:o.label||"",value:o.value||"",placeholder:o.placeholder,type:o.type,hint:o.hint}],
+  check:o.check?v=>o.check(v.v):null}).then(v=>v?v.v:null);
+const isDate=s=>/^\d{4}-\d{2}-\d{2}$/.test(String(s||"").trim());
+
+/* a delete you can take back: everything as it was is kept while the toast shows */
+const NAV_KEYS=()=>({view,activeId,activeTab,activeEpicId,activeMeetingId,activeJournalId,activeDebugId,activePlayId,activeJobId});
+function deleteWithUndo(msg,fn){const snap=JSON.stringify(state),nav=NAV_KEYS();fn();markDirty();renderApp();
+  efToastUndo(msg,()=>{state=JSON.parse(snap);({view,activeId,activeTab,activeEpicId,activeMeetingId,activeJournalId,activeDebugId,activePlayId,activeJobId}=nav);markDirty();renderApp();toast("Brought back");});}
+
+/* ---------- keys ---------- */
+const GO_KEYS={t:["today","Today"],d:["demands","Demands"],r:["transports","Transports"],k:["jobs","Tasks"],e:["epics","Epics"],m:["meetings","Meetings"],j:["journal","Journal"],
+  f:["effort","Effort"],v:["review","Review"],o:["month","Month"],b:["playbook","Playbook"],x:["debug","Debug"],s:["search","Search"]};
+const KEY_SHEET=[["Anywhere",[["Ctrl S","Save to your data file"],["Ctrl K","Search everything"],["Alt N","New demand"],["T","Log time"],["W","Note a win"],["?","This list"]]],
+  ["Go to a workspace — G, then",Object.entries(GO_KEYS).map(([k,[,l]])=>[k.toUpperCase(),l])],
+  ["On a demand or a task",[["N","Next action — when it comes back up"],["D","✓ Done — tick the next action off (and log the time)"],["E","Edit the demand"],["↑ ↓","The demand above / below in the list"],["1–6","Overview · Work · Objects · Transports · Effort · History"]]],
+  ["In a dialog",[["Enter","OK / Save"],["Ctrl Enter","Save, from a text box"],["Esc","Close"]]]];
+function openKeys(){const root=document.getElementById("modalRoot");
+  root.innerHTML=`<div class="modal-bg"><div class="modal keys" style="width:640px"><h2>⌨ Keyboard</h2><p class="faint" style="font-size:12px;margin-top:-8px">Letters work when you're not typing in a field.</p>
+    <div class="keys-g">${KEY_SHEET.map(([h,rows])=>`<div class="keys-s"><div class="ef-lb">${esc(h)}</div>${rows.map(([k,l])=>`<div class="keys-r"><span>${k.split(" ").map(x=>`<kbd>${esc(x)}</kbd>`).join(" ")}</span><span>${esc(l)}</span></div>`).join("")}</div>`).join("")}</div>
+    <div class="modal-foot"><button class="primary" id="keysClose">Close</button></div></div></div>`;
+  const close=()=>{root.innerHTML="";};root.querySelector("#keysClose").onclick=close;
+  root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};}
+let goPending=0;
+document.addEventListener("keydown",e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey||screenLocked||pendingEncrypted||document.getElementById("bootLock"))return;
+  if(document.querySelector("#modalRoot .modal-bg,.ask-bg"))return;
+  const a=document.activeElement;if(a&&(/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)||a.isContentEditable))return;
+  const k=e.key,lk=k.toLowerCase();
+  if(goPending&&Date.now()-goPending<1500){goPending=0;const g=GO_KEYS[lk];if(g){e.preventDefault();e.stopImmediatePropagation();view=g[0];meetingRollup=false;renderApp();}return;}
+  goPending=0;
+  if(k==="?"){e.preventDefault();openKeys();return;}
+  if(lk==="g"){e.preventDefault();goPending=Date.now();toast("Go to… T Today · D Demands · R Transports · K Tasks · E Epics · M Meetings · J Journal · F Effort");return;}
+  const x=view==="demands"?activeTask():view==="jobs"?activeJob():null;if(!x)return;
+  if(lk==="n"){e.preventDefault();openNextAction(x);}
+  else if(lk==="d"&&x.nextAction&&x.nextAction.date){e.preventDefault();nextActionDone(x);}
+  else if(lk==="e"&&view==="demands"){e.preventDefault();openTaskModal(x);}});
+/* ===================== LINE ICONS =====================
+   The app used several hundred emoji as icons; in the Instrument look they were the odd
+   ones out. Each emoji the app uses has a line icon here, drawn like the side rail's (18×18,
+   1.4 stroke, round ends, current text colour), and is swapped in as the page renders —
+   buttons, headings, cards, dialogs, toasts. Form fields, dropdown options and tooltips keep
+   the character (they can't hold a drawing). Typographic marks (✓ ✕ ✎ ★) stay as they are. */
+const IC_CIRC=(x,y,r)=>`M${x+r} ${y}a${r} ${r} 0 1 1-${2*r} 0a${r} ${r} 0 1 1 ${2*r} 0z`;
+const IC_PATHS={
+  trash:"M3.5 5h11M7.2 5V3.3h3.6V5M5 5l.7 10.2h6.6L13 5M7.6 7.8v4.6M10.4 7.8v4.6",
+  timer:IC_CIRC(9,10,5.8)+"M9 7v3.2l2.2 1.4M7.3 2.5h3.4M9 2.5v1.7",
+  clipboard:"M6 3.5H4.5v12h9v-12H12M6.5 2.5h5v2.2h-5zM6.5 8h5M6.5 10.5h5M6.5 13h3",
+  people:IC_CIRC(6.5,7,2.3)+IC_CIRC(12.5,7.5,1.8)+"M2.5 15c.6-2.4 2.2-3.6 4-3.6s3.4 1.2 4 3.6M11 11.8c1.6-.3 3.4.6 4.4 3.2",
+  lock:"M3.5 7.5h11v8h-11zM6 7.5V5.5a3 3 0 0 1 6 0v2M9 11v1.5",
+  unlock:"M3.5 7.5h11v8h-11zM6 7.5V5.5a3 3 0 0 1 5.8-1M9 11v1.5",
+  link:"M7.6 10.4l2.8-2.8M8.4 5.6l1.1-1.1a2.6 2.6 0 0 1 3.7 3.7l-1.1 1.1M9.6 12.4l-1.1 1.1a2.6 2.6 0 0 1-3.7-3.7l1.1-1.1",
+  bulb:"M6.6 12.5h4.8M7.2 15h3.6M6.6 12.5c0-1.6-2.1-2.6-2.1-5a4.5 4.5 0 0 1 9 0c0 2.4-2.1 3.4-2.1 5",
+  hourglass:"M5 2.5h8M5 15.5h8M6 2.5c0 3.3 3 4.2 3 6.5s-3 3.2-3 6.5M12 2.5c0 3.3-3 4.2-3 6.5s3 3.2 3 6.5",
+  alarm:IC_CIRC(9,10,5.5)+"M9 7.3V10l1.8 1.2M3 4.5l2-2M15 4.5l-2-2",
+  phone:"M5.2 2.8l2 .3.9 3-1.6 1.2a8.5 8.5 0 0 0 4.2 4.2l1.2-1.6 3 .9.3 2-1.6 1.7C8.6 14.5 3.5 9.4 3.5 4.4z",
+  pause:"M6.5 4v10M11.5 4v10",
+  builder:"M4.5 8.5h9M6 8.5a3 3 0 0 1 6 0M11.3 10.2a2.4 2.4 0 0 1-4.6 0M3.5 16c.6-2.3 2.9-3.5 5.5-3.5s4.9 1.2 5.5 3.5M9 5.5v-1",
+  umbrella:"M2.5 9a6.5 6.5 0 0 1 13 0zM9 9v5.5a1.5 1.5 0 0 1-3 0",
+  folders:"M2.5 6h4l1.2 1.4h7.8V15h-13zM4.5 3.5h4l1.2 1.4h5.8V6",
+  notebook:"M4.5 2.5h9v13h-9zM6.8 2.5v13M9 6h2.5M9 8.5h2.5",
+  bug:"M6 7h6v4.5a3 3 0 0 1-6 0zM9 7v7.5M6 9.5H3.5M14.5 9.5H12M6.2 12.5l-2.2 1.6M11.8 12.5l2.2 1.6M7 7l-.9-2.2M11 7l.9-2.2",
+  snow:"M9 2v14M3 5.5l12 7M3 12.5l12-7M7.4 2.9L9 4.3l1.6-1.4M7.4 15.1L9 13.7l1.6 1.4",
+  refresh:"M14 8a5 5 0 0 0-9.2-2.2M4 10a5 5 0 0 0 9.2 2.2M4.5 3v3h3M13.5 15v-3h-3",
+  repeat:"M3.5 8V7a2 2 0 0 1 2-2h9M12.5 3l2 2-2 2M14.5 10v1a2 2 0 0 1-2 2h-9M5.5 15l-2-2 2-2",
+  trophy:"M5.5 2.5h7v4.2a3.5 3.5 0 0 1-7 0zM5.5 4H3v1.2A2.6 2.6 0 0 0 5.7 7.8M12.5 4H15v1.2a2.6 2.6 0 0 1-2.7 2.6M9 10.2v2.8M6.5 15.5h5M7.5 13h3",
+  gear:IC_CIRC(9,9,2.3)+"M9 2v2M9 14v2M2 9h2M14 9h2M4 4l1.4 1.4M12.6 12.6L14 14M4 14l1.4-1.4M12.6 5.4L14 4",
+  calendar:"M2.5 3.5h13v12h-13zM2.5 7h13M6 2v3M12 2v3M5.5 10h1M8.5 10h1M11.5 10h1M5.5 12.5h1M8.5 12.5h1",
+  pin:"M9 16v-5M5.5 11h7M6.5 11l.5-6.5h4l.5 6.5M6 2.5h6",
+  printer:"M5 7V2.5h8V7M5 13H3V7h12v6h-2M5 10.5h8v5H5z",
+  camera:"M2.5 5.5h3l1.2-2h4.6l1.2 2h3V15h-13z"+IC_CIRC(9,10,2.6),
+  picture:"M2.5 3.5h13v11h-13zM2.5 12l4-3.5 3 2.5 2.5-2 3.5 3M11.6 6.5v.1",
+  disk:"M3 3h9.5L15 5.5V15H3zM6 3v4h6V3M5.5 15v-4.5h7V15",
+  note:"M4 2.5h7l3 3v10H4zM11 2.5v3h3M6.5 9h5M6.5 11.5h5M6.5 14h3",
+  pencil:"M3 15l1-3.5L12.5 3 15 5.5 6.5 14zM10.8 4.7l2.5 2.5",
+  truck:"M1.5 4.5h9.5v8h-9.5zM11 7.5h3l2.5 2.8v2.2H11"+IC_CIRC(4.5,13.8,1.4)+IC_CIRC(13.5,13.8,1.4),
+  doc:"M4 2.5h7l3 3v10H4zM11 2.5v3h3",
+  folder:"M2 4.5h5l1.5 1.8H16V15H2z",
+  plug:"M6.5 2.5v3.5M11.5 2.5v3.5M4.5 6h9v2.5a4.5 4.5 0 0 1-9 0zM9 13v3",
+  target:IC_CIRC(9,9,6)+IC_CIRC(9,9,2.6)+"M9 9v.1",
+  chat:"M2.5 3.5h13V12H8l-3.5 3v-3h-2z",
+  eye:"M1.5 9s2.8-5 7.5-5 7.5 5 7.5 5-2.8 5-7.5 5-7.5-5-7.5-5z"+IC_CIRC(9,9,2),
+  eyeoff:"M1.5 9s2.8-5 7.5-5 7.5 5 7.5 5-2.8 5-7.5 5-7.5-5-7.5-5zM3 3l12 12",
+  sleep:"M4 5h4l-4 5h4M10 9h3.5L10 13h3.5",
+  inbox:"M2.5 10.5h4l1 2h3l1-2h4M2.5 10.5l2-5h9l2 5v5h-13zM9 1.8v5.4M7 5.2L9 7.2l2-2",
+  box:"M2.5 5.5L9 2.5l6.5 3v7L9 15.5l-6.5-3zM2.5 5.5L9 8.5l6.5-3M9 8.5v7",
+  case:"M2.5 6h13v9h-13zM6.5 6V3.5h5V6M6 6v9M12 6v9",
+  party:"M3 15l3.5-9.5 6 6zM10 3.5l.5 1.5M14.5 7.5l-1.5.5M12.5 2.5l-1 2.5M15.5 4.5l-2.5 1",
+  mail:"M2.5 4h13v10h-13zM2.5 4.5L9 9.5l6.5-5",
+  chart:"M2.5 15.5h13M3.5 12l3.5-4 3 2.5 5-6M12 4.5h3v3",
+  wrench:"M11.5 2.6a3.6 3.6 0 0 0-3.2 5L3 12.9a1.5 1.5 0 0 0 2.1 2.1l5.3-5.3a3.6 3.6 0 0 0 5-3.2l-2.2 1.3-1.9-1.1-.1-2.2z",
+  moon:"M14.5 11.2A6 6 0 1 1 6.8 3.5a4.8 4.8 0 0 0 7.7 7.7z",
+  sun:IC_CIRC(9,9,3)+"M9 1.5v2M9 14.5v2M1.5 9h2M14.5 9h2M3.7 3.7l1.4 1.4M12.9 12.9l1.4 1.4M3.7 14.3l1.4-1.4M12.9 5.1l1.4-1.4",
+  keyboard:"M1.5 5h15v8.5h-15zM4 7.5h1M7 7.5h1M10 7.5h1M13 7.5h1M5 11h8",
+  rocket:"M9 2c3 2 4 5 3 9H6C5 7 6 4 9 2zM6 11l-2 3h3M12 11l2 3h-3M9 6.5v.1",
+  flag:"M4 16V2.5M4 3h10l-2 3.5 2 3.5H4",
+  scales:"M9 2.5v13M5.5 15.5h7M3 5h12M3 5L1.2 9.5a1.9 1.9 0 0 0 3.6 0zM15 5l-1.8 4.5a1.9 1.9 0 0 0 3.6 0z",
+  question:"M6.5 6.5a2.5 2.5 0 1 1 3.7 2.2c-.8.5-1.2 1-1.2 2M9 13.5v.1",
+  broom:"M13 2.5L9 8.5M6.5 8.5l5 3-2 4H3z",
+  web:"M2.5 2.5l13 13M15.5 2.5l-13 13M9 2v14M2 9h14",
+  stop:IC_CIRC(9,9,6)+"M5.8 9h6.4",
+  person:IC_CIRC(9,5.5,2.4)+"M3.5 15.5c.6-2.6 2.9-4 5.5-4s4.9 1.4 5.5 4",
+  search:IC_CIRC(7.5,7.5,4.5)+"M11 11l4.5 4.5",
+  ticket:"M2.5 5h13v2.5a1.5 1.5 0 0 0 0 3V13h-13v-2.5a1.5 1.5 0 0 0 0-3zM11 5v8",
+  puzzle:"M3 6h3a1.5 1.5 0 1 1 3 0h3v3a1.5 1.5 0 1 1 0 3v3H3z",
+  heart:"M9 15s-6-3.6-6-8a3.2 3.2 0 0 1 6-1.6A3.2 3.2 0 0 1 15 7c0 4.4-6 8-6 8z",
+  extinguisher:"M6.5 6.5h5v9h-5zM9 6.5v-3h3.5M7 3.5L5.5 2",
+  cap:"M1.5 7L9 3.5 16.5 7 9 10.5zM4.5 8.5v4c2.5 2 6.5 2 9 0v-4M16.5 7v4",
+  star:"M9 2l2.1 4.4 4.8.6-3.5 3.3.9 4.7L9 12.7 4.7 15l.9-4.7L2.1 7l4.8-.6z",
+  warn:"M9 2.5l7 12.5H2zM9 7v4M9 13.3v.1",
+  checkbox:"M3 3h12v12H3zM5.5 9.2l2.3 2.3 4.7-5",
+  box0:"M3 3h12v12H3z",
+  flagf:"M4.5 16V2.5M4.5 3h9l-1.8 3 1.8 3h-9"};
+const IC_OF={"🗑":"trash","⏱":"timer","📋":"clipboard","👥":"people","🔒":"lock","🔓":"unlock","🔗":"link","⛓":"link","💡":"bulb","⏳":"hourglass","⏰":"alarm","📞":"phone",
+  "⏸":"pause","👷":"builder","🏖":"umbrella","🌴":"umbrella","🗂":"folders","📓":"notebook","🐞":"bug","❄":"snow","🔄":"refresh","🔁":"repeat","🏆":"trophy","⚙":"gear",
+  "🗓":"calendar","📅":"calendar","📌":"pin","📍":"pin","🖨":"printer","📷":"camera","🖼":"picture","💾":"disk","📝":"note","🗒":"note","✍":"pencil","🚚":"truck",
+  "📄":"doc","📁":"folder","📂":"folder","🔌":"plug","🎯":"target","💬":"chat","👁":"eye","🙈":"eyeoff","💤":"sleep","📥":"inbox","📦":"box","🧳":"case","🎉":"party",
+  "✉":"mail","📨":"mail","📈":"chart","🔧":"wrench","☾":"moon","🌙":"moon","☀":"sun","⌨":"keyboard","🚀":"rocket","🏁":"flag","⚖":"scales","❓":"question","🧹":"broom",
+  "🕸":"web","⛔":"stop","🙋":"person","👤":"person","🔍":"search","🎫":"ticket","🧩":"puzzle","🙏":"heart","🧯":"extinguisher","🎓":"cap","⭐":"star","⚠":"warn",
+  "☑":"checkbox","☐":"box0","⚑":"flagf"};
+const IC_RE=new RegExp("("+Object.keys(IC_OF).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")\uFE0F?","gu");
+const icSvg=name=>`<svg class="ic ic-${name}" viewBox="0 0 18 18" aria-hidden="true"><path d="${IC_PATHS[name]}"/></svg>`;
+const IC_SKIP="textarea,select,option,script,style,svg,title,[contenteditable],.noic";
+function icText(n){const s=n.nodeValue;IC_RE.lastIndex=0;if(!IC_RE.test(s))return;const p=n.parentElement;if(!p||p.closest(IC_SKIP))return;
+  IC_RE.lastIndex=0;const f=document.createDocumentFragment();let last=0,m;
+  while((m=IC_RE.exec(s))){if(m.index>last)f.appendChild(document.createTextNode(s.slice(last,m.index)));
+    const sp=document.createElement("span");sp.className="icw";sp.innerHTML=icSvg(IC_OF[m[1]]);f.appendChild(sp);last=m.index+m[0].length;}
+  if(last<s.length)f.appendChild(document.createTextNode(s.slice(last)));p.replaceChild(f,n);}
+function iconize(root){if(!root)return;if(root.nodeType===3){icText(root);return;}if(root.nodeType!==1||root.closest&&root.closest(IC_SKIP))return;
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),hits=[];let n;while((n=w.nextNode()))if(IC_RE.test(n.nodeValue)){IC_RE.lastIndex=0;hits.push(n);}else IC_RE.lastIndex=0;
+  hits.forEach(icText);}
+const icObs=new MutationObserver(ms=>{for(const m of ms){if(m.type==="characterData")icText(m.target);else m.addedNodes.forEach(iconize);}});
+icObs.observe(document.body,{childList:true,subtree:true,characterData:true});
+iconize(document.body);
+/* ===================== ONE COHERENT LOOK =====================
+   Tasks and Meetings get the header Demands and Epics have — kind and context on top, the
+   title, a status segment, readouts — with their editable fields folded under ✎ Details.
+   The Waiting tile on Today names the three longest waits; a day in Next 10 weeks opens
+   what's on it. */
+const hdrOpen=new Set();   /* tasks and meetings whose Details fields are open (this session only) */
+const JOB_PEN={open:"var(--pen-2)",progress:"var(--pen-4)",done:"var(--pen-3)",dropped:"var(--ink-3)"};
+function hdrToggle(id,redraw){if(hdrOpen.has(id))hdrOpen.delete(id);else hdrOpen.add(id);redraw();}
+function waitListHTML(ws){return `<div class="bl ck-wl">${ws.slice(0,3).map(t=>`<div title="${esc(demandLabel(t))} — waiting on ${esc(t.waiting.on)}"><b class="mono">${esc(t.demandId||"—")}</b><span>${esc(t.waiting.on)}</span><i>${waitDays(t)!=null?waitDays(t)+" d":"—"}</i></div>`).join("")}</div>`;}
+/* everything on one day: freezes, recurring duties, due dates, next actions, tasks, meetings, epic targets, days off */
+function calDayItems(di){const out=[],dl=x=>`${x.demandId?`<b class="mono">${esc(x.demandId)}</b> `:""}${esc(x.title)}`;
+  const toDemand=x=>()=>{view="demands";activeId=x.id;activeTab="overview";renderApp();},toPlay=p=>()=>{view="playbook";activePlayId=p.id;renderApp();};
+  (state.daysOff||[]).filter(x=>x.date===di).forEach(x=>out.push({pen:EF_OFF[x.kind]?EF_OFF[x.kind].pen:"pen-5",k:EF_OFF[x.kind]?EF_OFF[x.kind].l:"Day off",tx:esc(x.label||"")||"—",go:()=>openDaysOff({date:di})}));
+  state.playbook.filter(p=>p.kind==="freeze"&&p.from&&p.to&&p.from<=di&&di<=p.to).forEach(p=>out.push({pen:"pen-1",k:"Freeze",tx:`${esc(p.title)}${(p.systems||[]).length?` <span class="faint">${esc(p.systems.join(", "))}</span>`:""}`,go:toPlay(p)}));
+  state.playbook.filter(p=>p.kind==="recurring"&&p.due===di).forEach(p=>out.push({pen:"pen-4",k:"Recurring",tx:esc(p.title),go:toPlay(p)}));
+  state.meetings.filter(m=>m.date===di).forEach(m=>out.push({pen:"ink-3",k:"Meeting",tx:esc(m.title),go:()=>{view="meetings";meetingRollup=false;activeMeetingId=m.id;renderApp();}}));
+  state.tasks.filter(x=>!["delivered","closed"].includes(x.status)&&x.dueDate===di).forEach(x=>out.push({pen:"pen-2",k:"Due",tx:dl(x),go:toDemand(x)}));
+  state.tasks.filter(x=>x.status!=="closed"&&x.nextAction&&x.nextAction.date===di).forEach(x=>out.push({pen:"pen-4",k:"Next action",tx:`${esc(x.nextAction.note||"(next step)")} <span class="faint">${esc(demandLabel(x))}</span>`,go:toDemand(x)}));
+  state.jobs.filter(j=>jobOpen(j)&&(j.due===di||j.nextAction.date===di)).forEach(j=>out.push({pen:"pen-7",k:j.due===di?"Task due":"Task step",tx:esc(j.due===di?j.title:(j.nextAction.note||j.title)),go:()=>{view="jobs";activeJobId=j.id;renderApp();}}));
+  state.epics.filter(e=>e.status!=="closed"&&e.targetDate===di).forEach(e=>out.push({pen:"pen-5",k:"Epic target",tx:esc(epicLabel(e)),go:()=>{view="epics";activeEpicId=e.id;renderApp();}}));
+  return out;}
+function wireCalClick(cv,host){const box=host.querySelector("#ckCalDay");if(!cv||!box)return;cv.style.cursor="pointer";cv.title="Click a day to see what's on it";
+  cv.addEventListener("click",e=>{const r=cv.getBoundingClientRect(),W=10,cw=(r.width-40)/W,ch=(r.height-30)/7,c=Math.floor((e.clientX-r.left-34)/cw),rw=Math.floor((e.clientY-r.top-20)/ch);
+    if(c<0||c>=W||rw<0||rw>6)return;
+    const d=new Date(todayStr()+"T00:00:00");d.setDate(d.getDate()-((d.getDay()+6)%7)+c*7+rw);const di=isoD(d),items=calDayItems(di);
+    box.innerHTML=`<div class="ck-cd-h"><b>${esc(efWdl(di))}</b>${di===todayStr()?" · today":""}<span class="faint">${items.length?items.length+" thing"+(items.length===1?"":"s"):""}</span><a href="#" class="ck-cd-x" title="Close">✕</a></div>
+      ${items.length?items.map((x,i)=>`<div class="ck-cd-r" data-i="${i}" style="--pen:var(--${x.pen})"><i></i><span class="k">${x.k}</span><span class="tx">${x.tx}</span></div>`).join(""):`<div class="faint">Nothing on this day.</div>`}`;
+    box.classList.add("on");box.querySelectorAll(".ck-cd-r").forEach(el=>el.onclick=()=>items[+el.dataset.i].go());
+    box.querySelector(".ck-cd-x").onclick=ev=>{ev.preventDefault();box.classList.remove("on");};});}
 /* ===================== TRANSPORT RUN SHEET ===================== */
 /* What Basis has to import into one system, in release order. A ToC stands in for the
    TRs bundled in it (imported once, where its first member sits in the order), customizing
@@ -5638,8 +5676,8 @@ function openRunSheet(tasks,label,defTarget){
     const cp=root.querySelector("#rs-copy");if(cp)cp.onclick=()=>{const x=runSheetData(tasks,target,false);
       copyRich(runSheetHTML(x,target,label,notes[label]||""),runSheetText(x,target,label,notes[label]||"")).then(()=>toast("Copied — paste it into your mail to Basis")).catch(()=>toast("Copy failed",true));};
     const tx=root.querySelector("#rs-text");if(tx)tx.onclick=()=>{navigator.clipboard.writeText(runSheetText(runSheetData(tasks,target,false),target,label,notes[label]||"")).then(()=>toast("Copied as text")).catch(()=>toast("Copy failed",true));};
-    const mk=root.querySelector("#rs-mark");if(mk)mk.onclick=()=>{
-      const v=prompt(`Basis imported all ${d.todo.length} item(s) into ${target}? Date of the import (YYYY-MM-DD):`,todayStr());if(v===null)return;
+    const mk=root.querySelector("#rs-mark");if(mk)mk.onclick=async()=>{
+      const v=await askText(`Basis imported all ${d.todo.length} item(s) into ${target}?`,{label:"Date of the import",type:"date",value:todayStr(),ok:"Record"});if(v===null)return;
       const dt=v.trim();if(!/^\d{4}-\d{2}-\d{2}$/.test(dt)){toast("Use the YYYY-MM-DD format",true);return;}
       const touched=new Set();d.todo.forEach(r=>{(r.toc||r.tr).syncs.push({system:target,date:dt});if(!r.toc)syncReleases(r.tr,target,dt);touched.add(r.t);});
       touched.forEach(t=>touch(t));draw();toast(`Recorded ${d.todo.length} import(s) into ${target} on ${dt}`);};
@@ -5702,7 +5740,7 @@ function handoverDoc(s,ts){
   const per=[
     ...state.playbook.filter(p=>p.kind==="freeze"&&p.from&&p.to&&p.from<=winEnd&&p.to>=winStart).map(p=>`❄ Change freeze ${p.from} → ${p.to}: ${p.title}${(p.systems||[]).length?" ("+p.systems.join(", ")+")":""}`),
     ...state.playbook.filter(p=>p.kind==="recurring"&&inWin(p.due)).map(p=>`🔁 ${p.due}: ${p.title}`),
-    ...(s.todos?state.todos.filter(x=>!x.done&&x.due&&x.due<=winEnd).map(x=>`☐ ${x.due}: ${x.text}`):[])];
+    ...(s.todos?state.jobs.filter(j=>jobOpen(j)&&j.due&&j.due<=winEnd).map(j=>`☐ ${j.due}: ${j.title}`):[])];
   if(per.length){H.push(`<h3>During this period (${esc(winStart)} → ${esc(winEnd)})</h3>`);M.push(`## During this period (${winStart} → ${winEnd})`,``);list("Coming up",per);}
   return {html:H.join(""),md:M.join("\n")};
 }
@@ -5723,7 +5761,7 @@ function openHandover(){
     <details style="margin-bottom:10px"><summary style="cursor:pointer;font-size:13px">Demands included: <b id="ho-n">${s.ids.size}</b> of ${cand.length} not closed — choose…</summary>
       <div style="display:flex;gap:6px;margin:8px 0"><button class="sm" id="ho-def" title="Open, in progress, bug, and delivered-but-not-yet-in-Prod">Open work</button><button class="sm" id="ho-all">All</button><button class="sm" id="ho-none">None</button></div>
       <div class="picklist" id="ho-list" style="max-height:220px"></div></details>
-    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px">${[["actions","Open action points from linked meetings"],["refs","Reference entries (secrets left out)"],["todos","My to-dos due before I'm back"]].map(([k,l])=>`<label ${lbl}><input type="checkbox" class="ho-opt" data-k="${k}" ${s[k]?"checked":""} style="width:auto"> ${l}</label>`).join("")}</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px">${[["actions","Open action points from linked meetings"],["refs","Reference entries (secrets left out)"],["todos","My tasks due before I'm back"]].map(([k,l])=>`<label ${lbl}><input type="checkbox" class="ho-opt" data-k="${k}" ${s[k]?"checked":""} style="width:auto"> ${l}</label>`).join("")}</div>
     <div class="specpaper specdoc" id="ho-prev"></div>
     <div class="modal-foot"><button id="ho-copy">📋 Copy Markdown</button><button id="ho-md">⬇ Download .md</button><button id="ho-print">🖨 Print / Save PDF</button><button id="ho-close" class="primary">Close</button></div></div></div>`;
   const prev=()=>{root.querySelector("#ho-prev").innerHTML=handoverDoc(s,chosen()).html;root.querySelector("#ho-n").textContent=s.ids.size;};
@@ -5757,11 +5795,10 @@ function openMenu(){
       <label>Appearance</label>
       <div style="display:grid;grid-template-columns:62px 1fr;gap:6px 10px;align-items:center;font-size:12px">
         <span class="faint">Bench</span><div style="display:flex;gap:5px;flex-wrap:wrap">${[["bench","Follow Windows"],["bench-paper","Paper"],["bench-backlit","Backlit"]].map(([k,l])=>`<button class="sm tpc ${tp===k?"primary":""}" data-t="${k}">${l}</button>`).join("")}</div>
-        <span class="faint">Classic</span><div style="display:flex;gap:5px;flex-wrap:wrap">${[["dark","Dark"],["light","Light"],["instrument","Instrument White"]].map(([k,l])=>`<button class="sm tpc ${tp===k?"primary":""}" data-t="${k}">${l}</button>`).join("")}</div>
         <span class="faint">Motion</span><div style="display:flex;gap:5px;flex-wrap:wrap">${[["auto","Follow Windows"],["full","Full"],["off","Off"]].map(([k,l])=>`<button class="sm mpc ${mp===k?"primary":""}" data-m="${k}">${l}</button>`).join("")}</div>
         <span class="faint">Greeting</span><input id="mn-name" value="${esc(viewPref("userName",""))}" placeholder="Your first name, for the Today greeting (optional)" style="font-size:12px;padding:4px 8px">
       </div>
-      <p class="faint" style="font-size:11px;margin:8px 0 0">Bench is the default. The ☀/🌙 button in the title bar flips light ↔ dark within the family you pick. Theme and motion are remembered in this browser only — never in your data file.</p>
+      <p class="faint" style="font-size:11px;margin:8px 0 0">The ☀/🌙 button in the title bar flips Paper ↔ Backlit. Theme and motion are remembered in this browser only — never in your data file.</p>
     </div>
     <div class="grid2">
       <div class="field"><label>Landscapes (comma separated)</label><input id="m-land" class="mono" value="${esc(state.settings.landscapes.join(", "))}"></div>
@@ -5802,6 +5839,7 @@ function openMenu(){
       <button class="sm" id="mn-objtypes">Edit…</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+      <button id="mn-keys">⌨ Keyboard shortcuts (?)</button>
       <button id="mn-week">🗓 Weekly summary…</button>
       <button id="mn-hand">🧳 Handover pack…</button>
       <button id="mn-csv">⬇ Export transports (CSV for Excel)</button>
@@ -5832,6 +5870,7 @@ function openMenu(){
   root.querySelector("#mn-imgexp").onchange=e=>{const n=Math.max(0,parseInt(e.target.value||"0",10)||0);state.settings.imageExpiryDays=n;markDirty();};
   root.querySelector("#mn-objtypes").onclick=()=>{close();openObjTypes(()=>renderApp());};
   root.querySelector("#mn-week").onclick=()=>{close();openWeekly();};
+  root.querySelector("#mn-keys").onclick=()=>{close();openKeys();};
   root.querySelector("#mn-hand").onclick=()=>{close();openHandover();};
   root.querySelector("#mn-csv").onclick=exportTransportsCSV;
   root.querySelector("#mn-export").onclick=exportDownload;
@@ -5856,7 +5895,7 @@ async function openSnapshots(){
   root.querySelector("#s-close").onclick=close;
   root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
   root.querySelectorAll(".pickrow[data-i]").forEach(el=>el.onclick=async()=>{const s=arr[+el.dataset.i];
-    if(!confirm("Restore snapshot from "+s.date+"? Current unsaved changes will be replaced."))return;
+    if(!await askOk("Changes not yet in your file are replaced.",{title:"Restore the snapshot from "+s.date+"?",ok:"Restore"}))return;
     try{if(await loadFromText(s.data,"snapshot "+s.date)){resetActive();dirty=true;close();renderApp();toast("Restored snapshot "+s.date+" — Ctrl+S to write it to your file");}}
     catch(e){toast("Snapshot is unreadable: "+e.message,true);}});
 }
@@ -6087,7 +6126,7 @@ function syncRail(){const r=document.getElementById("rail");if(!r)return;
   if(b&&ind&&benchOn()){ind.style.transform=`translateY(${b.offsetTop+6}px)`;ind.style.background=getComputedStyle(b).getPropertyValue("--pen");}
   const set=(id,n)=>{const el=document.getElementById(id);if(el)el.textContent=n?String(n):"";};
   set("rcDemands",state.tasks.filter(t=>["open","progress","bug"].includes(t.status)).length);
-  set("rcJournal",state.todos.filter(x=>!x.done).length);
+  set("rcJournal",0);
   set("rcJobs",state.jobs.filter(jobOpen).length);
   set("rcMeetings",state.meetings.reduce((n,m)=>n+meetingOpenActions(m),0));}
 /* status bar: which file, whether it's saved, and when auto-save will write */
@@ -6145,7 +6184,7 @@ function cockpitHTML(mid=""){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>
       <div class="ck-clock"><div class="ck-lbl" style="text-align:right">local · offline · ${state.settings.autosave?"autosave on":"autosave off"}</div><div class="big"><canvas id="ckClockM" title="Local time"></canvas><small id="ckClock"></small></div></div></div>
     ${mid}<div class="ck-sech"><span class="ck-lbl">Pulse · read from your data file</span></div>
     <div class="ck-tiles">${CK_TILES.map((x,i)=>`<div class="ck-unit ck-tile" data-i="${i}" style="--pen:${x.pen}"><div class="top"><span class="no">${x.no}</span><span class="st"><i></i><span>${x.st}</span></span></div>
-      <canvas></canvas><div class="nm">${x.nm}</div><div class="bl">${x.bl}</div><div class="ft"><span>${foot[i]}</span><span class="go">Open ›</span></div></div>`).join("")}</div>
+      <canvas></canvas><div class="nm">${x.nm}</div>${i===2&&c.waiting.length?waitListHTML(c.waiting):`<div class="bl">${x.bl}</div>`}<div class="ft"><span>${foot[i]}</span><span class="go">Open ›</span></div></div>`).join("")}</div>
     <div class="ck-grid">
       <div class="ck-unit go" id="ckPipeU" style="--pen:var(--pen-3)" title="Open the transport board"><div class="ck-head"><h2>Transport pipeline</h2><span class="ck-meta">${c.total} transports · ${c.short} short of go-live · ${c.unrel} not released</span></div>
         <canvas id="ckPipe" style="width:100%;height:${lanesN*104+8}px;display:block"></canvas>
@@ -6153,7 +6192,7 @@ function cockpitHTML(mid=""){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>
       <div class="ck-unit"><div class="ck-head"><h2>Epics</h2><span class="ck-meta">${eps.length} active</span></div>
         ${eps.length?eps.map(e=>{const r=epicRollup(e),fu=epicFollowUps(e).length;return `<div class="ck-ep" data-e="${e.id}"><canvas></canvas><div style="min-width:0"><div class="ec">◆ ${esc(e.code||"EPIC")} · ${e.role==="contributor"?"contributor":"lead"}</div><div class="en">${esc(e.name)}</div>
           <div class="es">${r.done}/${r.ts.length} demands done${e.targetDate?" · target "+e.targetDate:""}${fu?` · <b>${fu} follow-up${fu>1?"s":""} due</b>`:""}</div></div></div>`;}).join(""):`<div class="ck-empty">No active epics.</div>`}</div>
-      <div class="ck-unit"><div class="ck-head"><h2>Next 10 weeks</h2><span class="ck-meta">freezes · recurring · due · next actions</span></div><canvas id="ckCal" data-still="1700" style="width:100%;height:158px;display:block"></canvas></div>
+      <div class="ck-unit"><div class="ck-head"><h2>Next 10 weeks</h2><span class="ck-meta">click a day to see what's on it</span></div><canvas id="ckCal" data-still="1700" style="width:100%;height:158px;display:block"></canvas><div class="ck-calday" id="ckCalDay"></div></div>
     </div>`;}
 function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU}=DK;
   const q=s=>host.querySelector(s),goView=v=>{dvSet(v);view="demands";renderApp();};
@@ -6285,21 +6324,21 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
       if(nx.has(di)){ring(ctx,x,y,3,C["pen-4"],vis,1.2);continue;}
       dot(ctx,x,y,r>4?.8:1.1,C["ink-4"],(di<today?.5:1)*vis);}
     [["pen-2","due"],["pen-4","next action",1],["pen-4","recurring"],["pen-1","freeze"]].forEach(([p,l,o],i)=>{const x=w-262+i*66;if(o)ring(ctx,x,h-5,3,C[p],1,1.2);else dot(ctx,x,h-5,2.2,C[p]);label(ctx,l,x+6,h-5,{size:8,weight:400,align:"left",color:C["ink-3"]});});});
+  wireCalClick(q("#ckCal"),host);
 }
 
 /* ---------- theme + motion ----------
    A per-viewer preference (localStorage, never the data file), so it also applies on
    the lock screen. Two families: Bench (the default — Paper / Backlit, or follow
-   Windows) and the three classic themes. The title-bar button flips light ↔ dark inside
+   Windows) (the three classic themes were retired in v48). The title-bar button flips light ↔ dark inside
    the chosen family; Settings (⋯) picks any theme and the motion level. */
 const THEME_KEY="demanddesk.theme";
-const THEME_OPTS={"bench":"Bench · follow Windows","bench-paper":"Bench · Paper","bench-backlit":"Bench · Backlit","dark":"Classic dark","light":"Classic light","instrument":"Instrument White"};
+const THEME_OPTS={"bench":"Follow Windows","bench-paper":"Paper","bench-backlit":"Backlit"};   /* the classic themes were retired in v48 — a saved one opens as Bench */
 try{if(!localStorage.getItem("demanddesk.themeV2")){localStorage.setItem("demanddesk.themeV2","1");localStorage.setItem(THEME_KEY,"bench");}}catch(e){}
 function currentTheme(){try{const t=localStorage.getItem(THEME_KEY);return THEME_OPTS[t]?t:"bench";}catch(e){return "bench";}}
 const darkMQ=matchMedia("(prefers-color-scheme: dark)");
 function applyTheme(t){t=t||currentTheme();const el=document.documentElement;
   if(t.startsWith("bench")){el.setAttribute("data-theme","bench");el.setAttribute("data-mode",t==="bench-backlit"||(t==="bench"&&darkMQ.matches)?"dark":"light");}
-  else{el.setAttribute("data-theme",t);el.removeAttribute("data-mode");}
   /* Chromium doesn't reliably repaint persistent chrome when :root variables change;
      detaching and reattaching the root forces every element to re-resolve them */
   el.style.display="none";void el.offsetHeight;el.style.display="";
@@ -6310,7 +6349,6 @@ function applyTheme(t){t=t||currentTheme();const el=document.documentElement;
 function setTheme(t){try{localStorage.setItem(THEME_KEY,t);}catch(e){}applyTheme(t);lastTind=null;renderApp();}
 function toggleTheme(){const t=currentTheme();let nx;
   if(t.startsWith("bench"))nx=document.documentElement.getAttribute("data-mode")==="dark"?"bench-paper":"bench-backlit";
-  else nx=t==="dark"?"light":"dark";
   setTheme(nx);toast("Theme: "+THEME_OPTS[nx]);}
 darkMQ.addEventListener("change",()=>{if(currentTheme()==="bench"){applyTheme("bench");renderApp();}});
 
@@ -6369,9 +6407,9 @@ function demandHeadBench(t,sub,lc){
       <button class="tab ${activeTab==="history"?"active":""}" data-tab="history" title="6">History<span class="count">${(t.timeline||[]).length}</span></button>
       <span class="tsep"></span>
       <button class="tab sec2 ${activeTab==="reference"?"active":""}" data-tab="reference">Reference<span class="count">${(t.reference||[]).length}</span></button>
-      <button class="tab sec2 ${activeTab==="calls"?"active":""}" data-tab="calls">Linked<span class="count">${lc}</span></button>
-      <button class="tab sec2 ${activeTab==="images"?"active":""}" data-tab="images">Images<span class="count">${imagesFor("demand",t.id).length}</span></button>
-      <span class="kbh" title="Keyboard: ↑ ↓ move through the list, 1–6 switch tabs, T logs time">↑↓ · 1–6 · T</span>
+      <button class="tab sec2 inrail ${activeTab==="calls"?"active":""}" data-tab="calls">Linked<span class="count">${lc}</span></button>
+      <button class="tab sec2 inrail ${activeTab==="images"?"active":""}" data-tab="images">Images<span class="count">${imagesFor("demand",t.id).length}</span></button>
+      <span class="kbh keyhint" title="Keyboard shortcuts" onclick="openKeys()">? keys</span>
       <span class="tind"></span>
     </div></div><div class="detail-body" id="detailBody"></div>`;}
 
@@ -6948,7 +6986,7 @@ function efTimerStop(){const tm=efTimer();if(!tm)return;try{localStorage.removeI
   openLogTime({key:ok?tm.key:undefined,hours:h>12?"":h,date:isoTs(tm.start)});}
 function efTimerUI(){const tm=efTimer(),b=document.getElementById("btnLog"),sb=document.getElementById("sbEffort");
   if(b){let txt="⏱ Log time";if(tm){const s=Math.max(0,Math.floor((Date.now()-tm.start)/1000));txt=`<span class="ef-rec"></span>${esc(efName(tm.key))} · ${Math.floor(s/3600)}:${p2(Math.floor(s/60)%60)}:${p2(s%60)} ■`;}
-    if(b.innerHTML!==txt)b.innerHTML=txt;b.title=tm?"Timer running — click to stop it and log the hours":"Log time (T)";b.classList.toggle("ef-on",!!tm);}
+    if(b._t!==txt){b._t=txt;b.innerHTML=txt;}b.title=tm?"Timer running — click to stop it and log the hours":"Log time (T)";b.classList.toggle("ef-on",!!tm);}
   if(sb){const h=efSum(state.efforts.filter(e=>e.date===todayStr()));sb.textContent=`⏱ today ${efFh(h)} / ${EF_DAY} h`;}}
 setInterval(efTimerUI,1000);
 document.addEventListener("keydown",e=>{
@@ -7662,7 +7700,7 @@ async function notesConnect(){if(!window.showDirectoryPicker){toast("This browse
 async function notesReconnect(){if(!notesDirSaved)return notesConnect();
   try{const p=await notesDirSaved.requestPermission({mode:"read"});if(p==="granted"){notesDir=notesDirSaved;await notesScan(true);}else toast("Permission not given — still searching the copy from the last read",true);}
   catch(e){toast("Couldn't reconnect: "+e.message,true);}}
-async function notesForget(){if(!confirm("Forget the notes folder?\n\nYour .txt files are not touched — this only clears the copy this app keeps for searching."))return;
+async function notesForget(){if(!await askOk("Your .txt files are not touched — this only clears the copy this app keeps for searching.",{title:"Forget the notes folder?",ok:"Forget"}))return;
   notesDir=notesDirSaved=null;NOTES=[];NOTES_META=null;if(useIdb){await idbDel("notesdir");await idbDel("notescache");await idbDel("notesmeta");}renderApp();toast("Notes folder forgotten");}
 function notesProgress(n){const el=document.getElementById("ntStatusTxt");if(el&&n!=null)el.textContent=`Reading… ${n} file${n===1?"":"s"} so far`;}
 function notesScan(loud){if(!notesDir)return Promise.resolve();if(notesBusy)return notesBusy;
@@ -7718,7 +7756,6 @@ function searchAll(q){const terms=searchTerms(q);if(!terms.length)return [];cons
     m.actions.forEach(a=>add("Action",`${a.done?"✓ ":""}${a.text||"(action)"}${a.owner?" ("+a.owner+")":""}`,[a.text,a.owner,a.resolution&&"↳ "+a.resolution],a.due||m.date,go,m.title));});
   state.credentials.forEach(c=>add("Vault",`${c.system||""}${c.client?"/"+c.client:""} ${c.label||""}`.trim()||"(credential)",[c.system,c.client,c.label,c.username,c.url,c.notes],"",()=>{view="vault";}));
   state.journal.forEach(j=>add("Journal",j.title||"Journal · "+j.date,[j.title,j.body],j.date,()=>{view="journal";journalTodos=false;activeJournalId=j.id;}));
-  state.todos.forEach(x=>add("To-do",`${x.done?"✓ ":""}${x.text||"(to-do)"}`,[x.text,x.resolution&&"↳ "+x.resolution],x.due||isoTs(x.createdAt),()=>{view="journal";journalTodos=true;}));
   state.wins.forEach(w=>add("Win",`${WIN_KINDS[w.kind].icon} ${w.text}`,[w.text],w.date,()=>{view="review";}));
   state.efforts.forEach(e=>{const k=efKey(e);add("Effort",`${efFh(e.hours)} h · ${efName(k)}`,[e.note,e.activity],e.date,()=>{
     if(e.taskId&&efTaskOf(e.taskId)){view="demands";activeId=e.taskId;activeTab="effort";}else if(e.epicId&&epicById(e.epicId)){view="epics";activeEpicId=e.epicId;epicTab="effort";}else view="effort";setTimeout(()=>openEfDay(e.date,k),0);},e.activity);});
@@ -8128,6 +8165,30 @@ async function runSelfTest(){
     const m=migrate(clone(stOldFixture())),tr0=m.tasks[0].transports[0];
     ok("Upgrade: transports get the day they were added, the unreleased reminder a default",/^\d{4}-\d\d-\d\d$/.test(tr0.addedOn)&&tr0.releasedOn===""&&m.settings.unreleasedDays===5,JSON.stringify([tr0.addedOn,tr0.releasedOn,m.settings.unreleasedDays]));
     view="today";renderApp();}
+   ok("One look: only Bench (Paper / Backlit) is offered",Object.keys(THEME_OPTS).every(k=>k.startsWith("bench"))&&benchOn());
+   {const m=migrate(clone(stOldFixture())),j=m.jobs.find(x=>x.title==="Legacy to-do");
+    ok("Upgrade: the Journal's to-dos become Tasks",!!j&&j.source==="self"&&j.status==="open"&&m.todos.length===0&&state.jobs.some(x=>x.title==="Sample to-do"&&x.due===efAdd(todayStr(),1)),JSON.stringify(j));}
+   {const n=state.debug.length,keep=state.debug[0];deleteWithUndo("Self-test delete",()=>{state.debug=[];});const gone=state.debug.length===0;
+    const ub=[...document.querySelectorAll("#toast button")].find(x=>x.textContent==="Undo");if(ub)ub.click();
+    ok("Delete with Undo: it goes, and Undo brings it back",gone&&state.debug.length===n&&state.debug[0].id===keep.id);}
+   {const p1=askText("Self-test question",{value:"a"});await sleep(40);const inp=document.querySelector(".ask-bg input");if(inp)inp.value="Self-test answer";const okb=document.querySelector('.ask-bg [data-a="ok"]');if(okb)okb.click();const v1=await p1;
+    const p2=askOk("Self-test?");await sleep(40);document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}));const v2=await p2;
+    ok("In-app dialogs: OK answers, Esc cancels",v1==="Self-test answer"&&v2===false&&!document.querySelector(".ask-bg"),JSON.stringify([v1,v2]));}
+   {view="today";renderApp();document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
+    document.dispatchEvent(new KeyboardEvent("keydown",{key:"g",bubbles:true}));document.dispatchEvent(new KeyboardEvent("keydown",{key:"r",bubbles:true}));const went=view==="transports";
+    view="demands";activeId="st-a";renderApp();document.dispatchEvent(new KeyboardEvent("keydown",{key:"n",bubbles:true}));const R=document.getElementById("modalRoot"),na=!!R.querySelector("#na-note");R.innerHTML="";
+    document.dispatchEvent(new KeyboardEvent("keydown",{key:"?",bubbles:true}));const ks=!!R.querySelector(".keys");R.innerHTML="";view="today";renderApp();
+    ok("Keys: G then a letter moves between workspaces, N opens the next action, ? lists them",went&&na&&ks,`go ${went} · N ${na} · ? ${ks}`);}
+   {view="demands";activeId="st-a";activeTab="overview";renderApp();await sleep(60);const d=document.getElementById("detail"),left=(d.textContent.match(/🗑|⏱|⏰|🏆/g)||[]).length;
+    ok("Line icons: the page's emoji are drawn as line icons",!!d.querySelector(".ic")&&!left,`emoji left: ${left}`);
+    view="jobs";activeJobId="st-job-1";renderApp();const j=jobById("st-job-1"),s0=j.status;{const sb=document.querySelector('#jb-seg button[data-s="open"]');if(sb)sb.click();}const segOk=j.status==="open";j.status=s0;renderApp();
+    const jh=!!document.querySelector(".bhead #jb-title")&&!!document.querySelector(".bh-fields.hide #jb-status");
+    view="meetings";meetingRollup=false;activeMeetingId="st-m1";renderApp();const mh=!!document.querySelector(".bhead #mt-title")&&!!document.querySelector(".bh-fields.hide #mt-date");
+    ok("Tasks and Meetings have the Demand header: status segment, readouts, details folded",segOk&&jh&&mh,`seg ${segOk} · task ${jh} · meeting ${mh}`);
+    const R=document.getElementById("modalRoot");openTaskModal(state.tasks.find(x=>x.id==="st-a"));const gs=R.querySelectorAll(".mg").length,more=!!R.querySelector("details.mg-more #m-proj"),all=["m-demand","m-title","m-desc","m-sys","m-epic","m-status","m-due","m-req","m-wait","m-theme"].every(i=>R.querySelector("#"+i));R.innerHTML="";
+    ok("The Edit dialog in groups — What, Where, When, Who, and More",gs===5&&more&&all,`groups ${gs} · more ${more} · fields ${all}`);
+    ok("A day in Next 10 weeks lists what's on it; the Waiting tile names the longest waits",calDayItems(efAdd(todayStr(),10)).some(x=>x.k==="Epic target")&&waitListHTML(cockpitCounts().waiting).includes("QA team"));
+    view="today";renderApp();}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
@@ -8136,7 +8197,7 @@ async function runSelfTest(){
   const a=state.tasks.find(t=>t.id==="st-a");
   const pick=()=>{activeJobId="st-job-1";activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
   const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
-  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
+  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Keyboard",()=>openKeys()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
     ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
     ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Settings menu",()=>openMenu()],["Close a task",()=>openJobClose(jobById("st-job-1"),"done")],["Log time on a task",()=>openLogTime({key:"j:st-job-1"})],["A closed task",()=>{view="jobs";activeJobId="st-job-2";renderApp();}],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
   const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;

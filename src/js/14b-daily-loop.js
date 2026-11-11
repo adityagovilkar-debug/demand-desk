@@ -1,7 +1,7 @@
 /* ===================== THE DAILY LOOP =====================
    Today's agenda: one ordered list of what the day asks of you — next steps due (demands and
-   tasks), your own meeting action points, follow-ups on what you're waiting for, Journal
-   to-dos and what's due — each done right where it shows. Close the day: an hours box for
+   tasks), your own meeting action points, follow-ups on what you're waiting for, and what's
+   due — each done right where it shows. Close the day: an hours box for
    every demand, task and meeting touched that day, against the working day. */
 const CHASE_EVERY=3;   /* days between follow-ups on something you're waiting for */
 const AG_KINDS={step:{l:"Next step",pen:"pen-2",o:0},act:{l:"Action point",pen:"pen-5",o:1},chase:{l:"Follow up",pen:"pen-4",o:2},todo:{l:"To-do",pen:"pen-6",o:3},release:{l:"Release",pen:"pen-1",o:3.5},check:{l:"Check in",pen:"pen-7",o:3.6},due:{l:"Due",pen:"pen-1",o:4}};
@@ -37,11 +37,9 @@ function agendaItems(){const t0=todayStr(),out=[];
   [...state.tasks,...state.jobs].filter(chaseDue).forEach(x=>{const n=isJob(x)?jobWaitDays(x):waitDays(x),lc=lastChase(x);
     add("chase",t0,`Chase ${esc(x.waiting.on)}`,x,[["Chased",()=>agChased(x),`You chased them — it comes back in ${CHASE_EVERY} days`],["Answer in",()=>agAnswerIn(x),"Not waiting any more"]],
       {sub:[n!=null?`waiting ${n} d`:"",lc&&lc>=(x.waiting.since||"")?`chased ${-daysUntil(lc)} d ago`:""].filter(Boolean).join(" · ")});});
-  state.todos.filter(x=>!x.done&&x.due&&x.due<=t0).forEach(x=>out.push({k:"todo",date:x.due,what:esc(x.text||"(no text)"),of:"📓 Journal",go:()=>{view="journal";journalTodos=true;renderApp();},
-    acts:[["✓ Done",()=>{x.done=true;x.doneAt=Date.now();markDirty();renderApp();efToastUndo("To-do ticked off",()=>{x.done=false;x.doneAt=null;markDirty();renderApp();});},"Tick it off"]]}));
   state.tasks.forEach(x=>{const d=earliestOpenDue(x);if(!d||d>t0)return;const s=d===x.dueDate&&!["delivered","closed"].includes(x.status)?null:agSubDue(x,d);
     add("due",d,s?`Subtask: ${esc(s.title)}`:d<t0?"Past its due date":"Due today",x);});
-  state.jobs.filter(j=>jobOpen(j)&&j.due&&j.due<=t0).forEach(x=>add("due",x.due,x.askedBy?`${esc(x.askedBy)} expects an answer`:"An answer is expected",x));
+  state.jobs.filter(j=>jobOpen(j)&&j.due&&j.due<=t0).forEach(x=>add("due",x.due,x.askedBy?`${esc(x.askedBy)} expects an answer`:x.source==="self"?"Due":"An answer is expected",x));
   out.push(...agendaTransportItems(t0));
   return out.sort((a,b)=>a.date.localeCompare(b.date)||AG_KINDS[a.k].o-AG_KINDS[b.k].o);}
 const AG_CAP=10;

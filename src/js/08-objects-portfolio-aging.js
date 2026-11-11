@@ -21,10 +21,10 @@ function openObjTypes(onDone){
         arr[i]=v;save(arr);};
       tr.querySelector(".ot-up").onclick=()=>{if(i){[arr[i-1],arr[i]]=[arr[i],arr[i-1]];save(arr);}};
       tr.querySelector(".ot-dn").onclick=()=>{if(i<arr.length-1){[arr[i+1],arr[i]]=[arr[i],arr[i+1]];save(arr);}};
-      tr.querySelector(".ot-x").onclick=()=>{
+      tr.querySelector(".ot-x").onclick=async()=>{
         if(arr.length===1){toast("Keep at least one type",true);return;}
         const n=objTypeUsage(arr[i]);
-        if(n&&!confirm(`"${arr[i]}" is used by ${n} object(s).\n\nThose objects keep the type — it just won't be offered for new ones. Remove it from the list?`))return;
+        if(n&&!await askOk(`“${arr[i]}” is used by ${n} object(s). They keep the type — it just won't be offered for new ones.`,{title:"Remove this type from the list?",ok:"Remove"}))return;
         arr.splice(i,1);save(arr);};});};
   const add=()=>{const el=root.querySelector("#ot-new"),v=el.value.trim();if(!v)return;
     const arr=objTypes().slice();
@@ -32,7 +32,7 @@ function openObjTypes(onDone){
     arr.push(v);state.settings.objTypes=arr;markDirty();el.value="";draw();el.focus();};
   root.querySelector("#ot-add").onclick=add;
   root.querySelector("#ot-new").onkeydown=ev=>{if(ev.key==="Enter")add();};
-  root.querySelector("#ot-reset").onclick=()=>{if(confirm("Restore the built-in list of object types?\n\nObjects already logged keep their current type."))
+  root.querySelector("#ot-reset").onclick=async()=>{if(await askOk("Objects already logged keep their current type.",{title:"Restore the built-in object types?",ok:"Restore"}))
     {state.settings.objTypes=[...DEF_OBJ_TYPES];markDirty();draw();}};
   const close=()=>{root.innerHTML="";if(onDone)onDone();};
   root.querySelector("#ot-close").onclick=close;

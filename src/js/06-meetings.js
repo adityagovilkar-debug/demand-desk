@@ -27,16 +27,21 @@ function renderMeetingDetail(){
   if(meetingRollup){return renderActionRollup(host);}
   const m=activeMeeting();
   if(!m){host.innerHTML=nopick("Select a meeting,<br>or create a new one.");return;}
-  host.innerHTML=`<div class="detail-head"><div class="dh-top"><div style="flex:1">
-      <input id="mt-title" value="${esc(m.title)}" style="font-size:18px;font-weight:650;border-color:transparent;background:transparent;padding:2px 4px;width:100%">
-      <div class="dh-dates" style="margin-top:8px">
+  const hOpen=hdrOpen.has(m.id)||!m.title||m.title==="(untitled meeting)",oa=m.actions.filter(a=>!a.done).length,nl=(m.taskIds||[]).length+(m.epicIds||[]).length;
+  host.innerHTML=`<div class="detail-head bhead" style="--pen:var(--pen-4)">
+    <div class="bh-top"><div class="bh-l">
+        <div class="bh-no"><span class="bh-id">Meeting</span> · ${esc(efWdl(m.date))}${m.team?` · ${esc(m.team)}`:""}</div>
+        <input id="mt-title" class="bh-title" value="${esc(m.title)}" title="Click to rename">
+        <div class="bh-sub">${m.attendees?"with "+esc(m.attendees):"no attendees noted"}</div></div>
+      <div class="bh-acts"><div class="bh-btns"><button class="sm ${hOpen?"on":""}" id="mt-det" title="Date, team, attendees, duration">✎ Details</button><button class="sm ghost danger" id="mt-del" title="Delete this meeting">🗑</button></div></div></div>
+    ${roHTML([{k:"Date",v:shortD(m.date)},{k:"Team",v:m.team?esc(m.team):"—"},{k:"Duration",v:m.hours?U(efFh(m.hours),"h"):"—",title:"Logged in Effort for you"},
+      {k:"Action points",v:m.actions.length?U(oa+" / "+m.actions.length,"open"):"—",cls:oa?"warn":""},{k:"Linked",v:nl?U(nl,nl===1?"demand or epic":"demands & epics"):"—"}],"stack")}
+    <div class="bh-fields ${hOpen?"":"hide"}"><div class="dh-dates" style="margin-top:8px">
         <span>Date <input type="date" id="mt-date" value="${m.date}" style="width:150px"></span>
         <span>Team <input id="mt-team" list="dl-team-m" value="${esc(m.team)}" placeholder="e.g. Portal Team" style="width:150px"><datalist id="dl-team-m">${distinctMeetingTeams().map(x=>`<option value="${esc(x)}">`).join("")}</datalist></span>
         <span class="dh-grow">Attendees <input id="mt-att" value="${esc(m.attendees)}" placeholder="Names…"></span>
         <span>Duration <input id="mt-hrs" value="${m.hours?efFh(m.hours):""}" placeholder="45m · 1.5h" style="width:90px" title="Logged in Effort for you — don't log it again there"></span>
-      </div><div id="mt-eff"></div></div>
-      <button class="sm danger" id="mt-del" style="align-self:flex-start">🗑 Delete</button></div>
-    <div class="tabs"><button class="tab active">Notes, Demands &amp; Action Points</button></div></div>
+      </div></div><div id="mt-eff"></div></div>
     <div class="detail-body">
       <div class="field"><label>Notes</label><textarea id="mt-body" style="min-height:180px">${esc(m.body)}</textarea></div>
       <div id="mt-links">${linkChips(m.body)}</div>
@@ -53,8 +58,9 @@ function renderMeetingDetail(){
     m.hours=h;e.target.value=h?efFh(h):"";touch(m);meetingEffortSync(m);drawMeetingEff(m);};
   host.querySelector("#mt-team").onchange=e=>{m.team=e.target.value.trim();touch(m);renderMeetingSidebar();};
   host.querySelector("#mt-att").onchange=e=>{m.attendees=e.target.value;touch(m);renderMeetingSidebar();};
+  host.querySelector("#mt-det").onclick=()=>hdrToggle(m.id,renderMeetingDetail);
   host.querySelector("#mt-body").onchange=e=>{m.body=e.target.value;touch(m);const l=host.querySelector("#mt-links");if(l)l.innerHTML=linkChips(m.body);};
-  host.querySelector("#mt-del").onclick=()=>{if(confirm("Delete this meeting and its action points?")){state.meetings=state.meetings.filter(x=>x.id!==m.id);meetingEffortRemove(m.id);state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="meeting"&&l.id===m.id)));activeMeetingId=null;markDirty();renderApp();}};
+  host.querySelector("#mt-del").onclick=()=>deleteWithUndo("Deleted the meeting",()=>{state.meetings=state.meetings.filter(x=>x.id!==m.id);meetingEffortRemove(m.id);state.images.forEach(im=>im.links=im.links.filter(l=>!(l.kind==="meeting"&&l.id===m.id)));activeMeetingId=null;});
   host.querySelector("#mt-link").onclick=()=>openLinkDemandsToMeeting(m);
   host.querySelector("#mt-addact").onclick=()=>{m.actions.push(normAction({}));touch(m);drawMeetingActions(m);renderMeetingSidebar();};
   drawMeetingChips(m);drawMeetingActions(m);

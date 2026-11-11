@@ -31,7 +31,7 @@ const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod 
 /* The data format this copy understands. Bump it whenever a change adds or reshapes saved data —
    an older copy then refuses to save a file written by a newer one, instead of dropping fields
    it doesn't know about. */
-const DATA_VERSION=31;
+const DATA_VERSION=32;
 let dataNewer=0;   /* the version of a loaded file that's newer than this copy (0 = fine) */
 const SELFTEST=/[?&]selftest\b/.test(location.search);   /* sandbox: nothing is read from or written to your data */
 function newerMsg(){return `This data was saved by a newer Demand Desk (data version ${dataNewer}); this copy understands up to ${DATA_VERSION}. Saving is switched off so nothing gets dropped — open the file with the newest DemandDesk.html.`;}
@@ -370,7 +370,11 @@ function migrate(d){
   (d.calls||[]).forEach(c=>d.meetings.push(normMeeting({id:c.id,date:c.date,title:c.title||"(untitled call)",team:"",attendees:c.attendees,body:c.body,taskIds:c.taskIds,actions:[],createdAt:c.createdAt,updatedAt:c.updatedAt})));
   (d.teamMeetings||[]).forEach(m=>d.meetings.push(normMeeting({id:m.id,date:m.date,title:m.title||"(untitled meeting)",team:m.team||"",attendees:m.attendees,body:m.body,taskIds:[],actions:m.actions,createdAt:m.createdAt,updatedAt:m.updatedAt})));
   d.calls=[];d.teamMeetings=[];
-  d.todos=(d.todos||[]).map(normTodo);
+  /* v32: the Journal's to-do list became Tasks — one list for things to do */
+  (d.todos||[]).map(normTodo).forEach(x=>{if(d.jobs.some(j=>j.id===x.id))return;
+    d.jobs.push(normJob({id:x.id,title:x.text||"(to-do)",source:"self",received:isoTs(x.createdAt||Date.now()),due:x.due||"",status:x.done?"done":"open",
+      closedOn:x.done?isoTs(x.doneAt||x.createdAt||Date.now()):"",outcome:x.resolution||"",createdAt:x.createdAt,updatedAt:x.doneAt||x.createdAt}));});
+  d.todos=[];
   d.credentials=(d.credentials||[]).map(c=>({id:c.id||uid(),system:c.system||"",client:c.client||"",label:c.label||"",url:c.url||"",username:c.username||"",password:c.password||"",notes:c.notes||"",updatedAt:c.updatedAt||Date.now()}));
   d.journal=(d.journal||[]).map(j=>({id:j.id||uid(),date:j.date||todayStr(),title:j.title||"",body:j.body||"",taskIds:(j.taskIds||[]).slice(),epicIds:(j.epicIds||[]).slice(),createdAt:j.createdAt||Date.now(),updatedAt:j.updatedAt||Date.now()}));
   d.debug=(d.debug||[]).map(s=>({id:s.id||uid(),title:s.title||"(untitled debug)",demandId:s.demandId||"",taskId:s.taskId||"",status:s.status||"active",resume:s.resume||"",notes:s.notes||"",
@@ -511,23 +515,23 @@ async function loadFromText(txt,labelName){
 }
 const UNSAVED_MSG="You have changes that haven't reached your data file yet.\n\nOpening a different file replaces what's on screen (a copy is kept first — ⋯ → Restore a daily snapshot). Continue?";
 async function openFile(){if(!supportsFS)return importViaInput();
-  flushEdits();if(dirty&&!confirm(UNSAVED_MSG))return;
+  flushEdits();if(dirty&&!await askOk(UNSAVED_MSG,{title:"Open another file?",ok:"Open"}))return;
   try{const[h]=await window.showOpenFilePicker({types:[{description:"Demand Desk data",accept:{"application/json":[".json"]}}]});
     const f=await h.getFile();const txt=await f.text();
     if(dirty)await snapshotNow("before opening "+h.name);
     if(!await loadFromText(txt,h.name))return;
     fileHandle=h;diskConflict=null;dirty=false;setFileLabel(h.name);await noteFileSig();rememberHandle();resetActive();backupLocal();renderApp();toast("Opened "+h.name);
   }catch(e){if(e.name!=="AbortError")toast("Couldn't open: "+e.message,true);}}
-function saveGuardOk(action){
+async function saveGuardOk(action){
   if(SELFTEST){toast("Self-test sandbox — nothing is saved",true);return false;}
   if(dataNewer){toast(newerMsg(),true);return false;}
   if(pendingEncrypted){toast("Unlock first — nothing can be saved while the data is still locked",true);return false;}
   if(!isValidState(state)){toast("Save blocked — data looks corrupted; your file was NOT overwritten.",true);return false;}
-  if(hadContent&&contentCount()===0){return confirm("⚠ You're about to "+action+" an EMPTY dataset — every demand, debug session, journal entry etc. is currently empty.\n\nThis is unusual and may be a mistake. Continue anyway?");}
+  if(hadContent&&contentCount()===0){return askOk("You\'re about to "+action+" an EMPTY dataset — every demand, debug session, journal entry etc. is currently empty.\n\nThis is unusual and may be a mistake. Continue anyway?",{title:"⚠ An empty file?",ok:"Continue",danger:true});}
   return true;
 }
 async function saveFile(){flushEdits();if(!supportsFS)return exportDownload();
-  if(!saveGuardOk("save"))return;
+  if(!await saveGuardOk("save"))return;
   try{
     /* a remembered file that just needs permission again: re-link it rather than
        opening a Save-As dialog that could fork the data into a second file */
@@ -538,9 +542,9 @@ async function saveFile(){flushEdits();if(!supportsFS)return exportDownload();
     await writeFile();diskConflict=null;lastSaveAuto=false;setFileLabel(fileHandle.name);rememberHandle();renderSaveState();maybeSnapshot();toast("Saved → "+fileHandle.name+(isEncrypted()?" 🔒":""));
   }catch(e){if(e.name!=="AbortError")toast("Save failed: "+e.message,true);}}
 function setFileLabel(n){const el=document.getElementById("fileLabel");if(el)el.textContent=n?("— "+n):"";}
-async function exportDownload(){if(!saveGuardOk("download"))return;const b=new Blob([await serializeData()],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="demand-desk-data.json";a.click();URL.revokeObjectURL(a.href);if(!supportsFS)dirty=false; /* only when the download IS the save — otherwise the linked file is still behind */
+async function exportDownload(){if(!await saveGuardOk("download"))return;const b=new Blob([await serializeData()],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="demand-desk-data.json";a.click();URL.revokeObjectURL(a.href);if(!supportsFS)dirty=false; /* only when the download IS the save — otherwise the linked file is still behind */
   renderSaveState();maybeSnapshot();toast("Downloaded data file"+(isEncrypted()?" 🔒":""));}
-function importViaInput(){flushEdits();if(dirty&&!confirm(UNSAVED_MSG))return;
+async function importViaInput(){flushEdits();if(dirty&&!await askOk(UNSAVED_MSG,{title:"Open another file?",ok:"Open"}))return;
   const i=document.createElement("input");i.type="file";i.accept=".json,application/json";
   i.onchange=()=>{const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=async()=>{try{if(dirty)await snapshotNow("before importing "+f.name);if(!await loadFromText(r.result,f.name))return;dirty=false;resetActive();backupLocal();renderApp();toast("Imported "+f.name);}catch(e){toast("Bad file: "+e.message,true);}};r.readAsText(f);};i.click();}
 

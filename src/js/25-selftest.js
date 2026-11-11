@@ -205,6 +205,30 @@ async function runSelfTest(){
     const m=migrate(clone(stOldFixture())),tr0=m.tasks[0].transports[0];
     ok("Upgrade: transports get the day they were added, the unreleased reminder a default",/^\d{4}-\d\d-\d\d$/.test(tr0.addedOn)&&tr0.releasedOn===""&&m.settings.unreleasedDays===5,JSON.stringify([tr0.addedOn,tr0.releasedOn,m.settings.unreleasedDays]));
     view="today";renderApp();}
+   ok("One look: only Bench (Paper / Backlit) is offered",Object.keys(THEME_OPTS).every(k=>k.startsWith("bench"))&&benchOn());
+   {const m=migrate(clone(stOldFixture())),j=m.jobs.find(x=>x.title==="Legacy to-do");
+    ok("Upgrade: the Journal's to-dos become Tasks",!!j&&j.source==="self"&&j.status==="open"&&m.todos.length===0&&state.jobs.some(x=>x.title==="Sample to-do"&&x.due===efAdd(todayStr(),1)),JSON.stringify(j));}
+   {const n=state.debug.length,keep=state.debug[0];deleteWithUndo("Self-test delete",()=>{state.debug=[];});const gone=state.debug.length===0;
+    const ub=[...document.querySelectorAll("#toast button")].find(x=>x.textContent==="Undo");if(ub)ub.click();
+    ok("Delete with Undo: it goes, and Undo brings it back",gone&&state.debug.length===n&&state.debug[0].id===keep.id);}
+   {const p1=askText("Self-test question",{value:"a"});await sleep(40);const inp=document.querySelector(".ask-bg input");if(inp)inp.value="Self-test answer";const okb=document.querySelector('.ask-bg [data-a="ok"]');if(okb)okb.click();const v1=await p1;
+    const p2=askOk("Self-test?");await sleep(40);document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}));const v2=await p2;
+    ok("In-app dialogs: OK answers, Esc cancels",v1==="Self-test answer"&&v2===false&&!document.querySelector(".ask-bg"),JSON.stringify([v1,v2]));}
+   {view="today";renderApp();document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
+    document.dispatchEvent(new KeyboardEvent("keydown",{key:"g",bubbles:true}));document.dispatchEvent(new KeyboardEvent("keydown",{key:"r",bubbles:true}));const went=view==="transports";
+    view="demands";activeId="st-a";renderApp();document.dispatchEvent(new KeyboardEvent("keydown",{key:"n",bubbles:true}));const R=document.getElementById("modalRoot"),na=!!R.querySelector("#na-note");R.innerHTML="";
+    document.dispatchEvent(new KeyboardEvent("keydown",{key:"?",bubbles:true}));const ks=!!R.querySelector(".keys");R.innerHTML="";view="today";renderApp();
+    ok("Keys: G then a letter moves between workspaces, N opens the next action, ? lists them",went&&na&&ks,`go ${went} · N ${na} · ? ${ks}`);}
+   {view="demands";activeId="st-a";activeTab="overview";renderApp();await sleep(60);const d=document.getElementById("detail"),left=(d.textContent.match(/🗑|⏱|⏰|🏆/g)||[]).length;
+    ok("Line icons: the page's emoji are drawn as line icons",!!d.querySelector(".ic")&&!left,`emoji left: ${left}`);
+    view="jobs";activeJobId="st-job-1";renderApp();const j=jobById("st-job-1"),s0=j.status;{const sb=document.querySelector('#jb-seg button[data-s="open"]');if(sb)sb.click();}const segOk=j.status==="open";j.status=s0;renderApp();
+    const jh=!!document.querySelector(".bhead #jb-title")&&!!document.querySelector(".bh-fields.hide #jb-status");
+    view="meetings";meetingRollup=false;activeMeetingId="st-m1";renderApp();const mh=!!document.querySelector(".bhead #mt-title")&&!!document.querySelector(".bh-fields.hide #mt-date");
+    ok("Tasks and Meetings have the Demand header: status segment, readouts, details folded",segOk&&jh&&mh,`seg ${segOk} · task ${jh} · meeting ${mh}`);
+    const R=document.getElementById("modalRoot");openTaskModal(state.tasks.find(x=>x.id==="st-a"));const gs=R.querySelectorAll(".mg").length,more=!!R.querySelector("details.mg-more #m-proj"),all=["m-demand","m-title","m-desc","m-sys","m-epic","m-status","m-due","m-req","m-wait","m-theme"].every(i=>R.querySelector("#"+i));R.innerHTML="";
+    ok("The Edit dialog in groups — What, Where, When, Who, and More",gs===5&&more&&all,`groups ${gs} · more ${more} · fields ${all}`);
+    ok("A day in Next 10 weeks lists what's on it; the Waiting tile names the longest waits",calDayItems(efAdd(todayStr(),10)).some(x=>x.k==="Epic target")&&waitListHTML(cockpitCounts().waiting).includes("QA team"));
+    view="today";renderApp();}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
@@ -213,7 +237,7 @@ async function runSelfTest(){
   const a=state.tasks.find(t=>t.id==="st-a");
   const pick=()=>{activeJobId="st-job-1";activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
   const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
-  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
+  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Keyboard",()=>openKeys()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
     ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
     ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Settings menu",()=>openMenu()],["Close a task",()=>openJobClose(jobById("st-job-1"),"done")],["Log time on a task",()=>openLogTime({key:"j:st-job-1"})],["A closed task",()=>{view="jobs";activeJobId="st-job-2";renderApp();}],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
   const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;

@@ -228,7 +228,7 @@ function efTimerStop(){const tm=efTimer();if(!tm)return;try{localStorage.removeI
   openLogTime({key:ok?tm.key:undefined,hours:h>12?"":h,date:isoTs(tm.start)});}
 function efTimerUI(){const tm=efTimer(),b=document.getElementById("btnLog"),sb=document.getElementById("sbEffort");
   if(b){let txt="⏱ Log time";if(tm){const s=Math.max(0,Math.floor((Date.now()-tm.start)/1000));txt=`<span class="ef-rec"></span>${esc(efName(tm.key))} · ${Math.floor(s/3600)}:${p2(Math.floor(s/60)%60)}:${p2(s%60)} ■`;}
-    if(b.innerHTML!==txt)b.innerHTML=txt;b.title=tm?"Timer running — click to stop it and log the hours":"Log time (T)";b.classList.toggle("ef-on",!!tm);}
+    if(b._t!==txt){b._t=txt;b.innerHTML=txt;}b.title=tm?"Timer running — click to stop it and log the hours":"Log time (T)";b.classList.toggle("ef-on",!!tm);}
   if(sb){const h=efSum(state.efforts.filter(e=>e.date===todayStr()));sb.textContent=`⏱ today ${efFh(h)} / ${EF_DAY} h`;}}
 setInterval(efTimerUI,1000);
 document.addEventListener("keydown",e=>{

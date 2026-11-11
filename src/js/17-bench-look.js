@@ -224,7 +224,7 @@ function syncRail(){const r=document.getElementById("rail");if(!r)return;
   if(b&&ind&&benchOn()){ind.style.transform=`translateY(${b.offsetTop+6}px)`;ind.style.background=getComputedStyle(b).getPropertyValue("--pen");}
   const set=(id,n)=>{const el=document.getElementById(id);if(el)el.textContent=n?String(n):"";};
   set("rcDemands",state.tasks.filter(t=>["open","progress","bug"].includes(t.status)).length);
-  set("rcJournal",state.todos.filter(x=>!x.done).length);
+  set("rcJournal",0);
   set("rcJobs",state.jobs.filter(jobOpen).length);
   set("rcMeetings",state.meetings.reduce((n,m)=>n+meetingOpenActions(m),0));}
 /* status bar: which file, whether it's saved, and when auto-save will write */
@@ -282,7 +282,7 @@ function cockpitHTML(mid=""){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>
       <div class="ck-clock"><div class="ck-lbl" style="text-align:right">local · offline · ${state.settings.autosave?"autosave on":"autosave off"}</div><div class="big"><canvas id="ckClockM" title="Local time"></canvas><small id="ckClock"></small></div></div></div>
     ${mid}<div class="ck-sech"><span class="ck-lbl">Pulse · read from your data file</span></div>
     <div class="ck-tiles">${CK_TILES.map((x,i)=>`<div class="ck-unit ck-tile" data-i="${i}" style="--pen:${x.pen}"><div class="top"><span class="no">${x.no}</span><span class="st"><i></i><span>${x.st}</span></span></div>
-      <canvas></canvas><div class="nm">${x.nm}</div><div class="bl">${x.bl}</div><div class="ft"><span>${foot[i]}</span><span class="go">Open ›</span></div></div>`).join("")}</div>
+      <canvas></canvas><div class="nm">${x.nm}</div>${i===2&&c.waiting.length?waitListHTML(c.waiting):`<div class="bl">${x.bl}</div>`}<div class="ft"><span>${foot[i]}</span><span class="go">Open ›</span></div></div>`).join("")}</div>
     <div class="ck-grid">
       <div class="ck-unit go" id="ckPipeU" style="--pen:var(--pen-3)" title="Open the transport board"><div class="ck-head"><h2>Transport pipeline</h2><span class="ck-meta">${c.total} transports · ${c.short} short of go-live · ${c.unrel} not released</span></div>
         <canvas id="ckPipe" style="width:100%;height:${lanesN*104+8}px;display:block"></canvas>
@@ -290,7 +290,7 @@ function cockpitHTML(mid=""){const c=cockpitCounts(),worst=c.over.reduce((m,t)=>
       <div class="ck-unit"><div class="ck-head"><h2>Epics</h2><span class="ck-meta">${eps.length} active</span></div>
         ${eps.length?eps.map(e=>{const r=epicRollup(e),fu=epicFollowUps(e).length;return `<div class="ck-ep" data-e="${e.id}"><canvas></canvas><div style="min-width:0"><div class="ec">◆ ${esc(e.code||"EPIC")} · ${e.role==="contributor"?"contributor":"lead"}</div><div class="en">${esc(e.name)}</div>
           <div class="es">${r.done}/${r.ts.length} demands done${e.targetDate?" · target "+e.targetDate:""}${fu?` · <b>${fu} follow-up${fu>1?"s":""} due</b>`:""}</div></div></div>`;}).join(""):`<div class="ck-empty">No active epics.</div>`}</div>
-      <div class="ck-unit"><div class="ck-head"><h2>Next 10 weeks</h2><span class="ck-meta">freezes · recurring · due · next actions</span></div><canvas id="ckCal" data-still="1700" style="width:100%;height:158px;display:block"></canvas></div>
+      <div class="ck-unit"><div class="ck-head"><h2>Next 10 weeks</h2><span class="ck-meta">click a day to see what's on it</span></div><canvas id="ckCal" data-still="1700" style="width:100%;height:158px;display:block"></canvas><div class="ck-calday" id="ckCalDay"></div></div>
     </div>`;}
 function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU}=DK;
   const q=s=>host.querySelector(s),goView=v=>{dvSet(v);view="demands";renderApp();};
@@ -422,21 +422,21 @@ function mountCockpit(host){const {dot,ring,dotArc,dotRing,label,C,scope,rng,TAU
       if(nx.has(di)){ring(ctx,x,y,3,C["pen-4"],vis,1.2);continue;}
       dot(ctx,x,y,r>4?.8:1.1,C["ink-4"],(di<today?.5:1)*vis);}
     [["pen-2","due"],["pen-4","next action",1],["pen-4","recurring"],["pen-1","freeze"]].forEach(([p,l,o],i)=>{const x=w-262+i*66;if(o)ring(ctx,x,h-5,3,C[p],1,1.2);else dot(ctx,x,h-5,2.2,C[p]);label(ctx,l,x+6,h-5,{size:8,weight:400,align:"left",color:C["ink-3"]});});});
+  wireCalClick(q("#ckCal"),host);
 }
 
 /* ---------- theme + motion ----------
    A per-viewer preference (localStorage, never the data file), so it also applies on
    the lock screen. Two families: Bench (the default — Paper / Backlit, or follow
-   Windows) and the three classic themes. The title-bar button flips light ↔ dark inside
+   Windows) (the three classic themes were retired in v48). The title-bar button flips light ↔ dark inside
    the chosen family; Settings (⋯) picks any theme and the motion level. */
 const THEME_KEY="demanddesk.theme";
-const THEME_OPTS={"bench":"Bench · follow Windows","bench-paper":"Bench · Paper","bench-backlit":"Bench · Backlit","dark":"Classic dark","light":"Classic light","instrument":"Instrument White"};
+const THEME_OPTS={"bench":"Follow Windows","bench-paper":"Paper","bench-backlit":"Backlit"};   /* the classic themes were retired in v48 — a saved one opens as Bench */
 try{if(!localStorage.getItem("demanddesk.themeV2")){localStorage.setItem("demanddesk.themeV2","1");localStorage.setItem(THEME_KEY,"bench");}}catch(e){}
 function currentTheme(){try{const t=localStorage.getItem(THEME_KEY);return THEME_OPTS[t]?t:"bench";}catch(e){return "bench";}}
 const darkMQ=matchMedia("(prefers-color-scheme: dark)");
 function applyTheme(t){t=t||currentTheme();const el=document.documentElement;
   if(t.startsWith("bench")){el.setAttribute("data-theme","bench");el.setAttribute("data-mode",t==="bench-backlit"||(t==="bench"&&darkMQ.matches)?"dark":"light");}
-  else{el.setAttribute("data-theme",t);el.removeAttribute("data-mode");}
   /* Chromium doesn't reliably repaint persistent chrome when :root variables change;
      detaching and reattaching the root forces every element to re-resolve them */
   el.style.display="none";void el.offsetHeight;el.style.display="";
@@ -447,7 +447,6 @@ function applyTheme(t){t=t||currentTheme();const el=document.documentElement;
 function setTheme(t){try{localStorage.setItem(THEME_KEY,t);}catch(e){}applyTheme(t);lastTind=null;renderApp();}
 function toggleTheme(){const t=currentTheme();let nx;
   if(t.startsWith("bench"))nx=document.documentElement.getAttribute("data-mode")==="dark"?"bench-paper":"bench-backlit";
-  else nx=t==="dark"?"light":"dark";
   setTheme(nx);toast("Theme: "+THEME_OPTS[nx]);}
 darkMQ.addEventListener("change",()=>{if(currentTheme()==="bench"){applyTheme("bench");renderApp();}});
 

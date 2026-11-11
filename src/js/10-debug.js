@@ -42,7 +42,7 @@ function renderDebugDetail(){
   host.querySelector("#d-demand").onchange=e=>{s.demandId=e.target.value;touch(s);renderDebugSidebar();};
   host.querySelector("#d-status").onchange=e=>{s.status=e.target.value;touch(s);renderDebugDetail();renderDebugSidebar();};
   host.querySelector("#d-link").onchange=e=>{s.taskId=e.target.value;const t=state.tasks.find(x=>x.id===e.target.value);if(t&&!s.demandId&&t.demandId)s.demandId=t.demandId;touch(s);renderDebugDetail();};
-  host.querySelector("#d-del").onclick=()=>{if(confirm("Delete this debug session?")){state.debug=state.debug.filter(x=>x.id!==s.id);activeDebugId=null;markDirty();renderApp();}};
+  host.querySelector("#d-del").onclick=()=>deleteWithUndo("Deleted the debug session",()=>{state.debug=state.debug.filter(x=>x.id!==s.id);activeDebugId=null;});
   renderDebugBody(host.querySelector("#dBody"),s);
 }
 function renderDebugBody(body,s){

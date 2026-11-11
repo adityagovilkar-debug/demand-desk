@@ -25,21 +25,26 @@ transport's route as a rail (reached stations with their dates, the next import
 pulsing), a task's rail from the ask to the answer, leader callouts on the peak and
 this week in *Where the hours went*, a *Days on it* dot calendar on a demand's
 Effort tab, sliding segmented controls, and a demand's ID that settles in as you
-open it. Choose any theme under
-**⋯ → Settings → Appearance**:
+open it. Under **⋯ → Settings → Appearance** pick **Follow Windows** (default),
+**Paper** or **Backlit**; the **☀ / 🌙** button in the title bar flips Paper ↔ Backlit.
+(The three classic themes — Dark, Light, Instrument White — were retired in v48; a
+browser that had one saved opens in Bench.)
 
-| Family | Options |
-|---|---|
-| Bench | Follow Windows (default) · Paper · Backlit |
-| Classic | Dark · Light · Instrument White |
+**Line icons.** Every icon is a line drawing in the side rail's style — one stroke
+weight, the colour of the text around it — so it follows Paper, Backlit and the
+status colours. (The app used emoji until v48; they're swapped for their line icon
+as the page draws. Dropdown options and tooltips, which can only hold text, keep
+the character; ✓ ✕ ✎ stay as typed marks.)
 
-The **☀ / 🌙** button in the title bar flips light ↔ dark *within* the family you
-picked (Paper ↔ Backlit, or Classic dark ↔ light), so there's no cycling through
-six themes. The classic themes keep the original layout exactly.
+**Dialogs.** The app asks its own questions — never the browser's grey prompt or
+confirm box — above whatever is open: Enter for OK, Esc to cancel. Deleting doesn't
+ask "are you sure?": it happens, and **Deleted … · Undo** shows for five seconds
+(everything as it was is kept that long). Only what can't be undone still asks, in
+red — deleting an image file, removing encryption, deleting a comment.
 
 **What Bench adds**
 - **Shell:** an icon rail on the left (with a sliding indicator, counts for
-  active demands, open to-dos and open meeting actions, and Settings at the
+  active demands, open tasks and open meeting actions, and Settings at the
   bottom), an animated wordmark and clock in the title bar, and a **status bar**:
   which file you're linked to, whether it's saved, a live
   **"autosave in N s"** countdown, and totals.
@@ -96,7 +101,7 @@ six themes. The classic themes keep the original layout exactly.
   just still.
 - **Greeting** — optionally put your first name in Settings.
 
-**Instrument White** (a classic theme) is the scientific-plotter aesthetic from the Yantra
+**Instrument White** (once a theme of its own, now the basis of Bench) is the scientific-plotter aesthetic from the Yantra
 dashboard (see `instrument-white/`), the same one Team Desk offers: white paper
 with a faint engineering dot-grid, hairline rules, corner registration tics on
 every panel, uppercase silkscreen micro-labels, and tabular monospaced figures.
@@ -145,7 +150,7 @@ transports and what's still short of Prod, object clashes, reference entries
 (secrets left out), debugging in progress with its resume note, latest comments
 and open action points from linked meetings. It ends with other teams you're
 waiting on (from the epics) and freezes / recurring duties (optionally your
-to-dos) that fall in the period. Choose which demands go in (default: open work
+tasks due before you're back) that fall in the period. Choose which demands go in (default: open work
 plus delivered-but-not-in-Prod). Copy as Markdown, download .md, or print to PDF.
 
 ## Portability
@@ -161,7 +166,7 @@ or OneDrive. Open the HTML there, then **📂 Open** the JSON. Identical anywher
 A cross-cutting dashboard that pulls everything needing attention into one glance:
 **Overdue**, **Bugs / Rework**, **Go-live: TRs not yet at Prod** (counting ToC
 coverage), **Waiting on** (blocked demands), **Due this week**, **Open action
-points** (from meetings), **My action items** (personal reminders),
+points** (from meetings),
 **Recurring processes due** and **Freeze periods** (from the Playbook), **Stale**
 (open, untouched 14d+), **Debug sessions gone quiet** (active but untouched 14d+ —
 one click **✓ Resolved** or **⏸ Paused** right on the card), plus today's journal.
@@ -169,7 +174,7 @@ Click any item to jump straight to it.
 - **Today's agenda** — the first thing under the greeting: one ordered list of what
   the day asks of you, late items first — next steps due (demands and tasks), your
   own meeting action points due, **follow-ups** on what you've waited on for 3+ days,
-  Journal to-dos due, and demands or tasks due. Each is done right there: **✓ Done**
+  and demands or tasks due. Each is done right there: **✓ Done**
   / **Move** on a step, **✓ Done** / **↗ Task** on an action point, **Chased** /
   **Answer in** on a follow-up (a chase is noted in History and the follow-up comes
   back 3 days later; both have Undo). An action point counts as yours when its owner
@@ -204,7 +209,10 @@ Click any item to jump straight to it.
   without it), a data file changed by something else is noticed, the newer browser
   backup wins, Undo brings a deleted entry back, the main dialogs do what they say,
   and moving a delivered demand back from ✎ Edit asks why; then opens every page,
-  demand tab, epic tab and dialog in all six themes.
+  demand tab, epic tab and dialog in Paper, Backlit and Follow Windows; and checks
+  the v48 pieces — one look, to-dos become tasks, delete with Undo, the app's own
+  dialogs, the keys, line icons, the Task and Meeting headers, the Edit dialog in
+  groups, a day in Next 10 weeks.
   A green or red report lists anything that broke (**⧉ Copy report** to send it on).
   Takes about 15 seconds — run it after every update, on the work laptop too.
 - **Newer-data guard** — every data file records the format version that wrote it.
@@ -278,7 +286,7 @@ Click any item to jump straight to it.
   the app is open — lock your laptop.
 
 ### Demands
-- **The Bench Demands page** (default look; classic themes keep the old layout):
+- **The Demands page**:
   - **Three panes** — list · demand · **context rail**. The rail shows the next
     action, key facts, pinned Reference entries, Linked items and image thumbnails
     so you don't have to open those tabs. ⇥ in the header hides/shows it (the rail
@@ -537,8 +545,13 @@ The list filters Open / Waiting / Done / All with a text filter. Tasks show up o
 time** and the timer (*Tasks — not demands*), in Effort charts, the week sheet and the
 day ledger, in the **Friday wrap-up** (done this week), in **Review** (tasks handled and
 how many were answered by the date expected — a tile, a line and a table in the
-document), in **Search** and in **Browse by month**. A Journal to-do that grows into
-more than a one-liner has **↗ Task** to move it here.
+document), in **Search** and in **Browse by month**. The Journal's old to-do list
+became tasks in v48 (*came in by: myself*) — one list for things to do.
+- **The header** works like a demand's: how it came in and who asked on top, the
+  title (click to rename), a status segment (To do · In progress · Done · Dropped),
+  ⏱ Log time · ✓ Close… · ✎ Details · delete, and readouts — received, expected
+  (red when late), hours, log entries, waiting on. The fields (who asked, how it came
+  in, the dates) fold under **✎ Details**, open by themselves for a new task.
 
 ### Debug
 A debugging workbench per investigation, so a weekend gap doesn't lose you:
@@ -736,11 +749,8 @@ and **action points** (text, owner, due date, done).
 - **Daily entries** — one consolidated rough-notes entry per day.
 - **Linked demands** — link an entry to the demand(s) the notes are about
   (chips + 🔗 button); linked entries appear on the demand's *Linked* tab.
-- **✅ My action items** — a single running personal to-do list (reminders and
-  internal tasks not tied to any demand or meeting). Open via the pinned entry at
-  the top of the Journal sidebar; items persist across days until you tick them,
-  and open items also surface on the Today dashboard. Add with a due date, tick
-  to complete, add ↳ outcome notes (📝), clear completed in one click.
+- The Journal is the day's notes. Its old **My action items** list became Tasks in
+  v48 (data v32) — every to-do moved across, done ones as done.
 
 ### Epics
 Group related demands under one initiative. A **LUCA** epic might hold three
@@ -891,7 +901,7 @@ file:
 ### Lessons
 - **Closing a demand asks**: "💡 anything worth remembering?" — what you'd tell yourself
   before the next demand like it. **Skip** if there's nothing; add one any time from
-  **Lessons** on the demand's Overview (Work tab in the classic themes).
+  **Lessons** on the demand's Overview.
 - A lesson stays with its demand and is searchable. Tick **Also add to the Playbook** (or
   **→ Add to the Playbook** later) for rules you'd follow on *any* demand: it becomes a
   **💡 Lesson learned** Playbook entry (category *Lessons learned*) that links back to the
@@ -937,5 +947,12 @@ drive, not a shared location.
 - `Alt+N` — New demand
 - `T` — Log time (when you're not typing in a field)
 - `W` — Note a win
+- `N` — next action on the demand or task you're on · `D` — ✓ done (tick the next
+  action off, and log the time) · `E` — edit the demand
+- `G` then a letter — go to a workspace: `T` Today · `D` Demands · `R` Transports ·
+  `K` Tasks · `E` Epics · `M` Meetings · `J` Journal · `F` Effort · `V` Review ·
+  `O` Month · `B` Playbook · `X` Debug · `S` Search
+- `↑ ↓` — the demand above / below in the list · `1`–`6` — the demand's tabs
+- `?` — every key on one sheet (also ⋯ → Keyboard shortcuts, and *? keys* on a demand)
 - `Ctrl+Enter` — create / save in the demand dialog
 - `Esc` — close the open dialog or image (a half-filled demand asks first)

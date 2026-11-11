@@ -9,11 +9,10 @@ function openMenu(){
       <label>Appearance</label>
       <div style="display:grid;grid-template-columns:62px 1fr;gap:6px 10px;align-items:center;font-size:12px">
         <span class="faint">Bench</span><div style="display:flex;gap:5px;flex-wrap:wrap">${[["bench","Follow Windows"],["bench-paper","Paper"],["bench-backlit","Backlit"]].map(([k,l])=>`<button class="sm tpc ${tp===k?"primary":""}" data-t="${k}">${l}</button>`).join("")}</div>
-        <span class="faint">Classic</span><div style="display:flex;gap:5px;flex-wrap:wrap">${[["dark","Dark"],["light","Light"],["instrument","Instrument White"]].map(([k,l])=>`<button class="sm tpc ${tp===k?"primary":""}" data-t="${k}">${l}</button>`).join("")}</div>
         <span class="faint">Motion</span><div style="display:flex;gap:5px;flex-wrap:wrap">${[["auto","Follow Windows"],["full","Full"],["off","Off"]].map(([k,l])=>`<button class="sm mpc ${mp===k?"primary":""}" data-m="${k}">${l}</button>`).join("")}</div>
         <span class="faint">Greeting</span><input id="mn-name" value="${esc(viewPref("userName",""))}" placeholder="Your first name, for the Today greeting (optional)" style="font-size:12px;padding:4px 8px">
       </div>
-      <p class="faint" style="font-size:11px;margin:8px 0 0">Bench is the default. The ☀/🌙 button in the title bar flips light ↔ dark within the family you pick. Theme and motion are remembered in this browser only — never in your data file.</p>
+      <p class="faint" style="font-size:11px;margin:8px 0 0">The ☀/🌙 button in the title bar flips Paper ↔ Backlit. Theme and motion are remembered in this browser only — never in your data file.</p>
     </div>
     <div class="grid2">
       <div class="field"><label>Landscapes (comma separated)</label><input id="m-land" class="mono" value="${esc(state.settings.landscapes.join(", "))}"></div>
@@ -54,6 +53,7 @@ function openMenu(){
       <button class="sm" id="mn-objtypes">Edit…</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+      <button id="mn-keys">⌨ Keyboard shortcuts (?)</button>
       <button id="mn-week">🗓 Weekly summary…</button>
       <button id="mn-hand">🧳 Handover pack…</button>
       <button id="mn-csv">⬇ Export transports (CSV for Excel)</button>
@@ -84,6 +84,7 @@ function openMenu(){
   root.querySelector("#mn-imgexp").onchange=e=>{const n=Math.max(0,parseInt(e.target.value||"0",10)||0);state.settings.imageExpiryDays=n;markDirty();};
   root.querySelector("#mn-objtypes").onclick=()=>{close();openObjTypes(()=>renderApp());};
   root.querySelector("#mn-week").onclick=()=>{close();openWeekly();};
+  root.querySelector("#mn-keys").onclick=()=>{close();openKeys();};
   root.querySelector("#mn-hand").onclick=()=>{close();openHandover();};
   root.querySelector("#mn-csv").onclick=exportTransportsCSV;
   root.querySelector("#mn-export").onclick=exportDownload;
@@ -108,7 +109,7 @@ async function openSnapshots(){
   root.querySelector("#s-close").onclick=close;
   root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};
   root.querySelectorAll(".pickrow[data-i]").forEach(el=>el.onclick=async()=>{const s=arr[+el.dataset.i];
-    if(!confirm("Restore snapshot from "+s.date+"? Current unsaved changes will be replaced."))return;
+    if(!await askOk("Changes not yet in your file are replaced.",{title:"Restore the snapshot from "+s.date+"?",ok:"Restore"}))return;
     try{if(await loadFromText(s.data,"snapshot "+s.date)){resetActive();dirty=true;close();renderApp();toast("Restored snapshot "+s.date+" — Ctrl+S to write it to your file");}}
     catch(e){toast("Snapshot is unreadable: "+e.message,true);}});
 }

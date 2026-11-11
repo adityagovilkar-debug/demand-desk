@@ -17,21 +17,7 @@
     --radius:9px; --mono:"Cascadia Code","Consolas",ui-monospace,monospace;
     --sans:"Segoe UI",system-ui,-apple-system,sans-serif;
   }
-  :root[data-theme="light"]{
-    --bg:#eef1f5; --bg2:#ffffff; --panel:#ffffff; --panel2:#eef1f5;
-    --line:#d8dee4; --line2:#ccd3da;
-    --txt:#1f2328; --muted:#59636e; --faint:#818b96;
-    --accent:#1f6feb; --accent2:#6b46e0; --on-accent:#ffffff;
-    --green:#1a7f37; --amber:#9a6700; --red:#cf222e; --teal:#0f8a80;
-    --chip:#eaeef2;
-    --danger-bg:#ffebe9; --toc-bg:#f3f0ff;
-    --cover-yes-bg:#e6f4ea; --cover-yes-line:#b7e0c3;
-    --cover-no-bg:#fbeec2; --cover-no-line:#e6d19a;
-    --resume-bg:#eaf5ee; --pin-bg:#fbf3dd;
-    --exp-bg:#ffe9e6; --exp-line:#f0b3ab;
-    --alert-line:#f0b3ab; --warn-line:#e6d19a;
-    --accent-line:#b6d3f5; --green-line:#b7e0c3; --amber-line:#e6d19a; --red-line:#f0b3ab; --violet-line:#d0c4e4; --teal-line:#b3dfd9;
-  }
+  
   /* ---- INSTRUMENT WHITE ----
      Scientific-plotter look: white paper, hairlines, drafting-pen signal colours,
      silkscreen micro-labels, tabular mono figures. Adapted from instrument-white/.
@@ -44,33 +30,7 @@
        violet   #6B3FA0 — projects & Transports-of-Copies (structural grouping)
      Ink carries all structure; a colour anywhere means a real state.
      Scoped entirely under the attribute — dark and light are untouched. */
-  :root[data-theme="instrument"]{
-    color-scheme:light;
-    --bg:#FFFFFF; --bg2:#FFFFFF; --panel:#FFFFFF; --panel2:#F7F7F4;
-    --line:#E7E6DF; --line2:#D6D5CC;
-    --txt:#12141A; --muted:#5A5E68; --faint:#9A9EA8;
-    --accent:#1B4FA0; --accent2:#6B3FA0; --on-accent:#FFFFFF;
-    --green:#0E7C63; --amber:#B07500; --red:#D93A1E; --teal:#0E7C63;
-    --chip:#FFFFFF;
-    /* the system forbids surface gradients and tinted fills — flat paper, ruled edges */
-    --danger-bg:#FDF1EE; --toc-bg:#FFFFFF;
-    --cover-yes-bg:#FFFFFF; --cover-yes-line:#B4D8CE;
-    --cover-no-bg:#FFFFFF; --cover-no-line:#E4D3A6;
-    --resume-bg:#FFFFFF; --pin-bg:#FFFFFF;
-    --exp-bg:#FFFFFF; --exp-line:#F0C0B6;
-    --alert-line:#F0C0B6; --warn-line:#E4D3A6;
-    --accent-line:#BFD0E6; --green-line:#B4D8CE; --amber-line:#E4D3A6; --red-line:#F0C0B6; --violet-line:#D0C4E4; --teal-line:#B4D8CE;
-    --radius:3px;
-    --mono:ui-monospace,"Cascadia Mono","JetBrains Mono","SF Mono",Consolas,monospace;
-    --sans:"Inter","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
-    /* Silkscreen face for micro-labels. Bahnschrift is Windows' stock DIN — the
-       typeface of engineering drawings — so it needs no install and gives the
-       labels a genuinely technical voice instead of falling back to Segoe UI
-       (Inter is not installed on a locked-down machine, so --sans alone still
-       renders as the old font). Condensed, so tracked uppercase stays compact. */
-    --label:"Bahnschrift","Inter","Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;
-    --rule-strong:#D6D5CC; --grid-dot:#DEDDD6; --ink-3:#9A9EA8;
-  }
+  
   *{box-sizing:border-box}
   html,body{height:100%}
   body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);font-size:14px;line-height:1.45;overflow:hidden}
@@ -317,11 +277,11 @@
   .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:9px 16px;font-size:13px;z-index:80;box-shadow:0 8px 30px rgba(0,0,0,.4);opacity:0;transition:.25s;pointer-events:none}
   .toast.show{opacity:1;bottom:26px}
   .toast.err{border-color:var(--red);color:#ffb4ae}
-  :root[data-theme="light"] .toast.err,:root:is([data-theme="instrument"],[data-theme="bench"]) .toast.err{color:var(--red)}
+  :root[data-theme="bench"] .toast.err{color:var(--red)}
   /* status is changeable straight from the demand header */
   .statsel{width:auto;font-size:12px;padding:2px 6px;cursor:pointer;font-family:inherit}
   .statsel option{color:var(--txt);background:var(--panel)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .statsel{font-size:10px;padding:2px 4px}
+  :root[data-theme="bench"] .statsel{font-size:10px;padding:2px 4px}
   .savestate.conflict{color:var(--red);cursor:pointer;font-weight:600}
   .peerwarn{display:flex;align-items:center;gap:10px;padding:6px 16px;background:var(--danger-bg);border-bottom:1px solid var(--red-line);color:var(--red);font-size:12.5px;flex:0 0 auto;position:relative;z-index:1}
   .peerwarn button{margin-left:auto;flex:0 0 auto}
@@ -371,10 +331,10 @@
   .dvsv-n{cursor:pointer}.dvsv-n:hover{color:var(--accent)}
   .dvsv button{padding:0 4px;font-size:11px}
   @media (max-width:720px){.dvcols{grid-template-columns:1fr 1fr}.dvcols>div:last-child{grid-column:1/-1}}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dvview,:root:is([data-theme="instrument"],[data-theme="bench"]) .dvchip,:root:is([data-theme="instrument"],[data-theme="bench"]) .dvsv,:root:is([data-theme="instrument"],[data-theme="bench"]) .dvn{border-radius:2px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dvpanel{border-radius:3px;box-shadow:0 2px 10px rgba(18,20,26,.07)}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dvview,:root:is([data-theme="instrument"],[data-theme="bench"]) .dvpanel h4,:root:is([data-theme="instrument"],[data-theme="bench"]) .dvsub{font-family:var(--label);letter-spacing:.1em;text-transform:uppercase;font-size:9.5px}
-  :root:is([data-theme="instrument"],[data-theme="bench"]) .dvpanel label.dvopt{font-family:var(--sans);font-size:12.5px;letter-spacing:0;color:var(--txt)}
+  :root[data-theme="bench"] .dvview,:root[data-theme="bench"] .dvchip,:root[data-theme="bench"] .dvsv,:root[data-theme="bench"] .dvn{border-radius:2px}
+  :root[data-theme="bench"] .dvpanel{border-radius:3px;box-shadow:0 2px 10px rgba(18,20,26,.07)}
+  :root[data-theme="bench"] .dvview,:root[data-theme="bench"] .dvpanel h4,:root[data-theme="bench"] .dvsub{font-family:var(--label);letter-spacing:.1em;text-transform:uppercase;font-size:9.5px}
+  :root[data-theme="bench"] .dvpanel label.dvopt{font-family:var(--sans);font-size:12.5px;letter-spacing:0;color:var(--txt)}
 
   .gsearch{position:absolute;top:40px;left:0;width:420px;background:var(--panel);border:1px solid var(--line2);border-radius:8px;padding:6px;max-height:60vh;overflow:auto;z-index:60;box-shadow:0 12px 40px rgba(0,0,0,.5)}
   .gsr{padding:7px 9px;border-radius:6px;cursor:pointer;font-size:12px}

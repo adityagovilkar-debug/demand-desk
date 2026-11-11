@@ -53,9 +53,9 @@ function demandHeadBench(t,sub,lc){
       <button class="tab ${activeTab==="history"?"active":""}" data-tab="history" title="6">History<span class="count">${(t.timeline||[]).length}</span></button>
       <span class="tsep"></span>
       <button class="tab sec2 ${activeTab==="reference"?"active":""}" data-tab="reference">Reference<span class="count">${(t.reference||[]).length}</span></button>
-      <button class="tab sec2 ${activeTab==="calls"?"active":""}" data-tab="calls">Linked<span class="count">${lc}</span></button>
-      <button class="tab sec2 ${activeTab==="images"?"active":""}" data-tab="images">Images<span class="count">${imagesFor("demand",t.id).length}</span></button>
-      <span class="kbh" title="Keyboard: ↑ ↓ move through the list, 1–6 switch tabs, T logs time">↑↓ · 1–6 · T</span>
+      <button class="tab sec2 inrail ${activeTab==="calls"?"active":""}" data-tab="calls">Linked<span class="count">${lc}</span></button>
+      <button class="tab sec2 inrail ${activeTab==="images"?"active":""}" data-tab="images">Images<span class="count">${imagesFor("demand",t.id).length}</span></button>
+      <span class="kbh keyhint" title="Keyboard shortcuts" onclick="openKeys()">? keys</span>
       <span class="tind"></span>
     </div></div><div class="detail-body" id="detailBody"></div>`;}
 

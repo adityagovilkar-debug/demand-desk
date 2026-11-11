@@ -1,0 +1,15 @@
+  /* ---------------- in-app dialogs, the keys sheet, demand tabs on one row ---------------- */
+  .ask-bg{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--paper) 60%,transparent);backdrop-filter:blur(2px)}
+  .ask{animation:bmodin .18s cubic-bezier(.2,.8,.2,1)}
+  .ask .ask-t{white-space:pre-line;font-size:13px;line-height:1.55;color:var(--ink-2);margin:-4px 0 14px}
+  .ask .ask-h{font-size:11px;color:var(--ink-3);margin-top:4px}
+  .ask .primary.ask-danger{background:var(--bad);border-color:var(--bad);color:#fff}
+  .keys-g{display:grid;grid-template-columns:1fr 1fr;gap:18px 28px}
+  .keys-s .ef-lb{display:block;font-size:8.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:6px}
+  .keys-r{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:5px 0;border-bottom:1px dotted var(--rule-strong);font-size:12.5px}
+  .keys-r span:last-child{color:var(--ink-2);text-align:right}
+  kbd{font-family:var(--mono);font-size:10.5px;padding:1px 6px;border:1px solid var(--rule-strong);border-bottom-width:2px;border-radius:3px;background:var(--paper-2);color:var(--ink);white-space:nowrap}
+  .tabs .kbh.keyhint{cursor:pointer}
+  .tabs .kbh.keyhint:hover{color:var(--ink)}
+  /* Linked and Images live in the side panel; their tabs show only when it's off or the window is narrow */
+  @media (min-width:1181px){main.demands3:not(.noctx) .tabs .tab.inrail:not(.active){display:none}}
