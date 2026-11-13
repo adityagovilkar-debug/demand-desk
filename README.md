@@ -97,8 +97,25 @@ red — deleting an image file, removing encryption, deleting a comment.
 - **Entrances:** content rises in when you arrive somewhere, never on ordinary
   edits.
 - **Motion** — ⋯ → Settings → Motion: *Follow Windows* (default; honours
-  Windows' "reduce animations"), *Full*, or *Off*. Off keeps every instrument,
-  just still.
+  Windows' "reduce animations"), *Calm*, *Full*, or *Off*. Off keeps every
+  instrument, just still. **Full** adds motion tied to what happens:
+  - **Power-on** — once a session Today wipes in panel by panel behind a scan line,
+    and its readouts count up from zero.
+  - **Rolling readouts** — a number that changes rolls to its new value.
+  - **Transports travel** — on the board, a recorded import sends a dot along the
+    route to the station it reached.
+  - **Done becomes a dot** — ticking a step sends a trail of dots into the day's
+    hours bar, which fills dot by dot; a full working day closes a ring beside it.
+  - **Save ripple** — a save sends one ring of dots outward across the page.
+  - **Workspaces sweep in** behind a scan line; **search results decode** in; the
+    **Seen before** box gets one sweep when you open a demand.
+  - **A running timer** has a small scope trace beside it; **late agenda rows**
+    breathe.
+- **▶ Replay** — on Review (the chosen period) and the Friday wrap-up (the week):
+  the period played back in up to 16 seconds — a dot a day sized by hours and
+  coloured by where they went, the date running, counters for hours, deliveries,
+  transport moves, wins and tasks, and what happened as it passes. Esc closes;
+  ↻ plays it again. Works at any motion level.
 - **Greeting** — optionally put your first name in Settings.
 
 **Instrument White** (once a theme of its own, now the basis of Bench) is the scientific-plotter aesthetic from the Yantra

@@ -139,3 +139,10 @@ D. **Encryption.** If the file still holds passwords or secret references withou
 - **A second backup copy** written daily to a folder you choose (e.g. OneDrive).
 - **Log time from the search box** — type `2h 10421 debug fixed zero totals` in Ctrl+K.
 - **Subtask templates** — you wanted more usage data first.
+
+## Motion — DONE 14 Nov 2026 (v50)
+
+A *Full* motion level on top of *Calm* (the look before): power-on, rolling readouts,
+travelling transports, done-to-dot with the day's bar filling and the full-day ring,
+save ripple, workspace sweep, decoding results, the Seen before scan, the timer trace,
+breathing late lights — and ▶ Replay on Review and the week wrap-up.

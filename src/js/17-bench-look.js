@@ -136,8 +136,8 @@ const benchOn=()=>document.documentElement.getAttribute("data-theme")==="bench";
 /* Motion: Settings choice, or follow Windows' "reduce animations" */
 const MOTION_KEY="demanddesk.motion",reducedMQ=matchMedia("(prefers-reduced-motion: reduce)");
 function motionPref(){try{return localStorage.getItem(MOTION_KEY)||"auto";}catch(e){return "auto";}}
-function motionOn(){const p=motionPref();return p==="full"||(p==="auto"&&!reducedMQ.matches);}
-function applyMotion(){document.documentElement.classList.toggle("nomotion",!motionOn());}
+function motionOn(){const p=motionPref();return p==="full"||p==="show"||(p==="auto"&&!reducedMQ.matches);}   /* full = Calm, show = Full (14h-motion.js) */
+function applyMotion(){document.documentElement.classList.toggle("nomotion",!motionOn());document.documentElement.classList.toggle("mo-show",motionPref()==="show");}
 reducedMQ.addEventListener("change",applyMotion);
 const STATUS_PEN={open:"var(--accent)",progress:"var(--amber)",bug:"var(--red)",delivered:"var(--green)",closed:"var(--faint)"};
 const STATUS_CK={open:"pen-2",progress:"pen-4",bug:"pen-1",delivered:"pen-3",closed:"ink-3"};

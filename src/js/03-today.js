@@ -139,7 +139,7 @@ function wrapWeek(){const t=todayStr(),mon=efMon(t),days=[0,1,2,3,4].map(i=>efAd
 function wrapUpHTML(){const dow=efDow(todayStr()),W=wrapWeek();
   if(!wrapForce&&(![5,6,0].includes(dow)||viewPref("wrap.done","")===W.mon))return "";
   const pct=W.target?Math.min(100,Math.round(W.h/W.target*100)):0;
-  return `<div class="dashcard wrapup efx"><h3>🗓 Week wrap-up <span class="faint" style="font-weight:400;text-transform:none;letter-spacing:0">${efSh(W.mon)} – ${efSh(efAdd(W.mon,4))}</span><button class="sm ghost" id="wrDone" style="margin-left:auto" title="Hide it until next Friday">✓ Wrapped up</button></h3>
+  return `<div class="dashcard wrapup efx"><h3>🗓 Week wrap-up <span class="faint" style="font-weight:400;text-transform:none;letter-spacing:0">${efSh(W.mon)} – ${efSh(efAdd(W.mon,4))}</span><button class="sm ghost" id="wrReplay" style="margin-left:auto" title="This week played back as a short film">▶ Replay</button><button class="sm ghost" id="wrDone" title="Hide it until next Friday">✓ Wrapped up</button></h3>
     <div class="wr-grid">
       <div><div class="wr-k">Hours</div><div class="wr-big">${efFh(Math.round(W.h*10)/10)} h <span class="faint">of ${W.target} h</span></div><div class="wr-bar"><i style="width:${pct}%"></i></div>
         ${W.miss.length?`<div class="wr-miss">⚠ No log on ${W.miss.map(d=>`<span class="mono">${efWdl(d)}</span> <a href="#" data-wfill="${d}">＋ log</a> · <a href="#" data-woff="${d}">day off</a>`).join("<br>")}</div>`:`<div class="wr-ok">✓ every working day logged${W.off.length?` · ${W.off.length} day${W.off.length>1?"s":""} off`:""}</div>`}</div>

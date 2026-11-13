@@ -9,7 +9,7 @@ function openMenu(){
       <label>Appearance</label>
       <div style="display:grid;grid-template-columns:62px 1fr;gap:6px 10px;align-items:center;font-size:12px">
         <span class="faint">Bench</span><div style="display:flex;gap:5px;flex-wrap:wrap">${[["bench","Follow Windows"],["bench-paper","Paper"],["bench-backlit","Backlit"]].map(([k,l])=>`<button class="sm tpc ${tp===k?"primary":""}" data-t="${k}">${l}</button>`).join("")}</div>
-        <span class="faint">Motion</span><div style="display:flex;gap:5px;flex-wrap:wrap">${[["auto","Follow Windows"],["full","Full"],["off","Off"]].map(([k,l])=>`<button class="sm mpc ${mp===k?"primary":""}" data-m="${k}">${l}</button>`).join("")}</div>
+        <span class="faint">Motion</span><div style="display:flex;gap:5px;flex-wrap:wrap">${[["auto","Follow Windows"],["full","Calm"],["show","Full"],["off","Off"]].map(([k,l])=>`<button class="sm mpc ${mp===k?"primary":""}" data-m="${k}">${l}</button>`).join("")}</div>
         <span class="faint">Greeting</span><input id="mn-name" value="${esc(viewPref("userName",""))}" placeholder="Your first name, for the Today greeting (optional)" style="font-size:12px;padding:4px 8px">
       </div>
       <p class="faint" style="font-size:11px;margin:8px 0 0">The ☀/🌙 button in the title bar flips Paper ↔ Backlit. Theme and motion are remembered in this browser only — never in your data file.</p>

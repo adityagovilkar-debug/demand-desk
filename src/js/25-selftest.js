@@ -242,6 +242,10 @@ async function runSelfTest(){
     const F=rcFiles(),y=(a.receivedDate||"").slice(0,4),key=`${y}/Demands/ST-1 Sample report gets a filter.md`,all=JSON.stringify(F);
     ok("A readable copy: Markdown by year, secrets left out",!!F[key]&&F[key].includes("# ST-1 — Sample report gets a filter")&&!!F["README.md"]&&!all.includes("not-a-real-secret")&&!all.includes("not-a-real-password"),Object.keys(F).slice(0,6).join(" · "));
     ok("The readable copy is asked for once a year, around New Year only",!readableCopyDue("2026-07-01")&&!readableCopyDue("2026-12-01"));}
+   {const T0=todayStr(),R=replayData(efAdd(T0,-30),T0),n0=document.querySelectorAll(".rp-bg").length;openReplay(efAdd(T0,-30),T0,"Self-test");await sleep(80);const up=document.querySelectorAll(".rp-bg").length===n0+1;
+    document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}));
+    ok("Replay: a period plays back from the hours and events in it, and Esc closes it",R.days.length===31&&R.hrs.size>0&&R.ev.some(e=>e.k==="tr")&&up&&!document.querySelector(".rp-bg"),`days ${R.days.length} · hour-days ${R.hrs.size} · events ${R.ev.length} · opened ${up}`);
+    ok("Motion: Calm and Off leave the Full-level effects out",["auto","full","off"].includes(motionPref())?!motionShow():true);}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");

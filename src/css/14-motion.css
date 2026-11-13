@@ -1,0 +1,28 @@
+  /* ---------------- motion (the Full level) and Replay ---------------- */
+  .mo-dot{position:fixed;left:0;top:0;margin:-4px 0 0 -4px;border-radius:50%;z-index:95;pointer-events:none}
+  .mo-scanv{position:fixed;width:2px;background:var(--ink);z-index:94;pointer-events:none;box-shadow:0 0 14px 2px color-mix(in srgb,var(--ink) 30%,transparent)}
+  .mo-scanh{position:fixed;height:1.5px;background:var(--ink);z-index:94;pointer-events:none;box-shadow:0 0 14px 2px color-mix(in srgb,var(--ink) 30%,transparent)}
+  .mo-rip{position:fixed;inset:0;width:100vw;height:100vh;z-index:93;pointer-events:none}
+  .mo-ping{animation:moping .7s ease-out}
+  @keyframes moping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ink) 55%,transparent)}100%{box-shadow:0 0 0 14px transparent}}
+  svg.mo-ping{border-radius:6px}
+  .tb-st.mo-wait{background:transparent!important;color:var(--pen-2)!important;border-color:var(--pen-2)!important}
+  .tb-row.mo-moved{animation:momoved 1.6s ease-out}
+  @keyframes momoved{0%,40%{background:color-mix(in srgb,var(--pen-3) 12%,transparent)}100%{background:transparent}}
+  .mo-full{display:inline-flex;margin-left:2px}
+  .mo-full svg{width:17px;height:17px;fill:none;stroke:var(--good,#0E7C63);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .mo-full.go circle{stroke-dasharray:41;stroke-dashoffset:41;animation:modash .9s 1.2s ease-out forwards}
+  .mo-full.go path{stroke-dasharray:10;stroke-dashoffset:10;animation:modash .35s 2s ease-out forwards}
+  @keyframes modash{to{stroke-dashoffset:0}}
+  html.mo-show .ag-row.late .ag-k i{animation:vbreathe 2.4s ease-in-out infinite}
+  .seenb.mo-scan{position:relative;overflow:hidden}
+  .seenb.mo-scan::after{content:"";position:absolute;left:0;right:0;top:0;height:1.5px;background:var(--pen-2);box-shadow:0 0 10px 1px color-mix(in srgb,var(--pen-2) 45%,transparent);animation:moseen .9s ease-in-out forwards;pointer-events:none}
+  @keyframes moseen{from{transform:translateY(0);opacity:1}to{transform:translateY(240px);opacity:0}}
+  .seenb.mo-scan .sb-r,.seenb.mo-scan .sb-les{animation:morise .45s ease-out backwards}
+  @keyframes morise{from{opacity:0;transform:translateY(6px)}}
+  #moScope{width:60px;height:22px;flex:none;margin-right:2px}
+  .rp-bg{position:fixed;inset:0;z-index:120;background:var(--paper)}
+  .rp-bg canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .rp-bar{position:absolute;right:24px;top:18px;display:flex;align-items:center;gap:8px}
+  .rp-t{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-right:8px}
+  html.nomotion .mo-dot,html.nomotion .mo-rip,html.nomotion .mo-scanv,html.nomotion .mo-scanh{display:none}
