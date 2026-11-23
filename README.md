@@ -128,7 +128,7 @@ is a real state. The pens are fixed for the life of the app:
 | Pen | Used for |
 |---|---|
 | prussian `#1B4FA0` | Open · Development tier · links |
-| ochre `#B07500` | In progress · QA tier · waiting & warnings |
+| saffron `#CF7A12` (Backlit `#FFB24D`) | In progress · QA tier · waiting & warnings |
 | viridian `#0E7C63` | Delivered · Production tier · reached / good |
 | cinnabar `#D93A1E` | Bug · overdue · expired (the "past a limit" pen) |
 | violet `#6B3FA0` | projects · Transports of Copies |
