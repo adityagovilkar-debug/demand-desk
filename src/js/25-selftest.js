@@ -246,6 +246,10 @@ async function runSelfTest(){
     document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}));
     ok("Replay: a period plays back from the hours and events in it, and Esc closes it",R.days.length===31&&R.hrs.size>0&&R.ev.some(e=>e.k==="tr")&&up&&!document.querySelector(".rp-bg"),`days ${R.days.length} · hour-days ${R.hrs.size} · events ${R.ev.length} · opened ${up}`);
     ok("Motion: Calm and Off leave the Full-level effects out",["auto","full","off"].includes(motionPref())?!motionShow():true);}
+   {const a=state.tasks.find(x=>x.id==="st-a"),url=a.reference.find(r=>!r.secret);url.pinned=false;view="demands";activeId="st-a";activeTab="reference";renderApp();
+    const b=document.querySelector(`#refBody tr[data-id="${url.id}"] .r-pin`);if(b)b.click();const on=url.pinned&&!!document.querySelector(`#refBody tr[data-id="${url.id}"] .r-pin.on`);
+    activeTab="overview";renderApp();const box=document.querySelector("#ovPins");const shown=!!box&&box.textContent.includes(url.label);
+    ok("Pin: the button shows it's on, and the entry appears in Key reference on Overview",on&&shown,`on ${on} · shown ${shown}`);view="today";renderApp();}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");

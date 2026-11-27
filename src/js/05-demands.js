@@ -329,7 +329,7 @@ function renderDetail(){
 function renderReference(body,t){
   const list=t.reference||(t.reference=[]);
   body.innerHTML=`<div class="sec-title"><h3>Reference — key facts &amp; artifacts</h3><div class="ln"></div><button class="sm" id="addRef">＋ Add entry</button></div>
-    <p class="faint" style="font-size:12px;margin-top:-6px">URLs, endpoints, credentials, config you created for this demand. Mark sensitive values <b>secret</b> (masked + kept out of search); <b>pin</b> the important ones to show at the top of the Work tab.</p>
+    <p class="faint" style="font-size:12px;margin-top:-6px">URLs, endpoints, credentials, config you created for this demand. Mark sensitive values <b>secret</b> (masked + kept out of search); <b>pin</b> the important ones — they show in a <b>Key reference</b> box at the top of Overview and first in the side panel.</p>
     <div class="tbl-wrap"><table>
       <thead><tr><th style="width:26%">Label</th><th>Value</th><th style="width:64px">Secret</th><th style="width:50px">Pin</th><th style="width:34px"></th></tr></thead>
       <tbody id="refBody"></tbody></table></div>`;
@@ -337,13 +337,13 @@ function renderReference(body,t){
   const tb=body.querySelector("#refBody");
   const draw=()=>{
     tb.innerHTML=list.length?list.map(r=>{const rv=revealPw[r.id];
-      return `<tr data-id="${r.id}">
+      return `<tr data-id="${r.id}" class="${r.pinned?"ref-pinned":""}">
         <td><input class="r-label" value="${esc(r.label)}" placeholder="e.g. API proxy URL"></td>
         <td>${r.secret
           ?`<div style="display:flex;gap:3px;align-items:center"><input class="mono r-val" type="${rv?"text":"password"}" value="${esc(r.value)}" style="flex:1"><button class="ghost sm r-eye" title="Show/hide">${rv?"🙈":"👁"}</button><button class="ghost sm r-copy" title="Copy">📋</button></div>`
           :`<div style="display:flex;gap:3px;align-items:center"><input class="mono r-val" value="${esc(r.value)}" placeholder="value" style="flex:1">${/^https?:\/\//i.test(r.value)?`<a class="ghost sm" href="${esc(r.value)}" target="_blank" rel="noopener" title="Open link" style="text-decoration:none;padding:3px 6px">🔗</a>`:""}<button class="ghost sm r-copy" title="Copy">📋</button></div>`}</td>
         <td style="text-align:center"><input type="checkbox" class="r-secret" ${r.secret?"checked":""} style="width:auto"></td>
-        <td style="text-align:center"><button class="ghost sm r-pin" title="Pin to top of Work tab">${r.pinned?"📌":"📍"}</button></td>
+        <td style="text-align:center"><button class="ghost sm r-pin ${r.pinned?"on":""}" aria-pressed="${r.pinned}" title="${r.pinned?"Pinned — in Key reference on Overview and first in the side panel. Click to unpin.":"Pin — show it in Key reference on Overview and first in the side panel"}">📌</button></td>
         <td><button class="ghost sm danger r-del">🗑</button></td></tr>`;}).join("")
       :`<tr><td colspan="5" class="faint" style="padding:14px;text-align:center">No reference entries yet. Use “＋ Add entry”.</td></tr>`;
     tb.querySelectorAll("tr[data-id]").forEach(tr=>{const r=list.find(x=>x.id===tr.dataset.id);
@@ -352,7 +352,7 @@ function renderReference(body,t){
       const eye=tr.querySelector(".r-eye");if(eye)eye.onclick=()=>{revealPw[r.id]=!revealPw[r.id];draw();};
       tr.querySelector(".r-copy").onclick=()=>{navigator.clipboard.writeText(r.value).then(()=>toast("Copied")).catch(()=>toast("Copy failed",true));};
       tr.querySelector(".r-secret").onchange=e=>{r.secret=e.target.checked;if(r.secret)revealPw[r.id]=false;touch(t);draw();};
-      tr.querySelector(".r-pin").onclick=()=>{r.pinned=!r.pinned;touch(t);draw();};
+      tr.querySelector(".r-pin").onclick=()=>{r.pinned=!r.pinned;touch(t);draw();renderCtxRail();toast(r.pinned?`Pinned “${r.label||"the entry"}” — it's in Key reference on Overview`:`Unpinned “${r.label||"the entry"}”`);};
       tr.querySelector(".r-del").onclick=()=>{const i=list.indexOf(r);if(i>-1)list.splice(i,1);delete revealPw[r.id];touch(t);renderDetail();};});
   };
   draw();

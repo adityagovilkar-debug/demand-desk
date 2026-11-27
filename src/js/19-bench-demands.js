@@ -56,7 +56,7 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
   if(!(benchOn()&&view==="demands")){host.innerHTML="";return;}
   const t=activeTask();if(!t){host.innerHTML=`<div class="cx-in"><div class="bempty" style="padding:30px 0">Pick a demand to see its context.</div></div>`;return;}
   const ep=epicById(t.epicId),na=t.nextAction&&t.nextAction.date?t.nextAction:null,nad=na?daysUntil(na.date):0;
-  const refs=(t.reference||[]),pins=refs.filter(r=>r.pinned),show=(pins.length?pins:refs).slice(0,4);
+  const refs=(t.reference||[]),pins=refs.filter(r=>r.pinned),show=pins.length?pins.slice(0,6):refs.slice(0,4),morePins=Math.max(0,pins.length-6);
   const links=[...meetingsForTask(t.id).map(m=>({k:"meeting",id:m.id,t:m.title,d:m.date,pen:"var(--pen-4)"})),...journalForTask(t.id).map(j=>({k:"journal",id:j.id,t:j.title||"Journal "+j.date,d:j.date,pen:"var(--pen-3)"})),
     ...debugForTask(t.id).map(s=>({k:"debug",id:s.id,t:s.title,d:isoTs(s.updatedAt),pen:"var(--pen-1)"}))].sort((a,b)=>b.d.localeCompare(a.d));
   const imgs=imagesFor("demand",t.id),dn=t.dueDate&&!["delivered","closed"].includes(t.status)?daysUntil(t.dueDate):null;
@@ -76,8 +76,8 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
       <span class="k">Due</span><span class="v mono ${dn!=null&&dn<0?"late":""}">${t.dueDate||"—"}</span>
       <span class="k">Go-live</span><span class="v mono">${esc(goliveTargetFor(t))||"—"}${t.transports.some(tr=>trDest(t,tr).length)?" <span class='dim'>+ own routes</span>":""}</span>
       ${isWaiting(t)?`<span class="k">Waiting on</span><span class="v soon">${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+" d":""}</span>`:""}</div></div>
-    <div class="ck-unit cxs"><div class="ck-head"><h2>Reference</h2><a class="cxl" data-tab="reference">${refs.length?"all "+refs.length+" ›":"＋ add ›"}</a></div>
-      ${show.map(r=>`<div class="rf" data-id="${r.id}"><span class="l">${r.pinned?"📌 ":""}${esc(r.label)||"(no label)"}</span><span class="v">${r.secret?"••••••••":linkify(r.value)}</span><button class="ghost sm c" title="Copy">📋</button></div>`).join("")||`<div class="bempty">URLs, endpoints, test data — pin the ones you need often.</div>`}</div>
+    <div class="ck-unit cxs"><div class="ck-head"><h2>Reference</h2><a class="cxl" data-tab="reference">${refs.length?(pins.length?`${pins.length} pinned · `:"")+"all "+refs.length+" ›":"＋ add ›"}</a></div>
+      ${show.map(r=>`<div class="rf" data-id="${r.id}"><span class="l">${r.pinned?`<span class="pinmark" title="Pinned">📌</span> `:""}${esc(r.label)||"(no label)"}</span><span class="v">${r.secret?"••••••••":linkify(r.value)}</span><button class="ghost sm c" title="Copy">📋</button></div>`).join("")+(morePins?`<div class="faint" style="font-size:10.5px;padding-top:4px">+ ${morePins} more pinned</div>`:"")||`<div class="bempty">URLs, endpoints, test data — pin the ones you need often.</div>`}</div>
     <div class="ck-unit cxs"><div class="ck-head"><h2>Linked</h2><a class="cxl" data-tab="calls">${links.length?links.length+" · link ›":"＋ link ›"}</a></div>
       ${links.slice(0,6).map(l=>`<div class="lk" data-k="${l.k}" data-id="${l.id}" style="--pen:${l.pen}"><i></i><span class="t">${esc(l.t)}</span><span class="d">${shortD(l.d)}</span></div>`).join("")||`<div class="bempty">No meetings, journal or debug sessions linked.</div>`}</div>
     <div class="ck-unit cxs"><div class="ck-head"><h2>Images</h2><a class="cxl" data-tab="images">${imgs.length?"all "+imgs.length+" ›":"Ctrl V to paste"}</a></div>
@@ -113,7 +113,7 @@ function renderOverview(body,t){
     ...(t.comments||[]).map(c=>({ts:c.ts,pen:"var(--ink-3)",h:linkify(c.text)})),
     ...t.transports.flatMap(tr=>tr.syncs.filter(s=>s.system&&s.date).map(s=>({ts:new Date(s.date+"T12:00:00").getTime(),pen:"var(--good)",h:`<b class="mono">${esc(tr.number||"(TR)")}</b> reached ${esc(s.system)}`})))]
     .sort((a,b)=>b.ts-a.ts).slice(0,7);
-  body.innerHTML=`
+  body.innerHTML=`${(t.reference||[]).some(r=>r.pinned)?`<div class="pinbox" id="ovPins"></div>`:""}
     <div class="bsec jr"><div class="sec-title"><h3>Journey</h3><div class="ln"></div><span class="faint mono" style="font-size:10.5px">received ${t.receivedDate||"—"} · ${fin?`took ${age} days · finished ${fin}`:`${age} days`}${loops?` · ${loops} rework loop${loops>1?"s":""}`:""}</span></div><canvas class="jcv${efFor(t.id).length?" ef":""}"></canvas></div>
     <div class="grid2">
       <div class="field"><label>What is to be done</label><textarea id="fDesc" placeholder="Scope, requirement summary, acceptance criteria…">${esc(t.description)}</textarea></div>
@@ -130,6 +130,7 @@ function renderOverview(body,t){
       <div class="compose"><textarea id="ovCmt" rows="1" placeholder="Add a comment… (Ctrl+Enter)"></textarea><button class="sm primary" id="ovPost">Post</button></div></div>
     <div class="bsec" id="lsHost"></div>`;
   const updNL=()=>{body.querySelector("#n-links").innerHTML=linkChips((t.description||"")+" "+(t.notes||""));};
+  {const pb=body.querySelector("#ovPins");if(pb)drawPinned(pb,t,(t.reference||[]).filter(r=>r.pinned));}
   body.querySelector("#fDesc").onchange=e=>{t.description=e.target.value;touch(t);updNL();};
   body.querySelector("#fNotes").onchange=e=>{t.notes=e.target.value;touch(t);updNL();};
   const post=()=>{const ta=body.querySelector("#ovCmt"),v=ta.value.trim();if(!v)return;(t.comments=t.comments||[]).push({id:uid(),text:v,ts:Date.now()});touch(t);renderOverview(body,t);};

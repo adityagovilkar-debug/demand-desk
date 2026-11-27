@@ -1,0 +1,10 @@
+  /* ---------------- pinned reference entries: a clear on / off state ---------------- */
+  .r-pin{color:var(--ink-4)}
+  .r-pin:hover{color:var(--ink-2)}
+  .r-pin.on{color:var(--pen-1);background:color-mix(in srgb,var(--pen-1) 11%,transparent);border-color:color-mix(in srgb,var(--pen-1) 45%,transparent)}
+  .r-pin.on .ic{fill:color-mix(in srgb,var(--pen-1) 35%,transparent)}
+  #refBody tr.ref-pinned td:first-child{box-shadow:inset 3px 0 0 var(--pen-1)}
+  .rf .pinmark{color:var(--pen-1)}
+  :root[data-theme="bench"] .pinbox{border-left-color:var(--pen-1)}
+  :root[data-theme="bench"] .pinbox .pin-title{color:var(--pen-1)}
+  :root[data-theme="bench"] .pinbox{border-color:var(--red-line);border-left-color:var(--pen-1)}

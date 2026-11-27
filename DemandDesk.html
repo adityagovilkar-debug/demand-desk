@@ -1724,6 +1724,16 @@
   .rp-bar{position:absolute;right:24px;top:18px;display:flex;align-items:center;gap:8px}
   .rp-t{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-right:8px}
   html.nomotion .mo-dot,html.nomotion .mo-rip,html.nomotion .mo-scanv,html.nomotion .mo-scanh{display:none}
+  /* ---------------- pinned reference entries: a clear on / off state ---------------- */
+  .r-pin{color:var(--ink-4)}
+  .r-pin:hover{color:var(--ink-2)}
+  .r-pin.on{color:var(--pen-1);background:color-mix(in srgb,var(--pen-1) 11%,transparent);border-color:color-mix(in srgb,var(--pen-1) 45%,transparent)}
+  .r-pin.on .ic{fill:color-mix(in srgb,var(--pen-1) 35%,transparent)}
+  #refBody tr.ref-pinned td:first-child{box-shadow:inset 3px 0 0 var(--pen-1)}
+  .rf .pinmark{color:var(--pen-1)}
+  :root[data-theme="bench"] .pinbox{border-left-color:var(--pen-1)}
+  :root[data-theme="bench"] .pinbox .pin-title{color:var(--pen-1)}
+  :root[data-theme="bench"] .pinbox{border-color:var(--red-line);border-left-color:var(--pen-1)}
 </style>
 </head>
 <body>
@@ -3262,7 +3272,7 @@ function renderDetail(){
 function renderReference(body,t){
   const list=t.reference||(t.reference=[]);
   body.innerHTML=`<div class="sec-title"><h3>Reference — key facts &amp; artifacts</h3><div class="ln"></div><button class="sm" id="addRef">＋ Add entry</button></div>
-    <p class="faint" style="font-size:12px;margin-top:-6px">URLs, endpoints, credentials, config you created for this demand. Mark sensitive values <b>secret</b> (masked + kept out of search); <b>pin</b> the important ones to show at the top of the Work tab.</p>
+    <p class="faint" style="font-size:12px;margin-top:-6px">URLs, endpoints, credentials, config you created for this demand. Mark sensitive values <b>secret</b> (masked + kept out of search); <b>pin</b> the important ones — they show in a <b>Key reference</b> box at the top of Overview and first in the side panel.</p>
     <div class="tbl-wrap"><table>
       <thead><tr><th style="width:26%">Label</th><th>Value</th><th style="width:64px">Secret</th><th style="width:50px">Pin</th><th style="width:34px"></th></tr></thead>
       <tbody id="refBody"></tbody></table></div>`;
@@ -3270,13 +3280,13 @@ function renderReference(body,t){
   const tb=body.querySelector("#refBody");
   const draw=()=>{
     tb.innerHTML=list.length?list.map(r=>{const rv=revealPw[r.id];
-      return `<tr data-id="${r.id}">
+      return `<tr data-id="${r.id}" class="${r.pinned?"ref-pinned":""}">
         <td><input class="r-label" value="${esc(r.label)}" placeholder="e.g. API proxy URL"></td>
         <td>${r.secret
           ?`<div style="display:flex;gap:3px;align-items:center"><input class="mono r-val" type="${rv?"text":"password"}" value="${esc(r.value)}" style="flex:1"><button class="ghost sm r-eye" title="Show/hide">${rv?"🙈":"👁"}</button><button class="ghost sm r-copy" title="Copy">📋</button></div>`
           :`<div style="display:flex;gap:3px;align-items:center"><input class="mono r-val" value="${esc(r.value)}" placeholder="value" style="flex:1">${/^https?:\/\//i.test(r.value)?`<a class="ghost sm" href="${esc(r.value)}" target="_blank" rel="noopener" title="Open link" style="text-decoration:none;padding:3px 6px">🔗</a>`:""}<button class="ghost sm r-copy" title="Copy">📋</button></div>`}</td>
         <td style="text-align:center"><input type="checkbox" class="r-secret" ${r.secret?"checked":""} style="width:auto"></td>
-        <td style="text-align:center"><button class="ghost sm r-pin" title="Pin to top of Work tab">${r.pinned?"📌":"📍"}</button></td>
+        <td style="text-align:center"><button class="ghost sm r-pin ${r.pinned?"on":""}" aria-pressed="${r.pinned}" title="${r.pinned?"Pinned — in Key reference on Overview and first in the side panel. Click to unpin.":"Pin — show it in Key reference on Overview and first in the side panel"}">📌</button></td>
         <td><button class="ghost sm danger r-del">🗑</button></td></tr>`;}).join("")
       :`<tr><td colspan="5" class="faint" style="padding:14px;text-align:center">No reference entries yet. Use “＋ Add entry”.</td></tr>`;
     tb.querySelectorAll("tr[data-id]").forEach(tr=>{const r=list.find(x=>x.id===tr.dataset.id);
@@ -3285,7 +3295,7 @@ function renderReference(body,t){
       const eye=tr.querySelector(".r-eye");if(eye)eye.onclick=()=>{revealPw[r.id]=!revealPw[r.id];draw();};
       tr.querySelector(".r-copy").onclick=()=>{navigator.clipboard.writeText(r.value).then(()=>toast("Copied")).catch(()=>toast("Copy failed",true));};
       tr.querySelector(".r-secret").onchange=e=>{r.secret=e.target.checked;if(r.secret)revealPw[r.id]=false;touch(t);draw();};
-      tr.querySelector(".r-pin").onclick=()=>{r.pinned=!r.pinned;touch(t);draw();};
+      tr.querySelector(".r-pin").onclick=()=>{r.pinned=!r.pinned;touch(t);draw();renderCtxRail();toast(r.pinned?`Pinned “${r.label||"the entry"}” — it's in Key reference on Overview`:`Unpinned “${r.label||"the entry"}”`);};
       tr.querySelector(".r-del").onclick=()=>{const i=list.indexOf(r);if(i>-1)list.splice(i,1);delete revealPw[r.id];touch(t);renderDetail();};});
   };
   draw();
@@ -6933,7 +6943,7 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
   if(!(benchOn()&&view==="demands")){host.innerHTML="";return;}
   const t=activeTask();if(!t){host.innerHTML=`<div class="cx-in"><div class="bempty" style="padding:30px 0">Pick a demand to see its context.</div></div>`;return;}
   const ep=epicById(t.epicId),na=t.nextAction&&t.nextAction.date?t.nextAction:null,nad=na?daysUntil(na.date):0;
-  const refs=(t.reference||[]),pins=refs.filter(r=>r.pinned),show=(pins.length?pins:refs).slice(0,4);
+  const refs=(t.reference||[]),pins=refs.filter(r=>r.pinned),show=pins.length?pins.slice(0,6):refs.slice(0,4),morePins=Math.max(0,pins.length-6);
   const links=[...meetingsForTask(t.id).map(m=>({k:"meeting",id:m.id,t:m.title,d:m.date,pen:"var(--pen-4)"})),...journalForTask(t.id).map(j=>({k:"journal",id:j.id,t:j.title||"Journal "+j.date,d:j.date,pen:"var(--pen-3)"})),
     ...debugForTask(t.id).map(s=>({k:"debug",id:s.id,t:s.title,d:isoTs(s.updatedAt),pen:"var(--pen-1)"}))].sort((a,b)=>b.d.localeCompare(a.d));
   const imgs=imagesFor("demand",t.id),dn=t.dueDate&&!["delivered","closed"].includes(t.status)?daysUntil(t.dueDate):null;
@@ -6953,8 +6963,8 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
       <span class="k">Due</span><span class="v mono ${dn!=null&&dn<0?"late":""}">${t.dueDate||"—"}</span>
       <span class="k">Go-live</span><span class="v mono">${esc(goliveTargetFor(t))||"—"}${t.transports.some(tr=>trDest(t,tr).length)?" <span class='dim'>+ own routes</span>":""}</span>
       ${isWaiting(t)?`<span class="k">Waiting on</span><span class="v soon">${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+" d":""}</span>`:""}</div></div>
-    <div class="ck-unit cxs"><div class="ck-head"><h2>Reference</h2><a class="cxl" data-tab="reference">${refs.length?"all "+refs.length+" ›":"＋ add ›"}</a></div>
-      ${show.map(r=>`<div class="rf" data-id="${r.id}"><span class="l">${r.pinned?"📌 ":""}${esc(r.label)||"(no label)"}</span><span class="v">${r.secret?"••••••••":linkify(r.value)}</span><button class="ghost sm c" title="Copy">📋</button></div>`).join("")||`<div class="bempty">URLs, endpoints, test data — pin the ones you need often.</div>`}</div>
+    <div class="ck-unit cxs"><div class="ck-head"><h2>Reference</h2><a class="cxl" data-tab="reference">${refs.length?(pins.length?`${pins.length} pinned · `:"")+"all "+refs.length+" ›":"＋ add ›"}</a></div>
+      ${show.map(r=>`<div class="rf" data-id="${r.id}"><span class="l">${r.pinned?`<span class="pinmark" title="Pinned">📌</span> `:""}${esc(r.label)||"(no label)"}</span><span class="v">${r.secret?"••••••••":linkify(r.value)}</span><button class="ghost sm c" title="Copy">📋</button></div>`).join("")+(morePins?`<div class="faint" style="font-size:10.5px;padding-top:4px">+ ${morePins} more pinned</div>`:"")||`<div class="bempty">URLs, endpoints, test data — pin the ones you need often.</div>`}</div>
     <div class="ck-unit cxs"><div class="ck-head"><h2>Linked</h2><a class="cxl" data-tab="calls">${links.length?links.length+" · link ›":"＋ link ›"}</a></div>
       ${links.slice(0,6).map(l=>`<div class="lk" data-k="${l.k}" data-id="${l.id}" style="--pen:${l.pen}"><i></i><span class="t">${esc(l.t)}</span><span class="d">${shortD(l.d)}</span></div>`).join("")||`<div class="bempty">No meetings, journal or debug sessions linked.</div>`}</div>
     <div class="ck-unit cxs"><div class="ck-head"><h2>Images</h2><a class="cxl" data-tab="images">${imgs.length?"all "+imgs.length+" ›":"Ctrl V to paste"}</a></div>
@@ -6990,7 +7000,7 @@ function renderOverview(body,t){
     ...(t.comments||[]).map(c=>({ts:c.ts,pen:"var(--ink-3)",h:linkify(c.text)})),
     ...t.transports.flatMap(tr=>tr.syncs.filter(s=>s.system&&s.date).map(s=>({ts:new Date(s.date+"T12:00:00").getTime(),pen:"var(--good)",h:`<b class="mono">${esc(tr.number||"(TR)")}</b> reached ${esc(s.system)}`})))]
     .sort((a,b)=>b.ts-a.ts).slice(0,7);
-  body.innerHTML=`
+  body.innerHTML=`${(t.reference||[]).some(r=>r.pinned)?`<div class="pinbox" id="ovPins"></div>`:""}
     <div class="bsec jr"><div class="sec-title"><h3>Journey</h3><div class="ln"></div><span class="faint mono" style="font-size:10.5px">received ${t.receivedDate||"—"} · ${fin?`took ${age} days · finished ${fin}`:`${age} days`}${loops?` · ${loops} rework loop${loops>1?"s":""}`:""}</span></div><canvas class="jcv${efFor(t.id).length?" ef":""}"></canvas></div>
     <div class="grid2">
       <div class="field"><label>What is to be done</label><textarea id="fDesc" placeholder="Scope, requirement summary, acceptance criteria…">${esc(t.description)}</textarea></div>
@@ -7007,6 +7017,7 @@ function renderOverview(body,t){
       <div class="compose"><textarea id="ovCmt" rows="1" placeholder="Add a comment… (Ctrl+Enter)"></textarea><button class="sm primary" id="ovPost">Post</button></div></div>
     <div class="bsec" id="lsHost"></div>`;
   const updNL=()=>{body.querySelector("#n-links").innerHTML=linkChips((t.description||"")+" "+(t.notes||""));};
+  {const pb=body.querySelector("#ovPins");if(pb)drawPinned(pb,t,(t.reference||[]).filter(r=>r.pinned));}
   body.querySelector("#fDesc").onchange=e=>{t.description=e.target.value;touch(t);updNL();};
   body.querySelector("#fNotes").onchange=e=>{t.notes=e.target.value;touch(t);updNL();};
   const post=()=>{const ta=body.querySelector("#ovCmt"),v=ta.value.trim();if(!v)return;(t.comments=t.comments||[]).push({id:uid(),text:v,ts:Date.now()});touch(t);renderOverview(body,t);};
@@ -8559,6 +8570,10 @@ async function runSelfTest(){
     document.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:true}));
     ok("Replay: a period plays back from the hours and events in it, and Esc closes it",R.days.length===31&&R.hrs.size>0&&R.ev.some(e=>e.k==="tr")&&up&&!document.querySelector(".rp-bg"),`days ${R.days.length} · hour-days ${R.hrs.size} · events ${R.ev.length} · opened ${up}`);
     ok("Motion: Calm and Off leave the Full-level effects out",["auto","full","off"].includes(motionPref())?!motionShow():true);}
+   {const a=state.tasks.find(x=>x.id==="st-a"),url=a.reference.find(r=>!r.secret);url.pinned=false;view="demands";activeId="st-a";activeTab="reference";renderApp();
+    const b=document.querySelector(`#refBody tr[data-id="${url.id}"] .r-pin`);if(b)b.click();const on=url.pinned&&!!document.querySelector(`#refBody tr[data-id="${url.id}"] .r-pin.on`);
+    activeTab="overview";renderApp();const box=document.querySelector("#ovPins");const shown=!!box&&box.textContent.includes(url.label);
+    ok("Pin: the button shows it's on, and the entry appears in Key reference on Overview",on&&shown,`on ${on} · shown ${shown}`);view="today";renderApp();}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
