@@ -896,6 +896,16 @@ file:
 - **Transports → CSV** (⋯ menu, or the **⬇ CSV** button on a demand's Transports
   tab) — one row per transport across every demand, opens cleanly in Excel.
 - **Tech Spec → Markdown / .md / PDF** — per demand (see above).
+- **📄 Spec for an old demand** (under *New Demand* on the Demands page, or the ⋯ menu) — for
+  a demand from before this app: the ticket ID, title, type, system, who asked, received and
+  delivered dates, what was asked, how it was built, the steps (one a line), the objects (one
+  a line: `NAME | type | Created/Modified | what changed`), the transports (one a line:
+  `H03K900412 its text → H02 H01`), the testing and links (`label | URL`). **Preview / export**
+  gives the same technical specification a demand here gets (copy as Markdown, .md, or print
+  to PDF); **Keep as a closed demand** also files it — with its History, steps, objects and
+  transports — so Search, *Seen before* and the readable copy find it. Object names you type
+  are looked up in your old notes, pasted Excel rows and other demands (click to search; the
+  draft is kept in this browser as you type).
 - **🗓 Weekly summary** (Today sidebar, or ⋯ menu) — a status report for any week:
   demands delivered / bugs raised / new / closed, every transport movement,
   meetings (with open-action counts), debug findings and the week's journal

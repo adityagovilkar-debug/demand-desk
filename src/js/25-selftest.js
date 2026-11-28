@@ -250,6 +250,16 @@ async function runSelfTest(){
     const b=document.querySelector(`#refBody tr[data-id="${url.id}"] .r-pin`);if(b)b.click();const on=url.pinned&&!!document.querySelector(`#refBody tr[data-id="${url.id}"] .r-pin.on`);
     activeTab="overview";renderApp();const box=document.querySelector("#ovPins");const shown=!!box&&box.textContent.includes(url.label);
     ok("Pin: the button shows it's on, and the entry appears in Key reference on Overview",on&&shown,`on ${on} · shown ${shown}`);view="today";renderApp();}
+   {const ob=osObjects("ZST_OLD_RPT | Report | Modified | cost-centre selection\nZCL_ST_OLD | Created"),tr=osTransports("H03K900777 ST old fix ZST_OLD_RPT → H02 H01\nnot a number line","H03");
+    ok("Old-demand spec: objects and transports read from one line each",ob.length===2&&/Report/.test(ob[0].type)&&ob[0].desc==="cost-centre selection"&&ob[1].action==="Created"&&tr[0].number==="H03K900777"&&eq(tr[0].syncs.map(x=>x.system),["H02","H01"])&&tr[0].desc.startsWith("ST old fix")&&tr.length===2,JSON.stringify([ob,tr.map(x=>[x.number,x.desc])]));
+    const d={...OS_BLANK(),demandId:"ST-OLD",title:"Sample old demand",asked:"Sample old requirement",built:"Sample old solution",steps:"- Analysed\n- Built",objects:"ZST_OLD_RPT | Report | Modified",trs:"H03K900777 ST old fix ZST_OLD_RPT → H02",testing:"Sample tests",links:"Sample FS | https://example.invalid/fs",received:"2023-03-01",delivered:"2023-04-15"};
+    const t=osDemand(d),html=buildTechSpecHTML(t);
+    ok("Old-demand spec: the technical specification is built from it",html.includes("Sample old demand")&&html.includes("Sample old requirement")&&html.includes("ZST_OLD_RPT")&&html.includes("H03K900777")&&html.includes("Sample tests")&&t.status==="closed"&&t.subtasks.length===2&&t.transports[0].objectIds.length===1);
+    const realDraft=viewPref(OS_KEY,null);   /* a draft of yours in this browser is put back afterwards */
+    const n0=state.tasks.length,R=document.getElementById("modalRoot");osSave(d);openOldSpec();R.querySelector("#osKeep").click();const kept=state.tasks.length===n0+1&&state.tasks[state.tasks.length-1].demandId==="ST-OLD";
+    ok("Old-demand spec: kept as a closed demand, and the draft is cleared",kept&&osDraft().title===""&&deliveredDates(state.tasks[state.tasks.length-1]).includes("2023-04-15"),`kept ${kept}`);
+    if(realDraft===null){try{localStorage.removeItem("demanddesk."+OS_KEY);}catch(e){}}else setViewPref(OS_KEY,realDraft);
+    state.tasks=state.tasks.filter(x=>x.demandId!=="ST-OLD");R.innerHTML="";view="today";renderApp();}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
@@ -258,7 +268,7 @@ async function runSelfTest(){
   const a=state.tasks.find(t=>t.id==="st-a");
   const pick=()=>{activeJobId="st-job-1";activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
   const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
-  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Keyboard",()=>openKeys()],["A readable copy",()=>openReadableCopy()],["Paste rows from Excel",()=>openPasteSheet()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
+  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Keyboard",()=>openKeys()],["A readable copy",()=>openReadableCopy()],["Spec for an old demand",()=>openOldSpec()],["Paste rows from Excel",()=>openPasteSheet()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
     ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
     ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Settings menu",()=>openMenu()],["Close a task",()=>openJobClose(jobById("st-job-1"),"done")],["Log time on a task",()=>openLogTime({key:"j:st-job-1"})],["A closed task",()=>{view="jobs";activeJobId="st-job-2";renderApp();}],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
   const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;

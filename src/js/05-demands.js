@@ -147,11 +147,13 @@ function renderDemandSidebar(){
         <button class="sm" id="btnAging" title="Time-in-status &amp; delivery lead times" style="flex:1">📈 Aging</button>
       </div>
       <button class="primary" id="btnNew" style="width:100%">＋ New Demand / Task</button>
+      <button class="ghost sm" id="btnOldSpec" style="width:100%" title="A demand from before this app — its details and transports in, the technical specification out">📄 Spec for an old demand…</button>
     </div>
     <div class="stats" id="stats"></div>
     <div class="listwrap" id="taskList"></div>
     <div id="boardHost"></div>`;
   document.getElementById("btnNew").onclick=()=>openTaskModal(null);
+  document.getElementById("btnOldSpec").onclick=openOldSpec;
   {const ml=document.getElementById("mList"),mb=document.getElementById("mBoard");
    if(ml)ml.onclick=()=>{if(demandsMode()!=="list")setDemandsMode("list");};
    if(mb)mb.onclick=()=>{if(demandsMode()!=="board")setDemandsMode("board");};}
