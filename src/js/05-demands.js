@@ -8,13 +8,14 @@ const DV_GROUPS={none:"No grouping",epic:"Epic",wave:"Epic wave",status:"Status"
 const DV_SORTS={due:{label:"Due date",dir:"asc"},next:{label:"Next action",dir:"asc"},received:{label:"Received",dir:"desc"},updated:{label:"Last updated",dir:"desc"},
   age:{label:"Age",dir:"desc"},waiting:{label:"Time waiting",dir:"desc"},status:{label:"Status",dir:"asc"},clash:{label:"Object clashes",dir:"desc"},
   demand:{label:"Demand ID",dir:"asc"},title:{label:"Title",dir:"asc"}};
-const DV_ONLY={delegated:"Built by someone in my team",overdue:"Overdue",due7:"Overdue or due within 7 days",waiting:"Waiting on someone",clash:"With object clashes",notprod:"Transports not yet in Prod",next:"Next action due"};
+const DV_ONLY={delegated:"Built by someone in my team",overdue:"Overdue",due7:"Overdue or due within 7 days",waiting:"Waiting on someone",clash:"With object clashes",notprod:"Transports not yet in Prod",next:"Next action due",docs:"Delivered or closed, documents missing"};
 const DV_FIELDS={builder:"Built by",epic:"Epic",system:"System",project:"Project",theme:"Theme",requestor:"Requestor",type:"Type"};
 const STATUS_ORDER=Object.keys(STATUS),STATUS_RANK={bug:0,progress:1,open:2,delivered:3,closed:4};
 const DV_PRESETS=[
   {name:"My active",view:{group:"epic",sort:"due",status:["open","progress","bug"]}},
   {name:"Go-live",view:{group:"system",sort:"due",only:["notprod"]}},
   {name:"Waiting",view:{group:"none",sort:"waiting",dir:"desc",only:["waiting"]}},
+  {name:"Docs missing",view:{group:"none",sort:"due",only:["docs"]}},
   {name:"Clashes",view:{group:"none",sort:"clash",dir:"desc",only:["clash"]}},
   {name:"Everything",view:{group:"none",sort:"updated",dir:"desc"}}];
 let dvQuery=""; /* the quick text filter is deliberately not part of a saved view */
@@ -60,6 +61,7 @@ function dvMatches(v,cidx){
     for(const k of v.only){
       if(k==="overdue"){const d=earliestOpenDue(t);if(!(d&&d<today))return false;}
       else if(k==="waiting"){if(!isWaiting(t))return false;}
+      else if(k==="docs"){if(!docsDue(t))return false;}
       else if(k==="clash"){if(!openClashCount(t,cidx))return false;}
       else if(k==="notprod"){if(t.status==="closed"||!golivePending(t))return false;}
       else if(k==="next"){if(!nextActionDue(t))return false;}

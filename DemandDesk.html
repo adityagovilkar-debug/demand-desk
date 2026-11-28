@@ -1734,6 +1734,39 @@
   :root[data-theme="bench"] .pinbox{border-left-color:var(--pen-1)}
   :root[data-theme="bench"] .pinbox .pin-title{color:var(--pen-1)}
   :root[data-theme="bench"] .pinbox{border-color:var(--red-line);border-left-color:var(--pen-1)}
+  /* ---------------- documents: tech spec, unit test, functional specs ---------------- */
+  .ck-unit.docs{margin-bottom:14px}
+  .ck-unit.docs.due{border-color:color-mix(in srgb,var(--pen-1) 45%,var(--rule));box-shadow:inset 3px 0 0 var(--pen-1)}
+  .dc-late{color:var(--bad);font-weight:600}
+  .dc-row{display:grid;grid-template-columns:10px minmax(150px,200px) auto minmax(0,1fr) 26px 74px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px dotted var(--rule-strong)}
+  .dc-light{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ink-4)}
+  .dc-row.st-done .dc-light{background:var(--good);border-color:var(--good)}
+  .dc-row.st-todo .dc-light{border-color:var(--watch)}
+  .ck-unit.docs.due .dc-row.st-todo .dc-light,.dc-sheet .dc-row.st-todo .dc-light{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 25%,transparent)}
+  .dc-row.st-na .dc-light{border-style:dashed}
+  .dc-l{display:flex;flex-direction:column;min-width:0}
+  .dc-l b{font-weight:600;font-size:13px}
+  .dc-l small{font-family:var(--mono);font-size:10px;color:var(--ink-3)}
+  .dc-row.st-na .dc-l b{color:var(--ink-3)}
+  .dc-seg button{font-size:11px;padding:3px 8px}
+  .dc-url{min-width:0;font-size:12px}
+  .dc-row.st-na .dc-url{opacity:.45}
+  .dc-open{display:inline-flex;justify-content:center;text-decoration:none}
+  .dc-fsh{display:flex;align-items:center;justify-content:space-between;margin:12px 0 4px}
+  .dc-fs{display:grid;grid-template-columns:minmax(0,1.3fr) 150px minmax(0,1.2fr) 26px 30px;gap:8px;align-items:center;padding:4px 0}
+  .dc-fs input{font-size:12px;min-width:0}
+  .dc-none{font-size:12px;padding:4px 0}
+  .dcr-r{display:grid;grid-template-columns:8px minmax(0,1fr) auto;gap:8px;align-items:center;padding:4px 0;font-size:11.5px;border-top:1px dotted var(--rule-strong)}
+  .ck-head+.dcr-r{border-top:0}
+  .dcr-r i{width:7px;height:7px;border-radius:50%;border:1.3px solid var(--ink-4)}
+  .dcr-r.st-done i{background:var(--good);border-color:var(--good)}
+  .dcr-r.st-todo i{border-color:var(--watch)}
+  .dcr-r.st-na i{border-style:dashed}
+  .dcr-r.fs i{background:var(--pen-5);border-color:var(--pen-5)}
+  .dcr-r span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dcr-r em{font-style:normal;font-family:var(--mono);font-size:9.5px;color:var(--ink-3)}
+  .dcr-r a{text-decoration:none}
+  @media (max-width:1250px){.dc-row{grid-template-columns:10px minmax(0,1fr) auto;row-gap:6px}.dc-url{grid-column:2/4}.dc-row .dc-open,.dc-row .dc-draft{display:none}}
   /* ---------------- a spec for an old demand ---------------- */
   .os .mg textarea{min-height:0;resize:vertical}
   .os .mg textarea.mono{font-size:11.5px;white-space:pre}
@@ -1857,7 +1890,7 @@ const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod 
 /* The data format this copy understands. Bump it whenever a change adds or reshapes saved data —
    an older copy then refuses to save a file written by a newer one, instead of dropping fields
    it doesn't know about. */
-const DATA_VERSION=33;
+const DATA_VERSION=34;
 let dataNewer=0;   /* the version of a loaded file that's newer than this copy (0 = fine) */
 const SELFTEST=/[?&]selftest\b/.test(location.search);   /* sandbox: nothing is read from or written to your data */
 function newerMsg(){return `This data was saved by a newer Demand Desk (data version ${dataNewer}); this copy understands up to ${DATA_VERSION}. Saving is switched off so nothing gets dropped — open the file with the newest DemandDesk.html.`;}
@@ -2178,7 +2211,7 @@ function migrate(d){
     system:t.system||"",client:t.client||"",project:t.project||"",theme:t.theme||"",
     waiting:{on:(t.waiting&&t.waiting.on)||"",since:(t.waiting&&t.waiting.since)||""},goliveTarget:t.goliveTarget||"",
     nextAction:{date:(t.nextAction&&t.nextAction.date)||"",note:(t.nextAction&&t.nextAction.note)||""},
-    receivedDate:t.receivedDate||"",dueDate:t.dueDate||"",estimate:(+t.estimate>0?Math.round(+t.estimate*4)/4:0),star:!!t.star,
+    receivedDate:t.receivedDate||"",dueDate:t.dueDate||"",estimate:(+t.estimate>0?Math.round(+t.estimate*4)/4:0),docs:normDocs(t.docs),   /* v34: tech spec, unit test, functional specs */star:!!t.star,
     builders:[...new Set((t.builders||[]).filter(id=>(d.people||[]).some(p=>p.id===id)))],
     lessons:(t.lessons||[]).map(l=>({id:l.id||uid(),date:/^\d{4}-\d\d-\d\d$/.test(l.date||"")?l.date:todayStr(),text:String(l.text||""),playId:l.playId||""})).filter(l=>l.text.trim()),description:t.description||"",notes:t.notes||"",
     timeline:(t.timeline||[]).map(e=>({id:e.id||uid(),ts:e.ts||Date.now(),type:e.type||"note",from:e.from||"",to:e.to||"",note:e.note||"",cause:e.cause==="change"?"change":"",est:+e.est>0?+e.est:0})),
@@ -2961,13 +2994,14 @@ const DV_GROUPS={none:"No grouping",epic:"Epic",wave:"Epic wave",status:"Status"
 const DV_SORTS={due:{label:"Due date",dir:"asc"},next:{label:"Next action",dir:"asc"},received:{label:"Received",dir:"desc"},updated:{label:"Last updated",dir:"desc"},
   age:{label:"Age",dir:"desc"},waiting:{label:"Time waiting",dir:"desc"},status:{label:"Status",dir:"asc"},clash:{label:"Object clashes",dir:"desc"},
   demand:{label:"Demand ID",dir:"asc"},title:{label:"Title",dir:"asc"}};
-const DV_ONLY={delegated:"Built by someone in my team",overdue:"Overdue",due7:"Overdue or due within 7 days",waiting:"Waiting on someone",clash:"With object clashes",notprod:"Transports not yet in Prod",next:"Next action due"};
+const DV_ONLY={delegated:"Built by someone in my team",overdue:"Overdue",due7:"Overdue or due within 7 days",waiting:"Waiting on someone",clash:"With object clashes",notprod:"Transports not yet in Prod",next:"Next action due",docs:"Delivered or closed, documents missing"};
 const DV_FIELDS={builder:"Built by",epic:"Epic",system:"System",project:"Project",theme:"Theme",requestor:"Requestor",type:"Type"};
 const STATUS_ORDER=Object.keys(STATUS),STATUS_RANK={bug:0,progress:1,open:2,delivered:3,closed:4};
 const DV_PRESETS=[
   {name:"My active",view:{group:"epic",sort:"due",status:["open","progress","bug"]}},
   {name:"Go-live",view:{group:"system",sort:"due",only:["notprod"]}},
   {name:"Waiting",view:{group:"none",sort:"waiting",dir:"desc",only:["waiting"]}},
+  {name:"Docs missing",view:{group:"none",sort:"due",only:["docs"]}},
   {name:"Clashes",view:{group:"none",sort:"clash",dir:"desc",only:["clash"]}},
   {name:"Everything",view:{group:"none",sort:"updated",dir:"desc"}}];
 let dvQuery=""; /* the quick text filter is deliberately not part of a saved view */
@@ -3013,6 +3047,7 @@ function dvMatches(v,cidx){
     for(const k of v.only){
       if(k==="overdue"){const d=earliestOpenDue(t);if(!(d&&d<today))return false;}
       else if(k==="waiting"){if(!isWaiting(t))return false;}
+      else if(k==="docs"){if(!docsDue(t))return false;}
       else if(k==="clash"){if(!openClashCount(t,cidx))return false;}
       else if(k==="notprod"){if(t.status==="closed"||!golivePending(t))return false;}
       else if(k==="next"){if(!nextActionDue(t))return false;}
@@ -5236,7 +5271,7 @@ function nextActionTrail(t){return (t.timeline||[]).filter(e=>e.type==="note"&&/
    due — each done right where it shows. Close the day: an hours box for
    every demand, task and meeting touched that day, against the working day. */
 const CHASE_EVERY=3;   /* days between follow-ups on something you're waiting for */
-const AG_KINDS={step:{l:"Next step",pen:"pen-2",o:0},act:{l:"Action point",pen:"pen-5",o:1},chase:{l:"Follow up",pen:"pen-4",o:2},todo:{l:"To-do",pen:"pen-6",o:3},release:{l:"Release",pen:"pen-1",o:3.5},check:{l:"Check in",pen:"pen-7",o:3.6},yearly:{l:"Once a year",pen:"pen-5",o:3.7},due:{l:"Due",pen:"pen-1",o:4}};
+const AG_KINDS={step:{l:"Next step",pen:"pen-2",o:0},act:{l:"Action point",pen:"pen-5",o:1},chase:{l:"Follow up",pen:"pen-4",o:2},todo:{l:"To-do",pen:"pen-6",o:3},release:{l:"Release",pen:"pen-1",o:3.5},check:{l:"Check in",pen:"pen-7",o:3.6},yearly:{l:"Once a year",pen:"pen-5",o:3.7},docs:{l:"Documents",pen:"pen-1",o:3.4},due:{l:"Due",pen:"pen-1",o:4}};
 /* an action point is yours when it has no owner, says me / myself / I, or names you (the Greeting name in ⋯) */
 function actionIsMine(a){const o=String(a.owner||"").trim().toLowerCase(),n=viewPref("userName","").trim().toLowerCase();
   return !o||["me","myself","i","self"].includes(o)||(!!n&&o.split(/[\s,/&+]+/).includes(n));}
@@ -5272,7 +5307,7 @@ function agendaItems(){const t0=todayStr(),out=[];
   state.tasks.forEach(x=>{const d=earliestOpenDue(x);if(!d||d>t0)return;const s=d===x.dueDate&&!["delivered","closed"].includes(x.status)?null:agSubDue(x,d);
     add("due",d,s?`Subtask: ${esc(s.title)}`:d<t0?"Past its due date":"Due today",x);});
   state.jobs.filter(j=>jobOpen(j)&&j.due&&j.due<=t0).forEach(x=>add("due",x.due,x.askedBy?`${esc(x.askedBy)} expects an answer`:x.source==="self"?"Due":"An answer is expected",x));
-  out.push(...agendaTransportItems(t0));
+  out.push(...agendaTransportItems(t0),...agendaDocsItems(t0));
   if(readableCopyDue(t0))out.push({k:"yearly",date:t0,what:"Make this year's readable copy",sub:"everything as Markdown, by year",of:"📚 your data file",go:openReadableCopy,acts:[["Make it",()=>openReadableCopy(),"Write the readable copy now"]]});
   return out.sort((a,b)=>a.date.localeCompare(b.date)||AG_KINDS[a.k].o-AG_KINDS[b.k].o);}
 const AG_CAP=10;
@@ -5783,6 +5818,7 @@ function rcDemand(t){const L=[],ep=epicById(t.epicId),hrs=efSum(efFor(t.id));
   if(t.objects.length)L.push("## Objects","",...t.objects.map(o=>`- ${o.name} — ${o.type||""} ${o.action||""}${o.desc?": "+o.desc:""}`),"");
   if(t.transports.length)L.push("## Transports","",...t.transports.map(tr=>{const syn=effectiveSyncs(t,tr).filter(s=>s.system);return `- ${tr.number||"(unnumbered)"}${tr.desc?" — "+tr.desc:""} · from ${tr.system}${tr.released?"":" · not released"}${syn.length?" · reached "+syn.map(s=>s.system+(s.date?" "+s.date:"")).join(", "):""}`;}),"");
   const refs=(t.reference||[]).filter(r=>!r.secret);if(refs.length)L.push("## Reference","",...refs.map(r=>`- ${r.label}: ${r.value}`),"");
+  {const d=docsOf(t),rows=[...Object.entries(DOC_KINDS).map(([k,K])=>`- ${K.l}: ${DOC_STATE[d[k].state]}${d[k].date?" ("+d[k].date+")":""}${d[k].url?" — "+d[k].url:""}`),...d.fs.map(f=>`- Functional spec: ${f.title||"(untitled)"}${f.by?" by "+f.by:""}${f.url?" — "+f.url:""}`)];L.push("## Documents","",...rows,"");}
   if((t.lessons||[]).length)L.push("## Lessons","",...t.lessons.map(l=>`- ${l.date}: ${l.text}`),"");
   if((t.comments||[]).length)L.push("## Comments","",...t.comments.map(c=>`- ${c.text}`),"");
   const tl=(t.timeline||[]).slice().sort((a,b)=>a.ts-b.ts);if(tl.length)L.push("## History","",...tl.map(e=>`- ${isoTs(e.ts)} ${e.type==="status"?"→ "+(STATUS[e.to]||{label:e.to}).label:e.note||""}`),"");
@@ -5962,6 +5998,75 @@ function openReplay(from,to,title){const D=replayData(from,to),N=D.days.length;i
   raf=requestAnimationFrame(draw);}
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#rvReplay,#wrReplay");if(!b)return;
   if(b.id==="rvReplay"){const P=rvPeriod();openReplay(P.from,P.to,P.l);}else{const mon=efMon(todayStr());openReplay(mon,efAdd(mon,6),"The week of "+efSh(mon));}});
+/* ===================== DOCUMENTS — what has to exist before a demand is done =====================
+   Every demand carries its own documents: the technical spec and the unit test document
+   (each To do · Done · Not needed, with a link to where it's stored and the day it was done)
+   and any number of functional specs written by other people. When a demand is delivered the
+   checklist opens; anything still to do comes back on the agenda until it's done, and the
+   demand list can show every delivered or closed demand that's missing one. Pasting a link
+   counts as done. */
+const DOC_KINDS={ts:{l:"Technical spec",s:"Tech spec"},ut:{l:"Unit test document",s:"Unit test"}};
+const DOC_STATE={todo:"To do",done:"Done",na:"Not needed"};
+function normDocs(d){d=d||{};const one=x=>({state:DOC_STATE[x&&x.state]?x.state:"todo",url:String((x&&x.url)||""),date:/^\d{4}-\d\d-\d\d$/.test((x&&x.date)||"")?x.date:""});
+  return{ts:one(d.ts),ut:one(d.ut),fs:(d.fs||[]).map(f=>({id:f.id||uid(),title:String(f.title||""),by:String(f.by||""),url:String(f.url||"")})).filter(f=>f.title||f.url||f.by)};}
+const docsOf=t=>t.docs||(t.docs=normDocs());
+const docsMissing=t=>Object.keys(DOC_KINDS).filter(k=>docsOf(t)[k].state==="todo");
+const docsApply=t=>["delivered","closed"].includes(t.status);
+const docsDue=t=>docsApply(t)&&docsMissing(t).length>0;
+function deliveredOn(t){const e=(t.timeline||[]).filter(x=>x.type==="status"&&x.to==="delivered").pop();return e?isoTs(e.ts):(t.receivedDate||todayStr());}
+const docsPeople=t=>[...new Set([t.requestor,...(state.people||[]).map(p=>p.name),...state.tasks.flatMap(x=>(docsOf(x).fs||[]).map(f=>f.by))].filter(Boolean))].sort();
+
+/* the editor: used on Overview and in the checklist that opens at delivery */
+function docsEditorHTML(t){const d=docsOf(t),openA=u=>/^https?:\/\//i.test(u)?`<a class="ghost sm dc-open" href="${esc(u)}" target="_blank" rel="noopener" title="Open">↗</a>`:`<span class="dc-open"></span>`;
+  return `${Object.entries(DOC_KINDS).map(([k,K])=>{const x=d[k];return `<div class="dc-row st-${x.state}" data-k="${k}">
+      <span class="dc-light" title="${DOC_STATE[x.state]}"></span><span class="dc-l"><b>${K.l}</b><small>${x.state==="done"?(x.date?"done "+shortD(x.date):"done"):x.state==="na"?"not needed for this demand":docsApply(t)?"still to do":"due at delivery"}</small></span>
+      <span class="seg dc-seg">${Object.entries(DOC_STATE).map(([s,l])=>`<button data-s="${s}" class="${x.state===s?"on":""}">${l}</button>`).join("")}</span>
+      <input class="mono dc-url" value="${esc(x.url)}" placeholder="Link to where it's stored — pasting one marks it done" autocomplete="off">${openA(x.url)}
+      ${k==="ts"?`<button class="sm ghost dc-draft" title="The app's draft tech spec for this demand — print it or copy it into your template">📄 Draft</button>`:`<span></span>`}</div>`;}).join("")}
+    <div class="dc-fsh"><span class="ef-lb" style="margin:0">Functional specs — by others</span><button class="sm ghost dc-fsadd">＋ Add</button></div>
+    ${d.fs.length?d.fs.map(f=>`<div class="dc-fs" data-id="${f.id}"><input class="dc-ft" value="${esc(f.title)}" placeholder="Title — e.g. FS Payroll cost-centre filter v2"><input class="dc-fb" list="dl-docby" value="${esc(f.by)}" placeholder="By"><input class="mono dc-fu" value="${esc(f.url)}" placeholder="Link">${openA(f.url)}<button class="ghost sm danger dc-fdel" title="Remove">🗑</button></div>`).join("")
+      :`<div class="faint dc-none">None linked — add the functional spec someone else wrote, so it's one click from the demand.</div>`}
+    <datalist id="dl-docby">${docsPeople(t).map(n=>`<option value="${esc(n)}">`).join("")}</datalist>`;}
+function wireDocsEditor(host,t,redraw){const d=docsOf(t),save=()=>{touch(t);redraw();renderCtxRail&&view==="demands"&&renderCtxRail();};
+  host.querySelectorAll(".dc-row").forEach(row=>{const k=row.dataset.k,x=d[k];
+    row.querySelectorAll(".dc-seg button").forEach(b=>b.onclick=()=>{x.state=b.dataset.s;x.date=x.state==="done"?(x.date||todayStr()):"";save();});
+    row.querySelector(".dc-url").onchange=e=>{x.url=e.target.value.trim();if(x.url&&x.state==="todo"){x.state="done";x.date=todayStr();toast(`${DOC_KINDS[k].s} marked done`);}save();};
+    const dr=row.querySelector(".dc-draft");if(dr)dr.onclick=()=>openTechSpec(t);});
+  host.querySelector(".dc-fsadd").onclick=()=>{d.fs.push({id:uid(),title:"",by:"",url:""});touch(t);redraw();setTimeout(()=>{const i=host.querySelectorAll(".dc-ft");if(i.length)i[i.length-1].focus();},30);};
+  host.querySelectorAll(".dc-fs").forEach(r=>{const f=d.fs.find(x=>x.id===r.dataset.id);if(!f)return;
+    r.querySelector(".dc-ft").onchange=e=>{f.title=e.target.value;touch(t);};r.querySelector(".dc-fb").onchange=e=>{f.by=e.target.value.trim();touch(t);};
+    r.querySelector(".dc-fu").onchange=e=>{f.url=e.target.value.trim();save();};
+    r.querySelector(".dc-fdel").onclick=()=>{d.fs=d.fs.filter(y=>y!==f);save();};});}
+function docsSummary(t){const d=docsOf(t),n=Object.keys(DOC_KINDS).filter(k=>d[k].state!=="na").length,done=Object.keys(DOC_KINDS).filter(k=>d[k].state==="done").length;return{n,done,miss:docsMissing(t),fs:d.fs.length};}
+function docsUnitHTML(t){const s=docsSummary(t);
+  return `<div class="ck-unit docs ${docsDue(t)?"due":""}" id="ovDocs"><div class="ck-head"><h2>Documents</h2><span class="ck-meta">${s.n?`${s.done} of ${s.n} done`:"none needed"}${s.fs?` · ${s.fs} functional spec${s.fs===1?"":"s"}`:""}${docsDue(t)?` · <b class="dc-late">delivered without ${s.miss.map(k=>DOC_KINDS[k].s.toLowerCase()).join(" and ")}</b>`:""}</span></div><div class="dc-body"></div></div>`;}
+function drawDocsUnit(t){const u=document.getElementById("ovDocs");if(!u)return;const b=u.querySelector(".dc-body"),again=()=>{const n=document.createElement("div");n.innerHTML=docsUnitHTML(t);u.replaceWith(n.firstChild);drawDocsUnit(t);};
+  b.innerHTML=docsEditorHTML(t);wireDocsEditor(b,t,again);}
+function docsRailHTML(t){const s=docsSummary(t),d=docsOf(t);
+  return `<div class="ck-unit cxs dcr"><div class="ck-head"><h2>Documents</h2><a class="cxl" id="cxDocs">${s.n?`${s.done}/${s.n} ›`:"›"}</a></div>
+    ${Object.entries(DOC_KINDS).map(([k,K])=>`<div class="dcr-r st-${d[k].state}"><i></i><span>${K.s}</span>${d[k].url?`<a href="${esc(d[k].url)}" target="_blank" rel="noopener" title="Open">↗</a>`:`<em>${DOC_STATE[d[k].state].toLowerCase()}</em>`}</div>`).join("")}
+    ${d.fs.slice(0,3).map(f=>`<div class="dcr-r fs"><i></i><span title="${esc(f.by?"by "+f.by:"")}">${esc(f.title||"Functional spec")}</span>${f.url?`<a href="${esc(f.url)}" target="_blank" rel="noopener" title="Open">↗</a>`:""}</div>`).join("")}</div>`;}
+/* the checklist that opens when a demand is delivered — and from the agenda */
+function openDocsSheet(t,o={}){const root=document.getElementById("modalRoot");
+  const draw=()=>{root.innerHTML=`<div class="modal-bg"><div class="modal efx" id="docsSheet" style="width:760px"><h2>${o.delivering?"Delivered — the documents":"Documents"} · ${esc(demandLabel(t))}</h2>
+      <p class="faint" style="font-size:12px;margin-top:-8px">${o.delivering?"Before you move on: the tech spec and the unit test document, and where they're stored. Anything left to do comes back on Today until it's done.":"Paste a link to mark it done, or say it isn't needed for this demand."}</p>
+      <div class="dc-sheet">${docsEditorHTML(t)}</div>
+      <div class="modal-foot"><button class="ghost" id="dcLater">${docsMissing(t).length?"Later — remind me":"Close"}</button><button class="primary" id="dcDone">Done</button></div></div></div>`;
+    const close=()=>{root.innerHTML="";renderApp();};
+    wireDocsEditor(root.querySelector(".dc-sheet"),t,draw);
+    root.querySelector("#dcLater").onclick=()=>{close();if(docsMissing(t).length)toast("It'll stay on Today until the documents are done");};
+    root.querySelector("#dcDone").onclick=close;
+    root.querySelector(".modal-bg").onclick=e=>{if(e.target===root.querySelector(".modal-bg"))close();};};
+  draw();}
+/* every status change is written to History — the checklist hangs off that, so every way of delivering asks */
+{const lt=logTimeline;logTimeline=function(t,type,from,to,note){lt(t,type,from,to,note);
+  if(type==="status"&&to==="delivered"&&from!=="delivered"&&state.tasks.includes(t)&&docsMissing(t).length&&(!SELFTEST||window.stDocsPrompt))
+    setTimeout(()=>{if(!document.querySelector("#modalRoot .modal-bg,.ask-bg")&&t.status==="delivered"&&docsMissing(t).length)openDocsSheet(t,{delivering:true});},motionOn()?900:150);};}
+/* the agenda: delivered demands still missing a document */
+function agendaDocsItems(t0){return state.tasks.filter(t=>t.status==="delivered"&&docsDue(t)).map(t=>{const m=docsMissing(t);
+  return{k:"docs",date:deliveredOn(t)<=t0?deliveredOn(t):t0,what:`${m.map(k=>DOC_KINDS[k].s).join(" and ")} still to do`,sub:"delivered "+shortD(deliveredOn(t)),
+    of:`${t.demandId?`<b class="mono">${esc(t.demandId)}</b> `:""}${esc(t.title)}`,go:()=>{view="demands";activeId=t.id;activeTab="overview";renderApp();},
+    acts:[["Add links",()=>openDocsSheet(t),"Paste where the documents are stored, or mark one not needed"]]};});}
 /* ===================== A SPEC FOR AN OLD DEMAND =====================
    Demands from before this app have no record here, so no tech spec. This form takes what you
    remember and what's in your own notes — the ticket, what was asked, how it was built, the
@@ -7008,7 +7113,7 @@ function demandCardBench(t,grouped,cidx,board){const ep=epicById(t.epicId),nc=op
     <div class="tt">${esc(t.title)}</div>
     <div class="l3">${board?"":btag(`<i class="pdot"></i>${STATUS[t.status].label}`,STATUS_PEN[t.status])}${t.system&&!board?btag(`${esc(t.system)}<span class="t">${TIER_S[t.system.slice(-1)]||""}</span>${t.client?"·"+esc(t.client):""}`):""}
       ${buildersOf(t).length?btag(`👷 ${esc(builderNames(t))}`,"var(--pen-5)","Built by"):""}${isWaiting(t)?btag(`⏳ ${esc(t.waiting.on)}${waitDays(t)!=null?" "+waitDays(t)+"d":""}`,"var(--watch)"):""}${nc?btag(`⚠ ${nc} clash`,"var(--bad)","Object(s) also in flight in another demand"):""}
-      ${na?btag(`⏰ ${na.date===todayStr()?"today":na.date<todayStr()?"due":shortD(na.date)}`,"var(--watch)",na.note):""}${(()=>{const h=efSum(efFor(t.id)),e=+t.estimate||0;return h&&!board?btag(`⏱ ${efFh(h)}${e?"/"+efFh(e):""} h`,e&&h>e?"var(--bad)":"","Hours logged"+(e?" / estimate":"")):"";})()}
+      ${docsDue(t)?btag(`📄 ${docsMissing(t).length>1?"docs":DOC_KINDS[docsMissing(t)[0]].s.toLowerCase()} missing`,"var(--bad)","Delivered without its "+docsMissing(t).map(k=>DOC_KINDS[k].s.toLowerCase()).join(" and ")):""}${na?btag(`⏰ ${na.date===todayStr()?"today":na.date<todayStr()?"due":shortD(na.date)}`,"var(--watch)",na.note):""}${(()=>{const h=efSum(efFor(t.id)),e=+t.estimate||0;return h&&!board?btag(`⏱ ${efFh(h)}${e?"/"+efFh(e):""} h`,e&&h>e?"var(--bad)":"","Hours logged"+(e?" / estimate":"")):"";})()}
       <span class="strip" title="Transports: ● complete · ◐ on its way · ○ built · dashed = not released">${trStripSVG(t)}</span></div></div>`;}
 
 /* ---------- board: the list laid out by status; drag a card to change it ---------- */
@@ -7056,13 +7161,15 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
       <span class="k">Due</span><span class="v mono ${dn!=null&&dn<0?"late":""}">${t.dueDate||"—"}</span>
       <span class="k">Go-live</span><span class="v mono">${esc(goliveTargetFor(t))||"—"}${t.transports.some(tr=>trDest(t,tr).length)?" <span class='dim'>+ own routes</span>":""}</span>
       ${isWaiting(t)?`<span class="k">Waiting on</span><span class="v soon">${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+" d":""}</span>`:""}</div></div>
+    ${docsRailHTML(t)}
     <div class="ck-unit cxs"><div class="ck-head"><h2>Reference</h2><a class="cxl" data-tab="reference">${refs.length?(pins.length?`${pins.length} pinned · `:"")+"all "+refs.length+" ›":"＋ add ›"}</a></div>
       ${show.map(r=>`<div class="rf" data-id="${r.id}"><span class="l">${r.pinned?`<span class="pinmark" title="Pinned">📌</span> `:""}${esc(r.label)||"(no label)"}</span><span class="v">${r.secret?"••••••••":linkify(r.value)}</span><button class="ghost sm c" title="Copy">📋</button></div>`).join("")+(morePins?`<div class="faint" style="font-size:10.5px;padding-top:4px">+ ${morePins} more pinned</div>`:"")||`<div class="bempty">URLs, endpoints, test data — pin the ones you need often.</div>`}</div>
     <div class="ck-unit cxs"><div class="ck-head"><h2>Linked</h2><a class="cxl" data-tab="calls">${links.length?links.length+" · link ›":"＋ link ›"}</a></div>
       ${links.slice(0,6).map(l=>`<div class="lk" data-k="${l.k}" data-id="${l.id}" style="--pen:${l.pen}"><i></i><span class="t">${esc(l.t)}</span><span class="d">${shortD(l.d)}</span></div>`).join("")||`<div class="bempty">No meetings, journal or debug sessions linked.</div>`}</div>
     <div class="ck-unit cxs"><div class="ck-head"><h2>Images</h2><a class="cxl" data-tab="images">${imgs.length?"all "+imgs.length+" ›":"Ctrl V to paste"}</a></div>
       ${imgs.length?`<div class="thumbs">${imgs.slice(0,6).map(im=>`<div data-id="${im.id}" title="${esc(im.label||im.file)}"><span>${esc(im.label||im.file)}</span></div>`).join("")}</div>`:`<div class="bempty">Snip with Win+Shift+S, then Ctrl+V anywhere on this demand.</div>`}</div>${seenRailHTML(t)}${notesRailHTML(t)}</div>`;
-  const q=s=>host.querySelector(s);wireNotesRail(host,t);wireSeen(host,seenForDemand(t));
+  const q=s=>host.querySelector(s);wireNotesRail(host,t);
+  {const dl=q("#cxDocs");if(dl)dl.onclick=()=>{activeTab="overview";renderDetail();setTimeout(()=>{const u=document.getElementById("ovDocs");if(u)u.scrollIntoView({block:"start",behavior:motionOn()?"smooth":"auto"});},60);};}wireSeen(host,seenForDemand(t));
   if(q("#cxNaDone"))q("#cxNaDone").onclick=()=>nextActionDone(t);
   if(q("#cxNaEdit"))q("#cxNaEdit").onclick=()=>openNextAction(t);
   if(q("#cxBuild"))q("#cxBuild").onclick=()=>openBuilders(t);
@@ -7111,6 +7218,8 @@ function renderOverview(body,t){
     <div class="bsec" id="lsHost"></div>`;
   const updNL=()=>{body.querySelector("#n-links").innerHTML=linkChips((t.description||"")+" "+(t.notes||""));};
   {const pb=body.querySelector("#ovPins");if(pb)drawPinned(pb,t,(t.reference||[]).filter(r=>r.pinned));}
+  /* documents: at the top once the demand is delivered, at the foot before that */
+  body.insertAdjacentHTML(docsApply(t)?"afterbegin":"beforeend",docsUnitHTML(t));drawDocsUnit(t);
   body.querySelector("#fDesc").onchange=e=>{t.description=e.target.value;touch(t);updNL();};
   body.querySelector("#fNotes").onchange=e=>{t.notes=e.target.value;touch(t);updNL();};
   const post=()=>{const ta=body.querySelector("#ovCmt"),v=ta.value.trim();if(!v)return;(t.comments=t.comments||[]).push({id:uid(),text:v,ts:Date.now()});touch(t);renderOverview(body,t);};
@@ -8196,7 +8305,7 @@ function searchAll(q){const terms=searchTerms(q);if(!terms.length)return [];cons
   const add=(k,label,parts,date,go,sub)=>{const text=parts.filter(Boolean).join(" · "),low=text.toLowerCase();if(!terms.every(t=>low.includes(t)))return;hits.push({k,label,sub:sub||"",text,low,date:date||"",go});};
   const td=t=>t.receivedDate||isoTs(t.createdAt);
   state.tasks.forEach(t=>{const ep=epicById(t.epicId),go=tab=>()=>{view="demands";activeId=t.id;activeTab=tab;},dl=demandLabel(t);
-    add("Demand",`${t.demandId||"—"} · ${t.title}`,[t.demandId,t.title,t.description,t.notes,t.type,t.requestor,builderNames(t),t.project,t.theme,t.wave,t.system,t.client?"client "+t.client:"",t.nextAction&&t.nextAction.note,ep?epicLabel(ep):"",(t.comments||[]).map(c=>c.text).join(" · ")],td(t),go("overview"),[STATUS[t.status].label,t.system,t.theme].filter(Boolean).join(" · "));
+    add("Demand",`${t.demandId||"—"} · ${t.title}`,[t.demandId,t.title,t.description,t.notes,t.type,t.requestor,builderNames(t),t.project,t.theme,t.wave,t.system,t.client?"client "+t.client:"",t.nextAction&&t.nextAction.note,docsOf(t).fs.map(f=>f.title+" "+f.by).join(" "),ep?epicLabel(ep):"",(t.comments||[]).map(c=>c.text).join(" · ")],td(t),go("overview"),[STATUS[t.status].label,t.system,t.theme].filter(Boolean).join(" · "));
     t.objects.forEach(o=>add("Object",`${o.name||"(object)"} — ${o.action}`,[o.name,o.type,o.desc],td(t),go("objects"),dl));
     t.transports.forEach(tr=>{const toc=tocFor(t,tr),syn=effectiveSyncs(t,tr);
       add("Transport",`${tr.number||"(TR)"}${tr.desc?" — "+tr.desc:""}`,[tr.number,tr.desc,tr.notes,"origin "+tr.system,syn.map(s=>s.system).join(" "),toc?"ToC "+toc.number:"",(tr.dest||[]).join(" "),tr.client,isCust(tr)?"customizing cust config":"workbench"],syn.map(s=>s.date).filter(Boolean).sort().pop()||td(t),go("transports"),dl);});
@@ -8677,6 +8786,16 @@ async function runSelfTest(){
     ok("Old-demand spec: kept as a closed demand, and the draft is cleared",kept&&osDraft().title===""&&deliveredDates(state.tasks[state.tasks.length-1]).includes("2023-04-15"),`kept ${kept}`);
     if(realDraft===null){try{localStorage.removeItem("demanddesk."+OS_KEY);}catch(e){}}else setViewPref(OS_KEY,realDraft);
     state.tasks=state.tasks.filter(x=>x.demandId!=="ST-OLD");R.innerHTML="";view="today";renderApp();}
+   {const b=state.tasks.find(x=>x.id==="st-b"),c=state.tasks.find(x=>x.id==="st-c"),m=migrate(clone(stOldFixture()));
+    ok("Documents: an upgraded demand starts with its tech spec and unit test to do",m.tasks[0].docs.ts.state==="todo"&&m.tasks[0].docs.ut.state==="todo"&&Array.isArray(m.tasks[0].docs.fs));
+    ok("Documents: a delivered demand missing them is on the agenda and in the 'Docs missing' filter",agendaItems().some(i=>i.k==="docs"&&i.of.includes("ST-2"))&&state.tasks.filter(dvMatches({...dvBlank(),only:["docs"]})).includes(b));
+    view="demands";activeId="st-b";activeTab="overview";renderApp();const u=document.querySelector('#ovDocs .dc-row[data-k="ts"] .dc-url');if(u){u.value="https://example.invalid/ts.docx";u.dispatchEvent(new Event("change"));}
+    const ts=docsOf(b).ts;ok("Documents: pasting a link marks the tech spec done, dated today",ts.state==="done"&&ts.date===todayStr()&&ts.url.endsWith("ts.docx"),JSON.stringify(ts));
+    {const nb=document.querySelector('#ovDocs .dc-row[data-k="ut"] .dc-seg button[data-s="na"]');if(nb)nb.click();}
+    ok("Documents: 'Not needed' takes it off the agenda",!docsDue(b)&&!agendaItems().some(i=>i.k==="docs"&&i.of.includes("ST-2")));
+    window.stDocsPrompt=true;const s0=c.status;setDemandStatus(c,"delivered");await sleep(motionOn()?1100:350);const asked=!!document.getElementById("docsSheet");window.stDocsPrompt=false;
+    document.getElementById("modalRoot").innerHTML="";c.status=s0;c.timeline=c.timeline.filter(e=>!(e.type==="status"&&e.to==="delivered"));
+    ok("Documents: delivering a demand opens the checklist",asked);view="today";renderApp();}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
@@ -8685,7 +8804,7 @@ async function runSelfTest(){
   const a=state.tasks.find(t=>t.id==="st-a");
   const pick=()=>{activeJobId="st-job-1";activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
   const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
-  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Keyboard",()=>openKeys()],["A readable copy",()=>openReadableCopy()],["Spec for an old demand",()=>openOldSpec()],["Paste rows from Excel",()=>openPasteSheet()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
+  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Keyboard",()=>openKeys()],["A readable copy",()=>openReadableCopy()],["Documents checklist",()=>openDocsSheet(a,{delivering:true})],["Spec for an old demand",()=>openOldSpec()],["Paste rows from Excel",()=>openPasteSheet()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
     ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
     ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Settings menu",()=>openMenu()],["Close a task",()=>openJobClose(jobById("st-job-1"),"done")],["Log time on a task",()=>openLogTime({key:"j:st-job-1"})],["A closed task",()=>{view="jobs";activeJobId="st-job-2";renderApp();}],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
   const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;

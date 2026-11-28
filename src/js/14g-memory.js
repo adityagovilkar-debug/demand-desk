@@ -115,6 +115,7 @@ function rcDemand(t){const L=[],ep=epicById(t.epicId),hrs=efSum(efFor(t.id));
   if(t.objects.length)L.push("## Objects","",...t.objects.map(o=>`- ${o.name} — ${o.type||""} ${o.action||""}${o.desc?": "+o.desc:""}`),"");
   if(t.transports.length)L.push("## Transports","",...t.transports.map(tr=>{const syn=effectiveSyncs(t,tr).filter(s=>s.system);return `- ${tr.number||"(unnumbered)"}${tr.desc?" — "+tr.desc:""} · from ${tr.system}${tr.released?"":" · not released"}${syn.length?" · reached "+syn.map(s=>s.system+(s.date?" "+s.date:"")).join(", "):""}`;}),"");
   const refs=(t.reference||[]).filter(r=>!r.secret);if(refs.length)L.push("## Reference","",...refs.map(r=>`- ${r.label}: ${r.value}`),"");
+  {const d=docsOf(t),rows=[...Object.entries(DOC_KINDS).map(([k,K])=>`- ${K.l}: ${DOC_STATE[d[k].state]}${d[k].date?" ("+d[k].date+")":""}${d[k].url?" — "+d[k].url:""}`),...d.fs.map(f=>`- Functional spec: ${f.title||"(untitled)"}${f.by?" by "+f.by:""}${f.url?" — "+f.url:""}`)];L.push("## Documents","",...rows,"");}
   if((t.lessons||[]).length)L.push("## Lessons","",...t.lessons.map(l=>`- ${l.date}: ${l.text}`),"");
   if((t.comments||[]).length)L.push("## Comments","",...t.comments.map(c=>`- ${c.text}`),"");
   const tl=(t.timeline||[]).slice().sort((a,b)=>a.ts-b.ts);if(tl.length)L.push("## History","",...tl.map(e=>`- ${isoTs(e.ts)} ${e.type==="status"?"→ "+(STATUS[e.to]||{label:e.to}).label:e.note||""}`),"");

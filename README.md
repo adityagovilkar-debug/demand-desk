@@ -429,6 +429,21 @@ Click any item to jump straight to it.
   - **Group by → Ticket** in the demand list puts each shared ticket in a block with
     its combined hours and transports; one-demand tickets sit together at the end.
 
+### Documents — tech spec, unit test, functional specs
+Each demand carries its own documents, in a **Documents** box on Overview (at the top once
+it's delivered, at the foot before that) and in the side panel:
+- **Technical spec** and **Unit test document** — each *To do*, *Done* or *Not needed*, with
+  a link to where it's stored and the day it was done. **Pasting a link marks it done.**
+  *📄 Draft* on the tech spec opens the app's generated spec to start from.
+- **Functional specs by others** — any number, each with a title, who wrote it and a link.
+- **When a demand is delivered** (status buttons, board or ✎ Edit) the checklist opens on
+  its own. *Later — remind me* leaves it on **Today's agenda** until the documents are done
+  or marked not needed; the demand's card shows *docs missing*.
+- **Docs missing** (quick view, or ⚙ View → Only) lists every delivered or closed demand
+  still without its documents — the backlog to catch up on.
+- Functional-spec titles and authors are searchable; the readable copy lists every link.
+  Data v34.
+
 ### When the requirement changes (rounds)
 - Moving a **Delivered** or **Closed** demand backwards (status buttons, the board, the
   status dropdown) asks **why**:

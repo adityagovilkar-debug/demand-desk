@@ -31,7 +31,7 @@ const DEF_TIERS=[{d:"3",label:"Development",short:"DEV"},{d:"2",label:"Pre-prod 
 /* The data format this copy understands. Bump it whenever a change adds or reshapes saved data —
    an older copy then refuses to save a file written by a newer one, instead of dropping fields
    it doesn't know about. */
-const DATA_VERSION=33;
+const DATA_VERSION=34;
 let dataNewer=0;   /* the version of a loaded file that's newer than this copy (0 = fine) */
 const SELFTEST=/[?&]selftest\b/.test(location.search);   /* sandbox: nothing is read from or written to your data */
 function newerMsg(){return `This data was saved by a newer Demand Desk (data version ${dataNewer}); this copy understands up to ${DATA_VERSION}. Saving is switched off so nothing gets dropped — open the file with the newest DemandDesk.html.`;}
@@ -352,7 +352,7 @@ function migrate(d){
     system:t.system||"",client:t.client||"",project:t.project||"",theme:t.theme||"",
     waiting:{on:(t.waiting&&t.waiting.on)||"",since:(t.waiting&&t.waiting.since)||""},goliveTarget:t.goliveTarget||"",
     nextAction:{date:(t.nextAction&&t.nextAction.date)||"",note:(t.nextAction&&t.nextAction.note)||""},
-    receivedDate:t.receivedDate||"",dueDate:t.dueDate||"",estimate:(+t.estimate>0?Math.round(+t.estimate*4)/4:0),star:!!t.star,
+    receivedDate:t.receivedDate||"",dueDate:t.dueDate||"",estimate:(+t.estimate>0?Math.round(+t.estimate*4)/4:0),docs:normDocs(t.docs),   /* v34: tech spec, unit test, functional specs */star:!!t.star,
     builders:[...new Set((t.builders||[]).filter(id=>(d.people||[]).some(p=>p.id===id)))],
     lessons:(t.lessons||[]).map(l=>({id:l.id||uid(),date:/^\d{4}-\d\d-\d\d$/.test(l.date||"")?l.date:todayStr(),text:String(l.text||""),playId:l.playId||""})).filter(l=>l.text.trim()),description:t.description||"",notes:t.notes||"",
     timeline:(t.timeline||[]).map(e=>({id:e.id||uid(),ts:e.ts||Date.now(),type:e.type||"note",from:e.from||"",to:e.to||"",note:e.note||"",cause:e.cause==="change"?"change":"",est:+e.est>0?+e.est:0})),

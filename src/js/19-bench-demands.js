@@ -28,7 +28,7 @@ function demandCardBench(t,grouped,cidx,board){const ep=epicById(t.epicId),nc=op
     <div class="tt">${esc(t.title)}</div>
     <div class="l3">${board?"":btag(`<i class="pdot"></i>${STATUS[t.status].label}`,STATUS_PEN[t.status])}${t.system&&!board?btag(`${esc(t.system)}<span class="t">${TIER_S[t.system.slice(-1)]||""}</span>${t.client?"·"+esc(t.client):""}`):""}
       ${buildersOf(t).length?btag(`👷 ${esc(builderNames(t))}`,"var(--pen-5)","Built by"):""}${isWaiting(t)?btag(`⏳ ${esc(t.waiting.on)}${waitDays(t)!=null?" "+waitDays(t)+"d":""}`,"var(--watch)"):""}${nc?btag(`⚠ ${nc} clash`,"var(--bad)","Object(s) also in flight in another demand"):""}
-      ${na?btag(`⏰ ${na.date===todayStr()?"today":na.date<todayStr()?"due":shortD(na.date)}`,"var(--watch)",na.note):""}${(()=>{const h=efSum(efFor(t.id)),e=+t.estimate||0;return h&&!board?btag(`⏱ ${efFh(h)}${e?"/"+efFh(e):""} h`,e&&h>e?"var(--bad)":"","Hours logged"+(e?" / estimate":"")):"";})()}
+      ${docsDue(t)?btag(`📄 ${docsMissing(t).length>1?"docs":DOC_KINDS[docsMissing(t)[0]].s.toLowerCase()} missing`,"var(--bad)","Delivered without its "+docsMissing(t).map(k=>DOC_KINDS[k].s.toLowerCase()).join(" and ")):""}${na?btag(`⏰ ${na.date===todayStr()?"today":na.date<todayStr()?"due":shortD(na.date)}`,"var(--watch)",na.note):""}${(()=>{const h=efSum(efFor(t.id)),e=+t.estimate||0;return h&&!board?btag(`⏱ ${efFh(h)}${e?"/"+efFh(e):""} h`,e&&h>e?"var(--bad)":"","Hours logged"+(e?" / estimate":"")):"";})()}
       <span class="strip" title="Transports: ● complete · ◐ on its way · ○ built · dashed = not released">${trStripSVG(t)}</span></div></div>`;}
 
 /* ---------- board: the list laid out by status; drag a card to change it ---------- */
@@ -76,13 +76,15 @@ function renderCtxRail(){const host=document.getElementById("cxr");if(!host)retu
       <span class="k">Due</span><span class="v mono ${dn!=null&&dn<0?"late":""}">${t.dueDate||"—"}</span>
       <span class="k">Go-live</span><span class="v mono">${esc(goliveTargetFor(t))||"—"}${t.transports.some(tr=>trDest(t,tr).length)?" <span class='dim'>+ own routes</span>":""}</span>
       ${isWaiting(t)?`<span class="k">Waiting on</span><span class="v soon">${esc(t.waiting.on)}${waitDays(t)!=null?" · "+waitDays(t)+" d":""}</span>`:""}</div></div>
+    ${docsRailHTML(t)}
     <div class="ck-unit cxs"><div class="ck-head"><h2>Reference</h2><a class="cxl" data-tab="reference">${refs.length?(pins.length?`${pins.length} pinned · `:"")+"all "+refs.length+" ›":"＋ add ›"}</a></div>
       ${show.map(r=>`<div class="rf" data-id="${r.id}"><span class="l">${r.pinned?`<span class="pinmark" title="Pinned">📌</span> `:""}${esc(r.label)||"(no label)"}</span><span class="v">${r.secret?"••••••••":linkify(r.value)}</span><button class="ghost sm c" title="Copy">📋</button></div>`).join("")+(morePins?`<div class="faint" style="font-size:10.5px;padding-top:4px">+ ${morePins} more pinned</div>`:"")||`<div class="bempty">URLs, endpoints, test data — pin the ones you need often.</div>`}</div>
     <div class="ck-unit cxs"><div class="ck-head"><h2>Linked</h2><a class="cxl" data-tab="calls">${links.length?links.length+" · link ›":"＋ link ›"}</a></div>
       ${links.slice(0,6).map(l=>`<div class="lk" data-k="${l.k}" data-id="${l.id}" style="--pen:${l.pen}"><i></i><span class="t">${esc(l.t)}</span><span class="d">${shortD(l.d)}</span></div>`).join("")||`<div class="bempty">No meetings, journal or debug sessions linked.</div>`}</div>
     <div class="ck-unit cxs"><div class="ck-head"><h2>Images</h2><a class="cxl" data-tab="images">${imgs.length?"all "+imgs.length+" ›":"Ctrl V to paste"}</a></div>
       ${imgs.length?`<div class="thumbs">${imgs.slice(0,6).map(im=>`<div data-id="${im.id}" title="${esc(im.label||im.file)}"><span>${esc(im.label||im.file)}</span></div>`).join("")}</div>`:`<div class="bempty">Snip with Win+Shift+S, then Ctrl+V anywhere on this demand.</div>`}</div>${seenRailHTML(t)}${notesRailHTML(t)}</div>`;
-  const q=s=>host.querySelector(s);wireNotesRail(host,t);wireSeen(host,seenForDemand(t));
+  const q=s=>host.querySelector(s);wireNotesRail(host,t);
+  {const dl=q("#cxDocs");if(dl)dl.onclick=()=>{activeTab="overview";renderDetail();setTimeout(()=>{const u=document.getElementById("ovDocs");if(u)u.scrollIntoView({block:"start",behavior:motionOn()?"smooth":"auto"});},60);};}wireSeen(host,seenForDemand(t));
   if(q("#cxNaDone"))q("#cxNaDone").onclick=()=>nextActionDone(t);
   if(q("#cxNaEdit"))q("#cxNaEdit").onclick=()=>openNextAction(t);
   if(q("#cxBuild"))q("#cxBuild").onclick=()=>openBuilders(t);
@@ -131,6 +133,8 @@ function renderOverview(body,t){
     <div class="bsec" id="lsHost"></div>`;
   const updNL=()=>{body.querySelector("#n-links").innerHTML=linkChips((t.description||"")+" "+(t.notes||""));};
   {const pb=body.querySelector("#ovPins");if(pb)drawPinned(pb,t,(t.reference||[]).filter(r=>r.pinned));}
+  /* documents: at the top once the demand is delivered, at the foot before that */
+  body.insertAdjacentHTML(docsApply(t)?"afterbegin":"beforeend",docsUnitHTML(t));drawDocsUnit(t);
   body.querySelector("#fDesc").onchange=e=>{t.description=e.target.value;touch(t);updNL();};
   body.querySelector("#fNotes").onchange=e=>{t.notes=e.target.value;touch(t);updNL();};
   const post=()=>{const ta=body.querySelector("#ovCmt"),v=ta.value.trim();if(!v)return;(t.comments=t.comments||[]).push({id:uid(),text:v,ts:Date.now()});touch(t);renderOverview(body,t);};

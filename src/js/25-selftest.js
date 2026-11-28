@@ -260,6 +260,16 @@ async function runSelfTest(){
     ok("Old-demand spec: kept as a closed demand, and the draft is cleared",kept&&osDraft().title===""&&deliveredDates(state.tasks[state.tasks.length-1]).includes("2023-04-15"),`kept ${kept}`);
     if(realDraft===null){try{localStorage.removeItem("demanddesk."+OS_KEY);}catch(e){}}else setViewPref(OS_KEY,realDraft);
     state.tasks=state.tasks.filter(x=>x.demandId!=="ST-OLD");R.innerHTML="";view="today";renderApp();}
+   {const b=state.tasks.find(x=>x.id==="st-b"),c=state.tasks.find(x=>x.id==="st-c"),m=migrate(clone(stOldFixture()));
+    ok("Documents: an upgraded demand starts with its tech spec and unit test to do",m.tasks[0].docs.ts.state==="todo"&&m.tasks[0].docs.ut.state==="todo"&&Array.isArray(m.tasks[0].docs.fs));
+    ok("Documents: a delivered demand missing them is on the agenda and in the 'Docs missing' filter",agendaItems().some(i=>i.k==="docs"&&i.of.includes("ST-2"))&&state.tasks.filter(dvMatches({...dvBlank(),only:["docs"]})).includes(b));
+    view="demands";activeId="st-b";activeTab="overview";renderApp();const u=document.querySelector('#ovDocs .dc-row[data-k="ts"] .dc-url');if(u){u.value="https://example.invalid/ts.docx";u.dispatchEvent(new Event("change"));}
+    const ts=docsOf(b).ts;ok("Documents: pasting a link marks the tech spec done, dated today",ts.state==="done"&&ts.date===todayStr()&&ts.url.endsWith("ts.docx"),JSON.stringify(ts));
+    {const nb=document.querySelector('#ovDocs .dc-row[data-k="ut"] .dc-seg button[data-s="na"]');if(nb)nb.click();}
+    ok("Documents: 'Not needed' takes it off the agenda",!docsDue(b)&&!agendaItems().some(i=>i.k==="docs"&&i.of.includes("ST-2")));
+    window.stDocsPrompt=true;const s0=c.status;setDemandStatus(c,"delivered");await sleep(motionOn()?1100:350);const asked=!!document.getElementById("docsSheet");window.stDocsPrompt=false;
+    document.getElementById("modalRoot").innerHTML="";c.status=s0;c.timeline=c.timeline.filter(e=>!(e.type==="status"&&e.to==="delivered"));
+    ok("Documents: delivering a demand opens the checklist",asked);view="today";renderApp();}
    ok("Encryption warning shows while secrets are unencrypted",!!encWarnHTML()||viewPref("encWarn.until","")>T);}
 
   sec("Screens");
@@ -268,7 +278,7 @@ async function runSelfTest(){
   const a=state.tasks.find(t=>t.id==="st-a");
   const pick=()=>{activeJobId="st-job-1";activeId="st-a";activeEpicId="st-e1";activeDebugId="st-dbg1";activeMeetingId="st-m1";activeJournalId="st-j1";activePlayId="st-p1";meetingRollup=false;journalTodos=false;};
   const closeAll=()=>{document.getElementById("modalRoot").innerHTML="";const d=document.getElementById("efDrw");if(d)d.classList.remove("on");};
-  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Keyboard",()=>openKeys()],["A readable copy",()=>openReadableCopy()],["Spec for an old demand",()=>openOldSpec()],["Paste rows from Excel",()=>openPasteSheet()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
+  const modals=[["Log time",()=>openLogTime()],["Note a win",()=>openWin()],["Next action",()=>openNextAction(a)],["Next action ✓ Done",()=>nextActionDone(a)],["Close the day",()=>openCloseDay()],["Keyboard",()=>openKeys()],["A readable copy",()=>openReadableCopy()],["Documents checklist",()=>openDocsSheet(a,{delivering:true})],["Spec for an old demand",()=>openOldSpec()],["Paste rows from Excel",()=>openPasteSheet()],["Move a ToC along a route",()=>openTocRoute(a,a.tocs[0])],["Days off",()=>openDaysOff()],
     ["Tech Spec",()=>openTechSpec(a)],["Weekly summary",()=>openWeekly()],["Handover pack",()=>openHandover()],["Aging",()=>openAging()],["Portfolio",()=>openPortfolio()],
     ["Run sheet",()=>openRunSheet([a],"Self-test",goliveTargetFor(a))],["Lesson",()=>openLesson(a)],["Built by",()=>openBuilders(a)],["Settings menu",()=>openMenu()],["Close a task",()=>openJobClose(jobById("st-job-1"),"done")],["Log time on a task",()=>openLogTime({key:"j:st-job-1"})],["A closed task",()=>{view="jobs";activeJobId="st-job-2";renderApp();}],["Edit demand",()=>openTaskModal(a)],["Day ledger",()=>openEfDay(efAdd(todayStr(),-2))],["Week wrap-up",()=>{wrapForce=true;view="today";renderApp();}]];
   const themes=Object.keys(THEME_OPTS),total=themes.length*(views.length+tabs.length+etabs.length+modals.length);let n=0;
